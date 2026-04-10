@@ -1,0 +1,26 @@
+# Dependencies and package manager artifacts
+node_modules
+.pnp
+.pnp.js
+
+# Build caches and outputs
+.turbo
+dist
+build
+coverage
+.next
+out
+
+# Environment and generated files
+.env*
+*.tsbuildinfo
+
+# Lockfiles and binaries
+bun.lock
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+*.svg
