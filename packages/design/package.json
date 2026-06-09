@@ -1,5 +1,5 @@
 {
-  "name": "@entry/ui",
+  "name": "@entry/design",
   "module": "index.ts",
   "type": "module",
   "private": true
