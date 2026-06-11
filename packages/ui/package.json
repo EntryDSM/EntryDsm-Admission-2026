@@ -7,6 +7,12 @@
     ".": "./index.ts"
   },
   "dependencies": {
-    "@entry/design": "^0.0.0"
+    "@emotion/styled": "^11.14.1",
+    "@entry/design": "^0.0.0",
+    "@entry/utils": "^0.0.0",
+    "@entry/hooks": "^0.0.0",
+    "react": "^19.2.7",
+    "react-daum-postcode": "^3.2.0",
+    "react-router": "^7.17.0"
   }
 }
