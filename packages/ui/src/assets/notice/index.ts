@@ -1,1 +1,1 @@
-﻿export * from "./NoticePinIcon";
+﻿export * from "./noticePinIcon";

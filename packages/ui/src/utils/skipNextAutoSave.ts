@@ -11,13 +11,13 @@ export const lastManualSaveRef = { current: 0 };
 export const lastSavedPageRef = { current: null as string | null };
 
 // 토스트 함수 타입 정의
-export type ToastFunction = (message: string, type: "success" | "error") => void;
+export type ToastFn = (msg: string, type: "success" | "error") => void;
 
 // 전역 토스트 함수 참조
-export let globalShowToast: ToastFunction | null = null;
+export let globalShowToast: ToastFn | null = null;
 
 // 전역 토스트 함수 설정
-export const setGlobalShowToast = (toastFn: ToastFunction) => {
+export const setGlobalShowToast = (toastFn: ToastFn) => {
   globalShowToast = toastFn;
 };
 
@@ -97,8 +97,8 @@ export async function performSave(
       }
 
       if (globalShowToast) {
-        const message = `임시저장이 완료되었습니다.${currentPage ? ` (${currentPage})` : ""}`;
-        globalShowToast(message, "success");
+        const msg = `임시저장이 완료되었습니다.${currentPage ? ` (${currentPage})` : ""}`;
+        globalShowToast(msg, "success");
       }
     } catch (err) {
       if (globalShowToast) {

@@ -1,4 +1,4 @@
-import type { ApplicationState } from "./ApplicationDataContext";
+import type { ApplicationState } from "./applicationDataContext";
 
 const isEmpty = (value: unknown) =>
   value === null ||
@@ -194,13 +194,13 @@ export const canProceedToNext = (state: ApplicationState, currentRoute: string) 
   const { isValid, missingFields } = validatePageData(state, currentRoute);
   if (!isValid) {
     if (missingFields.includes("studentId_invalid")) {
-      return { canProceed: false, message: "학번은 5자리로 입력해주세요." };
+      return { canProceed: false, msg: "학번은 5자리로 입력해주세요." };
     }
 
     const missingFieldsKR = missingFields.map(field => fieldNameMap[field] || field);
     return {
       canProceed: false,
-      message: `필수 항목이 누락되었습니다: ${missingFieldsKR.join(", ")}`,
+      msg: `필수 항목이 누락되었습니다: ${missingFieldsKR.join(", ")}`,
     };
   }
 

@@ -269,12 +269,12 @@ const STORE_NAME = "formData";
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
 
-    request.onupgradeneeded = event => {
+    req.onupgradeneeded = event => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: "id" });
@@ -289,9 +289,9 @@ const saveToIndexedDB = async (data: ApplicationState): Promise<void> => {
   const store = transaction.objectStore(STORE_NAME);
 
   await new Promise<void>((resolve, reject) => {
-    const request = store.put({ id: "applicationData", data });
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    const req = store.put({ id: "applicationData", data });
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve();
   });
 };
 
@@ -301,10 +301,10 @@ const loadFromIndexedDB = async (): Promise<ApplicationState | null> => {
   const store = transaction.objectStore(STORE_NAME);
 
   return new Promise((resolve, reject) => {
-    const request = store.get("applicationData");
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      const result = request.result;
+    const req = store.get("applicationData");
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const result = req.result;
       resolve(result ? result.data : null);
     };
   });

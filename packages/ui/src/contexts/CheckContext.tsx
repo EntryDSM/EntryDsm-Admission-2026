@@ -1,7 +1,7 @@
 ﻿import React, { createContext, useContext, useReducer, useCallback } from "react";
 
 interface ICheckType {
-  message: string;
+  msg: string;
 }
 
 interface CheckState {
@@ -17,7 +17,7 @@ type CheckAction =
 
 const initialState: CheckState = {
   check: {
-    message: "",
+    msg: "",
   },
 };
 
