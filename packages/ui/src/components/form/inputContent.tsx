@@ -30,54 +30,67 @@ export const InputContent = ({
   maxLength,
   readonly = false,
 }: IInputType) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    let processedValue = input;
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target.value;
+      let processedValue = input;
 
-    if (type === "phone") {
-      // 숫자와 '-'만 허용
-      const filteredInput = input.replace(phoneAllowedRegEx, "");
-      const onlyNums = filteredInput.replace(numOnlyRegEx, "");
-      processedValue = filteredInput;
+      if (type === "phone") {
+        // 숫자와 '-'만 허용
+        const filteredInput = input.replace(phoneAllowedRegEx, "");
+        const onlyNums = filteredInput.replace(numOnlyRegEx, "");
+        processedValue = filteredInput;
 
-      // 9~11자리 번호 기준
-      if (onlyNums.startsWith("02")) {
-        // 02 지역번호(2자리) - 총 9~10자리
-        if (onlyNums.length === 9) {
-          processedValue = onlyNums.replace(seoulShortPhoneRegEx, "$1-$2-$3");
-        } else if (onlyNums.length === 10) {
-          processedValue = onlyNums.replace(seoulLongPhoneRegEx, "$1-$2-$3");
-        }
-      } else {
-        // 그 외 3자리 지역번호 또는 휴대폰
-        if (onlyNums.length === 10) {
-          // 000-000-0000 형식 (070 등)
-          processedValue = onlyNums.replace(localShortPhoneRegEx, "$1-$2-$3");
-        } else if (onlyNums.length === 11) {
-          // 000-0000-0000 형식 (010 등)
-          processedValue = onlyNums.replace(localLongPhoneRegEx, "$1-$2-$3");
+        // 9~11자리 번호 기준
+        if (onlyNums.startsWith("02")) {
+          // 02 지역번호(2자리) - 총 9~10자리
+          if (onlyNums.length === 9) {
+            processedValue = onlyNums.replace(seoulShortPhoneRegEx, "$1-$2-$3");
+          } else if (onlyNums.length === 10) {
+            processedValue = onlyNums.replace(seoulLongPhoneRegEx, "$1-$2-$3");
+          }
         } else {
-          processedValue = onlyNums; // 중간 입력 중에는 숫자만 유지
+          // 그 외 3자리 지역번호 또는 휴대폰
+          if (onlyNums.length === 10) {
+            // 000-000-0000 형식 (070 등)
+            processedValue = onlyNums.replace(localShortPhoneRegEx, "$1-$2-$3");
+          } else if (onlyNums.length === 11) {
+            // 000-0000-0000 형식 (010 등)
+            processedValue = onlyNums.replace(localLongPhoneRegEx, "$1-$2-$3");
+          } else {
+            processedValue = onlyNums; // 중간 입력 중에는 숫자만 유지
+          }
         }
+      } else if (type === "number") {
+        // 숫자만 허용
+        processedValue = input.replace(numOnlyRegEx, "");
+      } else if (type === "text") {
+        // 문자만 허용 (한글, 영어, 공백)
+        processedValue = input.replace(textOnlyRegEx, "");
       }
-    } else if (type === "number") {
-      // 숫자만 허용
-      processedValue = input.replace(numOnlyRegEx, "");
-    } else if (type === "text") {
-      // 문자만 허용 (한글, 영어, 공백)
-      processedValue = input.replace(textOnlyRegEx, "");
-    }
 
-    const syntheticEvent = {
-      ...e,
-      target: {
-        ...e.target,
-        value: processedValue,
-      },
-    };
+      const syntheticEvent = {
+        ...e,
+        target: {
+          ...e.target,
+          value: processedValue,
+        },
+      };
 
-    onChange?.(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
-  };
+      onChange?.(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
+    },
+    [
+      type,
+      onChange,
+      phoneAllowedRegEx,
+      numOnlyRegEx,
+      seoulShortPhoneRegEx,
+      seoulLongPhoneRegEx,
+      localShortPhoneRegEx,
+      localLongPhoneRegEx,
+      textOnlyRegEx,
+    ]
+  );
 
   // maxLength는 props 값을 우선하고, phone 타입이면 기본 13으로 제한합니다.
   const calculatedMaxLength = maxLength !== undefined ? maxLength : type === "phone" ? 13 : undefined;

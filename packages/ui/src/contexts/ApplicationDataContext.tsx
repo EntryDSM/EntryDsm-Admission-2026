@@ -289,9 +289,26 @@ const saveToIndexedDB = async (data: ApplicationState): Promise<void> => {
   const store = transaction.objectStore(STORE_NAME);
 
   await new Promise<void>((resolve, reject) => {
+    let isSettled = false;
+
+    const rejectWithCleanup = (error: unknown) => {
+      if (isSettled) return;
+      isSettled = true;
+      db.close();
+      reject(error);
+    };
+
     const req = store.put({ id: "applicationData", data });
-    req.onerror = () => reject(req.error);
-    req.onsuccess = () => resolve();
+    req.onerror = () => rejectWithCleanup(req.error);
+
+    transaction.oncomplete = () => {
+      if (isSettled) return;
+      isSettled = true;
+      db.close();
+      resolve();
+    };
+    transaction.onabort = () => rejectWithCleanup(transaction.error);
+    transaction.onerror = () => rejectWithCleanup(transaction.error);
   });
 };
 
@@ -301,12 +318,31 @@ const loadFromIndexedDB = async (): Promise<ApplicationState | null> => {
   const store = transaction.objectStore(STORE_NAME);
 
   return new Promise((resolve, reject) => {
+    let data: ApplicationState | null = null;
+    let isSettled = false;
+
+    const rejectWithCleanup = (error: unknown) => {
+      if (isSettled) return;
+      isSettled = true;
+      db.close();
+      reject(error);
+    };
+
     const req = store.get("applicationData");
-    req.onerror = () => reject(req.error);
+    req.onerror = () => rejectWithCleanup(req.error);
     req.onsuccess = () => {
       const result = req.result;
-      resolve(result ? result.data : null);
+      data = result ? result.data : null;
     };
+
+    transaction.oncomplete = () => {
+      if (isSettled) return;
+      isSettled = true;
+      db.close();
+      resolve(data);
+    };
+    transaction.onabort = () => rejectWithCleanup(transaction.error);
+    transaction.onerror = () => rejectWithCleanup(transaction.error);
   });
 };
 

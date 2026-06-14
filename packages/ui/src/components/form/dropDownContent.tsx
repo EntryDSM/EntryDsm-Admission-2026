@@ -45,8 +45,8 @@ export const DropDownContent = ({ datas, label, value, onChange }: IDropDownType
           </DropHead>
           {isClick && (
             <DropContainer width={headWidth}>
-              {datas.map(data => (
-                <DropOption key={data} onClick={() => handleOptionClick(data)}>
+              {datas.map((data, index) => (
+                <DropOption key={`${data}-${index}`} onClick={() => handleOptionClick(data)}>
                   {data}
                 </DropOption>
               ))}

@@ -88,6 +88,27 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/ged/attendance-volunteer": requiredFields(["dsmAlgorithm", "certificate"]),
 };
 
+const routeToStateKey = {
+  "/application-classification": "applicationClassification",
+  "/applicant-info": "applicantInfo",
+  "/guardian-info": "guardianInfo",
+  "/middle-school-info": "middleSchoolInfo",
+  "/personal-statements": "personalStatements",
+  "/first-graduate": "firstGraduate",
+  "/second-graduate": "secondGraduate",
+  "/third-graduate": "thirdGraduate",
+  "/fourth-graduate": "fourthGraduate",
+  "/activity-graduate": "activityGraduate",
+  "/first-prospective-graduate": "firstGraduateProspective",
+  "/second-prospective-graduate": "secondGraduateProspective",
+  "/third-prospective-graduate": "thirdGraduateProspective",
+  "/activity-prospective-graduate": "activityGraduateProspective",
+  "/ged/score": "gedScore",
+  "/ged/attendance-volunteer": "attendanceVolunteer",
+} as const satisfies Record<string, keyof ApplicationState>;
+
+const hasMappedStateRoute = (route: string): route is keyof typeof routeToStateKey => route in routeToStateKey;
+
 const fieldNameMap: Record<string, string> = {
   typeSelection: "전형 선택",
   regionSelection: "지역 선택",
@@ -132,60 +153,9 @@ export const validatePageData = (state: ApplicationState, route: string) => {
   const validator = pageValidations[route];
   if (!validator) return { isValid: true, missingFields: [] };
 
-  let data: unknown = {};
-  switch (route) {
-    case "/application-classification":
-      data = state.applicationClassification;
-      break;
-    case "/applicant-info":
-      data = state.applicantInfo;
-      break;
-    case "/guardian-info":
-      data = state.guardianInfo;
-      break;
-    case "/middle-school-info":
-      data = state.middleSchoolInfo;
-      break;
-    case "/personal-statements":
-      data = state.personalStatements;
-      break;
-    case "/first-graduate":
-      data = state.firstGraduate;
-      break;
-    case "/second-graduate":
-      data = state.secondGraduate;
-      break;
-    case "/third-graduate":
-      data = state.thirdGraduate;
-      break;
-    case "/fourth-graduate":
-      data = state.fourthGraduate;
-      break;
-    case "/activity-graduate":
-      data = state.activityGraduate;
-      break;
-    case "/first-prospective-graduate":
-      data = state.firstGraduateProspective;
-      break;
-    case "/second-prospective-graduate":
-      data = state.secondGraduateProspective;
-      break;
-    case "/third-prospective-graduate":
-      data = state.thirdGraduateProspective;
-      break;
-    case "/activity-prospective-graduate":
-      data = state.activityGraduateProspective;
-      break;
-    case "/ged/score":
-      data = state.gedScore;
-      break;
-    case "/ged/attendance-volunteer":
-      data = state.attendanceVolunteer;
-      break;
-    default:
-      return { isValid: true, missingFields: [] };
-  }
+  if (!hasMappedStateRoute(route)) return { isValid: true, missingFields: [] };
 
+  const data = state[routeToStateKey[route]];
   const missingFields = validator(data);
   return { isValid: missingFields.length === 0, missingFields };
 };

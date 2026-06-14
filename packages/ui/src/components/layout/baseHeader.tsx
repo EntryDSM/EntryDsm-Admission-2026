@@ -48,7 +48,7 @@ export const AdminHeader = () => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  // const [datas] = useState<{ name: string }>({ name: '?띻만?? });
+  // const [datas] = useState<{ name: string }>({ name: '홍길동' });
 
   const navData = [
     { name: "전형 일정 수정", path: "/admissions-schedule" },
