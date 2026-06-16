@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import styled from "@emotion/styled";
 
@@ -134,6 +134,7 @@ const InputWrapper = styled.div`
 
 const Input = styled.input<{ $isError: boolean; $isDisabled?: boolean }>`
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid ${({ $isError }) => ($isError ? colors.extra.error : colors.gray[300])};
   border-radius: 8px;
   padding: 15px 20px;
