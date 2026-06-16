@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState, useId } from "react";
 import type { ChangeEvent } from "react";
 import styled from "@emotion/styled";
 
@@ -33,6 +33,7 @@ export const AuthInput = ({
   isDisabled = false,
 }: IAuthInputType) => {
   const [inputValue, setInputValue] = useState<string>(value || "");
+  const inputId = useId();
   const [isClose, setIsClose] = useState<boolean>(true);
   const [showEye, setShowEye] = useState<boolean>(false);
 
@@ -89,9 +90,10 @@ export const AuthInput = ({
 
   return (
     <AuthInputContainer label={label} height={height}>
-      <Label>{label}</Label>
+      {label && <Label htmlFor={inputId}>{label}</Label>}
       <InputWrapper>
         <Input
+          id={inputId}
           $isError={isError}
           $isDisabled={isDisabled}
           value={isDisabled ? value : inputValue}
@@ -149,7 +151,7 @@ const Input = styled.input<{ $isError: boolean; $isDisabled?: boolean }>`
   }
 `;
 
-const Label = styled.div`
+const Label = styled.label`
   font-size: 14px;
   font-weight: 550;
 `;
