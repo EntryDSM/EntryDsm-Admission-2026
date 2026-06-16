@@ -2,7 +2,7 @@
 
 export const useBlockBack = () => {
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
+    const handlePopState = () => {
       // 뒤로가기를 누르면 history를 다시 앞으로 보냅니다.
       window.history.pushState(null, document.title, window.location.href);
     };

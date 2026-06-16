@@ -1,9 +1,9 @@
 ﻿import styled from "@emotion/styled";
 import { useNavigate, useLocation } from "react-router";
 import { useEffect, useState } from "react";
-import { useUserInfo, getAccessToken, removeAccessToken, removeRefreshToken } from "@entry/utils";
+// import { useUserInfo, getAccessToken, removeAccessToken, removeRefreshToken } from "@entry/utils";
 
-import { colors, Flex, Text, Skeleton } from "@entry/design";
+import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
 
@@ -62,8 +62,8 @@ export const AdminHeader = () => {
   };
 
   const handleLogout = () => {
-    removeAccessToken();
-    removeRefreshToken();
+    // removeAccessToken();
+    // removeRefreshToken();
     window.location.href = "https://entrydsm.kr/";
   };
 
@@ -104,8 +104,8 @@ export const CommonHeader = () => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const accessToken = getAccessToken();
-  const { data: userInfo, error, isError, isPending } = useUserInfo();
+  // const accessToken = getAccessToken();
+  // const { data: userInfo, error, isError, isPending } = useUserInfo();
 
   const navData = [
     { name: "공지사항", path: "/notice" },
@@ -120,12 +120,12 @@ export const CommonHeader = () => {
     navigate(path);
   };
 
-  const handleLoginClick = () => {
-    window.location.href = "https://auth.entrydsm.kr";
-  };
+  // const handleLoginClick = () => {
+  //   window.location.href = "https://auth.entrydsm.kr";
+  // };
 
-  const isLoggedIn = accessToken && userInfo && !isError;
-  const isLoading = accessToken && isPending;
+  // const isLoggedIn = accessToken && userInfo && !isError;
+  // const isLoading = accessToken && isPending;
 
   return (
     <HeaderContainer scrollPosition={scrollPosition}>
@@ -134,13 +134,13 @@ export const CommonHeader = () => {
         <CommonHeaderLogoText>EntryDSM</CommonHeaderLogoText>
       </CommonHeaderLogoSection>
       <CommonHeaderActionSection>
-        <Flex width="fit-content" height="fit-content" gap={28} alignItems="center">
-          {navData.map(data => (
-            <NavContent key={data.name} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
-              {data.name}
-            </NavContent>
-          ))}
-        </Flex>
+        {/* <Flex width="fit-content" height="fit-content" gap={28} alignItems="center"> */}
+        {navData.map(data => (
+          <NavContent key={data.name} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
+            {data.name}
+          </NavContent>
+        ))}
+        {/* </Flex>
         {isLoading ? (
           <Flex gap={20} alignItems="center" width="fit-content" height="fit-content">
             <SkeletonBox width="90px" height="22px" />
@@ -167,7 +167,7 @@ export const CommonHeader = () => {
           >
             로그인
           </Btn>
-        )}
+        )} */}
         <SideBarBtnIcon onClick={() => setIsSideClick(!isSideClick)} />
       </CommonHeaderActionSection>
       {isSideClick && (
@@ -177,7 +177,7 @@ export const CommonHeader = () => {
               {data.name}
             </SideNavContent>
           ))}
-          {isLoggedIn && <SideNavContent onClick={() => navClick("/mypage")}>마이페이지</SideNavContent>}
+          {/* {isLoggedIn && <SideNavContent onClick={() => navClick("/mypage")}>마이페이지</SideNavContent>} */}
         </SideNavContainer>
       )}
     </HeaderContainer>
@@ -189,7 +189,7 @@ interface IAuthHeaderType {
 }
 
 export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return (
     <AuthHeaderContainer>
@@ -203,22 +203,22 @@ export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
   );
 };
 
-const HeaderBtn = styled.button`
-  padding: 8px 20px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: ${colors.green[400]};
-  font-size: 16px;
-  font-weight: 400;
-  color: ${colors.extra.realWhite};
-  cursor: pointer;
-  &:hover {
-    background-color: ${colors.green[500]};
-    transition: 0.35s ease-in-out;
-  }
-`;
+// const HeaderBtn = styled.button`
+//   padding: 8px 20px;
+//   border-radius: 12px;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   background-color: ${colors.green[400]};
+//   font-size: 16px;
+//   font-weight: 400;
+//   color: ${colors.extra.realWhite};
+//   cursor: pointer;
+//   &:hover {
+//     background-color: ${colors.green[500]};
+//     transition: 0.35s ease-in-out;
+//   }
+// `;
 
 const LogoContainer = styled.div`
   display: flex;
@@ -352,8 +352,8 @@ const NavContent = styled.nav<{ isPath?: boolean }>`
   }
 `;
 
-const SkeletonBox = styled(Skeleton)<{ width: string; height: string }>`
-  width: ${({ width }) => width};
-  height: ${({ height }) => height};
-  border-radius: 8px;
-`;
+// const SkeletonBox = styled(Skeleton)<{ width: string; height: string }>`
+//   width: ${({ width }) => width};
+//   height: ${({ height }) => height};
+//   border-radius: 8px;
+// `;

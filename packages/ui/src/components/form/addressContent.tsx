@@ -2,7 +2,7 @@
 import { useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 
-import { colors, Flex, Text } from "@entry/design";
+import { colors, Flex } from "@entry/design";
 import { Btn } from "../primitives/btn";
 
 interface IAddressType {
@@ -22,11 +22,11 @@ export const AddressContent = ({
   handleAddressChange,
   handleDetailChange,
 }: IAddressType) => {
-  const [datas, setDatas] = useState<{ postalCode: string; address: string; addressDetail: string }>({
-    postalCode: "",
-    address: "",
-    addressDetail: "",
-  });
+  // const [datas, setDatas] = useState<{ postalCode: string; address: string; addressDetail: string }>({
+  //   postalCode: "",
+  //   address: "",
+  //   addressDetail: "",
+  // });
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const handleComplete = (data: any) => {

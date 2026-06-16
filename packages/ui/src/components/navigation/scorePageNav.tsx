@@ -20,7 +20,7 @@ export const ScorePageNav = ({ datas }: IScorePageNav) => {
     return datas.findIndex(data => location.pathname.endsWith(data.path));
   }, [location.pathname, datas]);
 
-  const navClick = (index: number, path: string) => {
+  const navClick = (path: string) => {
     navigate(path);
   };
 
@@ -29,7 +29,7 @@ export const ScorePageNav = ({ datas }: IScorePageNav) => {
       {datas.map((data, index) => (
         <NavItem isFirst={index === 0} key={index} flex={1}>
           {index !== 0 && <Line isActive={index <= activeIndex} />}
-          <NavBtn onClick={() => navClick(index, data.path)} isActive={index <= activeIndex}>
+          <NavBtn onClick={() => navClick(data.path)} isActive={index <= activeIndex}>
             <NavCircle isActive={index <= activeIndex} />
             <NavLabel isActive={index <= activeIndex}>{data.name}</NavLabel>
           </NavBtn>
