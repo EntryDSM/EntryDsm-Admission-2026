@@ -2,8 +2,8 @@
 import styled from "@emotion/styled";
 
 import { colors, Text } from "@entry/design";
-import { Check } from "../../assets/icons/check";
-import { OActivate, ONoActivate, XActivate, XNoActivate } from "../../assets/icons/oxIcons";
+import { Check } from "../../assets/icons/Check";
+import { OActivate, ONoActivate, XActivate, XNoActivate } from "../../assets/icons/OXIcons";
 
 interface ICertCheckFormType {
   title: string;
