@@ -1,5 +1,5 @@
 import { RouterProvider } from "react-router";
-import { Router } from "./Router";
+import { Router } from "./router";
 import { GlobalStyle } from "@entry/design";
 import { ToastContainer } from "react-toastify";
 
