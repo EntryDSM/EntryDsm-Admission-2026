@@ -1,0 +1,69 @@
+import styled from "@emotion/styled";
+import { colors } from "@entry/design";
+import { Btn } from "@entry/ui";
+
+interface IPostType {
+  id: number;
+  name: string;
+  formula: string;
+  resultVariable: string;
+  description: string;
+  region: string;
+  educationalStatus: string;
+}
+
+export const CalculatorPost = ({
+  id,
+  name,
+  formula,
+  educationalStatus,
+  resultVariable,
+  region,
+  description,
+}: IPostType) => {
+  return (
+    <Container>
+      <ContentContainer>
+        <Content>{id}</Content>
+        <Content>{name}</Content>
+        <Content>{description}</Content>
+        <Content>{formula}</Content>
+        <Content>{region}</Content>
+        <Content>{educationalStatus}</Content>
+        <Content>{resultVariable}</Content>
+      </ContentContainer>
+      <Btn
+        backgroundColor={colors.extra.realWhite}
+        color={colors.extra.error}
+        borderColor={colors.extra.error}
+        hoverBackgroundColor="none"
+      >
+        삭제하기
+      </Btn>
+    </Container>
+  );
+};
+
+const ContentContainer = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 2fr 3fr 4fr 1fr 1fr 2fr;
+`;
+
+const Content = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: ${colors.gray[400]};
+`;
+
+const Container = styled.div`
+  width: 100%;
+  padding: 20px;
+  border-bottom: 1px solid ${colors.gray[300]};
+  display: flex;
+  align-items: center;
+`;

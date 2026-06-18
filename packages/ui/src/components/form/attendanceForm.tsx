@@ -21,7 +21,6 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
   title,
   value,
   onChange,
-  defaultCount,
   width = "100%",
   suffix,
   prefix,

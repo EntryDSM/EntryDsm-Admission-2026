@@ -1,12 +1,14 @@
 import { RouterProvider } from "react-router";
-import { Router } from "./router";
+import { Router } from "./Router";
+import { GlobalStyle } from "@entry/design";
+import { ToastContainer } from "react-toastify";
 
-const App = () => {
+export const App = () => {
   return (
     <>
       <RouterProvider router={Router} />
+      <ToastContainer />
+      <GlobalStyle />
     </>
   );
 };
-
-export default App;

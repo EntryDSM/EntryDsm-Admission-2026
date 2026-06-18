@@ -1,7 +1,6 @@
 ﻿import styled from "@emotion/styled";
 import { useNavigate, useLocation } from "react-router";
 import { useEffect, useState } from "react";
-import { useUserInfo, getAccessToken, removeAccessToken, removeRefreshToken } from "@entry/utils";
 
 import { colors, Flex, Text, Skeleton } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
@@ -62,8 +61,7 @@ export const AdminHeader = () => {
   };
 
   const handleLogout = () => {
-    removeAccessToken();
-    removeRefreshToken();
+    // 로그아웃 로직 (예: 토큰 삭제)
     window.location.href = "https://entrydsm.kr/";
   };
 
@@ -104,8 +102,8 @@ export const CommonHeader = () => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const accessToken = getAccessToken();
-  const { data: userInfo, error, isError, isPending } = useUserInfo();
+  const accessToken = 0; // getAccessToken();
+  const { data: userInfo, isError, isPending } = { data: { name: "홍길동" }, isError: false, isPending: false }; // useUserInfo();
 
   const navData = [
     { name: "공지사항", path: "/notice" },
@@ -189,8 +187,6 @@ interface IAuthHeaderType {
 }
 
 export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
-  const navigate = useNavigate();
-
   return (
     <AuthHeaderContainer>
       <LogoContainer onClick={() => (window.location.href = "https://entrydsm.kr/")}>
@@ -202,23 +198,6 @@ export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
     </AuthHeaderContainer>
   );
 };
-
-const HeaderBtn = styled.button`
-  padding: 8px 20px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: ${colors.green[400]};
-  font-size: 16px;
-  font-weight: 400;
-  color: ${colors.extra.realWhite};
-  cursor: pointer;
-  &:hover {
-    background-color: ${colors.green[500]};
-    transition: 0.35s ease-in-out;
-  }
-`;
 
 const LogoContainer = styled.div`
   display: flex;
