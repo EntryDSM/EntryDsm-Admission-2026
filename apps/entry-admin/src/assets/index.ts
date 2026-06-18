@@ -10,5 +10,4 @@ export { OneIcon } from "./OneIcon";
 export { TwoIcon } from "./TwoIcon";
 export { ThreeIcon } from "./ThreeIcon";
 export { FourIcon } from "./FourIcon";
-export { NationalMapMarker } from "./NationalMapMarker";
 export { ArrowIcon } from "./ArrowIcon";

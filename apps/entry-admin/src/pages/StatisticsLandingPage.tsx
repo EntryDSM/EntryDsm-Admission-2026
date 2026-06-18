@@ -9,7 +9,6 @@ import {
   TwoIcon,
   ThreeIcon,
   FourIcon,
-  NationalMapMarker,
   ArrowIcon,
 } from "../assets";
 import React from "react";
@@ -397,34 +396,6 @@ export const StatisticsLandingPage = () => {
           )}
         </RegionGrid>
       </SectionContainer>
-
-      <SectionContainer>
-        <SectionTitle>지역별 접수 현황 - 지도</SectionTitle>
-        <MapDescription>대전, 전국 지역별 지원현황을 조회할수 있어요!</MapDescription>
-        <MapContainer>
-          <MapWrapper>
-            <NationalMapMarker />
-          </MapWrapper>
-          <MapLegend>
-            {isRegionLoading ? (
-              <>
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <MapLegendItem key={index}>
-                    <SkeletonValue />
-                  </MapLegendItem>
-                ))}
-              </>
-            ) : (
-              regionItems.slice(0, 4).map((item, index) => (
-                <MapLegendItem key={index}>
-                  <MapLegendText>{item.regionName}</MapLegendText>
-                  <MapLegendCount>{item.count}명</MapLegendCount>
-                </MapLegendItem>
-              ))
-            )}
-          </MapLegend>
-        </MapContainer>
-      </SectionContainer>
     </Container>
   );
 };
@@ -682,58 +653,6 @@ const RegionName = styled.div`
 
 const RegionCount = styled.div`
   font-size: 16px;
-  font-weight: 600;
-  color: ${colors.gray[500]};
-`;
-
-const MapDescription = styled.div`
-  font-size: 16px;
-  font-weight: 400;
-  color: ${colors.gray[400]};
-  margin-bottom: 24px;
-`;
-
-const MapContainer = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  height: 591px;
-`;
-
-const MapWrapper = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const MapLegend = styled.div`
-  width: 417px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const MapLegendItem = styled.div`
-  display: flex;
-  width: 417px;
-  height: 102px;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background-color: ${colors.extra.realWhite};
-  border-radius: 8px;
-  border: 1px solid ${colors.gray[200]};
-`;
-
-const MapLegendText = styled.div`
-  font-size: 32px;
-  font-weight: 500;
-  color: ${colors.gray[500]};
-`;
-
-const MapLegendCount = styled.div`
-  font-size: 32px;
   font-weight: 600;
   color: ${colors.gray[500]};
 `;

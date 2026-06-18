@@ -21,8 +21,8 @@ export const AdmissionsSchedule = () => {
   });
 
   const handleChange = useCallback(
-    (key: keyof typeof datas) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setDatas(prev => ({ ...prev, [key]: e.target.value }));
+    (key: keyof typeof datas) => (value: string) => {
+      setDatas(prev => ({ ...prev, [key]: value }));
     },
     []
   );

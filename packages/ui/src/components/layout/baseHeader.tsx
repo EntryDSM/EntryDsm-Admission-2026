@@ -50,7 +50,9 @@ export const AdminHeader = () => {
   // const [datas] = useState<{ name: string }>({ name: '홍길동' });
 
   const navData = [
-    { name: "전형 일정 수정", path: "/admissions-schedule" },
+    { name: "일정 수정", path: "/admissions-schedule" },
+    { name: "정원 수정", path: "/admissions-quota" },
+    { name: "계산식 수정", path: "/formula-calculator" },
     { name: "지원자 조회", path: "/applicants-list" },
     { name: "공지사항", path: "/notice" },
   ];
@@ -74,7 +76,7 @@ export const AdminHeader = () => {
         </Text>
       </Flex>
       <Flex gap={52} alignItems="center" height="fit-content" width="fit-content">
-        <Flex width="fit-content" height="fit-content" gap={28} alignItems="center">
+        <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
           {navData.map(data => (
             <NavContent key={data.path} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
               {data.name}

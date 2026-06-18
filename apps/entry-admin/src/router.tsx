@@ -9,6 +9,7 @@ import {
   NoticeCreate,
   NoticeEdit,
   StatisticsLandingPage,
+  AdmissionsQuota,
 } from "./pages";
 
 export const Router = createBrowserRouter([
@@ -43,6 +44,10 @@ export const Router = createBrowserRouter([
       {
         path: "notice/edit/:id",
         element: <NoticeEdit />,
+      },
+      {
+        path: "admissions-quota",
+        element: <AdmissionsQuota />,
       },
     ],
   },

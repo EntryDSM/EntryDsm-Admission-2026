@@ -12,7 +12,9 @@ interface IInputSectionType {
 export const InputSection = ({ label, suffix, value, onChange, placeholder }: IInputSectionType) => {
   return (
     <FormContainer>
-      <Text fontSize={20}>{label}</Text>
+      <Text fontSize={20} width="170px">
+        {label}
+      </Text>
       <InputWrapper>
         <StyledInput type="number" value={value} onChange={onChange} placeholder={placeholder} />
         <InputSuffix>{suffix}</InputSuffix>
