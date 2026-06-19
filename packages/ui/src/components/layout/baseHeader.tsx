@@ -104,8 +104,6 @@ export const CommonHeader = () => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const accessToken = 0; // getAccessToken();
-  const { data: userInfo, isError, isPending } = { data: { name: "홍길동" }, isError: false, isPending: false }; // useUserInfo();
 
   const navData = [
     { name: "공지사항", path: "/notice" },
