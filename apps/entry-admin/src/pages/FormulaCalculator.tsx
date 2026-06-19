@@ -1,397 +1,363 @@
-import { colors, Flex, Text } from "@entry/design";
-import { AuthInput, Btn, TabSection } from "@entry/ui";
-import { useState, useCallback, useMemo } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import styled from "@emotion/styled";
-import { CalculatorPost, Keyword } from "../components";
+import { colors, Flex, Text } from "@entry/design";
+import { Btn, TabSection } from "@entry/ui";
+import {
+  FormulaEditorPanel,
+  FormulaScoreCards,
+  FormulaVariableDictionary,
+  type FormulaDraftValue,
+  type FormulaTextField,
+  type FormulaVariableGroup,
+} from "../components";
+
+type AdmissionType = "GENERAL" | "MEISTER" | "SOCIAL";
+
+type FormulaConfig = FormulaDraftValue & {
+  id: string;
+  admissionType: AdmissionType;
+};
+
+type FormulaDraft = Omit<FormulaConfig, "id" | "admissionType">;
+
+const ADMISSION_TABS = [
+  { key: "GENERAL", label: "일반전형" },
+  { key: "MEISTER", label: "마이스터 인재" },
+  { key: "SOCIAL", label: "사회통합" },
+];
+
+const DEFAULT_FORMULAS: FormulaConfig[] = [
+  {
+    id: "general-subject-base",
+    admissionType: "GENERAL",
+    phase: "공통 산출",
+    name: "졸업예정자 교과 기준점수",
+    resultVariable: "subjectBaseScore",
+    maxScore: 80,
+    formula: "round((grade31Average * 8) + (previousSemesterAverage * 4) + (beforePreviousSemesterAverage * 4), 3)",
+    variables: ["grade31Average", "previousSemesterAverage", "beforePreviousSemesterAverage"],
+  },
+  {
+    id: "general-subject-score",
+    admissionType: "GENERAL",
+    phase: "1차 전형",
+    name: "일반전형 교과 성적",
+    resultVariable: "subjectScore",
+    maxScore: 140,
+    formula: "round(subjectBaseScore * 1.75, 3)",
+    variables: ["subjectBaseScore"],
+  },
+  {
+    id: "general-attendance-score",
+    admissionType: "GENERAL",
+    phase: "1차 전형",
+    name: "일반전형 출석 점수",
+    resultVariable: "attendanceScore",
+    maxScore: 15,
+    formula: "max(15 - floor(absenceDays + ((lateCount + earlyLeaveCount + resultCount) / 3)), 0)",
+    variables: ["absenceDays", "lateCount", "earlyLeaveCount", "resultCount"],
+  },
+  {
+    id: "general-volunteer-score",
+    admissionType: "GENERAL",
+    phase: "1차 전형",
+    name: "일반전형 봉사활동 점수",
+    resultVariable: "volunteerScore",
+    maxScore: 15,
+    formula: "min(volunteerHours, 15)",
+    variables: ["volunteerHours"],
+  },
+  {
+    id: "general-bonus-score",
+    admissionType: "GENERAL",
+    phase: "1차 전형",
+    name: "일반전형 가산점",
+    resultVariable: "bonusScore",
+    maxScore: 3,
+    formula: "algorithmContestBonus",
+    variables: ["algorithmContestBonus"],
+  },
+  {
+    id: "general-first-round",
+    admissionType: "GENERAL",
+    phase: "1차 전형",
+    name: "일반전형 1차 합계",
+    resultVariable: "firstRoundScore",
+    maxScore: 173,
+    formula: "subjectScore + attendanceScore + volunteerScore + bonusScore",
+    variables: ["subjectScore", "attendanceScore", "volunteerScore", "bonusScore"],
+  },
+  {
+    id: "meister-subject-base",
+    admissionType: "MEISTER",
+    phase: "공통 산출",
+    name: "졸업자 교과 기준점수",
+    resultVariable: "subjectBaseScore",
+    maxScore: 80,
+    formula:
+      "round((grade32Average * 4) + (grade31Average * 4) + (previousSemesterAverage * 4) + (beforePreviousSemesterAverage * 4), 3)",
+    variables: ["grade32Average", "grade31Average", "previousSemesterAverage", "beforePreviousSemesterAverage"],
+  },
+  {
+    id: "meister-subject-score",
+    admissionType: "MEISTER",
+    phase: "1차 전형",
+    name: "마이스터 인재 교과 성적",
+    resultVariable: "subjectScore",
+    maxScore: 80,
+    formula: "subjectBaseScore",
+    variables: ["subjectBaseScore"],
+  },
+  {
+    id: "meister-attendance-score",
+    admissionType: "MEISTER",
+    phase: "1차 전형",
+    name: "마이스터 인재 출석 점수",
+    resultVariable: "attendanceScore",
+    maxScore: 15,
+    formula: "max(15 - floor(absenceDays + ((lateCount + earlyLeaveCount + resultCount) / 3)), 0)",
+    variables: ["absenceDays", "lateCount", "earlyLeaveCount", "resultCount"],
+  },
+  {
+    id: "meister-volunteer-score",
+    admissionType: "MEISTER",
+    phase: "1차 전형",
+    name: "마이스터 인재 봉사활동 점수",
+    resultVariable: "volunteerScore",
+    maxScore: 15,
+    formula: "min(volunteerHours, 15)",
+    variables: ["volunteerHours"],
+  },
+  {
+    id: "meister-bonus-score",
+    admissionType: "MEISTER",
+    phase: "1차 전형",
+    name: "마이스터 인재 가산점",
+    resultVariable: "bonusScore",
+    maxScore: 9,
+    formula: "algorithmContestBonus + certificateBonus",
+    variables: ["algorithmContestBonus", "certificateBonus"],
+  },
+  {
+    id: "meister-first-round",
+    admissionType: "MEISTER",
+    phase: "1차 전형",
+    name: "마이스터 인재 1차 합계",
+    resultVariable: "firstRoundScore",
+    maxScore: 119,
+    formula: "subjectScore + attendanceScore + volunteerScore + bonusScore",
+    variables: ["subjectScore", "attendanceScore", "volunteerScore", "bonusScore"],
+  },
+  {
+    id: "social-subject-score",
+    admissionType: "SOCIAL",
+    phase: "1차 전형",
+    name: "사회통합 교과 성적",
+    resultVariable: "subjectScore",
+    maxScore: 80,
+    formula: "subjectBaseScore",
+    variables: ["subjectBaseScore"],
+  },
+  {
+    id: "social-attendance-score",
+    admissionType: "SOCIAL",
+    phase: "1차 전형",
+    name: "사회통합 출석 점수",
+    resultVariable: "attendanceScore",
+    maxScore: 15,
+    formula: "max(15 - floor(absenceDays + ((lateCount + earlyLeaveCount + resultCount) / 3)), 0)",
+    variables: ["absenceDays", "lateCount", "earlyLeaveCount", "resultCount"],
+  },
+  {
+    id: "social-volunteer-score",
+    admissionType: "SOCIAL",
+    phase: "1차 전형",
+    name: "사회통합 봉사활동 점수",
+    resultVariable: "volunteerScore",
+    maxScore: 15,
+    formula: "min(volunteerHours, 15)",
+    variables: ["volunteerHours"],
+  },
+  {
+    id: "social-bonus-score",
+    admissionType: "SOCIAL",
+    phase: "1차 전형",
+    name: "사회통합 가산점",
+    resultVariable: "bonusScore",
+    maxScore: 9,
+    formula: "algorithmContestBonus + certificateBonus",
+    variables: ["algorithmContestBonus", "certificateBonus"],
+  },
+  {
+    id: "social-first-round",
+    admissionType: "SOCIAL",
+    phase: "1차 전형",
+    name: "사회통합 1차 합계",
+    resultVariable: "firstRoundScore",
+    maxScore: 119,
+    formula: "subjectScore + attendanceScore + volunteerScore + bonusScore",
+    variables: ["subjectScore", "attendanceScore", "volunteerScore", "bonusScore"],
+  },
+];
+
+const VARIABLE_GROUPS: FormulaVariableGroup[] = [
+  {
+    title: "교과 성적",
+    variables: [
+      { key: "grade32Average", label: "3-2 평균평점" },
+      { key: "grade31Average", label: "3-1 평균평점" },
+      { key: "previousSemesterAverage", label: "직전학기 평균평점" },
+      { key: "beforePreviousSemesterAverage", label: "직전전학기 평균평점" },
+      { key: "subjectBaseScore", label: "교과 기준점수" },
+      { key: "subjectScore", label: "교과 환산점수" },
+    ],
+  },
+  {
+    title: "출석 점수",
+    variables: [
+      { key: "absenceDays", label: "미인정 결석" },
+      { key: "lateCount", label: "미인정 지각" },
+      { key: "earlyLeaveCount", label: "미인정 조퇴" },
+      { key: "resultCount", label: "미인정 결과" },
+      { key: "attendanceScore", label: "출석 점수" },
+    ],
+  },
+  {
+    title: "봉사, 가산점, 합계",
+    variables: [
+      { key: "volunteerHours", label: "봉사 시간" },
+      { key: "volunteerScore", label: "봉사활동 점수" },
+      { key: "algorithmContestBonus", label: "알고리즘대회 가산점" },
+      { key: "certificateBonus", label: "정보처리기능사 가산점" },
+      { key: "bonusScore", label: "가산점" },
+      { key: "firstRoundScore", label: "1차 합계" },
+    ],
+  },
+];
+
+const getInitialDraft = (formula: FormulaConfig): FormulaDraft => ({
+  phase: formula.phase,
+  name: formula.name,
+  resultVariable: formula.resultVariable,
+  maxScore: formula.maxScore,
+  formula: formula.formula,
+  variables: formula.variables,
+});
 
 export const FormulaCalculator = () => {
-  const [, setCurrentPage] = useState(1);
-  const [variableData, setVariableData] = useState<{ name: string; region: string; educationalStatus: string }>({
-    name: "",
-    region: "",
-    educationalStatus: "",
-  });
-  const [formulaData, setFormulaData] = useState<{
-    name: string;
-    formula: string;
-    description: string;
-    resultVariable: string;
-    region: string;
-    educationalStatus: string;
-  }>({
-    name: "",
-    formula: "",
-    description: "",
-    resultVariable: "",
-    region: "",
-    educationalStatus: "",
-  });
+  const [activeTab, setActiveTab] = useState<AdmissionType>("GENERAL");
+  const [formulaRows, setFormulaRows] = useState<FormulaConfig[]>(DEFAULT_FORMULAS);
+  const [selectedFormulaId, setSelectedFormulaId] = useState(DEFAULT_FORMULAS[0].id);
+  const [draft, setDraft] = useState<FormulaDraft>(getInitialDraft(DEFAULT_FORMULAS[0]));
 
-  const [activeTab, setActiveTab] = useState<"COMMON" | "MEISTER" | "SOCIAL">("COMMON"); //type send
-
-  const [variableKeyword, setVariableKeyword] = useState<{ id: number; content: string }[]>([
-    {
-      id: 1,
-      content: "sdfdgfhgj",
-    },
-    {
-      id: 2,
-      content: "sdfdgfhgj",
-    },
-    {
-      id: 3,
-      content: "sdfdgfhgj",
-    },
-    {
-      id: 4,
-      content: "sdfdgfhgj",
-    },
-  ]);
-
-  const [postData, setPostData] = useState<
-    {
-      id: number;
-      name: string;
-      formula: string;
-      description: string;
-      resultVariable: string;
-      educationalStatus: string;
-      region: string;
-    }[]
-  >([
-    {
-      id: 1,
-      name: "3학년 1학기 교과평균",
-      formula:
-        "({korean_3_1} + {social_3_1} + {history_3_1} + {math_3_1} + {science_3_1} + {tech_3_1} + {english_3_1}) / 7",
-      resultVariable: "나는 스파이더맨",
-      description: "dddd",
-      region: "대전",
-      educationalStatus: "졸업",
-    },
-  ]);
-
-  // useCallback으로 함수들 메모이제이션
-  const handleVariableDelClick = useCallback((id: number) => {
-    setVariableKeyword(prev => prev.filter(data => data.id !== id));
-  }, []);
-
-  const handleFormulaRegionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaData(prev => ({ ...prev, region: e.target.value }));
-  }, []);
-
-  const handleVariableEducationalStatusChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setVariableData(prev => ({ ...prev, educationalStatus: e.target.value }));
-  }, []);
-
-  const handleVariableRegionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setVariableData(prev => ({ ...prev, region: e.target.value }));
-  }, []);
-
-  const handleFormulaEducationalStatusChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaData(prev => ({ ...prev, educationalStatus: e.target.value }));
-  }, []);
-
-  const handleTabChange = useCallback((tab: string) => {
-    setActiveTab(tab as "COMMON" | "MEISTER" | "SOCIAL");
-    setCurrentPage(1);
-  }, []);
-
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaData(prev => ({ ...prev, name: e.target.value }));
-  }, []);
-
-  const handleFormulaChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaData(prev => ({ ...prev, formula: e.target.value }));
-  }, []);
-
-  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaData(prev => ({ ...prev, description: e.target.value }));
-  }, []);
-
-  const handleResultVariableChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaData(prev => ({ ...prev, resultVariable: e.target.value }));
-  }, []);
-
-  const handleVariableChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setVariableData(prev => ({ ...prev, name: e.target.value }));
-  }, []);
-
-  // TAB_TYPES를 useMemo로 메모이제이션
-  const TAB_TYPES = useMemo(
-    () => [
-      {
-        key: "COMMON" as const,
-        label: "일반 전형",
-        basePath: "/calculate/primary",
-      },
-      {
-        key: "MEISTER" as const,
-        label: "마이스터 인재 전형",
-        basePath: "/calculate/graduated",
-      },
-      {
-        key: "SOCIAL" as const,
-        label: "사회통합 전형",
-        basePath: "/calculate/qe",
-      },
-    ],
-    []
+  const activeFormulas = useMemo(
+    () => formulaRows.filter(formula => formula.admissionType === activeTab),
+    [activeTab, formulaRows]
+  );
+  const selectedFormula = useMemo(
+    () => formulaRows.find(formula => formula.id === selectedFormulaId),
+    [formulaRows, selectedFormulaId]
+  );
+  const usedVariables = useMemo(
+    () => VARIABLE_GROUPS.flatMap(group => group.variables).filter(variable => draft.variables.includes(variable.key)),
+    [draft.variables]
   );
 
-  const variableAddClick = useCallback(() => {
-    if (variableData.name.trim()) {
-      setVariableKeyword(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          content: variableData.name,
-        },
-      ]);
+  const handleTabChange = (tab: string) => {
+    const nextTab = tab as AdmissionType;
+    const nextFormula = formulaRows.find(formula => formula.admissionType === nextTab);
+
+    setActiveTab(nextTab);
+    setSelectedFormulaId(nextFormula?.id ?? "");
+    if (nextFormula) {
+      setDraft(getInitialDraft(nextFormula));
     }
-    setVariableData({ name: "", region: "", educationalStatus: "" });
-  }, [variableData.name]);
+  };
 
-  const formulaDataAddClick = useCallback(() => {
-    if (formulaData.name.trim()) {
-      setPostData(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          name: formulaData.name,
-          formula: formulaData.formula,
-          description: formulaData.description,
-          resultVariable: formulaData.resultVariable,
-          region: formulaData.region,
-          educationalStatus: formulaData.educationalStatus,
-        },
-      ]);
+  const handleFormulaSelect = (formulaId: string) => {
+    const nextFormula = formulaRows.find(formula => formula.id === formulaId);
+
+    setSelectedFormulaId(formulaId);
+    if (nextFormula) {
+      setDraft(getInitialDraft(nextFormula));
     }
-    setFormulaData({
-      name: "",
-      formula: "",
-      description: "",
-      resultVariable: "",
-      region: "",
-      educationalStatus: "",
-    });
-  }, [formulaData]);
+  };
 
-  // 렌더링 최적화를 위한 메모이제이션된 컴포넌트들
-  const keywordList = useMemo(
-    () =>
-      variableKeyword.map(data => (
-        <Keyword onClick={() => handleVariableDelClick(data.id)} key={data.id}>
-          {data.content}
-        </Keyword>
-      )),
-    [variableKeyword, handleVariableDelClick]
-  );
+  const handleTextFieldChange =
+    (field: FormulaTextField) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      setDraft(prev => ({ ...prev, [field]: e.target.value }));
+    };
 
-  const postList = useMemo(
-    () =>
-      postData.map(data => (
-        <CalculatorPost
-          key={data.id}
-          id={data.id}
-          resultVariable={data.resultVariable}
-          formula={data.formula}
-          name={data.name}
-          description={data.description}
-          region={data.region}
-          educationalStatus={data.educationalStatus}
-        />
-      )),
-    [postData]
-  );
+  const handleMaxScoreChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setDraft(prev => ({ ...prev, maxScore: Number(e.target.value) || 0 }));
+  };
+
+  const handleVariableClick = (variableKey: string) => {
+    setDraft(prev => ({
+      ...prev,
+      formula: prev.formula ? `${prev.formula} {${variableKey}}` : `{${variableKey}}`,
+      variables: prev.variables.includes(variableKey) ? prev.variables : [...prev.variables, variableKey],
+    }));
+  };
+
+  const handleDraftSave = () => {
+    setFormulaRows(prev =>
+      prev.map(formula =>
+        formula.id === selectedFormulaId
+          ? {
+              ...formula,
+              ...draft,
+            }
+          : formula
+      )
+    );
+  };
+
+  const handleDraftReset = () => {
+    if (selectedFormula) {
+      setDraft(getInitialDraft(selectedFormula));
+    }
+  };
 
   return (
     <Container>
-      <Flex isColumn={true} gap={16} width="100%" height="fit-content">
-        <Text fontSize={32} fontWeight={600} color={colors.gray[500]}>
-          전형 수식
+      <HeaderSection>
+        <Text fontSize={32} fontWeight={700} color={colors.gray[500]}>
+          계산식 수정
         </Text>
-        <Flex isColumn={true} gap={20} width="100%" height="fit-content">
-          <TabSection isAdmin={true} activeType={activeTab} onTypeChange={handleTabChange} options={TAB_TYPES} />
-          <Flex alignItems="start" height="fit-content" width="100%" gap={10}>
-            <FormulaContainer>
-              <AuthInput
-                height="fit-content"
-                placeholder="수식 이름을 입력하세요"
-                value={formulaData.name}
-                onChange={handleNameChange}
-              />
-              <AuthInput
-                height="fit-content"
-                placeholder="수식을 입력하세요"
-                value={formulaData.formula}
-                onChange={handleFormulaChange}
-              />
-              <AuthInput
-                height="fit-content"
-                placeholder="수식 설명을 입력하세요"
-                value={formulaData.description}
-                onChange={handleDescriptionChange}
-              />
-              <AuthInput
-                height="fit-content"
-                placeholder="결과 변수 명을 입력하세요"
-                value={formulaData.resultVariable}
-                onChange={handleResultVariableChange}
-              />
-              <Flex width="fit-content" height="fit-content" gap={12}>
-                <label>
-                  대전
-                  <input
-                    onChange={handleFormulaRegionChange}
-                    value="DAEJEON"
-                    checked={formulaData.region === "DAEJEON"}
-                    type="radio"
-                  />
-                </label>
-                <label>
-                  전국
-                  <input
-                    onChange={handleFormulaRegionChange}
-                    value="NATIONWIDE"
-                    checked={formulaData.region === "NATIONWIDE"}
-                    type="radio"
-                  />
-                </label>
-              </Flex>
-              <Flex width="fit-content" height="fit-content" gap={12}>
-                <label>
-                  졸업예정
-                  <input
-                    onChange={handleFormulaEducationalStatusChange}
-                    value="PROSPECTIVE_GRADUATE"
-                    checked={formulaData.educationalStatus === "PROSPECTIVE_GRADUATE"}
-                    type="radio"
-                  />
-                </label>
-                <label>
-                  졸업
-                  <input
-                    onChange={handleFormulaEducationalStatusChange}
-                    value="GRADUATE"
-                    checked={formulaData.educationalStatus === "GRADUATE"}
-                    type="radio"
-                  />
-                </label>
-                <label>
-                  검정고시
-                  <input
-                    onChange={handleFormulaEducationalStatusChange}
-                    value="QUALIFICATION_EXAM"
-                    checked={formulaData.educationalStatus === "QUALIFICATION_EXAM"}
-                    type="radio"
-                  />
-                </label>
-              </Flex>
-            </FormulaContainer>
-            <Btn
-              backgroundColor={colors.green[400]}
-              hoverBackgroundColor={colors.green[500]}
-              onClick={formulaDataAddClick}
-            >
-              수식 추가하기
-            </Btn>
-          </Flex>
-          <Flex alignItems="center" height="fit-content" width="100%" gap={10}>
-            <FormulaContainer>
-              <AuthInput
-                height="fit-content"
-                placeholder="사용할 변수명을 입력하세요"
-                onChange={handleVariableChange}
-                value={variableData.name}
-              />
-              <Flex width="fit-content" height="fit-content" gap={12}>
-                <label>
-                  대전
-                  <input
-                    onChange={handleVariableRegionChange}
-                    value="DAEJEON"
-                    checked={variableData.region === "DAEJEON"}
-                    type="radio"
-                  />
-                </label>
-                <label>
-                  전국
-                  <input
-                    onChange={handleVariableRegionChange}
-                    value="NATIONWIDE"
-                    checked={variableData.region === "NATIONWIDE"}
-                    type="radio"
-                  />
-                </label>
-              </Flex>
-              <Flex width="fit-content" height="fit-content" gap={12}>
-                <label>
-                  졸업예정
-                  <input
-                    onChange={handleVariableEducationalStatusChange}
-                    value="PROSPECTIVE_GRADUATE"
-                    checked={variableData.educationalStatus === "PROSPECTIVE_GRADUATE"}
-                    type="radio"
-                  />
-                </label>
-                <label>
-                  졸업
-                  <input
-                    onChange={handleVariableEducationalStatusChange}
-                    value="GRADUATE"
-                    checked={variableData.educationalStatus === "GRADUATE"}
-                    type="radio"
-                  />
-                </label>
-                <label>
-                  검정고시
-                  <input
-                    onChange={handleVariableEducationalStatusChange}
-                    value="QUALIFICATION_EXAM"
-                    checked={variableData.educationalStatus === "QUALIFICATION_EXAM"}
-                    type="radio"
-                  />
-                </label>
-              </Flex>
-            </FormulaContainer>
-            <Btn
-              backgroundColor={colors.green[400]}
-              hoverBackgroundColor={colors.green[500]}
-              onClick={variableAddClick}
-            >
-              변수 추가하기
-            </Btn>
-          </Flex>
+        <Flex width="fit-content" height="fit-content" gap={12}>
+          <Btn onClick={handleDraftSave} backgroundColor={colors.green[500]} hoverBackgroundColor={colors.green[600]}>
+            저장
+          </Btn>
+          <Btn
+            onClick={handleDraftReset}
+            backgroundColor={colors.gray[50]}
+            hoverBackgroundColor={colors.gray[100]}
+            borderColor={colors.gray[200]}
+            color={colors.gray[500]}
+          >
+            취소
+          </Btn>
         </Flex>
-      </Flex>
-      <Flex isColumn={true} width="auto" height="auto" gap={28}>
-        <Flex gap={16} isColumn={true} width="auto" height="auto">
-          <Text fontSize={32} fontWeight={600} color={colors.gray[500]}>
-            전역 변수
-          </Text>
-          <Flex gap={12} alignItems="center" width="auto" height="auto">
-            {keywordList}
-          </Flex>
-        </Flex>
-        <Flex isColumn={true} width="100%" height="auto">
-          <PostContainer>
-            <ContentContainer>
-              <Content>수식 번호</Content>
-              <Content>수식 이름</Content>
-              <Content>수식 설명</Content>
-              <Content>수식</Content>
-              <Content>지역 구분</Content>
-              <Content>졸업 구분</Content>
-              <Content>결과 변수</Content>
-            </ContentContainer>
-            <BtnContainer>
-              <Btn>삭제하기</Btn>
-            </BtnContainer>
-          </PostContainer>
-          {postList}
-        </Flex>
-      </Flex>
+      </HeaderSection>
+
+      <TabSection isAdmin={true} activeType={activeTab} onTypeChange={handleTabChange} options={ADMISSION_TABS} />
+
+      <FormulaScoreCards
+        formulas={activeFormulas}
+        selectedFormulaId={selectedFormulaId}
+        onSelect={handleFormulaSelect}
+      />
+
+      <WorkArea>
+        <FormulaEditorPanel
+          draft={draft}
+          usedVariables={usedVariables}
+          onTextFieldChange={handleTextFieldChange}
+          onMaxScoreChange={handleMaxScoreChange}
+        />
+        <FormulaVariableDictionary groups={VARIABLE_GROUPS} onVariableClick={handleVariableClick} />
+      </WorkArea>
     </Container>
   );
 };
@@ -400,44 +366,29 @@ const Container = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 `;
 
-const FormulaContainer = styled.div`
+const HeaderSection = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  @media (max-width: 860px) {
+    flex-direction: column;
+  }
+`;
+
+const WorkArea = styled.div`
   width: 100%;
   display: grid;
-  align-items: center;
-  gap: 10px;
-  grid-template-columns: 1fr 1fr 1fr;
-`;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+  gap: 20px;
+  align-items: start;
 
-const BtnContainer = styled.div`
-  width: fit-content;
-  height: fit-content;
-  opacity: 0;
-  pointer-events: none;
-`;
-
-const ContentContainer = styled.div`
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 2fr 3fr 4fr 1fr 1fr 2fr;
-`;
-
-const Content = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  color: ${colors.gray[400]};
-`;
-
-const PostContainer = styled.div`
-  width: 100%;
-  height: 83px;
-  border-bottom: 1px solid ${colors.gray[300]};
-  display: flex;
-  align-items: center;
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
 `;

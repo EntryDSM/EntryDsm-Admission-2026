@@ -333,7 +333,7 @@ export const StatisticsLandingPage = () => {
                   <ProgressBarContainer>
                     <ProgressBar progress={progressPercentage} color={typeColors[item.applicationType] || "#666"} />
                   </ProgressBarContainer>
-                  <ApplicationTypePercentage>{percentage}%가 지원했습니다.</ApplicationTypePercentage>
+                  <ApplicationTypePercentage>1차 선발 인원의 {percentage}%</ApplicationTypePercentage>
                 </ApplicationTypeCard>
               );
             })

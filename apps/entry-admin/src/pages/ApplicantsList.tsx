@@ -25,6 +25,16 @@ const educationOptions = [
   { key: "exam", label: "검정고시" },
 ] as const;
 
+const PRINT_ACTION_LABELS = [
+  "수험번호 업데이트",
+  "지원서 점검표 출력",
+  "전형 자료 출력",
+  "1차 합격자 번호 목록 출력",
+  "수험표 출력",
+] as const;
+
+const APPLICANT_TABLE_HEADERS = ["접수 번호", "이름", "지역", "전형", "학력", "원서 도착", "최종 제출"] as const;
+
 type RegionKey = (typeof regionOptions)[number]["key"];
 type AdmissionKey = (typeof admissionOptions)[number]["key"];
 type StatusKey = (typeof statusOptions)[number]["key"];
@@ -39,8 +49,10 @@ type ApplicationType = {
   isArrived: boolean;
 };
 
+const EMPTY_APPLICANTS: ApplicationType[] = [];
+
 export const ApplicantsList = () => {
-  const [applicantsList] = useState<ApplicationType[]>([]);
+  const applicantsList = EMPTY_APPLICANTS;
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedApplicant, setSelectedApplicant] = useState<ApplicationType | null>(null);
   const [filters, setFilters] = useState<{
@@ -133,7 +145,7 @@ export const ApplicantsList = () => {
     }
 
     // 정렬
-    return filtered.sort((a, b) => a.receiptCode - b.receiptCode);
+    return [...filtered].sort((a, b) => a.receiptCode - b.receiptCode);
   }, [applicantsList, searchKeyword, filters]);
 
   const totalPage = Math.max(1, Math.ceil(filteredApplicants.length / 20));
@@ -152,43 +164,19 @@ export const ApplicantsList = () => {
     <Container>
       <HeadContent>
         <FindApplicantInput onSearch={handleSearchChange} />
-        <ButtonContiner>
-          <Btn
-            color={colors.extra.realWhite}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            children="수험번호 업데이트"
-            onClick={handlePublishOnlyClick}
-          />
-          <Btn
-            color={colors.extra.realWhite}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            children="지원서 점검표 출력"
-            onClick={handlePublishOnlyClick}
-          />
-          <Btn
-            color={colors.extra.realWhite}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            children="전형 자료 출력"
-            onClick={handlePublishOnlyClick}
-          />
-          <Btn
-            color={colors.extra.realWhite}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            children="1차 합격자 번호 목록 출력"
-            onClick={handlePublishOnlyClick}
-          />
-          <Btn
-            color={colors.extra.realWhite}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            children="수험표 출력"
-            onClick={handlePublishOnlyClick}
-          />
-        </ButtonContiner>
+        <ButtonContainer>
+          {PRINT_ACTION_LABELS.map(label => (
+            <Btn
+              key={label}
+              color={colors.extra.realWhite}
+              backgroundColor={colors.green[400]}
+              hoverBackgroundColor={colors.green[500]}
+              onClick={handlePublishOnlyClick}
+            >
+              {label}
+            </Btn>
+          ))}
+        </ButtonContainer>
       </HeadContent>
 
       <FilterControl>
@@ -241,13 +229,9 @@ export const ApplicantsList = () => {
 
       <ApplicantsTitle>
         <LeftTitle>
-          <Title>접수 번호</Title>
-          <Title>이름</Title>
-          <Title>지역</Title>
-          <Title>전형</Title>
-          <Title>학력</Title>
-          <Title>원서 도착</Title>
-          <Title>최종 제출</Title>
+          {APPLICANT_TABLE_HEADERS.map(header => (
+            <Title key={header}>{header}</Title>
+          ))}
         </LeftTitle>
       </ApplicantsTitle>
 
@@ -291,7 +275,7 @@ export const ApplicantsList = () => {
   );
 };
 
-const ButtonContiner = styled.div`
+const ButtonContainer = styled.div`
   display: flex;
   justify-content: center;
   gap: 8px;

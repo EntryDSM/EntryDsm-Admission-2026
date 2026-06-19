@@ -4,24 +4,36 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { DropDownSection } from "../components";
 
+type ScheduleData = {
+  applicationStart: string;
+  applicationEnd: string;
+  firstAnnouncement: string;
+  interview: string;
+  finalAnnouncement: string;
+};
+
+const INITIAL_SCHEDULE_DATA: ScheduleData = {
+  applicationStart: "",
+  applicationEnd: "",
+  firstAnnouncement: "",
+  interview: "",
+  finalAnnouncement: "",
+};
+
+const SCHEDULE_FIELDS: { key: keyof ScheduleData; label: string }[] = [
+  { key: "applicationStart", label: "원서 제출 시작" },
+  { key: "applicationEnd", label: "원서 제출 마감" },
+  { key: "firstAnnouncement", label: "1차 발표" },
+  { key: "interview", label: "심층 면접" },
+  { key: "finalAnnouncement", label: "최종 발표" },
+];
+
 export const AdmissionsSchedule = () => {
   const navigate = useNavigate();
-  const [datas, setDatas] = useState<{
-    applicationStart: string;
-    applicationEnd: string;
-    firstAnnouncement: string;
-    interview: string;
-    finalAnnouncement: string;
-  }>({
-    applicationStart: "",
-    applicationEnd: "",
-    firstAnnouncement: "",
-    interview: "",
-    finalAnnouncement: "",
-  });
+  const [datas, setDatas] = useState<ScheduleData>(INITIAL_SCHEDULE_DATA);
 
   const handleChange = useCallback(
-    (key: keyof typeof datas) => (value: string) => {
+    (key: keyof ScheduleData) => (value: string) => {
       setDatas(prev => ({ ...prev, [key]: value }));
     },
     []
@@ -51,27 +63,14 @@ export const AdmissionsSchedule = () => {
         </Flex>
       </Flex>
       <Flex width="100%" height="auto" isColumn={true} gap={16}>
-        <DropDownSection
-          onChange={handleChange("applicationStart")}
-          label={"원서 제출 시작"}
-          value={datas.applicationStart}
-        />
-        <DropDownSection
-          onChange={handleChange("applicationEnd")}
-          label={"원서 제출 마감"}
-          value={datas.applicationEnd}
-        />
-        <DropDownSection
-          onChange={handleChange("firstAnnouncement")}
-          label={"1차 발표"}
-          value={datas.firstAnnouncement}
-        />
-        <DropDownSection onChange={handleChange("interview")} label={"심층 면접"} value={datas.interview} />
-        <DropDownSection
-          onChange={handleChange("finalAnnouncement")}
-          label={"최종 발표"}
-          value={datas.finalAnnouncement}
-        />
+        {SCHEDULE_FIELDS.map(field => (
+          <DropDownSection
+            key={field.key}
+            onChange={handleChange(field.key)}
+            label={field.label}
+            value={datas[field.key]}
+          />
+        ))}
       </Flex>
     </Flex>
   );
