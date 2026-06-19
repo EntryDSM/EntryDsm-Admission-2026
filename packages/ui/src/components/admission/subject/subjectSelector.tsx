@@ -1,7 +1,7 @@
 ﻿import styled from "@emotion/styled";
 
 import { colors } from "@entry/design";
-import { Check } from "../../../assets/icons/check";
+import { Check } from "../../../assets/icons/Check";
 import { GradeSelector } from "./gradeSelector";
 
 interface ISubjectSelector {

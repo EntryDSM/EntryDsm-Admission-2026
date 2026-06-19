@@ -22,6 +22,11 @@ export const AddressContent = ({
   handleAddressChange,
   handleDetailChange,
 }: IAddressType) => {
+  // const [datas, setDatas] = useState<{ postalCode: string; address: string; addressDetail: string }>({
+  //   postalCode: "",
+  //   address: "",
+  //   addressDetail: "",
+  // });
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const handleComplete = (data: any) => {
