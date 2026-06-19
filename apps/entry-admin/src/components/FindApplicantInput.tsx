@@ -1,7 +1,8 @@
-import styled from "@emotion/styled";
-import { search } from "../assets";
-import { colors } from "@entry/design";
 import { useState } from "react";
+import styled from "@emotion/styled";
+import { colors } from "@entry/design";
+
+import { search } from "../assets";
 
 interface IFindApplicantInputType {
   onSearch: (keyword: string) => void;

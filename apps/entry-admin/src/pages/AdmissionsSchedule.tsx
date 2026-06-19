@@ -1,7 +1,8 @@
-import { colors, Flex, Text } from "@entry/design";
-import { Btn } from "@entry/ui";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
+import { colors, Flex, Text } from "@entry/design";
+import { Btn } from "@entry/ui";
+
 import { DropDownSection } from "../components";
 
 type ScheduleData = {

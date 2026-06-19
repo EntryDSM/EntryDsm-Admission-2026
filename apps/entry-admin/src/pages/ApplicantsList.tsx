@@ -1,25 +1,26 @@
 import { useMemo, useState } from "react";
 import styled from "@emotion/styled";
-import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 import { colors } from "@entry/design";
 import { Btn, useModal } from "@entry/ui";
 
+import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
+
 type FilterGroupType = "region" | "admission" | "status" | "education";
 
-const regionOptions = [
+const REGION_OPTIONS = [
   { key: "daejeon", label: "대전", isNationwide: false },
   { key: "nationwide", label: "전국", isNationwide: true },
 ] as const;
 
-const admissionOptions = [
+const ADMISSION_OPTIONS = [
   { key: "general", label: "일반 전형" },
   { key: "meister", label: "마이스터 인재 전형" },
   { key: "social", label: "사회통합 전형" },
 ] as const;
 
-const statusOptions = [{ key: "received", label: "원서 도착" }] as const;
+const STATUS_OPTIONS = [{ key: "received", label: "원서 도착" }] as const;
 
-const educationOptions = [
+const EDUCATION_OPTIONS = [
   { key: "prospective", label: "졸업 예정" },
   { key: "graduate", label: "졸업" },
   { key: "exam", label: "검정고시" },
@@ -35,10 +36,10 @@ const PRINT_ACTION_LABELS = [
 
 const APPLICANT_TABLE_HEADERS = ["접수 번호", "이름", "지역", "전형", "학력", "원서 도착", "최종 제출"] as const;
 
-type RegionKey = (typeof regionOptions)[number]["key"];
-type AdmissionKey = (typeof admissionOptions)[number]["key"];
-type StatusKey = (typeof statusOptions)[number]["key"];
-type EducationKey = (typeof educationOptions)[number]["key"];
+type RegionKey = (typeof REGION_OPTIONS)[number]["key"];
+type AdmissionKey = (typeof ADMISSION_OPTIONS)[number]["key"];
+type StatusKey = (typeof STATUS_OPTIONS)[number]["key"];
+type EducationKey = (typeof EDUCATION_OPTIONS)[number]["key"];
 
 type ApplicationType = {
   receiptCode: number;
@@ -89,7 +90,10 @@ export const ApplicantsList = () => {
   };
 
   const handleApplicantClick = (applicant: ApplicationType) => {
-    if (!applicant.receiptCode) return;
+    if (!applicant.receiptCode) {
+      return;
+    }
+
     setSelectedApplicant(applicant);
     open();
   };
@@ -182,7 +186,7 @@ export const ApplicantsList = () => {
       <FilterControl>
         <LabelContainer>
           <Section>
-            {regionOptions.map(item => (
+            {REGION_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
                 label={item.label}
@@ -193,7 +197,7 @@ export const ApplicantsList = () => {
           </Section>
 
           <Section id="admission">
-            {admissionOptions.map(item => (
+            {ADMISSION_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
                 label={item.label}
@@ -204,7 +208,7 @@ export const ApplicantsList = () => {
           </Section>
 
           <Section>
-            {statusOptions.map(item => (
+            {STATUS_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
                 label={item.label}
@@ -215,7 +219,7 @@ export const ApplicantsList = () => {
           </Section>
 
           <Section>
-            {educationOptions.map(item => (
+            {EDUCATION_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
                 label={item.label}

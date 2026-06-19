@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
-import { AppLayout } from "./layout";
 import { ErrorPage } from "@entry/ui";
+
+import { AppLayout } from "./layout";
 import {
   AdmissionsSchedule,
   ApplicantsList,

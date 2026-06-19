@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
-import { left, right } from "../assets";
 import { colors } from "@entry/design";
+
+import { left, right } from "../assets";
 
 interface IPagiNationType {
   currentPage: number;
@@ -9,10 +10,7 @@ interface IPagiNationType {
 }
 
 export const PagiNation = ({ currentPage, totalPage, onPageChange }: IPagiNationType) => {
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPage; i++) {
-    pageNumbers.push(i);
-  }
+  const pageNumbers = Array.from({ length: totalPage }, (_, index) => index + 1);
 
   const goToPrevious = () => {
     if (currentPage > 1) {

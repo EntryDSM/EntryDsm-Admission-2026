@@ -1,9 +1,10 @@
 import { Fragment, type ChangeEvent, useCallback, useMemo, useState } from "react";
-import { InputSection } from "../components";
 import { colors, Flex, Text } from "@entry/design";
 import styled from "@emotion/styled";
 import { Btn } from "@entry/ui";
 import { useNavigate } from "react-router";
+
+import { InputSection } from "../components";
 
 type DataState = {
   daejeonGeneral: number; // 대전 일반

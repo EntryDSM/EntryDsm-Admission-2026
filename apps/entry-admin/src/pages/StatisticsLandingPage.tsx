@@ -1,5 +1,7 @@
+import { Fragment, useMemo } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+
 import {
   ApplicationPeriodIcon,
   AdmissionRateIcon,
@@ -11,11 +13,13 @@ import {
   FourIcon,
   ArrowIcon,
 } from "../assets";
-import React from "react";
 
 // 날짜 포맷 변환 함수 (yyyy-MM-ddTHH:mm:ss -> MM/DD)
 const formatDateToMMDD = (dateString: string) => {
-  if (!dateString) return "";
+  if (!dateString) {
+    return "";
+  }
+
   const date = new Date(dateString);
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -24,7 +28,10 @@ const formatDateToMMDD = (dateString: string) => {
 
 // D-day 계산 함수
 const calculateDday = (dateString: string) => {
-  if (!dateString) return null;
+  if (!dateString) {
+    return null;
+  }
+
   const targetDate = new Date(dateString);
   const today = new Date();
 
@@ -78,23 +85,29 @@ export const StatisticsLandingPage = () => {
   const isRegionLoading = false;
   const isCompetitionLoading = false;
   const isGenderLoading = false;
-  const regionItems = React.useMemo(() => {
-    if (!regionData) return [];
+  const regionItems = useMemo(() => {
+    if (!regionData) {
+      return [];
+    }
+
     return Object.entries(regionData).map(([regionName, count]) => ({
       regionName,
       count,
     }));
   }, [regionData]);
 
-  const genderItems = React.useMemo(() => {
-    if (!genderData) return [];
+  const genderItems = useMemo(() => {
+    if (!genderData) {
+      return [];
+    }
+
     return Object.entries(genderData).map(([genderName, count]) => ({
       genderName,
       count,
     }));
   }, [genderData]);
 
-  const competitionSummary = React.useMemo(() => {
+  const competitionSummary = useMemo(() => {
     const byTypeMap = new Map<string, number>();
     let totalApplicants = 0;
 
@@ -128,7 +141,7 @@ export const StatisticsLandingPage = () => {
       : "--/--~--/--";
 
   // 전형 일정
-  const processSchedule = [
+  const PROCESS_SCHEDULE = [
     { step: "원서 제출", date: isLoading ? "" : applicationPeriod },
     { step: "1차 발표", date: isLoading ? "" : firstAnnouncement ? formatDateToMMDD(firstAnnouncement) : "--/--" },
     { step: "2차 전형", date: isLoading ? "" : interview ? formatDateToMMDD(interview) : "--/--" },
@@ -148,10 +161,21 @@ export const StatisticsLandingPage = () => {
   const interviewTime = interview ? new Date(interview) : null;
   const finalAnnouncementTime = finalAnnouncement ? new Date(finalAnnouncement) : null;
 
-  if (endDateTime) endDateTime.setHours(0, 0, 0, 0);
-  if (firstAnnouncementTime) firstAnnouncementTime.setHours(0, 0, 0, 0);
-  if (interviewTime) interviewTime.setHours(0, 0, 0, 0);
-  if (finalAnnouncementTime) finalAnnouncementTime.setHours(0, 0, 0, 0);
+  if (endDateTime) {
+    endDateTime.setHours(0, 0, 0, 0);
+  }
+
+  if (firstAnnouncementTime) {
+    firstAnnouncementTime.setHours(0, 0, 0, 0);
+  }
+
+  if (interviewTime) {
+    interviewTime.setHours(0, 0, 0, 0);
+  }
+
+  if (finalAnnouncementTime) {
+    finalAnnouncementTime.setHours(0, 0, 0, 0);
+  }
 
   const isStep1Complete = endDateTime ? endDateTime <= today : false; // 원서 제출 마감
   const isStep2Complete = firstAnnouncementTime ? firstAnnouncementTime <= today : false; // 1차 발표
@@ -194,8 +218,8 @@ export const StatisticsLandingPage = () => {
       <ProcessTitle>전형 정보</ProcessTitle>
       <ProcessSection>
         <ProcessSteps>
-          {processSchedule.map((item, index) => (
-            <React.Fragment key={index}>
+          {PROCESS_SCHEDULE.map((item, index) => (
+            <Fragment key={index}>
               <ProcessItem>
                 <StepIcon>
                   {index === 0 && <OneIcon isActive={isStep1Complete} />}
@@ -206,12 +230,12 @@ export const StatisticsLandingPage = () => {
                 <StepLabel>{item.step}</StepLabel>
                 {isLoading ? <SkeletonDate /> : <StepDate>{item.date}</StepDate>}
               </ProcessItem>
-              {index < processSchedule.length - 1 && (
+              {index < PROCESS_SCHEDULE.length - 1 && (
                 <ArrowContainer>
                   <ArrowIcon />
                 </ArrowContainer>
               )}
-            </React.Fragment>
+            </Fragment>
           ))}
         </ProcessSteps>
       </ProcessSection>

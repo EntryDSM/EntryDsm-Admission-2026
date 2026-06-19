@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+
 import { cancel } from "../assets";
 
 interface ApplicantDetail {
@@ -48,7 +49,10 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
 
   // 원서 \n 적용
   const formatTextWithLineBreaks = (text?: string): ReactNode => {
-    if (!text) return null;
+    if (!text) {
+      return null;
+    }
+
     const lines = text.split("\n");
     return lines.map((line, index) => (
       <span key={index}>
@@ -59,16 +63,34 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
   };
 
   const getApplicationTypeLabel = (type?: string) => {
-    if (type === "SOCIAL") return "사회통합";
-    if (type === "MEISTER") return "마이스터전형";
-    if (type === "COMMON") return "일반";
+    if (type === "SOCIAL") {
+      return "사회통합";
+    }
+
+    if (type === "MEISTER") {
+      return "마이스터전형";
+    }
+
+    if (type === "COMMON") {
+      return "일반";
+    }
+
     return "-";
   };
 
   const getEducationalStatusLabel = (status?: string) => {
-    if (status === "PROSPECTIVE_GRADUATE") return "졸업 예정";
-    if (status === "GRADUATE") return "졸업";
-    if (status === "QUALIFICATION_EXAM") return "검정고시";
+    if (status === "PROSPECTIVE_GRADUATE") {
+      return "졸업 예정";
+    }
+
+    if (status === "GRADUATE") {
+      return "졸업";
+    }
+
+    if (status === "QUALIFICATION_EXAM") {
+      return "검정고시";
+    }
+
     return "-";
   };
 
@@ -87,14 +109,22 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
   };
 
   const getMaxScore = (applicationType?: string) => {
-    if (applicationType === "COMMON") return 170;
-    if (applicationType === "SOCIAL" || applicationType === "MEISTER") return 110;
+    if (applicationType === "COMMON") {
+      return 170;
+    }
+
+    if (applicationType === "SOCIAL" || applicationType === "MEISTER") {
+      return 110;
+    }
+
     return "-";
   };
 
   const regionLabel = applicant?.isDaejeon === undefined ? "-" : applicant.isDaejeon ? "대전" : "전국";
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <ModalOverlay onClick={onClose}>

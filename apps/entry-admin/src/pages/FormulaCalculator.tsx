@@ -1,7 +1,9 @@
 import { useMemo, useState, type ChangeEvent } from "react";
 import styled from "@emotion/styled";
+
 import { colors, Flex, Text } from "@entry/design";
 import { Btn, TabSection } from "@entry/ui";
+
 import {
   FormulaEditorPanel,
   FormulaScoreCards,
