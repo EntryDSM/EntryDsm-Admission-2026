@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
@@ -23,6 +23,15 @@ interface ApplicantDetail {
   parentTel?: string;
 }
 
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "textarea:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
 interface IApplicantDetailModalType {
   receiptCode?: number;
   isOpen: boolean;
@@ -32,13 +41,24 @@ interface IApplicantDetailModalType {
 
 export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }: IApplicantDetailModalType) => {
   const scrollPositionRef = useRef(0);
+  const modalContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
+      const originalPosition = document.body.style.position;
+      const originalTop = document.body.style.top;
+      const originalWidth = document.body.style.width;
+
       scrollPositionRef.current = window.scrollY;
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.style.width = "100%";
+
+      return () => {
+        document.body.style.position = originalPosition;
+        document.body.style.top = originalTop;
+        document.body.style.width = originalWidth;
+      };
     } else {
       document.body.style.position = "";
       document.body.style.top = "";
@@ -46,6 +66,58 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
       window.scrollTo(0, scrollPositionRef.current);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleEscapeKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+    modalContentRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isOpen, onClose]);
+
+  const handleModalKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      modalContentRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? []
+    );
+
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      modalContentRef.current?.focus();
+      return;
+    }
+
+    const firstFocusableElement = focusableElements[0];
+    const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+    if (
+      event.shiftKey &&
+      (document.activeElement === firstFocusableElement || document.activeElement === modalContentRef.current)
+    ) {
+      event.preventDefault();
+      lastFocusableElement.focus();
+      return;
+    }
+
+    if (!event.shiftKey && document.activeElement === lastFocusableElement) {
+      event.preventDefault();
+      firstFocusableElement.focus();
+    }
+  };
 
   // 원서 \n 적용
   const formatTextWithLineBreaks = (text?: string): ReactNode => {
@@ -128,12 +200,21 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
 
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={e => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>
-          <img src={cancel} alt="x" />
+      <ModalContent
+        ref={modalContentRef}
+        onClick={e => e.stopPropagation()}
+        onKeyDown={handleModalKeyDown}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="applicant-detail-modal-title"
+        tabIndex={-1}
+      >
+        <CloseButton type="button" onClick={onClose} aria-label="닫기">
+          <img src={cancel} alt="" aria-hidden="true" />
         </CloseButton>
 
         <ModalHeader>
+          <ModalTitle id="applicant-detail-modal-title">지원자 상세 정보</ModalTitle>
           <ApplicantImage>
             {applicant?.photoUrl ? (
               <img
@@ -289,6 +370,18 @@ const ModalHeader = styled.div`
     gap: 16px;
     padding: 60px 20px 20px 20px;
   }
+`;
+
+const ModalTitle = styled.h2`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 `;
 
 const ApplicantImage = styled.div`

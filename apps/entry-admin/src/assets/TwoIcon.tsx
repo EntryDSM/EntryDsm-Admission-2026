@@ -1,4 +1,6 @@
-export const TwoIcon = ({ isActive = false }: { isActive?: boolean }) => {
+import { memo } from "react";
+
+export const TwoIcon = memo(function TwoIcon({ isActive = false }: { isActive?: boolean }) {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="64" height="64" rx="32" fill={isActive ? "#1DB954" : "#D6D6D6"} />
@@ -8,4 +10,4 @@ export const TwoIcon = ({ isActive = false }: { isActive?: boolean }) => {
       />
     </svg>
   );
-};
+});

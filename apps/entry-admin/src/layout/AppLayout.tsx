@@ -14,7 +14,7 @@ export const AppLayout = () => {
 };
 
 const Main = styled.main`
-  width: 100vw;
+  width: 100%;
   margin-top: 70px;
   padding: 50px 100px;
 `;

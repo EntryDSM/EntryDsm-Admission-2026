@@ -9,8 +9,40 @@ interface IPagiNationType {
   onPageChange: (page: number) => void;
 }
 
+const ELLIPSIS = "ellipsis";
+const PAGE_RANGE = 2;
+
+type PageNumberItem = number | typeof ELLIPSIS;
+
+const getPageNumbers = (currentPage: number, totalPage: number): PageNumberItem[] => {
+  if (totalPage <= 0) {
+    return [];
+  }
+
+  const normalizedCurrentPage = Math.min(Math.max(currentPage, 1), totalPage);
+  const pages = new Set([1, totalPage]);
+  const startPage = Math.max(2, normalizedCurrentPage - PAGE_RANGE);
+  const endPage = Math.min(totalPage - 1, normalizedCurrentPage + PAGE_RANGE);
+
+  for (let page = startPage; page <= endPage; page += 1) {
+    pages.add(page);
+  }
+
+  return [...pages]
+    .sort((a, b) => a - b)
+    .flatMap((page, index, sortedPages) => {
+      const previousPage = sortedPages[index - 1];
+
+      if (previousPage && page - previousPage > 1) {
+        return [ELLIPSIS, page];
+      }
+
+      return [page];
+    });
+};
+
 export const PagiNation = ({ currentPage, totalPage, onPageChange }: IPagiNationType) => {
-  const pageNumbers = Array.from({ length: totalPage }, (_, index) => index + 1);
+  const pageNumbers = getPageNumbers(currentPage, totalPage);
 
   const goToPrevious = () => {
     if (currentPage > 1) {
@@ -34,11 +66,15 @@ export const PagiNation = ({ currentPage, totalPage, onPageChange }: IPagiNation
         <img src={left} alt="<" />
       </PageButton>
 
-      {pageNumbers.map(number => (
-        <PageButton key={number} onClick={() => goToPage(number)} isActive={number === currentPage}>
-          {number}
-        </PageButton>
-      ))}
+      {pageNumbers.map((pageNumber, index) =>
+        pageNumber === ELLIPSIS ? (
+          <Ellipsis key={`${pageNumber}-${index}`}>...</Ellipsis>
+        ) : (
+          <PageButton key={pageNumber} onClick={() => goToPage(pageNumber)} isActive={pageNumber === currentPage}>
+            {pageNumber}
+          </PageButton>
+        )
+      )}
 
       <PageButton id="right" onClick={goToNext} disabled={currentPage === totalPage}>
         <img src={right} alt=">" />
@@ -109,5 +145,27 @@ const PageButton = styled.button<{ isActive?: boolean }>`
       width: 12px;
       height: 12px;
     }
+  }
+`;
+
+const Ellipsis = styled.span`
+  min-width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${colors.gray[400]};
+  font-size: 14px;
+
+  @media (max-width: 768px) {
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 480px) {
+    min-width: 32px;
+    height: 32px;
+    font-size: 12px;
   }
 `;

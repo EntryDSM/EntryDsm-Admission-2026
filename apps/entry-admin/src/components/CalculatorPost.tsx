@@ -36,7 +36,7 @@ export const CalculatorPost = ({
         backgroundColor={colors.extra.realWhite}
         color={colors.extra.error}
         borderColor={colors.extra.error}
-        hoverBackgroundColor="none"
+        hoverBackgroundColor={colors.extra.realWhite}
       >
         삭제하기
       </Btn>

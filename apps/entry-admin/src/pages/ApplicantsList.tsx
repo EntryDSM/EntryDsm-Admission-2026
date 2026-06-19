@@ -53,6 +53,7 @@ type ApplicationType = {
 const EMPTY_APPLICANTS: ApplicationType[] = [];
 
 export const ApplicantsList = () => {
+  const APPLICANTS_PER_PAGE = 20;
   const applicantsList = EMPTY_APPLICANTS;
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedApplicant, setSelectedApplicant] = useState<ApplicationType | null>(null);
@@ -152,11 +153,11 @@ export const ApplicantsList = () => {
     return [...filtered].sort((a, b) => a.receiptCode - b.receiptCode);
   }, [applicantsList, searchKeyword, filters]);
 
-  const totalPage = Math.max(1, Math.ceil(filteredApplicants.length / 20));
+  const totalPage = Math.max(1, Math.ceil(filteredApplicants.length / APPLICANTS_PER_PAGE));
 
   const paginatedApplicants = useMemo(() => {
-    const startIndex = (currentPage - 1) * 20;
-    const endIndex = startIndex + 20;
+    const startIndex = (currentPage - 1) * APPLICANTS_PER_PAGE;
+    const endIndex = startIndex + APPLICANTS_PER_PAGE;
     return filteredApplicants.slice(startIndex, endIndex);
   }, [filteredApplicants, currentPage]);
 

@@ -1,4 +1,10 @@
-export const FourIcon = ({ isActive = false }: { isActive?: boolean }) => {
+import { memo } from "react";
+
+interface FourIconProps {
+  isActive?: boolean;
+}
+
+export const FourIcon = memo(function FourIcon({ isActive = false }: FourIconProps) {
   return (
     <svg width="65" height="64" viewBox="0 0 65 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="0.5" width="64" height="64" rx="32" fill={isActive ? "#1DB954" : "#D6D6D6"} />
@@ -8,4 +14,4 @@ export const FourIcon = ({ isActive = false }: { isActive?: boolean }) => {
       />
     </svg>
   );
-};
+});

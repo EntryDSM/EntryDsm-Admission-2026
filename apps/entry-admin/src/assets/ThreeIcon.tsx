@@ -1,4 +1,10 @@
-export const ThreeIcon = ({ isActive = false }: { isActive?: boolean }) => {
+import { memo } from "react";
+
+interface ThreeIconProps {
+  isActive?: boolean;
+}
+
+export const ThreeIcon = memo(function ThreeIcon({ isActive = false }: ThreeIconProps) {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="64" height="64" rx="32" fill={isActive ? "#1DB954" : "#D6D6D6"} />
@@ -8,4 +14,4 @@ export const ThreeIcon = ({ isActive = false }: { isActive?: boolean }) => {
       />
     </svg>
   );
-};
+});

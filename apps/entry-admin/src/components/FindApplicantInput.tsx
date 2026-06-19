@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
@@ -8,13 +8,24 @@ interface IFindApplicantInputType {
   onSearch: (keyword: string) => void;
 }
 
+const SEARCH_DEBOUNCE_DELAY = 300;
+
 export const FindApplicantInput = ({ onSearch }: IFindApplicantInputType) => {
   const [keyword, setKeyword] = useState<string>("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      onSearch(keyword);
+    }, SEARCH_DEBOUNCE_DELAY);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [keyword, onSearch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setKeyword(value);
-    onSearch(value);
   };
 
   return (

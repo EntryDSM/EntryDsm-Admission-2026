@@ -1,4 +1,5 @@
 import styled from "@emotion/styled";
+import { css } from "@emotion/react";
 import { colors } from "@entry/design";
 
 interface IKeywordType {
@@ -7,10 +8,18 @@ interface IKeywordType {
 }
 
 export const Keyword = ({ children, onClick }: IKeywordType) => {
-  return <KeywordContainer onClick={onClick}>{children}</KeywordContainer>;
+  if (onClick) {
+    return (
+      <KeywordButton type="button" onClick={onClick}>
+        {children}
+      </KeywordButton>
+    );
+  }
+
+  return <KeywordContainer>{children}</KeywordContainer>;
 };
 
-const KeywordContainer = styled.div`
+const keywordStyle = css`
   padding: 5px 15px;
   border-radius: 100px;
   border: 1px solid ${colors.green[500]};
@@ -21,4 +30,13 @@ const KeywordContainer = styled.div`
   font-weight: 400;
   color: ${colors.green[500]};
   background-color: #1db95414;
+`;
+
+const KeywordContainer = styled.div`
+  ${keywordStyle}
+`;
+
+const KeywordButton = styled.button`
+  ${keywordStyle}
+  cursor: pointer;
 `;

@@ -198,6 +198,8 @@ export const DropDownSection = memo(({ value, onChange, label }: IDropDownSectio
   );
 });
 
+DropDownSection.displayName = "DropDownSection";
+
 const FormContainer = styled.div`
   width: 100%;
   padding: 10px 0;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn } from "@entry/ui";
@@ -10,6 +10,12 @@ export const NoticeEdit = () => {
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState<NoticeFormValue>(() => ({ ...INITIAL_NOTICE_FORM_VALUE }));
   const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
+
+  useEffect(() => {
+    if (!id) {
+      navigate("/notice", { replace: true });
+    }
+  }, [id, navigate]);
 
   const handleSubmit = () => {
     if (!formData.title.trim()) {
@@ -29,6 +35,10 @@ export const NoticeEdit = () => {
       navigate("/notice");
     }
   };
+
+  if (!id) {
+    return null;
+  }
 
   return (
     <Container>

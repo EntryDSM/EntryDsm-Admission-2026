@@ -57,7 +57,7 @@ export const Applicant = ({
 
 const Container = styled.div`
   width: 100%;
-  height: object-fit;
+  height: auto;
   border-top: 1px solid ${colors.gray[300]};
   display: flex;
   align-items: center;
