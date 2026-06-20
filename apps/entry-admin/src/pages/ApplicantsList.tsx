@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn, useModal } from "@entry/ui";
+import { toast } from "react-toastify";
 
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
@@ -33,6 +34,8 @@ const PRINT_ACTION_LABELS = [
   "1차 합격자 번호 목록 출력",
   "수험표 출력",
 ] as const;
+
+const PRINT_ACTION_UNAVAILABLE_MESSAGE = "아직 지원하지 않는 기능입니다.";
 
 const APPLICANT_TABLE_HEADERS = ["접수 번호", "이름", "지역", "전형", "학력", "원서 도착", "최종 제출"] as const;
 
@@ -72,7 +75,9 @@ export const ApplicantsList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { isOpen, open, close } = useModal();
   const isLoading = false;
-  const handlePublishOnlyClick = () => undefined;
+  const handlePublishOnlyClick = () => {
+    toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
+  };
 
   const handleSearchChange = (keyword: string) => {
     setSearchKeyword(keyword);

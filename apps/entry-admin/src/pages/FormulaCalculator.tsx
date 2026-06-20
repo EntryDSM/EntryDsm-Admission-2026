@@ -246,6 +246,22 @@ const getInitialDraft = (formula: FormulaConfig): FormulaDraft => ({
   variables: formula.variables,
 });
 
+const extractFormulaVariables = (formula: string) => {
+  const variablePattern = /\{([^{}]+)\}/g;
+  const variables = new Set<string>();
+  let match = variablePattern.exec(formula);
+
+  while (match) {
+    const variableName = match[1].trim();
+    if (variableName) {
+      variables.add(variableName);
+    }
+    match = variablePattern.exec(formula);
+  }
+
+  return [...variables];
+};
+
 export const FormulaCalculator = () => {
   const [activeTab, setActiveTab] = useState<AdmissionType>("GENERAL");
   const [formulaRows, setFormulaRows] = useState<FormulaConfig[]>(DEFAULT_FORMULAS);
@@ -303,12 +319,18 @@ export const FormulaCalculator = () => {
   };
 
   const handleDraftSave = () => {
+    const nextDraft = {
+      ...draft,
+      variables: extractFormulaVariables(draft.formula),
+    };
+
+    setDraft(nextDraft);
     setFormulaRows(prev =>
       prev.map(formula =>
         formula.id === selectedFormulaId
           ? {
               ...formula,
-              ...draft,
+              ...nextDraft,
             }
           : formula
       )
