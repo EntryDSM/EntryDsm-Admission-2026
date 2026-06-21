@@ -1,7 +1,6 @@
 ﻿import styled from "@emotion/styled";
 import { useNavigate, useLocation } from "react-router";
 import { useEffect, useState } from "react";
-// import { useUserInfo, getAccessToken, removeAccessToken, removeRefreshToken } from "@entry/utils";
 
 import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
@@ -51,7 +50,9 @@ export const AdminHeader = () => {
   // const [datas] = useState<{ name: string }>({ name: '홍길동' });
 
   const navData = [
-    { name: "전형 일정 수정", path: "/admissions-schedule" },
+    { name: "일정 수정", path: "/admissions-schedule" },
+    { name: "정원 수정", path: "/admissions-quota" },
+    { name: "계산식 수정", path: "/formula-calculator" },
     { name: "지원자 조회", path: "/applicants-list" },
     { name: "공지사항", path: "/notice" },
   ];
@@ -62,8 +63,7 @@ export const AdminHeader = () => {
   };
 
   const handleLogout = () => {
-    // removeAccessToken();
-    // removeRefreshToken();
+    // 로그아웃 로직 (예: 토큰 삭제)
     window.location.href = "https://entrydsm.kr/";
   };
 
@@ -76,7 +76,7 @@ export const AdminHeader = () => {
         </Text>
       </Flex>
       <Flex gap={52} alignItems="center" height="fit-content" width="fit-content">
-        <Flex width="fit-content" height="fit-content" gap={28} alignItems="center">
+        <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
           {navData.map(data => (
             <NavContent key={data.path} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
               {data.name}
@@ -104,8 +104,6 @@ export const CommonHeader = () => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  // const accessToken = getAccessToken();
-  // const { data: userInfo, error, isError, isPending } = useUserInfo();
 
   const navData = [
     { name: "공지사항", path: "/notice" },
@@ -189,8 +187,6 @@ interface IAuthHeaderType {
 }
 
 export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
-  // const navigate = useNavigate();
-
   return (
     <AuthHeaderContainer>
       <LogoContainer onClick={() => (window.location.href = "https://entrydsm.kr/")}>

@@ -1,3 +1,59 @@
 import { createBrowserRouter } from "react-router";
+import { ErrorPage } from "@entry/ui";
 
-export const Router = createBrowserRouter([]);
+import { AppLayout } from "./layout";
+import {
+  AdmissionsSchedule,
+  ApplicantsList,
+  FormulaCalculator,
+  NoticeList,
+  NoticeCreate,
+  NoticeEdit,
+  StatisticsLandingPage,
+  AdmissionsQuota,
+} from "./pages";
+
+export const Router = createBrowserRouter([
+  {
+    path: "/",
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/",
+        element: <StatisticsLandingPage />,
+      },
+      {
+        path: "formula-calculator",
+        element: <FormulaCalculator />,
+      },
+      {
+        path: "applicants-list",
+        element: <ApplicantsList />,
+      },
+      {
+        path: "admissions-schedule",
+        element: <AdmissionsSchedule />,
+      },
+      {
+        path: "notice",
+        element: <NoticeList />,
+      },
+      {
+        path: "notice/create",
+        element: <NoticeCreate />,
+      },
+      {
+        path: "notice/edit/:id",
+        element: <NoticeEdit />,
+      },
+      {
+        path: "admissions-quota",
+        element: <AdmissionsQuota />,
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <ErrorPage errorMsg="404 Page Not Found" />,
+  },
+]);

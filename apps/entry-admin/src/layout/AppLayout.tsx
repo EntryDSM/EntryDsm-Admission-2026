@@ -1,0 +1,20 @@
+import styled from "@emotion/styled";
+import { Outlet } from "react-router";
+import { AdminHeader } from "@entry/ui";
+
+export const AppLayout = () => {
+  return (
+    <>
+      <AdminHeader />
+      <Main>
+        <Outlet />
+      </Main>
+    </>
+  );
+};
+
+const Main = styled.main`
+  width: 100%;
+  margin-top: 70px;
+  padding: 50px 100px;
+`;
