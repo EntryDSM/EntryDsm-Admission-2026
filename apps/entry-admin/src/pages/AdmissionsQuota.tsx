@@ -99,8 +99,8 @@ export const AdmissionsQuota = () => {
   // 공통 onChange handler
   const handleChange = useCallback(
     (key: keyof DataState) => (e: ChangeEvent<HTMLInputElement>) => {
-      const value = Number(e.target.value) || 0; // 숫자로 변환
-      const safeValue = Math.max(0, value);
+      const value = Number(e.target.value);
+      const safeValue = Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
       setDatas(prev => ({
         ...prev,
         [key]: safeValue,

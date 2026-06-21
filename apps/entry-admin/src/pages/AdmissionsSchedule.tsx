@@ -29,13 +29,34 @@ const SCHEDULE_FIELDS: { key: keyof ScheduleData; label: string }[] = [
   { key: "finalAnnouncement", label: "최종 발표" },
 ];
 
+const SCHEDULE_ORDER = SCHEDULE_FIELDS.map(({ key }) => key);
+
+const getOrderedScheduleData = (scheduleData: ScheduleData, key: keyof ScheduleData, value: string) => {
+  const nextScheduleData = { ...scheduleData, [key]: value };
+  let previousDateTime = "";
+
+  SCHEDULE_ORDER.forEach(scheduleKey => {
+    const currentDateTime = nextScheduleData[scheduleKey];
+
+    if (currentDateTime && previousDateTime && currentDateTime < previousDateTime) {
+      nextScheduleData[scheduleKey] = previousDateTime;
+    }
+
+    if (nextScheduleData[scheduleKey]) {
+      previousDateTime = nextScheduleData[scheduleKey];
+    }
+  });
+
+  return nextScheduleData;
+};
+
 export const AdmissionsSchedule = () => {
   const navigate = useNavigate();
   const [datas, setDatas] = useState<ScheduleData>(INITIAL_SCHEDULE_DATA);
 
   const handleChange = useCallback(
     (key: keyof ScheduleData) => (value: string) => {
-      setDatas(prev => ({ ...prev, [key]: value }));
+      setDatas(prev => getOrderedScheduleData(prev, key, value));
     },
     []
   );
