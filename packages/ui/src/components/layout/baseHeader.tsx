@@ -185,7 +185,7 @@ export const CommonHeader = () => {
 export const AuthHeader = () => {
   return (
     <AuthHeaderContainer>
-      <LogoContainer onClick={() => (window.location.href = "https://entrydsm.kr/")}>
+      <LogoContainer href="https://entrydsm.kr/" aria-label="EntryDSM 홈으로 이동">
         <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
@@ -212,10 +212,12 @@ export const AuthHeader = () => {
 //   }
 // `;
 
-const LogoContainer = styled.div`
+const LogoContainer = styled.a`
   display: flex;
   gap: 12px;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 `;
 
 const CommonHeaderLogoSection = styled.div`
