@@ -32,23 +32,7 @@ const LoginPage = () => {
   }, []);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-
-    // 숫자만 추출
-    const onlyNumber = value.replace(/[^\d]/g, "");
-
-    // 000-0000-0000 포맷팅
-    let formattedNumber = "";
-
-    if (onlyNumber.length < 4) {
-      formattedNumber = onlyNumber;
-    } else if (onlyNumber.length < 8) {
-      formattedNumber = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`;
-    } else {
-      formattedNumber = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7, 11)}`;
-    }
-
-    setPhoneNumber(formattedNumber);
+    setPhoneNumber(e.target.value);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +82,7 @@ const LoginPage = () => {
     <BackGroundWrapper>
       <LoginPageContainer>
         <TitleWrapper>
-          <EntryAuthTitle children="EntryDSM 로그인" isAdmin={false} />
+          <EntryAuthTitle children="EntryDSM 로그인" />
         </TitleWrapper>
         <InputWrapper>
           <AuthInput

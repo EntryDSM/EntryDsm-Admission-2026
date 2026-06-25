@@ -182,15 +182,11 @@ export const CommonHeader = () => {
   );
 };
 
-interface IAuthHeaderType {
-  isAdmin: boolean;
-}
-
-export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
+export const AuthHeader = () => {
   return (
     <AuthHeaderContainer>
       <LogoContainer onClick={() => (window.location.href = "https://entrydsm.kr/")}>
-        <EntryLogo isAdmin={isAdmin} />
+        <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
         </Text>

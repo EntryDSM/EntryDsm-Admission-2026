@@ -4,24 +4,30 @@ import { EntryLogo } from "@entry/ui";
 
 interface IEntryAuthTitleType {
   children: string;
-  isAdmin: boolean;
 }
 
-export const EntryAuthTitle = ({ children, isAdmin }: IEntryAuthTitleType) => {
+export const EntryAuthTitle = ({ children }: IEntryAuthTitleType) => {
   return (
     <>
-      <LogoTitle $isAdmin={isAdmin}>
-        <EntryLogo isAdmin={isAdmin} />
-        <Text fontSize={25} fontWeight={550} children={children} />
+      <LogoTitle>
+        <EntryLogo />
+        <h1>
+          <Text fontSize={25} fontWeight={550}>
+            {children}
+          </Text>
+        </h1>
       </LogoTitle>
-      <Text fontSize={14} fontWeight={400}>
-        EntryDSM에서 대덕소프트웨어마이스터고등학교 원서 접수를 시작하세요
-      </Text>
+
+      <p>
+        <Text fontSize={14} fontWeight={400}>
+          EntryDSM에서 대덕소프트웨어마이스터고등학교 원서 접수를 시작하세요
+        </Text>
+      </p>
     </>
   );
 };
 
-const LogoTitle = styled.div<{ $isAdmin: boolean }>`
+const LogoTitle = styled.div`
   width: fit-content;
   height: 75px;
   min-height: 75px;

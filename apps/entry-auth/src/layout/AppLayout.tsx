@@ -1,14 +1,11 @@
 import styled from "@emotion/styled";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { AuthHeader } from "@entry/ui";
 
 export const AppLayout = () => {
-  const location = useLocation();
-  const isAdmin = location.pathname.includes("/admin");
-
   return (
     <>
-      <AuthHeader isAdmin={isAdmin} />
+      <AuthHeader />
       <Main>
         <Outlet />
       </Main>
