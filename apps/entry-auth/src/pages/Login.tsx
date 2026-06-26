@@ -118,8 +118,6 @@ const LoginPage = () => {
 };
 
 const BackGroundWrapper = styled.div`
-  /* padding-top: 35px; */
-  /* padding-bottom: 10px; */
   display: flex;
   justify-content: center;
   overflow-x: hidden;

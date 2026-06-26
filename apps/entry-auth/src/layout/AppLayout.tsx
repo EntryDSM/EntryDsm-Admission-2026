@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { AuthHeader } from "@entry/ui";
 
 export const AppLayout = () => {

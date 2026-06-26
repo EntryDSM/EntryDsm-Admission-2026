@@ -11,11 +11,9 @@ export const EntryAuthTitle = ({ children }: IEntryAuthTitleType) => {
     <>
       <LogoTitle>
         <EntryLogo />
-        <h1>
-          <Text fontSize={25} fontWeight={550}>
-            {children}
-          </Text>
-        </h1>
+        <Text fontSize={25} fontWeight={550}>
+          {children}
+        </Text>
       </LogoTitle>
 
       <p>
