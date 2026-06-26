@@ -182,15 +182,11 @@ export const CommonHeader = () => {
   );
 };
 
-interface IAuthHeaderType {
-  isAdmin: boolean;
-}
-
-export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
+export const AuthHeader = () => {
   return (
     <AuthHeaderContainer>
-      <LogoContainer onClick={() => (window.location.href = "https://entrydsm.kr/")}>
-        <EntryLogo isAdmin={isAdmin} />
+      <LogoContainer href="https://entrydsm.kr/" aria-label="EntryDSM 홈으로 이동">
+        <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
         </Text>
@@ -216,10 +212,12 @@ export const AuthHeader = ({ isAdmin }: IAuthHeaderType) => {
 //   }
 // `;
 
-const LogoContainer = styled.div`
+const LogoContainer = styled.a`
   display: flex;
   gap: 12px;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 `;
 
 const CommonHeaderLogoSection = styled.div`
