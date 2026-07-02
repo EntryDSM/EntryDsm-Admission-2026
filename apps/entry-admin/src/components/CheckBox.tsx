@@ -19,27 +19,27 @@ export const CheckBox = ({ isChecked, label, onChange }: ICheckBoxType) => {
 };
 
 const Container = styled.div`
+  display: flex;
+  align-items: center;
+
   input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0 8px 0 0;
     accent-color: ${colors.green[400]};
   }
 `;
 
 const Label = styled.label`
-  margin-left: 8px;
   font-size: 16px;
+  font-weight: 500;
   color: ${colors.gray[400]};
   cursor: pointer;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 
   @media (max-width: 480px) {
     font-size: 14px;
-  }
-
-  input[type="checkbox"] {
-    margin-right: 8px;
-
-    @media (max-width: 480px) {
-      margin-right: 6px;
-    }
   }
 `;
