@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
 import { EntryAuthTitle } from "../components/index";
+import { useNavigate } from "react-router-dom";
 // import { useUserLogin } from "../hooks/useLogin";
 
 const LoginPage = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const isPhoneValid = phoneNumber.replace(/[^\d]/g, "").length >= 10;
   const isPasswordValid = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password);
@@ -109,7 +111,9 @@ const LoginPage = () => {
           로그인
         </LoginButton>
         <LoginKindContainer>
-          <div style={{ cursor: "pointer" }}>회원가입</div>
+          <div style={{ cursor: "pointer" }} onClick={() => navigate("/signup")}>
+            회원가입
+          </div>
           <AuthLink>비밀번호 찾기</AuthLink>
         </LoginKindContainer>
       </LoginPageContainer>
@@ -134,8 +138,6 @@ const InputWrapper = styled.div`
 `;
 
 const LoginPageContainer = styled.div`
-  padding: 0 100px;
-  border-radius: 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
