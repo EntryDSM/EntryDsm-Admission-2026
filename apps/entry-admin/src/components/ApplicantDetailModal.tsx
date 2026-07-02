@@ -343,7 +343,23 @@ const ModalOverlay = styled.div`
   display: flex;
   align-items: stretch;
   justify-content: flex-end;
+  background-color: rgba(0, 0, 0, 0.28);
   z-index: 1000;
+  animation: modalOverlayFadeIn 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes modalOverlayFadeIn {
+    from {
+      background-color: rgba(0, 0, 0, 0);
+    }
+
+    to {
+      background-color: rgba(0, 0, 0, 0.28);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 const ModalContent = styled.div`
@@ -352,7 +368,25 @@ const ModalContent = styled.div`
   height: 100vh;
   overflow-y: auto;
   position: relative;
-  border: 1px solid ${colors.gray[300]};
+  box-shadow: -8px 0 20px rgba(0, 0, 0, 0.08);
+  will-change: transform, opacity;
+  animation: modalSlideIn 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes modalSlideIn {
+    from {
+      transform: translateX(36px);
+      opacity: 0;
+    }
+
+    60% {
+      opacity: 1;
+    }
+
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
 
   @media (max-width: 1024px) {
     width: 60%;
@@ -360,6 +394,10 @@ const ModalContent = styled.div`
 
   @media (max-width: 768px) {
     width: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 `;
 
