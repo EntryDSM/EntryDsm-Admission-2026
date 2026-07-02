@@ -3,6 +3,7 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
 import { cancel } from "../assets";
+import { getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
 
 interface ApplicantDetail {
   photoUrl?: string;
@@ -133,38 +134,6 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
         {index < lines.length - 1 && <br />}
       </span>
     ));
-  };
-
-  const getApplicationTypeLabel = (type?: string) => {
-    if (type === "SOCIAL") {
-      return "사회통합";
-    }
-
-    if (type === "MEISTER") {
-      return "마이스터전형";
-    }
-
-    if (type === "COMMON") {
-      return "일반";
-    }
-
-    return "-";
-  };
-
-  const getEducationalStatusLabel = (status?: string) => {
-    if (status === "PROSPECTIVE_GRADUATE") {
-      return "졸업 예정";
-    }
-
-    if (status === "GRADUATE") {
-      return "졸업";
-    }
-
-    if (status === "QUALIFICATION_EXAM") {
-      return "검정고시";
-    }
-
-    return "-";
   };
 
   const getApplicationStatusLabel = (status?: string) => {

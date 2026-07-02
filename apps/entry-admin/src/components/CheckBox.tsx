@@ -33,7 +33,7 @@ const Container = styled.div`
 const Label = styled.label`
   font-size: 16px;
   font-weight: 500;
-  color: #878079;
+  color: ${colors.gray[400]};
   cursor: pointer;
   white-space: nowrap;
   display: flex;

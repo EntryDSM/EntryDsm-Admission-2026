@@ -260,18 +260,28 @@ export const ApplicantsList = () => {
         </FilterControl>
       </Toolbar>
 
-      <TableScroll>
-        <ApplicantsTitle>
-          {APPLICANT_TABLE_HEADERS.map(header => (
-            <Title key={header}>{header}</Title>
+      <TableScroll role="table" aria-label="지원자 목록" aria-colcount={APPLICANT_TABLE_HEADERS.length}>
+        <ApplicantsTitle role="row">
+          {APPLICANT_TABLE_HEADERS.map((header, index) => (
+            <Title key={header} role="columnheader" aria-colindex={index + 1}>
+              {header}
+            </Title>
           ))}
         </ApplicantsTitle>
 
-        <ApplicantsAllList>
+        <ApplicantsAllList role="rowgroup">
           {isLoading ? (
-            <LoadingContent>지원자 조회 데이터 기다리는 중...</LoadingContent>
+            <LoadingContent role="row">
+              <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
+                지원자 조회 데이터 기다리는 중...
+              </LoadingMessage>
+            </LoadingContent>
           ) : paginatedApplicants.length === 0 ? (
-            <LoadingContent>지원자 내역이 없습니다.</LoadingContent>
+            <LoadingContent role="row">
+              <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
+                지원자 내역이 없습니다.
+              </LoadingMessage>
+            </LoadingContent>
           ) : (
             paginatedApplicants.map(applicant => (
               <Applicant
@@ -279,6 +289,7 @@ export const ApplicantsList = () => {
                 receiptCode={applicant.receiptCode}
                 applicationType={applicant.applicationType}
                 applicantName={applicant.applicantName}
+                examinationNumber={applicant.examinationNumber}
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
@@ -402,7 +413,7 @@ const ApplicantsTitle = styled.div`
 
 const Title = styled.div`
   min-width: 0;
-  color: #878079;
+  color: ${colors.gray[400]};
   font-size: 16px;
   font-weight: 500;
   text-align: center;
@@ -421,7 +432,11 @@ const LoadingContent = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #878079;
+  color: ${colors.gray[400]};
   font-size: 16px;
   font-weight: 500;
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
 `;
