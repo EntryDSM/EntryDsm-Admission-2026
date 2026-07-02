@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn, useModal } from "@entry/ui";
@@ -57,17 +57,186 @@ type EducationKey = (typeof EDUCATION_OPTIONS)[number]["key"];
 type ApplicationType = {
   receiptCode: number;
   applicantName: string;
+  birthDay?: string;
+  gender?: string;
+  phoneNumber?: string;
   applicationType: "COMMON" | "MEISTER" | "SOCIAL";
   educationalStatus: "PROSPECTIVE_GRADUATE" | "GRADUATE" | "QUALIFICATION_EXAM";
   isDaejeon: boolean;
   isArrived: boolean;
 };
 
-const EMPTY_APPLICANTS: ApplicationType[] = [];
+const MOCK_APPLICANTS: ApplicationType[] = [
+  {
+    receiptCode: 1,
+    applicantName: "홍길동",
+    birthDay: "2010.03.12",
+    gender: "남자",
+    phoneNumber: "010-1234-0001",
+    applicationType: "MEISTER",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: true,
+    isArrived: true,
+  },
+  {
+    receiptCode: 2,
+    applicantName: "김민준",
+    birthDay: "2010.07.08",
+    gender: "남자",
+    phoneNumber: "010-1234-0002",
+    applicationType: "COMMON",
+    educationalStatus: "GRADUATE",
+    isDaejeon: false,
+    isArrived: false,
+  },
+  {
+    receiptCode: 3,
+    applicantName: "이서연",
+    birthDay: "2010.11.21",
+    gender: "여자",
+    phoneNumber: "010-1234-0003",
+    applicationType: "SOCIAL",
+    educationalStatus: "QUALIFICATION_EXAM",
+    isDaejeon: true,
+    isArrived: true,
+  },
+  {
+    receiptCode: 4,
+    applicantName: "박지호",
+    birthDay: "2010.01.30",
+    gender: "남자",
+    phoneNumber: "010-1234-0004",
+    applicationType: "MEISTER",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: true,
+    isArrived: false,
+  },
+  {
+    receiptCode: 5,
+    applicantName: "최하린",
+    birthDay: "2010.05.16",
+    gender: "여자",
+    phoneNumber: "010-1234-0005",
+    applicationType: "COMMON",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: false,
+    isArrived: true,
+  },
+  {
+    receiptCode: 6,
+    applicantName: "정도윤",
+    birthDay: "2010.09.02",
+    gender: "남자",
+    phoneNumber: "010-1234-0006",
+    applicationType: "MEISTER",
+    educationalStatus: "GRADUATE",
+    isDaejeon: true,
+    isArrived: true,
+  },
+  {
+    receiptCode: 7,
+    applicantName: "강서준",
+    birthDay: "2010.12.24",
+    gender: "남자",
+    phoneNumber: "010-1234-0007",
+    applicationType: "SOCIAL",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: false,
+    isArrived: false,
+  },
+  {
+    receiptCode: 8,
+    applicantName: "윤채원",
+    birthDay: "2010.04.05",
+    gender: "여자",
+    phoneNumber: "010-1234-0008",
+    applicationType: "COMMON",
+    educationalStatus: "QUALIFICATION_EXAM",
+    isDaejeon: true,
+    isArrived: true,
+  },
+  {
+    receiptCode: 9,
+    applicantName: "장예준",
+    birthDay: "2010.08.19",
+    gender: "남자",
+    phoneNumber: "010-1234-0009",
+    applicationType: "MEISTER",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: true,
+    isArrived: false,
+  },
+  {
+    receiptCode: 10,
+    applicantName: "임수아",
+    birthDay: "2010.02.11",
+    gender: "여자",
+    phoneNumber: "010-1234-0010",
+    applicationType: "COMMON",
+    educationalStatus: "GRADUATE",
+    isDaejeon: false,
+    isArrived: true,
+  },
+  {
+    receiptCode: 11,
+    applicantName: "한지우",
+    birthDay: "2010.06.27",
+    gender: "여자",
+    phoneNumber: "010-1234-0011",
+    applicationType: "SOCIAL",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: true,
+    isArrived: true,
+  },
+  {
+    receiptCode: 12,
+    applicantName: "오시현",
+    birthDay: "2010.10.14",
+    gender: "남자",
+    phoneNumber: "010-1234-0012",
+    applicationType: "MEISTER",
+    educationalStatus: "GRADUATE",
+    isDaejeon: false,
+    isArrived: false,
+  },
+  {
+    receiptCode: 13,
+    applicantName: "신유나",
+    birthDay: "2010.03.29",
+    gender: "여자",
+    phoneNumber: "010-1234-0013",
+    applicationType: "COMMON",
+    educationalStatus: "QUALIFICATION_EXAM",
+    isDaejeon: true,
+    isArrived: false,
+  },
+  {
+    receiptCode: 14,
+    applicantName: "서준호",
+    birthDay: "2010.07.23",
+    gender: "남자",
+    phoneNumber: "010-1234-0014",
+    applicationType: "MEISTER",
+    educationalStatus: "PROSPECTIVE_GRADUATE",
+    isDaejeon: false,
+    isArrived: true,
+  },
+  {
+    receiptCode: 15,
+    applicantName: "문예린",
+    birthDay: "2010.12.03",
+    gender: "여자",
+    phoneNumber: "010-1234-0015",
+    applicationType: "SOCIAL",
+    educationalStatus: "GRADUATE",
+    isDaejeon: true,
+    isArrived: true,
+  },
+];
 
 export const ApplicantsList = () => {
   const APPLICANTS_PER_PAGE = 10;
-  const applicantsList = EMPTY_APPLICANTS;
+  const applicantsList = MOCK_APPLICANTS;
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedApplicant, setSelectedApplicant] = useState<ApplicationType | null>(null);
   const [filters, setFilters] = useState<{
@@ -90,10 +259,10 @@ export const ApplicantsList = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
   };
 
-  const handleSearchChange = (keyword: string) => {
+  const handleSearchChange = useCallback((keyword: string) => {
     setSearchKeyword(keyword);
     setCurrentPage(1);
-  };
+  }, []);
 
   const handleCheckBoxChange = <G extends FilterGroupType, K extends keyof (typeof filters)[G]>(group: G, key: K) => {
     setFilters(prev => ({
@@ -280,6 +449,9 @@ export const ApplicantsList = () => {
           onClose={close}
           applicant={{
             name: selectedApplicant.applicantName,
+            birthDay: selectedApplicant.birthDay,
+            gender: selectedApplicant.gender,
+            phoneNumber: selectedApplicant.phoneNumber,
             isDaejeon: selectedApplicant.isDaejeon,
             applicationType: selectedApplicant.applicationType,
             educationalStatus: selectedApplicant.educationalStatus,

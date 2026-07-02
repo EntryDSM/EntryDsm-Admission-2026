@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
@@ -12,8 +12,14 @@ const SEARCH_DEBOUNCE_DELAY = 300;
 
 export const FindApplicantInput = ({ onSearch }: IFindApplicantInputType) => {
   const [keyword, setKeyword] = useState<string>("");
+  const isInitialRender = useRef(true);
 
   useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+
     const timeoutId = window.setTimeout(() => {
       onSearch(keyword);
     }, SEARCH_DEBOUNCE_DELAY);

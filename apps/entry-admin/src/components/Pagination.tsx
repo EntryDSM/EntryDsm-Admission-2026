@@ -57,6 +57,10 @@ export const PagiNation = ({ currentPage, totalPage, onPageChange }: IPagiNation
   };
 
   const goToPage = (page: number) => {
+    if (page < 1 || page > totalPage || page === currentPage) {
+      return;
+    }
+
     onPageChange(page);
   };
 

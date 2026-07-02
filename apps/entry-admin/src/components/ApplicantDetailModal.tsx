@@ -8,6 +8,8 @@ interface ApplicantDetail {
   photoUrl?: string;
   name?: string;
   birthDay?: string;
+  gender?: string;
+  phoneNumber?: string;
   isDaejeon?: boolean;
   applicationType?: string;
   educationalStatus?: string;
@@ -242,6 +244,16 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
             </InfoRow>
 
             <InfoRow>
+              <InfoLabel>성별</InfoLabel>
+              <InfoValue>{applicant?.gender ?? "-"}</InfoValue>
+            </InfoRow>
+
+            <InfoRow>
+              <InfoLabel>연락처</InfoLabel>
+              <InfoValue>{applicant?.phoneNumber ?? "-"}</InfoValue>
+            </InfoRow>
+
+            <InfoRow>
               <InfoLabel>지역</InfoLabel>
               <InfoValue>{regionLabel}</InfoValue>
             </InfoRow>
@@ -252,7 +264,7 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
             </InfoRow>
 
             <InfoRow>
-              <InfoLabel>학력</InfoLabel>
+              <InfoLabel>구분</InfoLabel>
               <InfoValue>{getEducationalStatusLabel(applicant?.educationalStatus)}</InfoValue>
             </InfoRow>
 
