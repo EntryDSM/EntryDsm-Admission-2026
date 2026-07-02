@@ -37,38 +37,35 @@ export const FindApplicantInput = ({ onSearch }: IFindApplicantInputType) => {
 };
 
 const InputContainer = styled.div`
-  display: flex;
-  width: 60%;
+  width: 100%;
+  max-width: 800px;
   height: 48px;
+  display: flex;
+  align-items: center;
   border: 1px solid ${colors.gray[300]};
-  padding-left: 27px;
   border-radius: 24px;
-
-  @media (max-width: 768px) {
-    width: 80%;
-  }
+  padding: 12px 24px;
+  background-color: ${colors.extra.realWhite};
 
   @media (max-width: 480px) {
-    width: 100%;
-    padding-left: 20px;
+    padding: 12px 18px;
   }
 
   img {
-    width: 18px;
+    width: 24px;
+    height: 24px;
+    opacity: 0.65;
   }
 
   input {
     width: 100%;
-    padding-left: 13px;
-    border-radius: 24px;
+    padding-left: 10px;
     border: none;
     outline: none;
     background: transparent;
-
-    &:placeholder-shown {
-      color: ${colors.gray[300]};
-      font-size: 16px;
-    }
+    color: ${colors.gray[500]};
+    font-size: 16px;
+    font-weight: 500;
 
     &::placeholder {
       color: ${colors.gray[300]};

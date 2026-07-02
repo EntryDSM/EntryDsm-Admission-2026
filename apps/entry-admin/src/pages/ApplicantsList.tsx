@@ -28,16 +28,26 @@ const EDUCATION_OPTIONS = [
 ] as const;
 
 const PRINT_ACTION_LABELS = [
-  "수험번호 업데이트",
-  "지원서 점검표 출력",
+  "수험번호 발급",
+  "지원자 점검표 출력",
   "전형 자료 출력",
-  "1차 합격자 번호 목록 출력",
+  "1차 합격자 명단 출력",
   "수험표 출력",
 ] as const;
 
 const PRINT_ACTION_UNAVAILABLE_MESSAGE = "아직 지원하지 않는 기능입니다.";
 
-const APPLICANT_TABLE_HEADERS = ["접수 번호", "이름", "지역", "전형", "학력", "원서 도착", "최종 제출"] as const;
+const APPLICANT_TABLE_HEADERS = [
+  "접수 번호",
+  "이름",
+  "지역",
+  "전형",
+  "구분",
+  "수험번호",
+  "원서 도착 여부",
+  "상태",
+  "최종 합격 등록",
+] as const;
 
 type RegionKey = (typeof REGION_OPTIONS)[number]["key"];
 type AdmissionKey = (typeof ADMISSION_OPTIONS)[number]["key"];
@@ -56,7 +66,7 @@ type ApplicationType = {
 const EMPTY_APPLICANTS: ApplicationType[] = [];
 
 export const ApplicantsList = () => {
-  const APPLICANTS_PER_PAGE = 20;
+  const APPLICANTS_PER_PAGE = 10;
   const applicantsList = EMPTY_APPLICANTS;
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedApplicant, setSelectedApplicant] = useState<ApplicationType | null>(null);
@@ -75,6 +85,7 @@ export const ApplicantsList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { isOpen, open, close } = useModal();
   const isLoading = false;
+
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
   };
@@ -104,7 +115,6 @@ export const ApplicantsList = () => {
     open();
   };
 
-  // 클라이언트 사이드 필터링
   const filteredApplicants = useMemo(() => {
     let filtered = applicantsList;
 
@@ -114,12 +124,10 @@ export const ApplicantsList = () => {
       filtered = filtered.filter(a => a.isDaejeon === isDaejeonSelected);
     }
 
-    // 검색어 필터
     if (searchKeyword) {
       filtered = filtered.filter(a => a.applicantName.toLocaleLowerCase().includes(searchKeyword.toLocaleLowerCase()));
     }
 
-    // 전형 필터 (여러 개 선택 가능)
     const selectedAdmissions = Object.entries(filters.admission)
       .filter(([, v]) => v)
       .map(([k]) => k as AdmissionKey);
@@ -134,7 +142,6 @@ export const ApplicantsList = () => {
       filtered = filtered.filter(a => allowedTypes.includes(a.applicationType));
     }
 
-    // 학력 필터 (여러 개 선택 가능)
     const selectedEducation = Object.entries(filters.education)
       .filter(([, v]) => v)
       .map(([k]) => k as EducationKey);
@@ -149,12 +156,10 @@ export const ApplicantsList = () => {
       filtered = filtered.filter(a => allowedEducation.includes(a.educationalStatus));
     }
 
-    // 원서 도착 필터
     if (filters.status.received) {
       filtered = filtered.filter(a => a.isArrived === true);
     }
 
-    // 정렬
     return [...filtered].sort((a, b) => a.receiptCode - b.receiptCode);
   }, [applicantsList, searchKeyword, filters]);
 
@@ -172,13 +177,16 @@ export const ApplicantsList = () => {
 
   return (
     <Container>
-      <HeadContent>
+      <SearchSection>
         <FindApplicantInput onSearch={handleSearchChange} />
+      </SearchSection>
+
+      <Toolbar>
         <ButtonContainer>
           {PRINT_ACTION_LABELS.map(label => (
             <Btn
               key={label}
-              color={colors.extra.realWhite}
+              color={colors.gray[50]}
               backgroundColor={colors.green[400]}
               hoverBackgroundColor={colors.green[500]}
               onClick={handlePublishOnlyClick}
@@ -187,11 +195,9 @@ export const ApplicantsList = () => {
             </Btn>
           ))}
         </ButtonContainer>
-      </HeadContent>
 
-      <FilterControl>
-        <LabelContainer>
-          <Section>
+        <FilterControl>
+          <FilterGroup>
             {REGION_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
@@ -200,9 +206,9 @@ export const ApplicantsList = () => {
                 onChange={() => handleCheckBoxChange("region", item.key)}
               />
             ))}
-          </Section>
+          </FilterGroup>
 
-          <Section id="admission">
+          <FilterGroup>
             {ADMISSION_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
@@ -211,9 +217,9 @@ export const ApplicantsList = () => {
                 onChange={() => handleCheckBoxChange("admission", item.key)}
               />
             ))}
-          </Section>
+          </FilterGroup>
 
-          <Section>
+          <FilterGroup>
             {STATUS_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
@@ -222,9 +228,9 @@ export const ApplicantsList = () => {
                 onChange={() => handleCheckBoxChange("status", item.key)}
               />
             ))}
-          </Section>
+          </FilterGroup>
 
-          <Section>
+          <FilterGroup>
             {EDUCATION_OPTIONS.map(item => (
               <CheckBox
                 key={item.key}
@@ -233,38 +239,39 @@ export const ApplicantsList = () => {
                 onChange={() => handleCheckBoxChange("education", item.key)}
               />
             ))}
-          </Section>
-        </LabelContainer>
-      </FilterControl>
+          </FilterGroup>
+        </FilterControl>
+      </Toolbar>
 
-      <ApplicantsTitle>
-        <LeftTitle>
+      <TableScroll>
+        <ApplicantsTitle>
           {APPLICANT_TABLE_HEADERS.map(header => (
             <Title key={header}>{header}</Title>
           ))}
-        </LeftTitle>
-      </ApplicantsTitle>
+        </ApplicantsTitle>
 
-      <ApplicantsAllList>
-        {isLoading ? (
-          <LoadingContent>지원자 조회 데이터 기다리는 중...</LoadingContent>
-        ) : paginatedApplicants.length === 0 ? (
-          <LoadingContent>지원자 내역이 없습니다.</LoadingContent>
-        ) : (
-          paginatedApplicants.map(applicant => (
-            <Applicant
-              key={applicant.receiptCode}
-              receiptCode={applicant.receiptCode}
-              applicationType={applicant.applicationType}
-              applicantName={applicant.applicantName}
-              educationalStatus={applicant.educationalStatus}
-              isDaejeon={applicant.isDaejeon}
-              isArrived={applicant.isArrived}
-              onClick={() => handleApplicantClick(applicant)}
-            />
-          ))
-        )}
-      </ApplicantsAllList>
+        <ApplicantsAllList>
+          {isLoading ? (
+            <LoadingContent>지원자 조회 데이터 기다리는 중...</LoadingContent>
+          ) : paginatedApplicants.length === 0 ? (
+            <LoadingContent>지원자 내역이 없습니다.</LoadingContent>
+          ) : (
+            paginatedApplicants.map(applicant => (
+              <Applicant
+                key={applicant.receiptCode}
+                receiptCode={applicant.receiptCode}
+                applicationType={applicant.applicationType}
+                applicantName={applicant.applicantName}
+                educationalStatus={applicant.educationalStatus}
+                isDaejeon={applicant.isDaejeon}
+                isArrived={applicant.isArrived}
+                onClick={() => handleApplicantClick(applicant)}
+                onRegisterClick={handlePublishOnlyClick}
+              />
+            ))
+          )}
+        </ApplicantsAllList>
+      </TableScroll>
 
       {selectedApplicant?.receiptCode && (
         <ApplicantDetailModal
@@ -285,16 +292,8 @@ export const ApplicantsList = () => {
   );
 };
 
-const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 16px;
-  flex-wrap: wrap;
-`;
-
 const Container = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -304,201 +303,90 @@ const Container = styled.div`
   }
 `;
 
-const HeadContent = styled.div`
+const SearchSection = styled.div`
+  width: min(100%, 800px);
+  display: flex;
+  justify-content: center;
+`;
+
+const Toolbar = styled.section`
   width: 100%;
+  max-width: 1540px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 19px;
+  margin-top: 32px;
+`;
+
+const ButtonContainer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  button {
+    height: 48px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 500;
+  }
 `;
 
 const FilterControl = styled.div`
   width: 100%;
-  height: 48px;
-  max-width: 1540px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 24px;
-  gap: 19px;
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    height: auto;
-    gap: 16px;
-  }
-`;
-
-const LabelContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  width: 100%;
-  max-width: 1200px;
-  align-items: start;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  #admission {
-    border-inline: none;
-    padding: 0;
-  }
-`;
-
-const Section = styled.div`
+  min-height: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 15px;
+  justify-content: space-between;
+  gap: 32px;
 
-  @media (max-width: 480px) {
+  @media (max-width: 1280px) {
     flex-wrap: wrap;
-    gap: 8px;
+    justify-content: center;
+    row-gap: 16px;
   }
+
+  @media (max-width: 640px) {
+    justify-content: flex-start;
+    gap: 14px 20px;
+  }
+`;
+
+const FilterGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+`;
+
+const TableScroll = styled.div`
+  width: 100%;
+  max-width: 1540px;
+  margin-top: 28px;
 `;
 
 const ApplicantsTitle = styled.div`
   width: 100%;
   height: 40px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr 0.7fr 1.4fr 0.9fr 0.9fr 1.3fr 1fr 1.2fr;
+  column-gap: clamp(8px, 2.6vw, 50px);
   align-items: center;
-  justify-content: space-between;
-  padding-block: 30px;
-
-  @media (max-width: 768px) {
-    overflow-x: auto;
-  }
-
-  .mobile-hidden {
-    @media (max-width: 600px) {
-      display: none;
-    }
-  }
-
-  .tablet-hidden {
-    @media (max-width: 400px) {
-      display: none;
-    }
-  }
-`;
-
-const LeftTitle = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-
-  > div {
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  > div:nth-of-type(1) {
-    width: 100px;
-  }
-  > div:nth-of-type(2) {
-    width: 100px;
-  }
-  > div:nth-of-type(3) {
-    width: 100px;
-  }
-  > div:nth-of-type(4) {
-    width: 140px;
-  }
-  > div:nth-of-type(5) {
-    width: 120px;
-  }
-  > div:nth-of-type(6) {
-    width: 120px;
-  }
-  > div:nth-of-type(7) {
-    width: 120px;
-  }
-
-  @media (max-width: 1200px) {
-    > div:nth-of-type(1) {
-      width: 90px;
-    }
-    > div:nth-of-type(2) {
-      width: 90px;
-    }
-    > div:nth-of-type(3) {
-      width: 90px;
-    }
-    > div:nth-of-type(4) {
-      width: 120px;
-    }
-    > div:nth-of-type(5) {
-      width: 100px;
-    }
-    > div:nth-of-type(6) {
-      width: 100px;
-    }
-    > div:nth-of-type(7) {
-      width: 100px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    > div:nth-of-type(1) {
-      width: 70px;
-    }
-    > div:nth-of-type(2) {
-      width: 70px;
-    }
-    > div:nth-of-type(3) {
-      width: 70px;
-    }
-    > div:nth-of-type(4) {
-      width: 100px;
-    }
-    > div:nth-of-type(5) {
-      width: 80px;
-    }
-    > div:nth-of-type(6) {
-      width: 80px;
-    }
-    > div:nth-of-type(7) {
-      width: 80px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    > div:nth-of-type(1) {
-      width: 60px;
-    }
-    > div:nth-of-type(2) {
-      width: 60px;
-    }
-    > div:nth-of-type(3) {
-      width: 60px;
-    }
-    > div:nth-of-type(4) {
-      width: 80px;
-    }
-    > div:nth-of-type(5) {
-      width: 70px;
-    }
-    > div:nth-of-type(6) {
-      width: 70px;
-    }
-    > div:nth-of-type(7) {
-      width: 70px;
-    }
-  }
 `;
 
 const Title = styled.div`
+  min-width: 0;
+  color: #878079;
   font-size: 16px;
-  color: ${colors.gray[400]};
+  font-weight: 500;
+  text-align: center;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     font-size: 14px;
   }
 `;
@@ -508,9 +396,11 @@ const ApplicantsAllList = styled.div`
 `;
 
 const LoadingContent = styled.div`
+  min-height: 332px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${colors.gray[400]};
-  margin-top: 80px;
+  color: #878079;
+  font-size: 16px;
+  font-weight: 500;
 `;

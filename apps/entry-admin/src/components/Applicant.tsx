@@ -9,6 +9,39 @@ type IApplicationComponentType = {
   isDaejeon?: boolean;
   isArrived?: boolean;
   onClick: () => void;
+  onRegisterClick?: () => void;
+};
+
+const getApplicationTypeLabel = (applicationType?: string) => {
+  if (applicationType === "SOCIAL") {
+    return "사회 통합 전형";
+  }
+
+  if (applicationType === "MEISTER") {
+    return "마이스터 인재 전형";
+  }
+
+  if (applicationType === "COMMON") {
+    return "일반 전형";
+  }
+
+  return "-";
+};
+
+const getEducationalStatusLabel = (educationalStatus?: string) => {
+  if (educationalStatus === "PROSPECTIVE_GRADUATE") {
+    return "졸업예정";
+  }
+
+  if (educationalStatus === "GRADUATE") {
+    return "졸업";
+  }
+
+  if (educationalStatus === "QUALIFICATION_EXAM") {
+    return "검정고시";
+  }
+
+  return "-";
 };
 
 export const Applicant = ({
@@ -19,238 +52,107 @@ export const Applicant = ({
   isDaejeon,
   isArrived,
   onClick,
+  onRegisterClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
+  const statusLabel = isArrived ? "원서 도착" : "-";
+
+  const handleRegisterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onRegisterClick?.();
+  };
 
   return (
     <Container onClick={onClick}>
-      <LeftContent>
-        <Content>{receiptCode ?? "-"}</Content>
-        <Content>{applicantName || "-"}</Content>
-        <Content className="tablet-hidden">{regionLabel}</Content>
-        <Content className="mobile-hidden">
-          {applicationType === "SOCIAL"
-            ? "사회통합"
-            : applicationType === "MEISTER"
-              ? "마이스터전형"
-              : applicationType === "COMMON"
-                ? "일반"
-                : "-"}
-        </Content>
-        <Content>
-          {educationalStatus === "PROSPECTIVE_GRADUATE"
-            ? "졸업 예정"
-            : educationalStatus === "GRADUATE"
-              ? "졸업"
-              : educationalStatus === "QUALIFICATION_EXAM"
-                ? "검정고시"
-                : "-"}
-        </Content>
-        <CheckboxContent className="mobile-hidden">
-          <StyledCheckbox type="checkbox" checked={!!isArrived} onClick={event => event.stopPropagation()} readOnly />
-        </CheckboxContent>
-        <CheckboxContent className="mobile-hidden">{isArrived ? "완료" : "미완료"}</CheckboxContent>
-      </LeftContent>
+      <Cell>{receiptCode ?? "-"}</Cell>
+      <Cell>{applicantName || "-"}</Cell>
+      <Cell>{regionLabel}</Cell>
+      <Cell>{getApplicationTypeLabel(applicationType)}</Cell>
+      <Cell>{getEducationalStatusLabel(educationalStatus)}</Cell>
+      <Cell>-</Cell>
+      <CheckboxCell>
+        <StyledCheckbox type="checkbox" checked={!!isArrived} onClick={event => event.stopPropagation()} readOnly />
+      </CheckboxCell>
+      <Cell>{statusLabel}</Cell>
+      <RegisterCell>
+        <RegisterButton type="button" onClick={handleRegisterClick}>
+          합격자 등록
+        </RegisterButton>
+      </RegisterCell>
     </Container>
   );
 };
 
 const Container = styled.div`
   width: 100%;
-  height: auto;
-  border-top: 1px solid ${colors.gray[300]};
-  display: flex;
+  height: 83px;
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr 0.7fr 1.4fr 0.9fr 0.9fr 1.3fr 1fr 1.2fr;
+  column-gap: clamp(8px, 2.6vw, 50px);
   align-items: center;
-  justify-content: flex-start;
+  background-color: ${colors.extra.realWhite};
   cursor: pointer;
 
-  @media (max-width: 768px) {
-    overflow-x: auto;
-  }
-
-  .mobile-hidden {
-    @media (max-width: 600px) {
-      display: none;
-    }
-  }
-
-  .tablet-hidden {
-    @media (max-width: 400px) {
-      display: none;
-    }
+  &:hover {
+    background-color: ${colors.gray[50]};
   }
 `;
 
-const LeftContent = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-
-  > div {
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  > div:nth-of-type(1) {
-    width: 100px;
-  } /* 접수 번호 */
-  > div:nth-of-type(2) {
-    width: 100px;
-  } /* 이름 */
-  > div:nth-of-type(3) {
-    width: 100px;
-  } /* 지역 */
-  > div:nth-of-type(4) {
-    width: 140px;
-  } /* 전형 */
-  > div:nth-of-type(5) {
-    width: 120px;
-  } /* 학력 */
-  > div:nth-of-type(6) {
-    width: 120px;
-  } /* 원서 도착 */
-  > div:nth-of-type(7) {
-    width: 120px;
-  } /* 최종 제출 */
-
-  @media (max-width: 1200px) {
-    > div:nth-of-type(1) {
-      width: 90px;
-    }
-    > div:nth-of-type(2) {
-      width: 90px;
-    }
-    > div:nth-of-type(3) {
-      width: 90px;
-    }
-    > div:nth-of-type(4) {
-      width: 120px;
-    }
-    > div:nth-of-type(5) {
-      width: 100px;
-    }
-    > div:nth-of-type(6) {
-      width: 100px;
-    }
-    > div:nth-of-type(7) {
-      width: 100px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    > div:nth-of-type(1) {
-      width: 70px;
-    }
-    > div:nth-of-type(2) {
-      width: 70px;
-    }
-    > div:nth-of-type(3) {
-      width: 70px;
-    }
-    > div:nth-of-type(4) {
-      width: 100px;
-    }
-    > div:nth-of-type(5) {
-      width: 80px;
-    }
-    > div:nth-of-type(6) {
-      width: 80px;
-    }
-    > div:nth-of-type(7) {
-      width: 80px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    > div:nth-of-type(1) {
-      width: 60px;
-    }
-    > div:nth-of-type(2) {
-      width: 60px;
-    }
-    > div:nth-of-type(3) {
-      width: 60px;
-    }
-    > div:nth-of-type(4) {
-      width: 80px;
-    }
-    > div:nth-of-type(5) {
-      width: 70px;
-    }
-    > div:nth-of-type(6) {
-      width: 70px;
-    }
-    > div:nth-of-type(7) {
-      width: 70px;
-    }
-  }
-`;
-
-const Content = styled.div`
-  font-size: 16px;
-  color: ${colors.gray[400]};
-  padding: 32px 0;
+const Cell = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-
-  @media (max-width: 1200px) {
-    padding: 24px 0;
-  }
+  min-width: 0;
+  padding: 0 4px;
+  color: #878079;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   @media (max-width: 768px) {
-    padding: 20px 0;
-  }
-
-  @media (max-width: 600px) {
-    padding: 16px 0;
     font-size: 14px;
   }
-
-  @media (max-width: 400px) {
-    padding: 12px 0;
-    font-size: 13px;
-  }
 `;
 
-const CheckboxContent = styled.div`
-  padding: 32px 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  color: ${colors.gray[400]};
+const CheckboxCell = styled(Cell)`
+  padding: 0;
+`;
 
-  @media (max-width: 1200px) {
-    padding: 24px 0;
-  }
-
-  @media (max-width: 768px) {
-    padding: 20px 0;
-  }
-
-  @media (max-width: 600px) {
-    padding: 16px 0;
-  }
-
-  @media (max-width: 400px) {
-    padding: 12px 0;
-  }
+const RegisterCell = styled(Cell)`
+  padding: 0;
 `;
 
 const StyledCheckbox = styled.input`
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: ${colors.green[400]};
   cursor: pointer;
-  accent-color: #4ade80;
+`;
 
-  @media (max-width: 600px) {
-    width: 16px;
-    height: 16px;
+const RegisterButton = styled.button`
+  height: 37px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: ${colors.green[400]};
+  color: ${colors.gray[50]};
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${colors.green[500]};
   }
 
-  @media (max-width: 400px) {
-    width: 14px;
-    height: 14px;
+  @media (max-width: 768px) {
+    height: 34px;
+    padding: 8px;
+    font-size: 14px;
   }
 `;

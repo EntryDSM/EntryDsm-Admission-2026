@@ -88,32 +88,34 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   margin-top: 80px;
+  gap: 10px;
 
   @media (max-width: 768px) {
     margin-top: 70px;
+    gap: 8px;
   }
 
   #left {
-    margin-right: 5px;
+    margin-right: 0;
   }
 
   #right {
-    margin-left: 5px;
+    margin-left: 0;
   }
 `;
 
 const PageButton = styled.button<{ isActive?: boolean }>`
-  min-width: 35px;
-  height: 35px;
+  min-width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
   background: none;
   color: ${({ isActive }) => (isActive ? colors.green[500] : colors.gray[400])};
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 400;
 
   &:disabled {
     opacity: 0.5;
@@ -126,46 +128,46 @@ const PageButton = styled.button<{ isActive?: boolean }>`
   }
 
   @media (max-width: 768px) {
-    min-width: 36px;
-    height: 36px;
-    font-size: 13px;
+    min-width: 34px;
+    height: 34px;
+    font-size: 14px;
 
     img {
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
     }
   }
 
   @media (max-width: 480px) {
     min-width: 32px;
     height: 32px;
-    font-size: 12px;
+    font-size: 13px;
 
     img {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
     }
   }
 `;
 
 const Ellipsis = styled.span`
-  min-width: 35px;
-  height: 35px;
+  min-width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${colors.gray[400]};
-  font-size: 14px;
+  font-size: 16px;
 
   @media (max-width: 768px) {
-    min-width: 36px;
-    height: 36px;
-    font-size: 13px;
+    min-width: 34px;
+    height: 34px;
+    font-size: 14px;
   }
 
   @media (max-width: 480px) {
     min-width: 32px;
     height: 32px;
-    font-size: 12px;
+    font-size: 13px;
   }
 `;
