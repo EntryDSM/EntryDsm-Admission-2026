@@ -10,6 +10,7 @@ interface ApplicantDetail {
   birthDay?: string;
   gender?: string;
   phoneNumber?: string;
+  examinationNumber?: string;
   isDaejeon?: boolean;
   applicationType?: string;
   educationalStatus?: string;
@@ -215,24 +216,33 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
 
         <ModalHeader>
           <ModalTitle id="applicant-detail-modal-title">지원자 상세 정보</ModalTitle>
-          <ApplicantImage>
-            {applicant?.photoUrl ? (
-              <img
-                src={applicant.photoUrl}
-                alt="지원자 사진"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <ProfilePlaceholder />
-            )}
-          </ApplicantImage>
+          <ApplicantPhotoArea>
+            <ApplicantNumberGroup>
+              <ApplicantNumber>
+                접수번호
+                <NumberBadge>{receiptCode ?? "-"}</NumberBadge>
+              </ApplicantNumber>
+
+              <ApplicantNumber>
+                수험번호
+                <NumberBadge>{applicant?.examinationNumber ?? "-"}</NumberBadge>
+              </ApplicantNumber>
+            </ApplicantNumberGroup>
+
+            <ApplicantImage>
+              {applicant?.photoUrl ? (
+                <img
+                  src={applicant.photoUrl}
+                  alt="지원자 사진"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <ProfilePlaceholder />
+              )}
+            </ApplicantImage>
+          </ApplicantPhotoArea>
 
           <ApplicantInfo>
-            <ApplicantNumber>
-              접수 번호
-              <NumberBadge>{receiptCode ?? "-"}</NumberBadge>
-            </ApplicantNumber>
-
             <InfoRow>
               <InfoLabel>이름</InfoLabel>
               <InfoValue>{applicant?.name ?? "-"}</InfoValue>
@@ -395,12 +405,23 @@ const ModalTitle = styled.h2`
 `;
 
 const ApplicantImage = styled.div`
-  flex-shrink: 0;
   border: 1px solid ${colors.gray[300]};
   border-radius: 8px;
   overflow: hidden;
   width: 200px;
   height: 253px;
+`;
+
+const ApplicantPhotoArea = styled.div`
+  flex-shrink: 0;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    width: 200px;
+  }
 `;
 
 const ProfilePlaceholder = styled.div`
@@ -417,17 +438,24 @@ const ApplicantInfo = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 35px;
+  gap: 28px;
   min-width: 0;
 `;
 
 const ApplicantNumber = styled.div`
   display: flex;
   align-items: center;
-  gap: 39px;
+  justify-content: space-between;
+  gap: 16px;
   font-size: 24px;
   font-weight: 500;
   color: ${colors.gray[500]};
+`;
+
+const ApplicantNumberGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 `;
 
 const NumberBadge = styled.span`
@@ -435,7 +463,6 @@ const NumberBadge = styled.span`
   font-size: 24px;
   font-weight: 500;
   text-align: right;
-  flex: 1;
 `;
 
 const InfoRow = styled.div`
