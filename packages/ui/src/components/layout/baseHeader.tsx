@@ -72,7 +72,7 @@ export const AdminHeader = () => {
       <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
         <EntryLogo isAdmin={true} />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
-          EntryDSM
+          EntryAdmin
         </Text>
       </Flex>
       <Flex gap={52} alignItems="center" height="fit-content" width="fit-content">
