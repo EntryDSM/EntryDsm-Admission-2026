@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
 import { EntryAuthTitle } from "../components/index";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 // import { useUserLogin } from "../hooks/useLogin";
 
 export const LoginPage = () => {

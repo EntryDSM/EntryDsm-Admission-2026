@@ -4,7 +4,7 @@ import { colors } from "@entry/design";
 import { SelectUser } from "../components";
 import { AuthLayout } from "../components/AuthLayout";
 import { AuthLink, AuthLinkText } from "../components/AuthLink";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 export const SignUpPage = () => {
   const [currentStep, setCurrentStep] = useState(1);

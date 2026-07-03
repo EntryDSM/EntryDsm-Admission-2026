@@ -4,7 +4,7 @@ import { SelectUser } from "../components";
 // import { colors } from "@entry/design";
 import { AuthLayout } from "../components/AuthLayout";
 import { AuthLink, AuthLinkText } from "../components/AuthLink";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ChangePassword } from "../components";
 
 export const FindPasswordPage = () => {
