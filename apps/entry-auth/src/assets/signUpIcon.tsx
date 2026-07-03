@@ -1,4 +1,4 @@
-import studentIcon from "./Student.svg";
+import studentIcon from "./student.svg";
 import parentIcon from "./parent.svg";
 
 interface ISignUpIconType {
