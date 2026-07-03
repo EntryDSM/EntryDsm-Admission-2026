@@ -49,7 +49,7 @@ const LoginKindContainer = styled.div`
   align-items: center;
   color: ${colors.gray[300]};
   gap: 22px;
-  margin-top: 60px;
+  margin-top: 22px;
 
   div:hover {
     color: ${colors.gray[400]};

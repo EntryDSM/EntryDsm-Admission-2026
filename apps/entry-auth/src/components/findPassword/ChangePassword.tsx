@@ -1,5 +1,5 @@
 // import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
@@ -11,12 +11,12 @@ export const ChangePassword = () => {
   // const [isFormValid, setIsFormValid] = useState<boolean>(false);
   // const [passwordError, setPasswordError] = useState<boolean>(false);
   // const [passwordCheckError, setPasswordCheckError] = useState<boolean>(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const handleSubmit = () => {
-    // if (!isFormValid) return;
-    navigate("/");
-  };
+  // const handleSubmit = () => {
+  //   if (!isFormValid) return;
+  //   navigate("/");
+  // };
 
   // const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const value = e.target.value;
@@ -45,17 +45,17 @@ export const ChangePassword = () => {
         type="password"
         isEye={true}
         label="비밀번호"
-        placeholder="변경할 비밀번호를 입력해주세요."
+        placeholder="변경할 비밀번호를 입력하세요"
         errorMsg="비밀번호 형식이 올바르지 않습니다."
       />
       <AuthInput
         type="password"
-        label="비밀번호 확인"
-        placeholder="비밀번호를 다시 입력해주세요."
+        label="비밀번호 재입력"
+        placeholder="비밀번호를 다시 입력하세요"
         errorMsg="비밀번호가 일치하지 않습니다."
         isEye={true}
       />
-      <CheckButton $disabled={!handleSubmit}>확인</CheckButton>
+      <CheckButton $disabled={true}>비밀번호 변경</CheckButton>
     </InputsWrapper>
   );
 };
@@ -64,8 +64,8 @@ const InputsWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 50%;
-  margin-top: 58px;
+  width: 100%;
+  margin-top: 55px;
   gap: 40px;
 
   @media (max-width: 1065px) {
@@ -82,8 +82,9 @@ const CheckButton = styled.button<{ $disabled: boolean }>`
   color: ${colors.extra.realWhite};
   font-size: 14px;
   font-weight: 550;
-  margin-top: 140px;
+  margin-top: 30px;
   transition: all 0.3s ease;
+  border: none;
   cursor: ${props => (props.$disabled ? "not-allowed" : "pointer")};
 
   &:hover {

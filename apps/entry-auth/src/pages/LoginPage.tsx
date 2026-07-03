@@ -6,7 +6,7 @@ import { EntryAuthTitle } from "../components/index";
 import { useNavigate } from "react-router-dom";
 // import { useUserLogin } from "../hooks/useLogin";
 
-const LoginPage = () => {
+export const LoginPage = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -158,10 +158,10 @@ const LoginButton = styled.button<{ $disabled: boolean }>`
   margin-top: 20%;
   border: none;
   border-radius: 12px;
-  cursor: ${props => (props.$disabled ? "not-allowed" : "pointer")};
   font-size: 15px;
   font-weight: 550;
   transition: all 0.4s ease;
+  cursor: ${props => (props.$disabled ? "not-allowed" : "pointer")};
 
   &:hover {
     background-color: ${colors.orange[850]};
@@ -189,5 +189,3 @@ const AuthLink = styled.div`
   border-inline-start: 2px solid ${colors.gray[100]};
   cursor: pointer;
 `;
-
-export default LoginPage;

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { SelectUser } from "../components";
-import styled from "@emotion/styled";
-import { colors } from "@entry/design";
+// import styled from "@emotion/styled";
+// import { colors } from "@entry/design";
 import { AuthLayout } from "../components/AuthLayout";
 import { AuthLink, AuthLinkText } from "../components/AuthLink";
 import { useNavigate } from "react-router-dom";
+import { ChangePassword } from "../components";
 
 export const FindPasswordPage = () => {
   const navigate = useNavigate();
@@ -21,15 +22,17 @@ export const FindPasswordPage = () => {
       case 1:
         return <SelectUser onNext={handleNextStep} />;
       case 2:
-        return <SecondStepPlaceholder>2단계 콘텐츠 준비 중</SecondStepPlaceholder>;
+        return <ChangePassword />;
       default:
         return null;
     }
   };
 
+  const title = currentStep === 1 ? "EntryDSM 비밀번호 찾기" : "EntryDSM 비밀번호 변경";
+
   return (
     <AuthLayout
-      title="EntryDSM 비밀번호 찾기"
+      title={title}
       footer={
         <>
           <AuthLinkText onClick={() => navigate("/signup")}>회원가입</AuthLinkText>
@@ -41,9 +44,3 @@ export const FindPasswordPage = () => {
     </AuthLayout>
   );
 };
-
-const SecondStepPlaceholder = styled.div`
-  margin-top: 40px;
-  font-size: 18px;
-  color: ${colors.gray[500]};
-`;
