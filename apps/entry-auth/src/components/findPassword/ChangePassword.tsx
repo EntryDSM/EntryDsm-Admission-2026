@@ -1,43 +1,17 @@
-// import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
 
 // 비밀번호 찾기에서의 password 변경 컴포넌트
 export const ChangePassword = () => {
-  // const [password, setPassword] = useState<string>("");
-  // const [passwordCheck, setPasswordCheck] = useState<string>("");
-  // const [isFormValid, setIsFormValid] = useState<boolean>(false);
-  // const [passwordError, setPasswordError] = useState<boolean>(false);
-  // const [passwordCheckError, setPasswordCheckError] = useState<boolean>(false);
-  // const navigate = useNavigate();
+  const [password, setPassword] = useState<string>("");
+  const [passwordCheck, setPasswordCheck] = useState<string>("");
 
-  // const handleSubmit = () => {
-  //   if (!isFormValid) return;
-  //   navigate("/");
-  // };
-
-  // const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const value = e.target.value;
-  //   setPassword(value);
-
-  //   setPasswordError(value.length < 8 || !/[!@#$%^&*(),.?":{}|<>]/.test(value));
-  // };
-
-  // const handlePasswordCheckChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const value = e.target.value;
-  //   setPasswordCheck(value);
-
-  //   setPasswordCheckError(value !== password);
-  // };
-
-  // useEffect(() => {
-  //   const isPasswordValid = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  //   const isPasswordCheckValid = password === passwordCheck;
-
-  //   setIsFormValid(isPasswordValid && isPasswordCheckValid);
-  // }, [password, passwordCheck]);
+  const isPasswordValid = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const passwordError = password.length > 0 && !isPasswordValid;
+  const passwordCheckError = passwordCheck.length > 0 && password !== passwordCheck;
+  const isFormValid = isPasswordValid && !passwordCheckError;
 
   return (
     <InputsWrapper>
@@ -45,17 +19,25 @@ export const ChangePassword = () => {
         type="password"
         isEye={true}
         label="비밀번호"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
         placeholder="변경할 비밀번호를 입력하세요"
-        errorMsg="비밀번호 형식이 올바르지 않습니다."
+        isError={passwordError}
+        errorMsg="＊8자 이상, 숫자, 특수문자를 포함해 비밀번호를 입력해 주세요."
       />
       <AuthInput
         type="password"
         label="비밀번호 재입력"
+        value={passwordCheck}
+        onChange={e => setPasswordCheck(e.target.value)}
         placeholder="비밀번호를 다시 입력하세요"
+        isError={passwordCheckError}
         errorMsg="비밀번호가 일치하지 않습니다."
         isEye={true}
       />
-      <CheckButton $disabled={true}>비밀번호 변경</CheckButton>
+      <CheckButton $disabled={!isFormValid} disabled={!isFormValid}>
+        비밀번호 변경
+      </CheckButton>
     </InputsWrapper>
   );
 };
