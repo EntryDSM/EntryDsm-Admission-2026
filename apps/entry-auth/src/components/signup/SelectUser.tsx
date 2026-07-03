@@ -16,10 +16,24 @@ export const SelectUser = ({ onNext }: ISelectUserType) => {
   return (
     <SelectUserContainer>
       <CardContainer>
-        <CardWrapper onClick={() => handleCardClick("student")}>
+        <CardWrapper
+          role="button"
+          tabIndex={0}
+          onClick={() => handleCardClick("student")}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") handleCardClick("student");
+          }}
+        >
           <AuthCard isStudent={true} title="학생 명의로 인증" />
         </CardWrapper>
-        <CardWrapper onClick={() => handleCardClick("parent")}>
+        <CardWrapper
+          role="button"
+          tabIndex={0}
+          onClick={() => handleCardClick("parent")}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") handleCardClick("parent");
+          }}
+        >
           <AuthCard isStudent={false} title="부모 명의로 인증" />
         </CardWrapper>
       </CardContainer>
@@ -46,9 +60,4 @@ const CardContainer = styled.div`
   overflow-y: hidden;
   padding-top: 15px;
   gap: 20px;
-
-  /* @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: center;
-  } */
 `;

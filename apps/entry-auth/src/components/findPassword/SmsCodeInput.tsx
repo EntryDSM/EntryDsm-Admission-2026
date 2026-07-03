@@ -9,19 +9,22 @@ interface IPhoneInputType {
 
 export const SmsCodeInput = ({ onNext }: IPhoneInputType) => {
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isVerified, setIsVerified] = useState<boolean>(false);
 
   const handleComplete = (code: string) => {
     // 인증 코드 더미값
     if (code === "12345678") {
       console.log("인증 성공");
       setErrorMessage("");
+      setIsVerified(true);
     } else {
       setErrorMessage("인증 번호가 올바르지 않습니다.");
+      setIsVerified(false);
     }
   };
 
   const handleNext = () => {
-    if (!errorMessage) {
+    if (isVerified) {
       onNext();
     }
   };

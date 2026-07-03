@@ -32,7 +32,7 @@ export const PhoneInput = ({ onNext }: IPhoneInputType) => {
 
     setPhoneNumber(formattedNumber);
 
-    setPhoneError(onlyNumber.length < 10);
+    setPhoneError(onlyNumber.length > 0 && onlyNumber.length < 11);
   };
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export const PhoneInput = ({ onNext }: IPhoneInputType) => {
         isError={!!phoneError}
         errorMsg="올바른 형식이 아닙니다."
       />
-      <NextButton onClick={handleNext} $disabled={!isFormValid}>
+      <NextButton onClick={handleNext} disabled={!isFormValid} $disabled={!isFormValid}>
         다음
       </NextButton>
     </PhoneInputContainer>

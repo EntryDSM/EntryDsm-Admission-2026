@@ -52,7 +52,9 @@ export const PinInputGroup = ({ length = 8, onComplete, error, onErrorClear }: I
         {values.map((value, index) => (
           <Input
             key={index}
-            // ref={el => (inputRefs.current[index] = el)}
+            ref={el => {
+              inputRefs.current[index] = el;
+            }}
             maxLength={1}
             value={value}
             onChange={e => handleChange(index, e.target.value)}

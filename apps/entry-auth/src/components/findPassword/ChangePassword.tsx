@@ -8,10 +8,10 @@ export const ChangePassword = () => {
   const [password, setPassword] = useState<string>("");
   const [passwordCheck, setPasswordCheck] = useState<string>("");
 
-  const isPasswordValid = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const passwordError = password.length > 0 && !isPasswordValid;
   const passwordCheckError = passwordCheck.length > 0 && password !== passwordCheck;
-  const isFormValid = isPasswordValid && !passwordCheckError;
+  const isFormValid = isPasswordValid && passwordCheck.length > 0 && password === passwordCheck;
 
   return (
     <InputsWrapper>

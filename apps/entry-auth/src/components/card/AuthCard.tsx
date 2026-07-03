@@ -16,7 +16,7 @@ export const AuthCard = ({ isStudent, title }: IAuthCardType) => {
         <TitleContainer>{title}</TitleContainer>
         <Description>EntryDSM에 {isStudent ? "학생" : "보호자"} 명의로 가입합니다.</Description>
       </ContentBox>
-      <img src={RigthArrow} alt="student icon" width={15} height={15} />
+      <img src={RigthArrow} alt="Right Arrow icon" width={15} height={15} />
     </AuthCardContainer>
   );
 };

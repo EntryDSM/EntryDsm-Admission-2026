@@ -5,7 +5,7 @@ interface ISignUpIconType {
   isStudent: boolean;
 }
 
-export const SignUpIcon = ({ isStudent = true }: ISignUpIconType) => {
+export const SignUpIcon = ({ isStudent }: ISignUpIconType) => {
   if (isStudent) {
     return <img src={studentIcon} alt="student icon" width={50} height={50} />;
   }

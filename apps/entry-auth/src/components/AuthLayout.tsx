@@ -14,7 +14,7 @@ export const AuthLayout = ({ title, footer, children }: AuthLayoutProps) => {
     <BackGroundWrapper>
       <PageContainer>
         <TitleWrapper>
-          <EntryAuthTitle children={title} />
+          <EntryAuthTitle>{title}</EntryAuthTitle>
         </TitleWrapper>
         {children}
         <LoginKindContainer>{footer}</LoginKindContainer>
