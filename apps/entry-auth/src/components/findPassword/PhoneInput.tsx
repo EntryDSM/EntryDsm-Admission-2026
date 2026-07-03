@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
 import styled from "@emotion/styled";
 import { AuthInput } from "@entry/ui";
 import { colors } from "@entry/design";
@@ -13,7 +14,7 @@ export const PhoneInput = ({ onNext }: IPhoneInputType) => {
   const [isFormValid] = useState<boolean>(false);
   const [isSending] = useState<boolean>(true);
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
     // 숫자만 추출

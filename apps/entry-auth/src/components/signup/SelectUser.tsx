@@ -8,8 +8,6 @@ interface ISelectUserType {
 // 회원가입 1단계
 export const SelectUser = ({ onNext }: ISelectUserType) => {
   const handleCardClick = (type: string) => {
-    const isParent = type === "parent";
-    localStorage.setItem("isParent", JSON.stringify(isParent));
     onNext(type);
   };
 

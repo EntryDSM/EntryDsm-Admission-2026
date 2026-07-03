@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useStepFlow } from "../hooks/useStepFlow";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { SelectUser } from "../components";
@@ -7,14 +7,8 @@ import { AuthLink, AuthLinkText } from "../components/AuthLink";
 import { useNavigate } from "react-router";
 
 export const SignUpPage = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const { currentStep, handleNextStep } = useStepFlow(1, 2);
   const navigate = useNavigate();
-
-  const handleNextStep = () => {
-    if (currentStep < 2) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
 
   const renderContent = () => {
     switch (currentStep) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useStepFlow } from "../hooks/useStepFlow";
 import { SelectUser } from "../components";
 // import styled from "@emotion/styled";
 // import { colors } from "@entry/design";
@@ -9,13 +9,8 @@ import { ChangePassword } from "../components";
 
 export const FindPasswordPage = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
 
-  const handleNextStep = () => {
-    if (currentStep < 2) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
+  const { currentStep, handleNextStep } = useStepFlow(1, 2);
 
   const renderContent = () => {
     switch (currentStep) {

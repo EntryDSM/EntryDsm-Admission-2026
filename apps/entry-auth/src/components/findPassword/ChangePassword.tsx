@@ -13,6 +13,13 @@ export const ChangePassword = () => {
   const passwordCheckError = passwordCheck.length > 0 && password !== passwordCheck;
   const isFormValid = isPasswordValid && passwordCheck.length > 0 && password === passwordCheck;
 
+  const handleChangePassword = () => {
+    if (!isFormValid) return;
+
+    // TODO: 비밀번호 변경 API 연동 필요
+    console.log("비밀번호 변경 요청", { password });
+  };
+
   return (
     <InputsWrapper>
       <AuthInput
@@ -35,7 +42,7 @@ export const ChangePassword = () => {
         errorMsg="비밀번호가 일치하지 않습니다."
         isEye={true}
       />
-      <CheckButton $disabled={!isFormValid} disabled={!isFormValid}>
+      <CheckButton type="button" $disabled={!isFormValid} disabled={!isFormValid} onClick={handleChangePassword}>
         비밀번호 변경
       </CheckButton>
     </InputsWrapper>
