@@ -114,7 +114,7 @@ const LoginPage = () => {
           <div style={{ cursor: "pointer" }} onClick={() => navigate("/signup")}>
             회원가입
           </div>
-          <AuthLink>비밀번호 찾기</AuthLink>
+          <AuthLink onClick={() => navigate("find-password")}>비밀번호 찾기</AuthLink>
         </LoginKindContainer>
       </LoginPageContainer>
     </BackGroundWrapper>
