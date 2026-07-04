@@ -195,6 +195,29 @@ export const AuthHeader = () => {
   );
 };
 
+export const MonitoringHeader = () => {
+  const navigate = useNavigate();
+
+  return (
+    <MonitoringActionSection>
+      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+        <EntryLogo isMonitoring={true} />
+        <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
+          EntryMonitoring
+        </Text>
+      </Flex>
+      <Flex gap={20} alignItems="center" height="fit-content" width="fit-content">
+        <Btn backgroundColor={"#6668F1"} hoverBackgroundColor={"#6668F1"}>
+          EntryDSM 지원자 페이지
+        </Btn>
+        <Btn backgroundColor={"#6668F1"} hoverBackgroundColor={"#6668F1"}>
+          Aws 콘솔 페이지
+        </Btn>
+      </Flex>
+    </MonitoringActionSection>
+  );
+};
+
 // const HeaderBtn = styled.button`
 //   padding: 8px 20px;
 //   border-radius: 12px;
@@ -351,3 +374,27 @@ const NavContent = styled.nav<{ isPath?: boolean }>`
 //   height: ${({ height }) => height};
 //   border-radius: 8px;
 // `;
+
+const MonitoringActionSection = styled.div`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 120px;
+  gap: 20px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  height: 70px;
+  transition: 0.4s ease-in-out;
+  z-index: 100;
+
+  @media (max-width: 1200px) {
+    padding: 0 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 12px;
+  }
+`;
