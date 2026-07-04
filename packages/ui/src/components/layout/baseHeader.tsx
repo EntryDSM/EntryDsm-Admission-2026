@@ -208,10 +208,19 @@ export const MonitoringHeader = () => {
         </Text>
       </Flex>
       <Flex gap={20} alignItems="center" height="fit-content" width="fit-content">
-        <Btn backgroundColor={"#6668F1"} hoverBackgroundColor={"#6668F1"}>
+        <Btn
+          onClick={() => (window.location.href = "https://auth.entrydsm.kr")}
+          aria-label="EntryDSM 홈으로 이동"
+          backgroundColor={"#6668F1"}
+          hoverBackgroundColor={"#6668F1"}
+        >
           EntryDSM 지원자 페이지
         </Btn>
-        <Btn backgroundColor={"#6668F1"} hoverBackgroundColor={"#6668F1"}>
+        <Btn
+          onClick={() => (window.location.href = "https://179895363651.signin.aws.amazon.com/console")}
+          backgroundColor={"#6668F1"}
+          hoverBackgroundColor={"#6668F1"}
+        >
           Aws 콘솔 페이지
         </Btn>
         <NameBox>
