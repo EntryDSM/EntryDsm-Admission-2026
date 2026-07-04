@@ -49,7 +49,7 @@ const BtnContainer = styled.button<Omit<IBtnType, "onClick" | "children">>`
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 20px;
+  font-size: 18px;
   color: ${({ color }) => color};
   background-color: ${({ backgroundColor }) => backgroundColor};
   border: 2px solid ${({ borderColor }) => borderColor};

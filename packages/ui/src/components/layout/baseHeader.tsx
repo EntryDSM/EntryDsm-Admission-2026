@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
+import { Logout } from "../../assets";
 
 // 공통 스크롤 감지 훅
 const useScrollY = () => {
@@ -203,7 +204,7 @@ export const MonitoringHeader = () => {
       <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
         <EntryLogo isMonitoring={true} />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
-          EntryMonitoring
+          EntryMonitor
         </Text>
       </Flex>
       <Flex gap={20} alignItems="center" height="fit-content" width="fit-content">
@@ -213,6 +214,10 @@ export const MonitoringHeader = () => {
         <Btn backgroundColor={"#6668F1"} hoverBackgroundColor={"#6668F1"}>
           Aws 콘솔 페이지
         </Btn>
+        <NameBox>
+          <Text fontSize={22}>김이름</Text>
+          <img src={Logout} alt="logout" />
+        </NameBox>
       </Flex>
     </MonitoringActionSection>
   );
@@ -287,6 +292,7 @@ const AuthHeaderContainer = styled.div`
   align-items: center;
   justify-self: start;
   position: fixed;
+  border-bottom: 1px solid ${colors.gray[200]};
   top: 0;
   left: 0;
   width: 100vw;
@@ -380,6 +386,7 @@ const MonitoringActionSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid ${colors.gray[200]};
   padding: 0 120px;
   gap: 20px;
   top: 0;
@@ -397,4 +404,9 @@ const MonitoringActionSection = styled.div`
   @media (max-width: 480px) {
     padding: 0 12px;
   }
+`;
+
+const NameBox = styled.div`
+  display: flex;
+  gap: 5px;
 `;
