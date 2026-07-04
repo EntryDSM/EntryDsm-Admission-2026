@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { AppLayout } from "./layout";
-import LoginPage from "./pages/Login";
+import { FindPasswordPage, SignUpPage, LoginPage } from "./pages";
 
 export const Router = createBrowserRouter([
   {
@@ -10,6 +10,14 @@ export const Router = createBrowserRouter([
       {
         path: "/",
         element: <LoginPage />,
+      },
+      {
+        path: "/signup",
+        element: <SignUpPage />,
+      },
+      {
+        path: "/find-password",
+        element: <FindPasswordPage />,
       },
     ],
   },
