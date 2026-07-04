@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { AppLayout } from "./layout";
+import { MonitoringPage } from "./pages";
 
 export const Router = createBrowserRouter([
   {
@@ -8,7 +9,7 @@ export const Router = createBrowserRouter([
     children: [
       {
         path: "/",
-        // element: <LoginPage />,
+        element: <MonitoringPage />,
       },
     ],
   },
