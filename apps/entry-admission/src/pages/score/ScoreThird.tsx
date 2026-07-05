@@ -1,0 +1,27 @@
+import { useState } from "react";
+import { Flex } from "@entry/design";
+import { GradeManager, usePageData } from "@entry/ui";
+
+export const ScoreThird = () => {
+  const subjects = ["국어", "사회", "역사", "수학", "과학", "기술 · 가정", "영어"];
+  const [globalGrade, setGlobalGrade] = useState<string | null>(null);
+
+  const [subjectGrades, setSubjectGrades] = usePageData("thirdGraduate");
+
+  // // 성적 변경 시 디버깅
+  // useEffect(() => {
+  //   console.log('ScoreThird - subjectGrades 변경됨:', subjectGrades);
+  // }, [subjectGrades]);
+
+  return (
+    <Flex width="100%" height="100%" isColumn={true}>
+      <GradeManager
+        subjects={subjects}
+        globalGrade={globalGrade}
+        subjectGrades={subjectGrades}
+        setGlobalGrade={setGlobalGrade}
+        setSubjectGrades={setSubjectGrades}
+      />
+    </Flex>
+  );
+};

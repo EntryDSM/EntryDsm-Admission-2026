@@ -98,6 +98,7 @@ export const PhotoUploadModal = ({
   const handleUpload = () => {
     if (!isLoading) {
       onFileUpload(fileObj);
+      setIsOpen(false);
     }
   };
 

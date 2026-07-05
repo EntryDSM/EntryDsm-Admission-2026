@@ -19,8 +19,8 @@ interface IApplicantInfoType {
 interface IGuardianInfoType {
   guardianName: string;
   guardianNumber: string;
-  gender: string;
   relationship: string[];
+  otherRelationship: string;
   postalCode: string; // 우편번호
   address: string; // 기본주소
   addressDetail: string; // 상세주소
@@ -36,6 +36,9 @@ interface IMiddleSchoolInfoType {
 
 interface IPersonalStatementsType {
   personalStmt: string;
+}
+
+interface StatementOfPurposeType {
   studyPlan: string;
 }
 
@@ -81,6 +84,7 @@ export interface ApplicationState {
   guardianInfo: IGuardianInfoType;
   middleSchoolInfo: IMiddleSchoolInfoType;
   personalStatements: IPersonalStatementsType;
+  StatementOfPurpose: StatementOfPurposeType;
   gedScore: IGedScoreType;
   attendanceVolunteer: IGedAttendanceVolunteerType;
   firstGraduate: IScoreType;
@@ -120,21 +124,23 @@ const initialState: ApplicationState = {
   guardianInfo: {
     guardianName: "",
     guardianNumber: "",
-    gender: "",
     relationship: [],
+    otherRelationship: "",
     postalCode: "",
     address: "",
     addressDetail: "",
   },
   middleSchoolInfo: {
-    schoolName: "",
-    schoolCode: "",
+    schoolName: "진잠중학교", //테스트 값 나중에 실제 사용할 때 수정필요
+    schoolCode: "진잠", // 테스트 값 나중에 실제 사용할 때 수정필요
     studentId: null,
     schoolPhone: "",
     teacherName: "",
   },
   personalStatements: {
     personalStmt: "",
+  },
+  StatementOfPurpose: {
     studyPlan: "",
   },
   gedScore: {
