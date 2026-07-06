@@ -1,10 +1,11 @@
 import { colors, Flex, Text } from "@entry/design";
 import styled from "@emotion/styled";
+import { useNavigate } from "react-router";
 import { Btn } from "@entry/ui";
 
 export const Submitted = () => {
   const resultDate = "2026년 00월 00일 00시 00분";
-
+  const navigate = useNavigate();
   return (
     <Flex width="100%" height="calc(100vh - 100px)" justifyContent="center" alignItems="center">
       <Flex width="40%" height="fit-content" isColumn={true} gap={60} alignItems="center">
@@ -20,11 +21,13 @@ export const Submitted = () => {
           <MsgWrapper>
             <Text fontSize={16}>1차 결과는 {resultDate} 발표 예정입니다.</Text>
             <Text fontSize={16} color={colors.gray[400]}>
-              최종 원서를 출력해 서명과 직은을 찍은 뒤 반드시 본교로 발송 또는 방문 접수하세요.
+              최종 원서를 출력해 서명과 직인을 찍은 뒤 반드시 본교로 발송 또는 방문 접수하세요.
             </Text>
           </MsgWrapper>
         </Flex>
-        <Btn width="100%">마이페이지</Btn>
+        <Btn width="100%" onClick={() => navigate("/")}>
+          마이페이지
+        </Btn>
       </Flex>
     </Flex>
   );

@@ -17,7 +17,9 @@ export const SubmitCheck = () => {
   };
 
   const handleSubmit = () => {
-    navigate("/submitted");
+    if (message === "확인했습니다") {
+      navigate("/submitted");
+    }
   };
 
   return (
@@ -56,6 +58,7 @@ export const SubmitCheck = () => {
               color={colors.orange[700]}
               borderColor={colors.orange[300]}
               hoverBackgroundColor={colors.orange[100]}
+              isBlocked={message !== "확인했습니다"}
             >
               제출
             </Btn>

@@ -19,6 +19,7 @@ type SchoolItem = {
   address: string;
 };
 
+// TODO: 연동 후 삭제 또는 주석처리 필요
 const MOCK_SCHOOLS: SchoolItem[] = [
   {
     code: "UI-0001",
@@ -50,23 +51,17 @@ export const SchoolSearchModal = ({
     setTempSelectedCode(prev => (prev === code ? null : code));
   };
 
-  const backRef = useRef<HTMLDivElement>(null);
-  const backClick: React.MouseEventHandler<HTMLDivElement> = e => {
-    if (backRef.current === e.target) {
-      setTempSelectedName(selectedName ?? null);
-      setTempSelectedCode(selectedCode ?? null);
-      setIsShow(false);
-      setDatas([]);
-      setSearchValue("");
-    }
-  };
-
-  const handleCancelClick = () => {
+  const handleClose = () => {
     setTempSelectedName(selectedName ?? null);
     setTempSelectedCode(selectedCode ?? null);
     setIsShow(false);
     setDatas([]);
     setSearchValue("");
+  };
+
+  const backRef = useRef<HTMLDivElement>(null);
+  const backClick: React.MouseEventHandler<HTMLDivElement> = e => {
+    if (backRef.current === e.target) handleClose();
   };
 
   const handleConfirmClick = () => {
@@ -132,7 +127,7 @@ export const SchoolSearchModal = ({
               backgroundColor={colors.extra.realWhite}
               color={colors.orange[800]}
               hoverBackgroundColor={colors.extra.realWhite}
-              onClick={handleCancelClick}
+              onClick={handleClose}
             >
               취소
             </PreviousBtn>

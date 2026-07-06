@@ -94,7 +94,7 @@ const routeToStateKey = {
   "/guardian-info": "guardianInfo",
   "/middle-school-info": "middleSchoolInfo",
   "/personal-statements": "personalStatements",
-  "/statement-of-purpose": "StatementOfPurpose",
+  "/statement-of-purpose": "statementOfPurpose",
   "/first-graduate": "firstGraduate",
   "/second-graduate": "secondGraduate",
   "/third-graduate": "thirdGraduate",

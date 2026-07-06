@@ -4,7 +4,7 @@ import { FormElement } from "../../components";
 import styled from "@emotion/styled";
 
 export const StatementOfPurpose = () => {
-  const [datas, setDatas] = usePageData("StatementOfPurpose");
+  const [datas, setDatas] = usePageData("statementOfPurpose");
 
   const handleStudyPlanChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;

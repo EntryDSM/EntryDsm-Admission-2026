@@ -38,7 +38,7 @@ interface IPersonalStatementsType {
   personalStmt: string;
 }
 
-interface StatementOfPurposeType {
+interface statementOfPurposeType {
   studyPlan: string;
 }
 
@@ -84,7 +84,7 @@ export interface ApplicationState {
   guardianInfo: IGuardianInfoType;
   middleSchoolInfo: IMiddleSchoolInfoType;
   personalStatements: IPersonalStatementsType;
-  StatementOfPurpose: StatementOfPurposeType;
+  statementOfPurpose: statementOfPurposeType;
   gedScore: IGedScoreType;
   attendanceVolunteer: IGedAttendanceVolunteerType;
   firstGraduate: IScoreType;
@@ -131,8 +131,8 @@ const initialState: ApplicationState = {
     addressDetail: "",
   },
   middleSchoolInfo: {
-    schoolName: "진잠중학교", //테스트 값 나중에 실제 사용할 때 수정필요
-    schoolCode: "진잠", // 테스트 값 나중에 실제 사용할 때 수정필요
+    schoolName: "",
+    schoolCode: "",
     studentId: null,
     schoolPhone: "",
     teacherName: "",
@@ -140,7 +140,7 @@ const initialState: ApplicationState = {
   personalStatements: {
     personalStmt: "",
   },
-  StatementOfPurpose: {
+  statementOfPurpose: {
     studyPlan: "",
   },
   gedScore: {
