@@ -13,8 +13,8 @@ export const ErrorLogCard = ({ label, value, items }: IErrorLogCardProps) => {
       <Label>{label}</Label>
       <Value>{value}</Value>
       <ItemList>
-        {items.map(item => (
-          <ItemBox>{item}</ItemBox>
+        {items.map((item, index) => (
+          <ItemBox key={index}>{item}</ItemBox>
         ))}
       </ItemList>
     </ErrorLogCardContainer>
