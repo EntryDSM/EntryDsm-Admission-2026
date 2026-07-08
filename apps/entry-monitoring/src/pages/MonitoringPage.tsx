@@ -11,24 +11,6 @@ interface MonitoringPageProps {
 }
 
 export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: MonitoringPageProps) => {
-  const labels = [
-    "00:00",
-    "1:00",
-    "2:00",
-    "3:00",
-    "4:00",
-    "5:00",
-    "6:00",
-    "7:00",
-    "8:00",
-    "9:00",
-    "10:00",
-    "11:00",
-    "12:00",
-  ];
-  // const apiRequestLabels = data.apiRequestChart.map((_, index) => `#${index + 1}`);
-  // const visitorLabels = data.visitorChart.map((_, index) => `#${index + 1}`);
-
   return (
     <Grid>
       <DeviceArea>
@@ -43,8 +25,8 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       <ApiChartArea>
         <BarChartCard
           title="API 요청 수"
-          labels={labels}
-          values={[20, 6, 5, 3, 2, 1, 18, 7, 6, 5, 4, 22, 8]}
+          labels={data.apiRequestChart.map((_, i) => `${i}:00`)}
+          values={data.apiRequestChart}
           unit="회"
           height="100%"
         />
@@ -85,8 +67,8 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       <VisChartArea>
         <BarChartCard
           title="접속자 수"
-          labels={labels}
-          values={[12, 8, 6, 5, 4, 3, 14, 7, 6, 5, 10, 15, 9]}
+          labels={data.visitorChart.map((_, i) => `${i}:00`)}
+          values={data.visitorChart}
           unit="명"
         />
         <SummaryGrid>
@@ -121,8 +103,8 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
         <StatCard label="PDF 다운로드 성공" value={`${data.pdfSuccess}명`} variant="gray" />
         <StatCard label="DB 총 용량" value={`${data.dbUsageMb}MB`} variant="gray" />
         <Info>
-          <div>Hot Menu</div>
-          <ActionButton variant="primary" onClick={onReload}>
+          <div className="hot-menu">Hot Menu</div>
+          <ActionButton variant="primary" onClick={onReload} disabled={!onReload}>
             Reload
           </ActionButton>
         </Info>
@@ -132,10 +114,10 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
         <StatCard label="PDF 다운로드 실패" value={`${data.pdfFail}명`} variant="primary" />
         <StatCard label="버킷 총 용량" value={`${data.bucketUsageMb}MB`} variant="gray" />
         <Info>
-          <ActionButton variant="primary" onClick={onDownload}>
+          <ActionButton variant="primary" onClick={onDownload} disabled={!onDownload}>
             <DownloadIcon />
           </ActionButton>
-          <ActionButton variant="light" onClick={onStatus}>
+          <ActionButton variant="light" onClick={onStatus} disabled={!onStatus}>
             Status
           </ActionButton>
         </Info>
@@ -225,7 +207,7 @@ const Info = styled.div`
   gap: 8px;
   flex: 1;
 
-  div {
+  .hot-menu {
     display: flex;
     text-align: center;
     padding: 12px;

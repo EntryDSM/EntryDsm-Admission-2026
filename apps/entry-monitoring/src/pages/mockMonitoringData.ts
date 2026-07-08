@@ -31,10 +31,10 @@ export interface MonitoringData {
 
 export const mockMonitoringData: MonitoringData = {
   deviceStats: [
-    { label: "Android", count: 240, percentage: 80 },
-    { label: "Windows", count: 240, percentage: 80 },
-    { label: "iOS", count: 240, percentage: 80 },
-    { label: "기타", count: 240, percentage: 80 },
+    { label: "Android", count: 240, percentage: 40 },
+    { label: "Windows", count: 180, percentage: 30 },
+    { label: "iOS", count: 120, percentage: 20 },
+    { label: "기타", count: 60, percentage: 10 },
   ],
   totalApiRequests: 24304,
   apiSuccessCount: 0,

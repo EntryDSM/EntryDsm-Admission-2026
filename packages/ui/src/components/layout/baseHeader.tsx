@@ -7,26 +7,6 @@ import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
 import { Logout } from "../../assets";
 
-// 공통 스크롤 감지 훅
-// const useScrollY = () => {
-//   const [scrollPosition, setScrollPosition] = useState<number>(0);
-
-//   useEffect(() => {
-//     const handleScroll = () => {
-//       setScrollPosition(window.scrollY);
-//     };
-
-//     window.addEventListener("scroll", handleScroll, { passive: true });
-//     handleScroll(); // mount 시 초기 스크롤 감지
-
-//     return () => {
-//       window.removeEventListener("scroll", handleScroll);
-//     };
-//   }, []);
-
-//   return scrollPosition;
-// };
-
 export const NoPathHeader = () => {
   const navigate = useNavigate();
 
@@ -223,7 +203,7 @@ export const MonitoringHeader = () => {
           Aws 콘솔 페이지
         </Btn>
         <ButtonName>
-          김이름 <img src={Logout} alt="" />
+          김이름 <img src={Logout} alt="로그아웃" />
         </ButtonName>
       </Flex>
     </MonitoringActionSection>
@@ -394,5 +374,12 @@ const ButtonName = styled.button`
   display: flex;
   gap: 5px;
   background-color: transparent;
+  border: none;
+  cursor: pointer;
   font-size: 22px;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.gray[300]};
+    outline-offset: 2px;
+  }
 `;

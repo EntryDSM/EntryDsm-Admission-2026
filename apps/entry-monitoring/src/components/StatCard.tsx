@@ -39,10 +39,11 @@ export const StatCard = ({
   labelFontSize = "14px",
   valueFontSize = "32px",
   detailValues,
-}: IStatCardProps) => {
+  alwaysShowLabel = false,
+}: IStatCardProps & { alwaysShowLabel?: boolean }) => {
   return (
     <StatCardContainer variant={variant}>
-      {label ? (
+      {label || alwaysShowLabel ? (
         <Label variant={variant} fontSize={labelFontSize}>
           {label}
         </Label>
@@ -50,35 +51,6 @@ export const StatCard = ({
         <div></div>
       )}
 
-      {detailValues ? (
-        <DetailValueGroup>
-          {detailValues.map(item => (
-            <DetailValue key={item.label}>
-              <DetailLabel>{item.label}</DetailLabel>
-              <DetailAmount fontSize={valueFontSize}>{item.value}</DetailAmount>
-            </DetailValue>
-          ))}
-        </DetailValueGroup>
-      ) : (
-        <Value fontSize={valueFontSize}>{value}</Value>
-      )}
-    </StatCardContainer>
-  );
-};
-
-export const PeopleCard = ({
-  label,
-  value,
-  variant = "white",
-  labelFontSize = "14px",
-  valueFontSize = "32px",
-  detailValues,
-}: IStatCardProps) => {
-  return (
-    <StatCardContainer variant={variant}>
-      <Label variant={variant} fontSize={labelFontSize}>
-        {label}
-      </Label>
       {detailValues ? (
         <DetailValueGroup>
           {detailValues.map(item => (
