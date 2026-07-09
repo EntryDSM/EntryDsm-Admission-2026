@@ -15,3 +15,4 @@ export * from "./OXIcons";
 export { default as dropdownArrow } from "./dropdownArrow.svg";
 export * from "./Eye";
 export { default as modalCancel } from "./modalCancel.svg";
+export { default as Logout } from "./Logout.svg";

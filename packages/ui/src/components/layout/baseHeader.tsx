@@ -1,37 +1,17 @@
 ﻿import styled from "@emotion/styled";
 import { useNavigate, useLocation } from "react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
-
-// 공통 스크롤 감지 훅
-const useScrollY = () => {
-  const [scrollPosition, setScrollPosition] = useState<number>(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollPosition(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // mount 시 초기 스크롤 감지
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  return scrollPosition;
-};
+import { Logout } from "../../assets";
 
 export const NoPathHeader = () => {
-  const scrollPosition = useScrollY();
   const navigate = useNavigate();
 
   return (
-    <NoPathHeaderContainer scrollPosition={scrollPosition}>
+    <NoPathHeaderContainer>
       <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
         <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
@@ -43,7 +23,6 @@ export const NoPathHeader = () => {
 };
 
 export const AdminHeader = () => {
-  const scrollPosition = useScrollY();
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -68,7 +47,7 @@ export const AdminHeader = () => {
   };
 
   return (
-    <HeaderContainer scrollPosition={scrollPosition}>
+    <HeaderContainer>
       <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
         <EntryLogo isAdmin={true} />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
@@ -100,7 +79,6 @@ export const AdminHeader = () => {
 };
 
 export const CommonHeader = () => {
-  const scrollPosition = useScrollY();
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -126,7 +104,7 @@ export const CommonHeader = () => {
   // const isLoading = accessToken && isPending;
 
   return (
-    <HeaderContainer scrollPosition={scrollPosition}>
+    <HeaderContainer>
       <CommonHeaderLogoSection onClick={() => navigate("/")}>
         <EntryLogo />
         <CommonHeaderLogoText>EntryDSM</CommonHeaderLogoText>
@@ -195,22 +173,42 @@ export const AuthHeader = () => {
   );
 };
 
-// const HeaderBtn = styled.button`
-//   padding: 8px 20px;
-//   border-radius: 12px;
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   background-color: ${colors.green[400]};
-//   font-size: 16px;
-//   font-weight: 400;
-//   color: ${colors.extra.realWhite};
-//   cursor: pointer;
-//   &:hover {
-//     background-color: ${colors.green[500]};
-//     transition: 0.35s ease-in-out;
-//   }
-// `;
+export const MonitoringHeader = () => {
+  const navigate = useNavigate();
+
+  return (
+    <MonitoringActionSection>
+      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+        <EntryLogo isMonitoring={true} />
+        <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
+          EntryMonitor
+        </Text>
+      </Flex>
+      <Flex gap={20} alignItems="center" height="fit-content" width="fit-content">
+        <Btn
+          onClick={() => window.open("https://entrydsm.kr", "_blank", "noopener,noreferrer")}
+          aria-label="EntryDSM 홈으로 이동"
+          backgroundColor={"#6668F1"}
+          hoverBackgroundColor={"#6668F1"}
+        >
+          EntryDSM 지원자 페이지
+        </Btn>
+        <Btn
+          onClick={() =>
+            window.open("https://179895363651.signin.aws.amazon.com/console", "_blank", "noopener,noreferrer")
+          }
+          backgroundColor={"#6668F1"}
+          hoverBackgroundColor={"#6668F1"}
+        >
+          Aws 콘솔 페이지
+        </Btn>
+        <ButtonName>
+          김이름 <img src={Logout} alt="로그아웃" />
+        </ButtonName>
+      </Flex>
+    </MonitoringActionSection>
+  );
+};
 
 const LogoContainer = styled.a`
   display: flex;
@@ -264,6 +262,7 @@ const AuthHeaderContainer = styled.div`
   align-items: center;
   justify-self: start;
   position: fixed;
+  border-bottom: 1px solid ${colors.gray[200]};
   top: 0;
   left: 0;
   width: 100vw;
@@ -297,7 +296,7 @@ const SideNavContent = styled.nav`
   }
 `;
 
-const HeaderContainer = styled.header<{ scrollPosition?: number }>`
+const HeaderContainer = styled.header`
   position: fixed;
   top: 0;
   left: 0;
@@ -307,9 +306,8 @@ const HeaderContainer = styled.header<{ scrollPosition?: number }>`
   justify-content: space-between;
   padding: 0 120px;
   align-items: center;
-  background-color: ${({ scrollPosition }) => (scrollPosition ? colors.extra.realWhite : "transparent")};
-  border-bottom: 1px solid ${({ scrollPosition }) => (scrollPosition ? colors.gray[200] : "transparent")};
-  transition: 0.4s ease-in-out;
+  background-color: ${colors.extra.realWhite};
+  border-bottom: 1px solid ${colors.gray[200]};
   z-index: 100;
 
   @media (max-width: 1200px) {
@@ -346,8 +344,42 @@ const NavContent = styled.nav<{ isPath?: boolean }>`
   }
 `;
 
-// const SkeletonBox = styled(Skeleton)<{ width: string; height: string }>`
-//   width: ${({ width }) => width};
-//   height: ${({ height }) => height};
-//   border-radius: 8px;
-// `;
+const MonitoringActionSection = styled.div`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid ${colors.gray[200]};
+  background-color: ${colors.extra.realWhite};
+  padding: 0 120px;
+  gap: 20px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  height: 70px;
+  transition: 0.4s ease-in-out;
+  z-index: 100;
+
+  @media (max-width: 1200px) {
+    padding: 0 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 12px;
+  }
+`;
+
+const ButtonName = styled.button`
+  display: flex;
+  gap: 5px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.gray[300]};
+    outline-offset: 2px;
+  }
+`;
