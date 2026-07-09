@@ -1,9 +1,13 @@
 ﻿import React, { createContext, useContext, useReducer, useCallback } from "react";
 
+export const GRADUATION_TYPES = ["검정고시(중학교 졸업 학력)", "졸업 예정", "졸업"] as const;
+
+export type GraduationType = (typeof GRADUATION_TYPES)[number];
+
 interface IApplicationClassificationType {
   typeSelection: string;
   regionSelection: string;
-  graduationType: string;
+  graduationType: GraduationType | "";
   graduationDate: (string | number)[];
 }
 

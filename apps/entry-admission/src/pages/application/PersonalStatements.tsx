@@ -1,4 +1,5 @@
 ﻿import { colors, Flex, Text } from "@entry/design";
+import type { ChangeEvent } from "react";
 import { usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
 import styled from "@emotion/styled";
@@ -6,7 +7,7 @@ import styled from "@emotion/styled";
 export const PersonalStatements = () => {
   const [datas, setDatas] = usePageData("personalStatements");
 
-  const handlePersonalStmtChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handlePersonalStmtChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
     setDatas({ ...datas, personalStmt: value });
   };

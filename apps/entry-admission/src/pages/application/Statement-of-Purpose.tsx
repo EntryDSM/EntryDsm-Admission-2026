@@ -1,4 +1,4 @@
-﻿import { colors, Flex, Text } from "@entry/design";
+import { colors, Flex, Text } from "@entry/design";
 import { usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
 import styled from "@emotion/styled";

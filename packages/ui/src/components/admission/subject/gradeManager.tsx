@@ -1,4 +1,5 @@
-﻿import { AllSubjectSelector } from "./allSubjectSelector";
+﻿import { useEffect, useState } from "react";
+import { AllSubjectSelector } from "./allSubjectSelector";
 import { SubjectSelector } from "./subjectSelector";
 
 interface IGradeManagerProps {
@@ -28,6 +29,17 @@ export const GradeManager = ({
     영어: "eng",
   };
 
+  useEffect(() => {
+    const values = Object.values(subjectGrades ?? {});
+    const allSameGrade = values.length > 0 && values.every(v => v === values[0]) && values[0] !== null;
+
+    if (allSameGrade) {
+      setGlobalGrade(values[0] as string);
+    } else {
+      setGlobalGrade(null);
+    }
+  }, [subjectGrades]);
+
   const getSubjectKey = (subject: string, index?: number) =>
     subjectKeyMap[subject] ?? defaultSubjectKeys[index ?? -1] ?? subject;
 
@@ -49,18 +61,7 @@ export const GradeManager = ({
     };
 
     setSubjectGrades(updatedGrades);
-
-    // 모든 과목이 같은 성적인지 확인
-    const subjectKeys = subjects.map((subj, index) => getSubjectKey(subj, index));
-    const allSameGrade = subjectKeys.every(subjKey => updatedGrades[subjKey] === grade);
-
-    if (allSameGrade && subjectKeys.every(subjKey => subjKey in updatedGrades)) {
-      setGlobalGrade(grade);
-    } else if (globalGrade !== null) {
-      setGlobalGrade(null);
-    }
   };
-
   return (
     <>
       <AllSubjectSelector selected={globalGrade} onSelect={handleGlobalGradeChange} />

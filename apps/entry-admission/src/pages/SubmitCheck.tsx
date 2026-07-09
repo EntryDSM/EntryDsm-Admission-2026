@@ -1,6 +1,7 @@
 ﻿import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn, InputContent, PreviousBtn } from "@entry/ui";
+import { ApplicationPreview } from "./applicationCheck/index";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -23,49 +24,52 @@ export const SubmitCheck = () => {
   };
 
   return (
-    <ModalBackdrop>
-      <ModalCard>
-        <Flex width="100%" height="fit-content" isColumn={true} gap={40}>
-          <Flex width="fit-content" height="fit-content" isColumn={true} gap={16}>
-            <Text fontSize={32} fontWeight={700}>
-              제출하시겠습니까?
-            </Text>
-            <Text fontSize={18} color={colors.gray[400]}>
-              제출을 위해서는 "확인했습니다"를 작성해주세요.
-            </Text>
+    <>
+      <ApplicationPreview />
+      <ModalBackdrop>
+        <ModalCard>
+          <Flex width="100%" height="fit-content" isColumn={true} gap={40}>
+            <Flex width="fit-content" height="fit-content" isColumn={true} gap={16}>
+              <Text fontSize={32} fontWeight={700}>
+                제출하시겠습니까?
+              </Text>
+              <Text fontSize={18} color={colors.gray[400]}>
+                제출을 위해서는 "확인했습니다"를 작성해주세요.
+              </Text>
+            </Flex>
+            <InputContent
+              width="100%"
+              value={message}
+              onChange={handleInputChange}
+              placeholder='"확인했습니다"를 입력하세요'
+            />
+            <ButtonRow>
+              <PreviousBtn
+                width="83px"
+                backgroundColor={colors.gray[50]}
+                color={colors.gray[400]}
+                borderColor={colors.gray[100]}
+                hoverBackgroundColor={colors.gray[50]}
+                onClick={handleClose}
+              >
+                취소
+              </PreviousBtn>
+              <Btn
+                width="83px"
+                onClick={handleSubmit}
+                backgroundColor={colors.orange[100]}
+                color={colors.orange[700]}
+                borderColor={colors.orange[300]}
+                hoverBackgroundColor={colors.orange[100]}
+                isBlocked={message !== "확인했습니다"}
+              >
+                제출
+              </Btn>
+            </ButtonRow>
           </Flex>
-          <InputContent
-            width="100%"
-            value={message}
-            onChange={handleInputChange}
-            placeholder='"확인했습니다"를 입력하세요'
-          />
-          <ButtonRow>
-            <PreviousBtn
-              width="83px"
-              backgroundColor={colors.gray[50]}
-              color={colors.gray[400]}
-              borderColor={colors.gray[100]}
-              hoverBackgroundColor={colors.gray[50]}
-              onClick={handleClose}
-            >
-              취소
-            </PreviousBtn>
-            <Btn
-              width="83px"
-              onClick={handleSubmit}
-              backgroundColor={colors.orange[100]}
-              color={colors.orange[700]}
-              borderColor={colors.orange[300]}
-              hoverBackgroundColor={colors.orange[100]}
-              isBlocked={message !== "확인했습니다"}
-            >
-              제출
-            </Btn>
-          </ButtonRow>
-        </Flex>
-      </ModalCard>
-    </ModalBackdrop>
+        </ModalCard>
+      </ModalBackdrop>
+    </>
   );
 };
 

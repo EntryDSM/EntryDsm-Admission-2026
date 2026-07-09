@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { colors, Text } from "@entry/design";
 import { ScorePageNav } from "@entry/ui";
 
@@ -11,9 +11,11 @@ export const GedScoreLayout = () => {
     },
     {
       path: "/ged/attendance-volunteer",
-      name: "출결 및 봉사",
+      name: "검정고시 점수",
     },
   ];
+
+  const location = useLocation();
 
   const currentData = datas.find(data => location.pathname.includes(data.path));
 
@@ -50,6 +52,8 @@ export const GraduateScoreLayout = () => {
     },
   ];
 
+  const location = useLocation();
+
   const currentData = datas.find(data => location.pathname.includes(data.path));
 
   return (
@@ -83,6 +87,7 @@ export const ProspectiveGraduateScoreLayout = () => {
       explanation: "결석, 지각, 조퇴 등이 없는 경우에는 0을 입력해 주세요.",
     },
   ];
+  const location = useLocation();
 
   const currentData = datas.find(data => location.pathname.includes(data.path));
 

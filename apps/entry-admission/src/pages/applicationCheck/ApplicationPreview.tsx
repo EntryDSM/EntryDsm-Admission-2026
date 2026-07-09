@@ -3,8 +3,8 @@ import { useState } from "react";
 import styled from "@emotion/styled";
 
 export const ApplicationPreview = () => {
+  //TODO: 나중에 연동할 때 로딩 할 수 있게 로딩 분기해야함
   const [isLoading] = useState<boolean>(false);
-
   return (
     <Container>
       {isLoading ? (

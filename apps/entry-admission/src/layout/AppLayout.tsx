@@ -2,6 +2,7 @@
 import { canProceedToNext, usePageData, useApplicationData } from "@entry/ui";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { ApplicationNav } from "../components";
+import { GRADUATION_TYPES, type GraduationType } from "@entry/ui";
 
 export const AppLayout = () => {
   const navigate = useNavigate();
@@ -21,7 +22,6 @@ export const AppLayout = () => {
     { path: "/fourth-graduate", step: 5 },
     { path: "/activity-graduate", step: 5 },
     { path: "/application-preview", step: 6 },
-    { path: "/submit-check", step: 7 },
   ];
 
   const pageProspectiveGraduateRoutes = [
@@ -31,12 +31,11 @@ export const AppLayout = () => {
     { path: "/middle-school-info", step: 3 },
     { path: "/personal-statements", step: 4 },
     { path: "/statement-of-purpose", step: 4 },
-    { path: "/first-graduate", step: 5 },
-    { path: "/second-graduate", step: 5 },
-    { path: "/third-graduate", step: 5 },
-    { path: "/activity-graduate", step: 5 },
-    { path: "/application-preview", step: 6 },
-    { path: "/submit-check", step: 7 },
+    { path: "/first-prospective-graduate", step: 5 },
+    { path: "/second-prospective-graduate", step: 5 },
+    { path: "/third-prospective-graduate", step: 5 },
+    { path: "/activity-prospective-graduate", step: 5 },
+    { path: "/application-preview", step: 7 },
   ];
 
   const gedPageRoutes = [
@@ -48,22 +47,21 @@ export const AppLayout = () => {
     { path: "/ged/score", step: 4 },
     { path: "/ged/attendance-volunteer", step: 4 },
     { path: "/application-preview", step: 5 },
-    { path: "/submit-check", step: 6 },
   ];
 
   const schoolApplicantSteps = 8;
   const gedSteps = 7;
 
-  const graduationType = datas?.graduationType;
+  const graduationType = datas?.graduationType as GraduationType | undefined;
 
   const { routesConfig, progressSteps } = (() => {
-    if (graduationType === "검정고시(중학교 졸업 학력)") {
+    if (GRADUATION_TYPES[0] === graduationType) {
       return { routesConfig: gedPageRoutes, progressSteps: gedSteps };
     }
-    if (graduationType === "졸업 예정") {
+    if (GRADUATION_TYPES[1] === graduationType) {
       return { routesConfig: pageProspectiveGraduateRoutes, progressSteps: schoolApplicantSteps };
     }
-    if (graduationType === "졸업") {
+    if (GRADUATION_TYPES[2] === graduationType) {
       return { routesConfig: pageGraduateRoutes, progressSteps: schoolApplicantSteps };
     }
     return { routesConfig: gedPageRoutes, progressSteps: gedSteps };

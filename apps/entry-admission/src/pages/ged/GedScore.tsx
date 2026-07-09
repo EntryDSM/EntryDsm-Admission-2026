@@ -13,7 +13,7 @@ const SUBJECTS = [
 
 export const GedScore = () => {
   const [datas, setDatas] = usePageData("gedScore");
-  const safeData = (datas ?? {}) as unknown as Record<string, string | number | null>;
+  const safeData = datas ?? ({} as Record<(typeof SUBJECTS)[number]["key"], string | number | null>);
 
   const handleChange = (key: string) => (value: string) => {
     setDatas({ ...datas, [key]: value === "" ? null : value });

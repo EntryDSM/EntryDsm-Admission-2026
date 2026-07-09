@@ -10,7 +10,7 @@ export const GlobalLoader = ({ isLoading }: IGlobalLoaderProps) => {
   if (!isLoading) return null;
 
   return (
-    <LoadingModal>
+    <LoadingModal role="status" aria-live="polite">
       <Flex isColumn={true} gap={20} alignItems="center" width="fit-content" height="fit-content">
         <BeatLoader color={colors.orange[800]} />
         <Text fontSize={18} fontWeight={500} color={colors.gray[500]}>

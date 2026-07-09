@@ -1,4 +1,4 @@
-﻿import type { ApplicationState } from "./ApplicationDataContext";
+import type { ApplicationState } from "./ApplicationDataContext";
 
 const isEmpty = (value: unknown) =>
   value === null ||

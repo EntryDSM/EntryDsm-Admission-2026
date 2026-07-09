@@ -1,8 +1,15 @@
+import { useLocation } from "react-router";
 import { colors, Flex, Text } from "@entry/design";
 import { AttendanceForm, Caution, CertCheckForm, usePageData } from "@entry/ui";
 
-export const ActivityGraduate = () => {
-  const [datas, setDatas] = usePageData("activityGraduate");
+interface ActivityPagePropsType {
+  pageKey: "activityGraduate" | "activityGraduateProspective";
+}
+
+export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
+  const [datas, setDatas] = usePageData(pageKey);
+  const currentlocation = useLocation();
+  const prospectiveGraduation = "/activity-prospective-graduate";
 
   const safeData = datas || { dsmAlgorithm: null, certificate: null };
 
@@ -42,9 +49,15 @@ export const ActivityGraduate = () => {
           </Text>
           <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
             <Caution />
-            <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
-              출결은 9월 30일까지의 1,2,3학년 전체 합산합니다.
-            </Text>
+            {currentlocation.pathname === prospectiveGraduation ? (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 9월 30일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            ) : (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 졸업일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            )}
           </Flex>
         </Flex>
         <Flex height="fit-content" flexWrap="wrap" width="100%" gapX={22} gapY={24}>
@@ -89,9 +102,15 @@ export const ActivityGraduate = () => {
           </Text>
           <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
             <Caution />
-            <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
-              봉사 시간은 9월 30일까지의 1, 2, 3학년 전체 시간을 합산합니다.
-            </Text>
+            {currentlocation.pathname === prospectiveGraduation ? (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 9월 30일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            ) : (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 졸업일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            )}
           </Flex>
         </Flex>
         <AttendanceForm

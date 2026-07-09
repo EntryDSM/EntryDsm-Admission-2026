@@ -9,19 +9,15 @@ import {
 } from "./layout";
 import {
   ActivityGraduate,
-  ActivityProspectiveGraduate,
   ApplicationClassification,
   MiddleSchoolInfo,
   PersonalStatements,
   StatementOfPurpose,
   Landing,
   ScoreFirst,
-  ScoreFirstProspectiveGraduate,
   ScoreFourth,
   ScoreSecond,
-  ScoreSecondProspectiveGraduate,
   ScoreThird,
-  ScoreThirdProspectiveGraduate,
   ApplicantInfo,
   SubmitCheck,
   Submitted,
@@ -68,15 +64,15 @@ export const Router = createBrowserRouter([
                 children: [
                   {
                     path: "first-graduate",
-                    element: <ScoreFirst />,
+                    element: <ScoreFirst pageKey={"firstGraduate"} />,
                   },
                   {
                     path: "second-graduate",
-                    element: <ScoreSecond />,
+                    element: <ScoreSecond pageKey={"secondGraduate"} />,
                   },
                   {
                     path: "third-graduate",
-                    element: <ScoreThird />,
+                    element: <ScoreThird pageKey={"thirdGraduate"} />,
                   },
                   {
                     path: "fourth-graduate",
@@ -84,7 +80,7 @@ export const Router = createBrowserRouter([
                   },
                   {
                     path: "activity-graduate",
-                    element: <ActivityGraduate />,
+                    element: <ActivityGraduate pageKey={"activityGraduate"} />,
                   },
                 ],
               },
@@ -94,19 +90,19 @@ export const Router = createBrowserRouter([
                 children: [
                   {
                     path: "first-prospective-graduate",
-                    element: <ScoreFirstProspectiveGraduate />,
+                    element: <ScoreFirst pageKey={"firstGraduateProspective"} />,
                   },
                   {
                     path: "second-prospective-graduate",
-                    element: <ScoreSecondProspectiveGraduate />,
+                    element: <ScoreSecond pageKey={"secondGraduateProspective"} />,
                   },
                   {
                     path: "third-prospective-graduate",
-                    element: <ScoreThirdProspectiveGraduate />,
+                    element: <ScoreThird pageKey={"thirdGraduateProspective"} />,
                   },
                   {
                     path: "activity-prospective-graduate",
-                    element: <ActivityProspectiveGraduate />,
+                    element: <ActivityGraduate pageKey={"activityGraduateProspective"} />,
                   },
                 ],
               },

@@ -1,4 +1,5 @@
-﻿import { Flex } from "@entry/design";
+﻿import { useMemo } from "react";
+import { Flex } from "@entry/design";
 import { FormElement } from "../../components";
 import { usePageData } from "@entry/ui";
 
@@ -20,7 +21,7 @@ export const ApplicationClassification = () => {
   const selectedMonth = datas?.graduationDate?.[1] || currentMonth;
   const days = getDaysInMonth(selectedYear as number, selectedMonth as number);
 
-  const getFormDropDownData = () => {
+  const formDropDownData = useMemo(() => {
     if (datas?.graduationType === "졸업") {
       return [
         {
@@ -43,11 +44,8 @@ export const ApplicationClassification = () => {
         },
       ];
     }
-
     return [];
-  };
-
-  const formDropDownData = getFormDropDownData();
+  }, [datas?.graduationType, years, months, days]);
 
   const formRadioData = [
     { name: "유형선택", data: ["일반", "마이스터 인재", "사회통합"] },
@@ -68,8 +66,8 @@ export const ApplicationClassification = () => {
 
   const handleGraduationTypeSelection = (value: string) => {
     let defaultDate: (string | number)[] = [];
-    if (value === "졸업") defaultDate = [2026, 1, 1];
-    if (value === "졸업 예정") defaultDate = [2026, 1];
+    if (value === "졸업") defaultDate = [currentYear, 1, 1];
+    if (value === "졸업 예정") defaultDate = [currentYear, 1];
     setDatas({ ...datas, graduationType: value, graduationDate: defaultDate });
   };
 

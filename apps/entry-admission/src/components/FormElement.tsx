@@ -113,10 +113,7 @@ const DropDownSection = React.memo<{
   dropDownValues?: (string | number)[];
   onDropDownChange?: (values: (string | number)[]) => void;
 }>(({ dropDownDatas, dropDownValues = [], onDropDownChange }) => {
-  const defaultValues = useMemo(
-    () => dropDownDatas.map(data => (Array.isArray(data.content) ? data.content[0] : data.content)),
-    [dropDownDatas]
-  );
+  const defaultValues = useMemo(() => dropDownDatas.map(data => data.content[0]), [dropDownDatas]);
 
   const currentValues = dropDownValues.length > 0 ? dropDownValues : defaultValues;
 
@@ -154,7 +151,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
   const { label, explanation, warning, type, width, sideContent } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const hasValue = useMemo(() => {
+  const hasValue = (() => {
     switch (type) {
       case "input":
         return props.value !== null && props.value !== undefined && props.value !== "";
@@ -187,7 +184,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
       default:
         return false;
     }
-  }, [type, props]);
+  })();
 
   const renderContent = useCallback(() => {
     switch (type) {
@@ -353,7 +350,7 @@ const CheckWrapper = styled.div`
 const SpeechBubbleContainer = styled.div`
   position: relative;
   display: flex;
-  align-items: space-between;
+  justify-content: space-between;
   flex-direction: column;
 `;
 

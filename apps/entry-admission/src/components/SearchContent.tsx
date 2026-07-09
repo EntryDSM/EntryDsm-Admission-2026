@@ -46,7 +46,7 @@ const InputContainer = styled.input<{ isBlocked?: boolean; width?: string }>`
   color: ${colors.gray[500]};
   font-size: 16px;
   opacity: ${({ isBlocked }) => (isBlocked ? 0.4 : 1)};
-  pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "cursor")};
+  pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "auto")};
 
   &::placeholder {
     color: ${colors.gray[300]};

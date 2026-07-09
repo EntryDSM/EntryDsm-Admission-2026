@@ -1,21 +1,22 @@
 ﻿import styled from "@emotion/styled";
 import { Outlet, useLocation } from "react-router";
 import { Text } from "@entry/design";
-import { ApplicationPreview, SubmitCheck } from "../pages";
+import { SubmitCheck } from "../pages";
 
 export const ApplicationLayout = () => {
   const { pathname } = useLocation();
 
-  const title = (() => {
-    if (pathname.includes("applicant-info")) return "지원자 인적사항";
-    if (pathname.includes("guardian-info")) return "보호자 인적사항";
-    if (pathname.includes("middle-school-info")) return "중학교 정보 입력";
-    if (pathname.includes("personal-statements")) return "자기소개서";
-    if (pathname.includes("statement-of-purpose")) return "학업계획서";
-    if (pathname.includes("application-classification")) return "지원자 유형 구분";
-    if (pathname.includes("submit-check") || pathname.includes("application-preview")) return "";
-    return "성적 기입";
-  })();
+  const titleMap = new Map([
+    ["/applicant-info", "지원자 인적사항"],
+    ["/guardian-info", "보호자 인적사항"],
+    ["/middle-school-info", "중학교 정보 입력"],
+    ["/personal-statements", "자기소개서"],
+    ["/statement-of-purpose", "학업계획서"],
+    ["/application-classification", "지원자 유형 구분"],
+    ["/application-preview", ""],
+  ]);
+
+  const title = titleMap.get(pathname);
 
   const isSubmitCheckPage = pathname.includes("submit-check");
 
@@ -29,7 +30,6 @@ export const ApplicationLayout = () => {
       <ContentSection>
         {isSubmitCheckPage ? (
           <>
-            <ApplicationPreview />
             <SubmitCheck />
           </>
         ) : (
