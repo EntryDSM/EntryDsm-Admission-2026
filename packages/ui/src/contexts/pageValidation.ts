@@ -67,14 +67,14 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/guardian-info": requiredFields([
     "guardianName",
     "guardianNumber",
-    "gender",
     "relationship",
     "postalCode",
     "address",
     "addressDetail",
   ]),
   "/middle-school-info": validateMiddleSchoolInfoPage,
-  "/personal-statements": requiredFields(["personalStmt", "studyPlan"]),
+  "/personal-statements": requiredFields(["personalStmt"]),
+  "/statement-of-purpose": requiredFields(["studyPlan"]),
   "/first-graduate": requiredFields(scoreFields),
   "/second-graduate": requiredFields(scoreFields),
   "/third-graduate": requiredFields(scoreFields),
@@ -94,6 +94,7 @@ const routeToStateKey = {
   "/guardian-info": "guardianInfo",
   "/middle-school-info": "middleSchoolInfo",
   "/personal-statements": "personalStatements",
+  "/statement-of-purpose": "statementOfPurpose",
   "/first-graduate": "firstGraduate",
   "/second-graduate": "secondGraduate",
   "/third-graduate": "thirdGraduate",
@@ -110,7 +111,7 @@ const routeToStateKey = {
 const hasMappedStateRoute = (route: string): route is keyof typeof routeToStateKey => route in routeToStateKey;
 
 const fieldNameMap: Record<string, string> = {
-  typeSelection: "전형 선택",
+  typeSelection: "유형 선택",
   regionSelection: "지역 선택",
   graduationType: "졸업 구분",
   graduationDate: "졸업 연월",
@@ -170,7 +171,7 @@ export const canProceedToNext = (state: ApplicationState, currentRoute: string) 
     const missingFieldsKR = missingFields.map(field => fieldNameMap[field] || field);
     return {
       canProceed: false,
-      msg: `필수 항목이 누락되었습니다: ${missingFieldsKR.join(", ")}`,
+      msg: `필수 항목이 누락되었습니다. ${missingFieldsKR.join(", ")}`,
     };
   }
 

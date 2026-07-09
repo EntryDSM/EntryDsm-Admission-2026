@@ -1,9 +1,13 @@
 ﻿import React, { createContext, useContext, useReducer, useCallback } from "react";
 
+export const GRADUATION_TYPES = ["검정고시(중학교 졸업 학력)", "졸업 예정", "졸업"] as const;
+
+export type GraduationType = (typeof GRADUATION_TYPES)[number];
+
 interface IApplicationClassificationType {
   typeSelection: string;
   regionSelection: string;
-  graduationType: string;
+  graduationType: GraduationType | "";
   graduationDate: (string | number)[];
 }
 
@@ -19,8 +23,8 @@ interface IApplicantInfoType {
 interface IGuardianInfoType {
   guardianName: string;
   guardianNumber: string;
-  gender: string;
   relationship: string[];
+  otherRelationship: string;
   postalCode: string; // 우편번호
   address: string; // 기본주소
   addressDetail: string; // 상세주소
@@ -36,6 +40,9 @@ interface IMiddleSchoolInfoType {
 
 interface IPersonalStatementsType {
   personalStmt: string;
+}
+
+interface statementOfPurposeType {
   studyPlan: string;
 }
 
@@ -45,6 +52,7 @@ interface IGedScoreType {
   his: number | null;
   sci: number | null;
   math: number | null;
+  tech: number | null;
   eng: number | null;
 }
 
@@ -81,6 +89,7 @@ export interface ApplicationState {
   guardianInfo: IGuardianInfoType;
   middleSchoolInfo: IMiddleSchoolInfoType;
   personalStatements: IPersonalStatementsType;
+  statementOfPurpose: statementOfPurposeType;
   gedScore: IGedScoreType;
   attendanceVolunteer: IGedAttendanceVolunteerType;
   firstGraduate: IScoreType;
@@ -120,8 +129,8 @@ const initialState: ApplicationState = {
   guardianInfo: {
     guardianName: "",
     guardianNumber: "",
-    gender: "",
     relationship: [],
+    otherRelationship: "",
     postalCode: "",
     address: "",
     addressDetail: "",
@@ -135,6 +144,8 @@ const initialState: ApplicationState = {
   },
   personalStatements: {
     personalStmt: "",
+  },
+  statementOfPurpose: {
     studyPlan: "",
   },
   gedScore: {
@@ -143,6 +154,7 @@ const initialState: ApplicationState = {
     his: null,
     sci: null,
     math: null,
+    tech: null,
     eng: null,
   },
   attendanceVolunteer: {
