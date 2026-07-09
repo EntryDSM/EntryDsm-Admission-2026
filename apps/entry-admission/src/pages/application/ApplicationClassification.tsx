@@ -2,9 +2,11 @@
 import { Flex } from "@entry/design";
 import { FormElement } from "../../components";
 import { usePageData } from "@entry/ui";
+import { GRADUATION_TYPES, type GraduationType } from "@entry/ui";
 
 export const ApplicationClassification = () => {
   const [datas, setDatas] = usePageData("applicationClassification");
+  const graduationType = datas?.graduationType as GraduationType | undefined;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -22,7 +24,7 @@ export const ApplicationClassification = () => {
   const days = getDaysInMonth(selectedYear as number, selectedMonth as number);
 
   const formDropDownData = useMemo(() => {
-    if (datas?.graduationType === "졸업") {
+    if (GRADUATION_TYPES[2] === graduationType) {
       return [
         {
           data: [
@@ -34,7 +36,7 @@ export const ApplicationClassification = () => {
       ];
     }
 
-    if (datas?.graduationType === "졸업 예정") {
+    if (GRADUATION_TYPES[1] === graduationType) {
       return [
         {
           data: [
@@ -45,7 +47,7 @@ export const ApplicationClassification = () => {
       ];
     }
     return [];
-  }, [datas?.graduationType, years, months, days]);
+  }, [graduationType, years, months, days]);
 
   const formRadioData = [
     { name: "유형선택", data: ["일반", "마이스터 인재", "사회통합"] },

@@ -22,6 +22,7 @@ export const AppLayout = () => {
     { path: "/fourth-graduate", step: 5 },
     { path: "/activity-graduate", step: 5 },
     { path: "/application-preview", step: 6 },
+    { path: "/submit-check", step: 7 },
   ];
 
   const pageProspectiveGraduateRoutes = [
@@ -35,7 +36,8 @@ export const AppLayout = () => {
     { path: "/second-prospective-graduate", step: 5 },
     { path: "/third-prospective-graduate", step: 5 },
     { path: "/activity-prospective-graduate", step: 5 },
-    { path: "/application-preview", step: 7 },
+    { path: "/application-preview", step: 6 },
+    { path: "/submit-check", step: 7 },
   ];
 
   const gedPageRoutes = [
@@ -47,6 +49,7 @@ export const AppLayout = () => {
     { path: "/ged/score", step: 4 },
     { path: "/ged/attendance-volunteer", step: 4 },
     { path: "/application-preview", step: 5 },
+    { path: "/submit-check", step: 6 },
   ];
 
   const schoolApplicantSteps = 8;

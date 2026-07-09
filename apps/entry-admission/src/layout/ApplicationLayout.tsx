@@ -22,11 +22,13 @@ export const ApplicationLayout = () => {
 
   return (
     <Container>
-      <TitleSection>
-        <Text fontSize={32} fontWeight={600}>
-          {title}
-        </Text>
-      </TitleSection>
+      {title !== undefined && (
+        <TitleSection>
+          <Text fontSize={32} fontWeight={600}>
+            {title}
+          </Text>
+        </TitleSection>
+      )}
       <ContentSection>
         {isSubmitCheckPage ? (
           <>

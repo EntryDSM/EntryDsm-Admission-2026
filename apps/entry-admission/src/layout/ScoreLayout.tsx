@@ -11,7 +11,7 @@ export const GedScoreLayout = () => {
     },
     {
       path: "/ged/attendance-volunteer",
-      name: "검정고시 점수",
+      name: "자격증",
     },
   ];
 
