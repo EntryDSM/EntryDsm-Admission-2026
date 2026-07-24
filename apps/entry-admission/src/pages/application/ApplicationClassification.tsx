@@ -77,20 +77,10 @@ export const ApplicationClassification = () => {
     setDatas({ ...datas, graduationDate: values });
   };
 
-  const getExplanationText = () => {
-    if (datas?.graduationType === "졸업") {
-      return "졸업 연월일을 모두 선택해주세요.";
-    }
-    if (datas?.graduationType === "졸업 예정") {
-      return "졸업 예정자의 경우 졸업 예정 월만 선택해주세요.";
-    }
-    return "";
-  };
-
   return (
     <Flex width="100%" height="fit-content" isColumn={true} gap={16}>
       <FormElement
-        label="유형 선택"
+        label="전형 선택"
         type="radio"
         radioDatas={formRadioData[0].data}
         selectedRadio={datas?.typeSelection}
@@ -117,7 +107,6 @@ export const ApplicationClassification = () => {
         datas?.graduationType !== "검정고시(중학교 졸업 학력)" &&
         formDropDownData.length > 0 && (
           <FormElement
-            explanation={getExplanationText()}
             label={datas?.graduationType === "졸업" ? "졸업 연월일" : "졸업 예정 연월"}
             type="dropDown"
             dropDownDatas={formDropDownData[0].data}

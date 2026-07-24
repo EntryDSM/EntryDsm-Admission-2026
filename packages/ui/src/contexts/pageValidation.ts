@@ -48,6 +48,26 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
   return missingFields;
 };
 
+const validateGuardianInfoPage = (data: unknown) => {
+  const missingFields = requiredFields([
+    "guardianName",
+    "guardianNumber",
+    "relationship",
+    "postalCode",
+    "address",
+    "addressDetail",
+  ])(data);
+
+  const relationship = getFieldValue(data, "relationship");
+  const selectedRelationship = Array.isArray(relationship) ? relationship[0] : undefined;
+
+  if (selectedRelationship === "기타" && isEmpty(getFieldValue(data, "otherRelationship"))) {
+    missingFields.push("otherRelationship");
+  }
+
+  return missingFields;
+};
+
 const requiredFields = (fields: string[]) => (data: unknown) =>
   fields.filter(field => isEmpty(getFieldValue(data, field)));
 
@@ -64,14 +84,7 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
     "gender",
     "specialNotes",
   ]),
-  "/guardian-info": requiredFields([
-    "guardianName",
-    "guardianNumber",
-    "relationship",
-    "postalCode",
-    "address",
-    "addressDetail",
-  ]),
+  "/guardian-info": validateGuardianInfoPage,
   "/middle-school-info": validateMiddleSchoolInfoPage,
   "/personal-statements": requiredFields(["personalStmt"]),
   "/statement-of-purpose": requiredFields(["studyPlan"]),
@@ -124,6 +137,7 @@ const fieldNameMap: Record<string, string> = {
   guardianName: "보호자 성명",
   guardianNumber: "보호자 연락처",
   relationship: "지원자와의 관계",
+  otherRelationship: "지원자와의 관계(기타)",
   postalCode: "우편번호",
   address: "주소",
   addressDetail: "상세 주소",

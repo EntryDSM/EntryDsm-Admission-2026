@@ -42,9 +42,29 @@ export const AddressContent = ({
   return (
     <Flex isColumn={true} gap={12} width="100%" height="auto">
       <Flex height="auto" width="100%" gap={20} alignItems="center">
-        <InputContainer isBlocked={true} placeholder="우편번호" value={postalCodeValue} onChange={handleCodeChange} />
-        <InputContainer isBlocked={true} placeholder="기본주소" value={addressValue} onChange={handleAddressChange} />
-        <Btn onClick={handleSearchClick}>검색</Btn>
+        <InputContainer
+          isBlocked={true}
+          disabled
+          placeholder="우편번호"
+          value={postalCodeValue}
+          onChange={handleCodeChange}
+        />
+        <InputContainer
+          isBlocked={true}
+          disabled
+          placeholder="기본주소"
+          value={addressValue}
+          onChange={handleAddressChange}
+        />
+        <Btn
+          backgroundColor={colors.orange[100]}
+          color={colors.orange[700]}
+          borderColor={colors.orange[300]}
+          onClick={handleSearchClick}
+          hoverBackgroundColor={colors.orange[100]}
+        >
+          검색
+        </Btn>
       </Flex>
       <InputContainer placeholder="상세주소" value={addressDetailValue} onChange={handleDetailChange} />
       {isOpen && (
@@ -74,6 +94,10 @@ const InputContainer = styled.input<{
   &::placeholder {
     color: ${colors.gray[300]};
     font-size: 16px;
+  }
+
+  &:focus-visible {
+    border-color: ${colors.orange[800]};
   }
 `;
 

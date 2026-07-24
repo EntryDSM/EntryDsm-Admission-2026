@@ -145,6 +145,12 @@ const Input = styled.input<{ $isError: boolean; $isDisabled?: boolean }>`
   background-color: ${({ $isDisabled }) => ($isDisabled ? colors.gray[100] : "white")};
   pointer-events: ${({ $isDisabled }) => ($isDisabled ? "none" : "auto")};
 
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    outline-offset: 2px;
+    border-color: ${({ $isError }) => ($isError ? colors.extra.error : colors.orange[800])};
+  }
+
   ::placeholder {
     color: ${colors.gray[300]};
     font-weight: 400;

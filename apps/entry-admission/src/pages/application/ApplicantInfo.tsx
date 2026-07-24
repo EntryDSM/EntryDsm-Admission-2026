@@ -90,7 +90,7 @@ export const ApplicantInfo = () => {
         type="input"
         label="지원자 연락처"
         inputType="phone"
-        placeholder="전화번호를 입력해주세요."
+        placeholder="지원자 연락처를 입력하세요"
         onInputChange={handleInputChange("applicantNumber")}
         value={datas.applicantNumber}
         readonly={userInfoDatas.isParent ? false : true}
@@ -113,9 +113,9 @@ export const ApplicantInfo = () => {
         type="radio"
         label="특기 사항"
         radioDatas={formRadioData[0].data}
-        warning="특기사항은 UI만 확인 가능하도록 남겨두었습니다."
         setSelectedRadio={handleEtcChange}
         selectedRadio={datas.specialNotes}
+        explanation="＊특기사항에 해당하는 항목이 있으면 체크해주세요"
       />
     </Flex>
   );

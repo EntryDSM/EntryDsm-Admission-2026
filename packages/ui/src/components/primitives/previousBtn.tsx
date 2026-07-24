@@ -11,6 +11,7 @@ interface IPreviousBtnType {
   borderColor?: string;
   hoverBackgroundColor?: string;
   isBlocked?: boolean;
+  disabled?: boolean;
 }
 
 export const PreviousBtn: React.FC<IPreviousBtnType> = ({
@@ -22,7 +23,10 @@ export const PreviousBtn: React.FC<IPreviousBtnType> = ({
   children,
   onClick,
   isBlocked = false,
+  disabled = false,
 }) => {
+  const isDisabled = isBlocked || disabled;
+
   return (
     <StyledBtn
       hoverBackgroundColor={hoverBackgroundColor}
@@ -31,7 +35,8 @@ export const PreviousBtn: React.FC<IPreviousBtnType> = ({
       width={width}
       color={color}
       onClick={onClick}
-      isBlocked={isBlocked}
+      isBlocked={isDisabled}
+      disabled={isDisabled}
     >
       {children}
     </StyledBtn>
@@ -40,7 +45,7 @@ export const PreviousBtn: React.FC<IPreviousBtnType> = ({
 
 const StyledBtn = styled.button<Omit<IPreviousBtnType, "onClick" | "children">>`
   opacity: ${({ isBlocked }) => (isBlocked ? 0.5 : 1)};
-  pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "cursor")};
+  pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "auto")};
   width: ${({ width }) => width};
   display: flex;
   align-items: center;
@@ -56,5 +61,10 @@ const StyledBtn = styled.button<Omit<IPreviousBtnType, "onClick" | "children">>`
   &:hover {
     background-color: ${({ hoverBackgroundColor }) => hoverBackgroundColor};
     transition: 0.35s ease-in-out;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    outline-offset: 3px;
   }
 `;

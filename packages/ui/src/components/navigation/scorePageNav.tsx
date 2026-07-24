@@ -64,7 +64,7 @@ const Line = styled.div<{ isActive: boolean }>`
   transition: background-color 0.4s ease-in-out;
 `;
 
-const NavBtn = styled.button<{ isActive: boolean }>`
+const NavBtn = styled.div<{ isActive: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 4px;

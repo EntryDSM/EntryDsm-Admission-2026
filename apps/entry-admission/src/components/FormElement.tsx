@@ -95,9 +95,16 @@ const WarningTooltip = React.memo(({ warning }: { warning: string }) => {
   return (
     <SpeechBubbleContainer>
       {isHover && <SpeechBubble>{warning}</SpeechBubble>}
-      <div style={{ width: "20px", height: "20px" }} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      <TooltipTrigger
+        type="button"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
+        aria-label="경고 내용 보기"
+      >
         <MemoizedCaution />
-      </div>
+      </TooltipTrigger>
     </SpeechBubbleContainer>
   );
 });
@@ -150,6 +157,7 @@ const DropDownSection = React.memo<{
 export const FormElement = React.memo<FormElementProps>(props => {
   const { label, explanation, warning, type, width, sideContent } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const radioGroupName = label ? `radio-${label.replace(/\s+/g, "-")}` : "radio-group";
 
   const hasValue = (() => {
     switch (type) {
@@ -186,7 +194,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
     }
   })();
 
-  const renderContent = useCallback(() => {
+  const renderContent = () => {
     switch (type) {
       case "input":
         return (
@@ -218,6 +226,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
                 key={`${data}-${index}`}
                 label={data}
                 isSelected={props.selectedRadio === data}
+                groupName={radioGroupName}
                 onSelect={() => {
                   if (props.selectedRadio === data) {
                     props.setSelectedRadio?.("");
@@ -254,7 +263,14 @@ export const FormElement = React.memo<FormElementProps>(props => {
               isLoading={props.isLoading}
               progressPercentage={props.progressPercentage}
             />
-            <ImageContent initialImgUrl={props.imgUrl} onClick={() => setIsModalOpen(true)} />
+            <Flex isColumn={true} gap={10} height="fit-content" width="100%" justifyContent="space-between">
+              <ImageContent initialImgUrl={props.imgUrl} onClick={() => setIsModalOpen(true)} />
+              {explanation && (
+                <Text fontSize={16} fontWeight={300} color={colors.gray[400]}>
+                  {explanation}
+                </Text>
+              )}
+            </Flex>
           </>
         );
       }
@@ -284,7 +300,9 @@ export const FormElement = React.memo<FormElementProps>(props => {
       default:
         return null;
     }
-  }, [type, props, width, isModalOpen]);
+  };
+
+  const isBottomExplanation = type === "imgSelector";
 
   return (
     <FormContainer>
@@ -314,7 +332,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
           )}
         </Flex>
 
-        {explanation && (
+        {!isBottomExplanation && explanation && (
           <Text fontSize={16} fontWeight={300} color={colors.gray[400]}>
             {explanation}
           </Text>
@@ -352,6 +370,21 @@ const SpeechBubbleContainer = styled.div`
   display: flex;
   justify-content: space-between;
   flex-direction: column;
+`;
+
+const TooltipTrigger = styled.button`
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    outline-offset: 3px;
+    border-radius: 50%;
+  }
 `;
 
 const SpeechBubble = styled.div`
