@@ -62,7 +62,7 @@ export function BarChartCard({ title, labels, values, unit = "", height = 60 }: 
               const index = items[0]?.dataIndex ?? 0;
               return `${labels[index]} ${title}`;
             },
-            label: context => {
+            label: (context: TooltipItem<"bar">) => {
               const value = context.parsed.y ?? 0;
               return ` ${value}${unit}`;
             },

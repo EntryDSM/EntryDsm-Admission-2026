@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "@emotion/styled";
 
 import { colors, Text } from "@entry/design";
@@ -6,7 +6,7 @@ import { Check } from "../../assets";
 
 interface IAttendanceFormType {
   title: string;
-  text: string;
+  text?: string;
   value: string | number | null;
   onChange: (value: string) => void;
   defaultCount?: number;
@@ -19,6 +19,7 @@ interface IAttendanceFormType {
   maxScore?: number;
   minScore?: number;
   inputWidth?: string;
+  suffix?: string;
 }
 
 export const AttendanceForm: React.FC<IAttendanceFormType> = ({
@@ -34,22 +35,17 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
   maxScore,
   minScore = 0,
   inputWidth = "100%",
+  suffix,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [isFilled, setIsFilled] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsFilled(!!value || value === 0);
-  }, [value]);
+  const hasValue = value !== null && value !== undefined && value !== "";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value: rawValue } = e.target;
 
-    // 숫자만 추출 (마이너스 기호 제거)
     const numOnlyRegEx = /[^0-9]/g;
     const onlyNums = rawValue.replace(numOnlyRegEx, "");
 
-    // 빈 값 처리
     if (onlyNums === "") {
       onChange("");
       return;
@@ -57,24 +53,21 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
 
     const numValue = Number(onlyNums);
 
-    // 0 이상인지 체크
     if (numValue < minScore) {
       return;
     }
 
-    // 최댓값이 설정되어 있으면 최댓값 체크
     if (maxScore !== undefined && numValue > maxScore) {
       return;
     }
 
-    // 숫자로 변환 후 다시 문자열로 저장 (선행 0 자동 제거)
     onChange(String(numValue));
   };
 
   return (
     <Container width={width} layout={layout}>
       <HeaderRow>
-        <CheckMark hasValue={!!value}>
+        <CheckMark hasValue={hasValue}>
           <Check />
         </CheckMark>
         <Text fontSize={fontSize} fontWeight={fontWeight}>
@@ -90,9 +83,10 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          hasValue={!!value}
+          hasValue={hasValue}
           isFocused={isFocused}
         />
+        {suffix && <Suffix>{suffix}</Suffix>}
       </InputWrapper>
     </Container>
   );
@@ -134,13 +128,23 @@ const StyledInput = styled.input<{
           ? colors.orange[800]
           : colors.gray[200]};
   border-radius: 12px;
-  padding: 18px;
+  padding: 18px 48px 18px 18px;
   font-size: 16px;
   outline: none;
   box-sizing: border-box;
+
   &::placeholder {
     color: ${colors.gray[300]};
   }
+`;
+
+const Suffix = styled.span`
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  color: ${colors.gray[500]};
+  pointer-events: none;
 `;
 
 const CheckMark = styled.span<{ hasValue: boolean }>`
