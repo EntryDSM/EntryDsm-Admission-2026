@@ -79,8 +79,12 @@ export const GraduateScoreLayout = () => {
 export const ProspectiveGraduateScoreLayout = () => {
   const datas = [
     { path: "/first-prospective-graduate", name: "3학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
-    { path: "/second-prospective-graduate", name: "직전 학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
-    { path: "/third-prospective-graduate", name: "직전전 학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
+    {
+      path: "/second-prospective-graduate",
+      name: "2학년 2학기",
+      explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요.",
+    },
+    { path: "/third-prospective-graduate", name: "2학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     {
       path: "/activity-prospective-graduate",
       name: "출결 및 봉사",

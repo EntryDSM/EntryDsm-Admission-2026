@@ -15,7 +15,7 @@ export const DropDownContent = ({ datas, label, value, onChange }: IDropDownType
   const [content, setContent] = useState<string | number>(() => {
     return value ?? datas[0] ?? "";
   });
-  const headRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLButtonElement>(null);
   const [headWidth, setHeadWidth] = useState<number | null>(null);
   const [isClick, setIsClick] = useState<boolean>(false);
 
@@ -39,14 +39,14 @@ export const DropDownContent = ({ datas, label, value, onChange }: IDropDownType
     <Flex width="fit-content" height="fit-content" gap={12} alignItems="center">
       <DropAllContainer>
         <Flex isColumn={true} width="fit-content" height="fit-content">
-          <DropHead ref={headRef} onClick={() => setIsClick(!isClick)}>
+          <DropHead type="button" ref={headRef} onClick={() => setIsClick(!isClick)}>
             {content}
             <DropDownImg isClick={isClick} src={dropdownArrow} alt="arrow" />
           </DropHead>
           {isClick && (
             <DropContainer width={headWidth}>
               {datas.map((data, index) => (
-                <DropOption key={`${data}-${index}`} onClick={() => handleOptionClick(data)}>
+                <DropOption type="button" key={`${data}-${index}`} onClick={() => handleOptionClick(data)}>
                   {data}
                 </DropOption>
               ))}
@@ -65,7 +65,7 @@ const DropAllContainer = styled.div`
   position: relative;
 `;
 
-const DropHead = styled.div`
+const DropHead = styled.button`
   padding: 8px 16px;
   height: 40px;
   border-radius: 6px;
@@ -76,6 +76,13 @@ const DropHead = styled.div`
   gap: 12px;
   color: ${colors.gray[500]};
   font-size: 16px;
+  background-color: ${colors.extra.realWhite};
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    outline-offset: 2px;
+  }
 `;
 
 const DropDownImg = styled.img<{ isClick: boolean }>`
@@ -84,9 +91,11 @@ const DropDownImg = styled.img<{ isClick: boolean }>`
   transition: 0.35s;
 `;
 
-const DropOption = styled.div`
+const DropOption = styled.button`
   width: 100%;
   height: 40px;
+  padding: 0 8px;
+  border: none;
   border-radius: 6px;
   display: flex;
   justify-content: center;
@@ -94,10 +103,21 @@ const DropOption = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  background-color: ${colors.extra.realWhite};
+  color: ${colors.gray[500]};
+  cursor: pointer;
+
   &:hover {
     transition: 0.35s ease-in-out;
     background-color: ${colors.orange[100]};
   }
+
+  &:focus-visible {
+    outline: none;
+    background-color: ${colors.orange[100]};
+    color: ${colors.orange[800]};
+  }
+
   flex-shrink: 0;
 `;
 

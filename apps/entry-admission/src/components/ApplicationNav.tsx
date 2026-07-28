@@ -85,7 +85,6 @@ function renderPageIndicators(currentStep: number, progressSteps: number) {
 }
 
 const PageIndicator = styled.nav<{ isActive: boolean }>`
-  cursor: pointer;
   width: 54px;
   height: 4px;
   background-color: ${({ isActive }) => (isActive ? colors.orange[800] : colors.gray[200])};

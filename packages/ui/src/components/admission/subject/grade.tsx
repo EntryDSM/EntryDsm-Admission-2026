@@ -12,23 +12,52 @@ interface IGradeType {
   height?: string;
   fontSize?: string;
   gap?: string;
+  groupName?: string;
 }
 
-export const Grade = ({ grade, isCancel, isSelected, onSelect, width, height, fontSize }: IGradeType) => {
+export const Grade = ({ grade, isCancel, isSelected, onSelect, width, height, fontSize, groupName }: IGradeType) => {
+  const value = isCancel ? "x" : (grade ?? "");
+
   return (
     <GradeContainer
       $width={width || "45px"}
       $height={height || "45px"}
       $fontSize={fontSize || "22px"}
-      onClick={onSelect}
       $isClick={isSelected}
     >
-      {isCancel ? <Cancel isClicked={isSelected} /> : grade}
+      <Radio
+        $isClick={isSelected}
+        type="radio"
+        name={groupName}
+        value={value}
+        checked={isSelected}
+        onChange={onSelect}
+      />
+      <CancelContent>{isCancel ? <Cancel isClicked={isSelected} /> : grade}</CancelContent>
     </GradeContainer>
   );
 };
 
-const GradeContainer = styled.div<{
+const Radio = styled.input<{
+  $isClick?: boolean;
+}>`
+  width: 100%;
+  height: 100%;
+
+  opacity: 0;
+  position: relative;
+  cursor: pointer;
+`;
+
+const CancelContent = styled.span`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+`;
+
+const GradeContainer = styled.label<{
   $isClick?: boolean;
   $width: string;
   $height: string;
@@ -46,4 +75,10 @@ const GradeContainer = styled.div<{
   font-size: ${props => props.$fontSize};
   font-weight: 450;
   transition: all 0.2s ease;
+  position: relative;
+
+  &:has(input:focus-visible) {
+    outline: 3px solid ${colors.orange[800]};
+    outline-offset: 3px;
+  }
 `;

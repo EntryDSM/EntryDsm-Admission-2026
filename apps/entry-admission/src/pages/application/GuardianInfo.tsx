@@ -60,7 +60,7 @@ export const GuardianInfo = () => {
         type="input"
         label="보호자 연락처"
         inputType="phone"
-        placeholder="전화번호를 입력해주세요."
+        placeholder="보호자 연락처를 입력하세요"
         onInputChange={handleInputChange("guardianNumber")}
         value={datas.guardianNumber}
         readonly={false}

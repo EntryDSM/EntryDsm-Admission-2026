@@ -12,7 +12,7 @@ export const AllSubjectSelector = ({ selected, onSelect }: IAllSubjectSelectorTy
   return (
     <Container>
       <Title>전체 선택</Title>
-      <GradeSelector selected={selected} onSelect={onSelect} size="small" />
+      <GradeSelector selected={selected} onSelect={onSelect} size="small" groupName={"all-subject"} />
     </Container>
   );
 };
