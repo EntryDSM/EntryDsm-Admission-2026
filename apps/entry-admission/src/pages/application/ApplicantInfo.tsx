@@ -98,6 +98,7 @@ export const ApplicantInfo = () => {
       <FormElement
         label={formRadioData[1].name}
         type="radio"
+        groupName="성별"
         radioDatas={formRadioData[1].data}
         selectedRadio={datas.gender}
         setSelectedRadio={handleGenderSelection}
@@ -112,6 +113,7 @@ export const ApplicantInfo = () => {
       <FormElement
         type="radio"
         label="특기 사항"
+        groupName="특기 사항"
         radioDatas={formRadioData[0].data}
         setSelectedRadio={handleEtcChange}
         selectedRadio={datas.specialNotes}

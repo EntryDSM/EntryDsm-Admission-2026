@@ -82,6 +82,7 @@ export const ApplicationClassification = () => {
       <FormElement
         label="전형 선택"
         type="radio"
+        groupName="전형 선택"
         radioDatas={formRadioData[0].data}
         selectedRadio={datas?.typeSelection}
         setSelectedRadio={handleTypeSelection}
@@ -90,6 +91,7 @@ export const ApplicationClassification = () => {
       <FormElement
         label="지역 선택"
         type="radio"
+        groupName="지역 선택"
         radioDatas={formRadioData[1].data}
         selectedRadio={datas?.regionSelection}
         setSelectedRadio={handleRegionSelection}
@@ -98,6 +100,7 @@ export const ApplicationClassification = () => {
       <FormElement
         label="졸업 구분"
         type="radio"
+        groupName="졸업 구분"
         radioDatas={formRadioData[2].data}
         selectedRadio={datas?.graduationType}
         setSelectedRadio={handleGraduationTypeSelection}

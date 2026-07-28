@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import styled from "@emotion/styled";
 
 import { colors } from "@entry/design";
@@ -9,7 +9,6 @@ interface IScorePageNav {
 }
 
 export const ScorePageNav = ({ datas }: IScorePageNav) => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {

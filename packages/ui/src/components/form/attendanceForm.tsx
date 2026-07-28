@@ -127,15 +127,6 @@ const StyledInput = styled.input<{
   }
 `;
 
-const Suffix = styled.span`
-  position: absolute;
-  top: 50%;
-  right: 18px;
-  transform: translateY(-50%);
-  color: ${colors.gray[500]};
-  pointer-events: none;
-`;
-
 const CheckMark = styled.span<{ hasValue: boolean }>`
   color: ${props => (props.hasValue ? colors.orange[800] : colors.gray[300])};
   transition: color 0.2s;
