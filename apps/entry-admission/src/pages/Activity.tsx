@@ -72,7 +72,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           <AttendanceForm
             width={"48%"}
             title="미인정 조퇴"
-            text="미인정 조퇴을 입력하세요"
+            text="미인정 조퇴를 입력하세요"
             defaultCount={10}
             onChange={earlyLeaveChange}
             value={datas.earlyLeave}
