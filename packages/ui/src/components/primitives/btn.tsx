@@ -32,7 +32,6 @@ export const Btn = ({
       color={color}
       onClick={onClick}
       isBlocked={isBlocked}
-      disabled={isBlocked}
     >
       {children}
     </BtnContainer>
@@ -44,7 +43,7 @@ const BtnContainer = styled.button<Omit<IBtnType, "onClick" | "children">>`
   height: 48px;
   min-width: 83px;
   opacity: ${({ isBlocked }) => (isBlocked ? 0.5 : 1)};
-  pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "auto")};
+  pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "cursor")};
   padding: 12px 24px;
   border-radius: 12px;
   display: flex;
@@ -52,7 +51,6 @@ const BtnContainer = styled.button<Omit<IBtnType, "onClick" | "children">>`
   align-items: center;
   font-size: 18px;
   color: ${({ color }) => color};
-  font-weight: 500;
   background-color: ${({ backgroundColor }) => backgroundColor};
   border: 2px solid ${({ borderColor }) => borderColor};
   cursor: pointer;
@@ -60,10 +58,5 @@ const BtnContainer = styled.button<Omit<IBtnType, "onClick" | "children">>`
   &:hover {
     background-color: ${({ hoverBackgroundColor }) => hoverBackgroundColor};
     transition: 0.35s ease-in-out;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${colors.orange[800]};
-    outline-offset: 3px;
   }
 `;

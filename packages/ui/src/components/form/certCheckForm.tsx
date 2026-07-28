@@ -10,10 +10,9 @@ interface ICertCheckFormType {
   value: "O" | "X" | null;
   onChange: (value: "O" | "X") => void;
   width?: string;
-  helperText?: string;
 }
 
-export const CertCheckForm: React.FC<ICertCheckFormType> = ({ title, value, onChange, width = "100%", helperText }) => {
+export const CertCheckForm: React.FC<ICertCheckFormType> = ({ title, value, onChange, width = "100%" }) => {
   const [_, setIsFilled] = useState<boolean>(false);
 
   useEffect(() => {
@@ -30,11 +29,6 @@ export const CertCheckForm: React.FC<ICertCheckFormType> = ({ title, value, onCh
           <Text fontSize={32} fontWeight={600}>
             {title}
           </Text>
-          {helperText && (
-            <Text fontSize={12} color={colors.gray[400]}>
-              {helperText}
-            </Text>
-          )}
         </LeftSection>
         <BtnWrapper>
           <IconBtn onClick={() => onChange("O")}>{value === "O" ? <OActivate /> : <ONoActivate />}</IconBtn>
@@ -85,11 +79,6 @@ const IconBtn = styled.button`
 
   &:hover {
     transform: scale(1.05);
-  }
-  &:focus-visible {
-    outline: 2px solid ${colors.orange[800]};
-    outline-offset: 2px;
-    border-color: ${colors.orange[800]};
   }
 `;
 

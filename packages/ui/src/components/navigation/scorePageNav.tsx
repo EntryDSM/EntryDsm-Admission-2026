@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import styled from "@emotion/styled";
 
 import { colors } from "@entry/design";
@@ -9,6 +9,7 @@ interface IScorePageNav {
 }
 
 export const ScorePageNav = ({ datas }: IScorePageNav) => {
+  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -19,12 +20,16 @@ export const ScorePageNav = ({ datas }: IScorePageNav) => {
     return datas.findIndex(data => location.pathname.endsWith(data.path));
   }, [location.pathname, datas]);
 
+  const navClick = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <Container>
       {datas.map((data, index) => (
         <NavItem isFirst={index === 0} key={index} flex={1}>
           {index !== 0 && <Line isActive={index <= activeIndex} />}
-          <NavBtn isActive={index <= activeIndex}>
+          <NavBtn onClick={() => navClick(data.path)} isActive={index <= activeIndex}>
             <NavCircle isActive={index <= activeIndex} />
             <NavLabel isActive={index <= activeIndex}>{data.name}</NavLabel>
           </NavBtn>
@@ -59,7 +64,7 @@ const Line = styled.div<{ isActive: boolean }>`
   transition: background-color 0.4s ease-in-out;
 `;
 
-const NavBtn = styled.div<{ isActive: boolean }>`
+const NavBtn = styled.button<{ isActive: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 4px;

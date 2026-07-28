@@ -77,12 +77,10 @@ export const ImageContent = ({ onFileChange, initialImgUrl = null, onClick }: II
 
   return (
     <ImgSelector
-      type="button"
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
       onClick={handleClick}
       imgUrl={imgUrl}
-      aria-label={imgUrl ? "사진 변경" : "사진 업로드"}
     >
       {isHover && imgUrl && (
         <HoverSelector>
@@ -107,24 +105,17 @@ export const ImageContent = ({ onFileChange, initialImgUrl = null, onClick }: II
   );
 };
 
-const ImgSelector = styled.button<{ imgUrl?: string | null }>`
+const ImgSelector = styled.div<{ imgUrl?: string | null }>`
   position: relative;
   width: 150px;
   height: 190px;
-  padding: 0;
   border-radius: 4px;
   border: 1px solid ${colors.gray[300]};
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: ${colors.extra.realWhite};
   cursor: pointer;
   overflow: hidden;
-
-  &:focus-visible {
-    outline: 3px solid ${colors.orange[800]};
-    outline-offset: 3px;
-  }
 `;
 
 const ImgContentStyled = styled.img`

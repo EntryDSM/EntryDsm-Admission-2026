@@ -3,6 +3,7 @@ import { colors, Flex, Text } from "@entry/design";
 import styled from "@emotion/styled";
 import {
   AddressContent,
+  Caution,
   Check,
   DropDownContent,
   ImageContent,
@@ -41,7 +42,6 @@ interface TextAreaProps {
 interface RadioProps {
   type: "radio";
   radioDatas: string[];
-  groupName: string;
   selectedRadio?: string;
   setSelectedRadio?: (value: string) => void;
 }
@@ -84,6 +84,23 @@ type FormElementProps = BaseFormElementProps &
   (InputProps | TextAreaProps | RadioProps | DropDownProps | ImageProps | SearchProps | AddressProps);
 
 const MemoizedCheck = React.memo(Check);
+const MemoizedCaution = React.memo(Caution);
+
+const WarningTooltip = React.memo(({ warning }: { warning: string }) => {
+  const [isHover, setIsHover] = useState(false);
+
+  const handleMouseEnter = useCallback(() => setIsHover(true), []);
+  const handleMouseLeave = useCallback(() => setIsHover(false), []);
+
+  return (
+    <SpeechBubbleContainer>
+      {isHover && <SpeechBubble>{warning}</SpeechBubble>}
+      <div style={{ width: "20px", height: "20px" }} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <MemoizedCaution />
+      </div>
+    </SpeechBubbleContainer>
+  );
+});
 
 const CheckIcon = React.memo(({ isFilled }: { isFilled: boolean }) => (
   <CheckWrapper>
@@ -131,7 +148,7 @@ const DropDownSection = React.memo<{
 });
 
 export const FormElement = React.memo<FormElementProps>(props => {
-  const { label, explanation, type, width, sideContent } = props;
+  const { label, explanation, warning, type, width, sideContent } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const hasValue = (() => {
@@ -169,7 +186,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
     }
   })();
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     switch (type) {
       case "input":
         return (
@@ -201,7 +218,6 @@ export const FormElement = React.memo<FormElementProps>(props => {
                 key={`${data}-${index}`}
                 label={data}
                 isSelected={props.selectedRadio === data}
-                groupName={props.groupName}
                 onSelect={() => {
                   if (props.selectedRadio === data) {
                     props.setSelectedRadio?.("");
@@ -238,14 +254,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
               isLoading={props.isLoading}
               progressPercentage={props.progressPercentage}
             />
-            <Flex isColumn={true} gap={10} height="fit-content" width="100%" justifyContent="space-between">
-              <ImageContent initialImgUrl={props.imgUrl} onClick={() => setIsModalOpen(true)} />
-              {explanation && (
-                <Text fontSize={16} fontWeight={300} color={colors.gray[400]}>
-                  {explanation}
-                </Text>
-              )}
-            </Flex>
+            <ImageContent initialImgUrl={props.imgUrl} onClick={() => setIsModalOpen(true)} />
           </>
         );
       }
@@ -275,9 +284,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
       default:
         return null;
     }
-  };
-
-  const isBottomExplanation = type === "imgSelector";
+  }, [type, props, width, isModalOpen]);
 
   return (
     <FormContainer>
@@ -294,6 +301,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
               <CheckIcon isFilled={hasValue} />
               <Label>{label}</Label>
             </CheckContainer>
+            {warning && <WarningTooltip warning={warning} />}
           </Flex>
 
           {type === "dropDown" ? (
@@ -306,7 +314,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
           )}
         </Flex>
 
-        {!isBottomExplanation && explanation && (
+        {explanation && (
           <Text fontSize={16} fontWeight={300} color={colors.gray[400]}>
             {explanation}
           </Text>
@@ -317,6 +325,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
 });
 
 FormElement.displayName = "FormElement";
+WarningTooltip.displayName = "WarningTooltip";
 CheckIcon.displayName = "CheckIcon";
 DropDownSection.displayName = "DropDownSection";
 
@@ -336,6 +345,53 @@ const CheckWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+`;
+
+const SpeechBubbleContainer = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+`;
+
+const SpeechBubble = styled.div`
+  position: absolute;
+  left: 12px;
+  top: -56px;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  padding: 9px 16px;
+  background-color: ${colors.extra.realWhite};
+  color: ${colors.orange[600]};
+  border: 1px solid ${colors.orange[800]};
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 10;
+
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 7px 7px 0 7px;
+    border-style: solid;
+    border-color: ${colors.orange[800]} transparent transparent transparent;
+    z-index: 0;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0 6px;
+    border-style: solid;
+    border-color: ${colors.extra.realWhite} transparent transparent transparent;
+    z-index: 1;
+  }
 `;
 
 const FormContainer = styled.div`

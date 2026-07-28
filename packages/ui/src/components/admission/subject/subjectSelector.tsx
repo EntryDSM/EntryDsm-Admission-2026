@@ -1,6 +1,7 @@
 ﻿import styled from "@emotion/styled";
 
 import { colors } from "@entry/design";
+import { Check } from "../../../assets/icons/Check";
 import { GradeSelector } from "./gradeSelector";
 
 interface ISubjectSelector {
@@ -17,9 +18,10 @@ export const SubjectSelector = ({ subjectName, selectedGrade, onSelectGrade }: I
   return (
     <Container>
       <Label>
+        {selectedGrade && <Check />}
         <Subject>{subjectName}</Subject>
       </Label>
-      <GradeSelector selected={selectedGrade} onSelect={handleSelect} groupName={`subject-${subjectName}`} />
+      <GradeSelector selected={selectedGrade} onSelect={handleSelect} />
     </Container>
   );
 };

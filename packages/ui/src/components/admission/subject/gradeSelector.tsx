@@ -6,10 +6,9 @@ interface IGradeSelectorType {
   selected: string | null;
   onSelect: (grade: string | null) => void;
   size?: "large" | "small";
-  groupName: string;
 }
 
-export const GradeSelector = ({ selected, onSelect, size = "large", groupName }: IGradeSelectorType) => {
+export const GradeSelector = ({ selected, onSelect, size = "large" }: IGradeSelectorType) => {
   const isSmall = size === "small";
   const grades = ["A", "B", "C", "D", "E"];
 
@@ -24,7 +23,6 @@ export const GradeSelector = ({ selected, onSelect, size = "large", groupName }:
           key={grade}
           grade={grade}
           isSelected={selected === grade}
-          groupName={groupName}
           onSelect={() => handleSelect(grade)}
           width={isSmall ? "30px" : "45px"}
           height={isSmall ? "30px" : "45px"}
@@ -34,7 +32,6 @@ export const GradeSelector = ({ selected, onSelect, size = "large", groupName }:
       <Grade
         isCancel={true}
         isSelected={selected === "x"}
-        groupName={groupName}
         onSelect={() => handleSelect("x")}
         width={isSmall ? "30px" : "45px"}
         height={isSmall ? "30px" : "45px"}

@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Search, PreviousBtn } from "@entry/ui";
 
 interface ISchoolSearchModalType {
@@ -77,44 +77,27 @@ export const SchoolSearchModal = ({
     setDatas(MOCK_SCHOOLS.filter(item => item.name.toLowerCase().includes(searchValue.toLowerCase())));
   };
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSearchClick();
-    }
-  };
-
   return (
     isShow && (
       <ModalBack ref={backRef} onClick={backClick}>
         <Modal>
-          <Flex isColumn={true} height="" gap={10}>
-            <Text fontSize={24} fontWeight={600} color={colors.extra.realBlack}>
-              학교 검색하기
-            </Text>
-            <Text fontSize={20} fontWeight={400} color={colors.gray[400]}>
-              학교이름을 입력해 학교를 선택하세요
-            </Text>
-          </Flex>
+          <Text fontSize={24} fontWeight={500} color={colors.extra.realBlack}>
+            학교 검색
+          </Text>
           <Wrapper>
             <FakeInput>
               <ImageContainer>
                 <Search />
               </ImageContainer>
-              <SearchInput
-                placeholder="학교 검색"
-                onChange={handleSearchChange}
-                value={searchValue}
-                onKeyDown={handleSearchKeyDown}
-              />
+              <SearchInput placeholder="학교 검색" onChange={handleSearchChange} value={searchValue} />
             </FakeInput>
             <SearchButton onClick={handleSearchClick}>찾기</SearchButton>
           </Wrapper>
+
           <ContentContainer>
             {datas.length > 0 ? (
               datas.map(data => (
-                <Content type="button" onClick={() => contentClick(data.name, data.code)} key={data.code}>
+                <Content onClick={() => contentClick(data.name, data.code)} key={data.code}>
                   <Text>{data.name}</Text>
                   <Text color={colors.orange[800]}>{data.code}</Text>
                   <Text color={colors.gray[400]} fontWeight={400}>
@@ -170,15 +153,12 @@ const SearchButton = styled.button`
   &:hover {
     opacity: 0.9;
   }
-
-  &:focus-visible {
-    outline: 2px solid ${colors.orange[800]};
-    outline-offset: 3px;
-  }
 `;
 
 const Wrapper = styled.div`
   display: flex;
+  margin-top: 60px;
+  margin-bottom: 20px;
   gap: 12px;
 `;
 
@@ -204,46 +184,29 @@ const Modal = styled.div`
   background-color: ${colors.extra.realWhite};
   display: flex;
   flex-direction: column;
-  gap: 20px;
 `;
 
 const ContentContainer = styled.div`
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  height: 160px;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
-  -ms-overflow-style: none;
-
-  ::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
-const Content = styled.button`
+const Content = styled.div`
   display: flex;
   gap: 20px;
   align-items: center;
   width: 100%;
   padding: 16px 20px;
-  border: none;
   color: ${colors.gray[400]};
   font-size: 16px;
   border-bottom: 1px solid ${colors.gray[300]};
   background-color: ${colors.extra.realWhite};
-  text-align: left;
-  cursor: pointer;
-
   &:hover {
     background-color: ${colors.gray[50]};
     transition: 0.35s ease-in-out;
-  }
-
-  &:focus-visible {
-    outline: none;
-    background-color: ${colors.gray[50]};
-    box-shadow: inset 0 0 0 2px ${colors.orange[800]};
   }
 `;
 
@@ -268,12 +231,6 @@ const SearchInput = styled.input`
   padding: 12px 24px 12px 58px;
   font-size: 16px;
   color: ${colors.extra.realBlack};
-
-  &:focus-visible {
-    outline: 2px solid ${colors.orange[800]};
-    outline-offset: 2px;
-  }
-
   &::placeholder {
     color: ${colors.gray[300]};
     font-size: 16px;

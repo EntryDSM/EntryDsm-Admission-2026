@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 
 import { colors, Text } from "@entry/design";
@@ -6,44 +6,42 @@ import { Check } from "../../assets";
 
 interface IAttendanceFormType {
   title: string;
-  text?: string;
   value: string | number | null;
   onChange: (value: string) => void;
   defaultCount?: number;
   width?: string;
-  fontSize?: number;
-  fontWeight?: number;
+  suffix: string;
   prefix?: string;
-  layout?: "column" | "row";
   maxLength?: number;
   maxScore?: number;
   minScore?: number;
-  inputWidth?: string;
 }
 
 export const AttendanceForm: React.FC<IAttendanceFormType> = ({
   title,
-  text,
   value,
   onChange,
   width = "100%",
-  fontSize = 16,
-  fontWeight = 400,
+  suffix,
   prefix,
-  layout = "column",
   maxScore,
   minScore = 0,
-  inputWidth = "100%",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const hasValue = value !== null && value !== undefined && value !== "";
+  const [isFilled, setIsFilled] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsFilled(!!value || value === 0);
+  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value: rawValue } = e.target;
 
+    // 숫자만 추출 (마이너스 기호 제거)
     const numOnlyRegEx = /[^0-9]/g;
     const onlyNums = rawValue.replace(numOnlyRegEx, "");
 
+    // 빈 값 처리
     if (onlyNums === "") {
       onChange("");
       return;
@@ -51,80 +49,97 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
 
     const numValue = Number(onlyNums);
 
+    // 0 이상인지 체크
     if (numValue < minScore) {
       return;
     }
 
+    // 최댓값이 설정되어 있으면 최댓값 체크
     if (maxScore !== undefined && numValue > maxScore) {
       return;
     }
 
+    // 숫자로 변환 후 다시 문자열로 저장 (선행 0 자동 제거)
     onChange(String(numValue));
   };
 
   return (
-    <Container width={width} layout={layout}>
+    <Container width={width}>
       <HeaderRow>
-        <CheckMark hasValue={hasValue}>
+        <CheckMark hasValue={!!value}>
           <Check />
         </CheckMark>
-        <Text fontSize={fontSize} fontWeight={fontWeight}>
+        <Text>
           {prefix ? `${prefix} ` : ""}
           {title}
         </Text>
       </HeaderRow>
-      <InputWrapper layout={layout} inputWidth={inputWidth}>
+      <InputWrapper>
         <StyledInput
+          suffix={suffix}
           type="text"
-          placeholder={text}
           value={value ?? ""}
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          hasValue={hasValue}
+          hasValue={!!value}
           isFocused={isFocused}
         />
+        <InputSuffix isFilled={isFilled}>{suffix}</InputSuffix>
       </InputWrapper>
     </Container>
   );
 };
 
-const Container = styled.div<{ width: string; layout: "column" | "row" }>`
+const Container = styled.div<Pick<IAttendanceFormType, "width">>`
   width: ${({ width }) => width};
   margin-bottom: 16px;
-  display: flex;
-  flex-direction: ${({ layout }) => (layout === "row" ? "row" : "column")};
-  justify-content: ${({ layout }) => (layout === "row" ? "space-between" : "flex-start")};
-  gap: 10px;
 `;
 
 const HeaderRow = styled.div`
   display: flex;
   align-items: center;
+  margin-bottom: 20px;
   gap: 20px;
 `;
 
-const InputWrapper = styled.div<{ layout: "column" | "row"; inputWidth: string }>`
+const InputWrapper = styled.div`
   position: relative;
-  width: ${({ layout, inputWidth }) => (layout === "row" ? inputWidth : "100%")};
+  width: 100%;
 `;
 
 const StyledInput = styled.input<{
   hasValue: boolean;
   isFocused: boolean;
+  suffix: string;
 }>`
   width: 100%;
   height: 48px;
-  border: 2px solid ${props => (props.isFocused || props.hasValue ? colors.orange[800] : colors.gray[200])};
+  border: 2px solid
+    ${props =>
+      props.isFocused
+        ? props.hasValue
+          ? colors.orange[800]
+          : colors.gray[300]
+        : props.hasValue
+          ? colors.orange[800]
+          : colors.gray[300]};
   border-radius: 12px;
-  padding: 18px 48px 18px 18px;
+  padding: ${({ suffix }) => (suffix && suffix.length > 1 ? "0 54px 0 20px" : "0 40px 0 20px")};
   font-size: 16px;
   outline: none;
   box-sizing: border-box;
+  text-align: right;
+`;
 
-  &::placeholder {
-    color: ${colors.gray[300]};
-  }
+const InputSuffix = styled.span<{ isFilled: boolean }>`
+  position: absolute;
+  top: 50%;
+  right: 23px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: ${({ isFilled }) => (isFilled ? colors.gray[500] : colors.gray[300])};
+  pointer-events: none;
 `;
 
 const CheckMark = styled.span<{ hasValue: boolean }>`

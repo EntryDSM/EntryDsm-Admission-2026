@@ -26,12 +26,7 @@ export const AttendanceVolunteer = () => {
       </Text>
       <Flex isColumn={true} width="100%" height="fit-content" gap={0} justifyContent="center">
         <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
-        <CertCheckForm
-          onChange={certificateChange}
-          title="프로그래밍 기능사 자격증 취득"
-          value={safeData.certificate}
-          helperText="＊프로그래밍 기능사 자격증 취득여부 가산점은 일반전형일 경우 들어가지 않습니다."
-        />
+        <CertCheckForm onChange={certificateChange} title="정보처리기능사 자격증 취득" value={safeData.certificate} />
       </Flex>
     </Flex>
   );

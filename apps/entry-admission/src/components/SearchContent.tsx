@@ -18,7 +18,6 @@ export const SearchContent = ({ selectedName, setSelectedName, setSelectedCode, 
     <Flex alignItems="center" height="fit-content" width="fit-content" gap={32}>
       <InputContainer
         isBlocked={true}
-        disabled
         readOnly={true}
         width="300px"
         placeholder="중학교 이름을 입력해주세요."
@@ -48,12 +47,6 @@ const InputContainer = styled.input<{ isBlocked?: boolean; width?: string }>`
   font-size: 16px;
   opacity: ${({ isBlocked }) => (isBlocked ? 0.4 : 1)};
   pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "auto")};
-
-  &:focus-visible {
-    outline: 2px solid ${colors.orange[800]};
-    outline-offset: 2px;
-    border-color: ${colors.orange[800]};
-  }
 
   &::placeholder {
     color: ${colors.gray[300]};

@@ -64,33 +64,33 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           <AttendanceForm
             width={"48%"}
             title="미인정 결석"
-            text="미인정 결석을 입력하세요"
             defaultCount={10}
             onChange={absenceChange}
             value={datas.absence}
+            suffix="회"
           />
           <AttendanceForm
             width={"48%"}
             title="미인정 조퇴"
-            text="미인정 조퇴를 입력하세요"
             defaultCount={10}
             onChange={earlyLeaveChange}
             value={datas.earlyLeave}
+            suffix="회"
           />
           <AttendanceForm
             width={"48%"}
             title="미인정 지각"
-            text="미인정 지각을 입력하세요"
             defaultCount={10}
             onChange={tardinessChange}
             value={datas.tardiness}
+            suffix="회"
           />
           <AttendanceForm
             width={"48%"}
             title="미인정 결과"
-            text="미인정 결과를 입력하세요"
             defaultCount={10}
             value={datas.classExit}
+            suffix="회"
             onChange={classExitChange}
           />
         </Flex>
@@ -116,9 +116,9 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
         <AttendanceForm
           onChange={volunteerChange}
           value={datas.volunteer}
+          suffix="시간"
           width={"400px"}
           title="봉사시간"
-          text="봉사시간을 입력하세요"
           defaultCount={10}
         />
       </Flex>
@@ -128,12 +128,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
         </Text>
         <Flex isColumn={true} width="100%" gap={0} height="fit-content">
           <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
-          <CertCheckForm
-            onChange={certificateChange}
-            title="프로그래밍 기능사 자격증"
-            value={safeData.certificate}
-            helperText="＊프로그래밍 기능사 자격증 취득여부 가산점은 일반전형일 경우 들어가지 않습니다."
-          />
+          <CertCheckForm onChange={certificateChange} title="정보처리기능사 자격증 취득" value={safeData.certificate} />
         </Flex>
       </Flex>
     </Flex>
