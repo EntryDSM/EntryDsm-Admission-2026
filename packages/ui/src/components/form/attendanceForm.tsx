@@ -19,7 +19,6 @@ interface IAttendanceFormType {
   maxScore?: number;
   minScore?: number;
   inputWidth?: string;
-  suffix?: string;
 }
 
 export const AttendanceForm: React.FC<IAttendanceFormType> = ({
@@ -35,7 +34,6 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
   maxScore,
   minScore = 0,
   inputWidth = "100%",
-  suffix,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = value !== null && value !== undefined && value !== "";
@@ -86,7 +84,6 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
           hasValue={hasValue}
           isFocused={isFocused}
         />
-        {suffix && <Suffix>{suffix}</Suffix>}
       </InputWrapper>
     </Container>
   );
@@ -118,15 +115,7 @@ const StyledInput = styled.input<{
 }>`
   width: 100%;
   height: 48px;
-  border: 2px solid
-    ${props =>
-      props.isFocused
-        ? props.hasValue
-          ? colors.orange[800]
-          : colors.gray[200]
-        : props.hasValue
-          ? colors.orange[800]
-          : colors.gray[200]};
+  border: 2px solid ${props => (props.isFocused || props.hasValue ? colors.orange[800] : colors.gray[200])};
   border-radius: 12px;
   padding: 18px 48px 18px 18px;
   font-size: 16px;
