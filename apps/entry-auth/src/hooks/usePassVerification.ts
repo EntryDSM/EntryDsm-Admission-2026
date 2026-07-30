@@ -1,75 +1,99 @@
-// import { useState, useEffect } from "react";
-// import { useMutation, useQuery } from "@tanstack/react-query";
-// import { createPassPopup, getPassVerifyInfo } from "../apis";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPassPopup } from "../apis";
+import type { PassInfo } from "../apis";
 
-// export const usePassVerification = () => {
-//   const [mdlToken, setMdlToken] = useState<string | null>(null);
-//   const [isRedirectedFromPass, setIsRedirectedFromPass] = useState<boolean>(false);
+const PASS_RESULT_MESSAGE = "entrydsm:pass-result";
 
-//   const popupMutation = useMutation({
-//     mutationFn: createPassPopup,
-//     onSuccess: html => {
-//       // PASS 인증 페이지로 이동
-//       const blob = new Blob([html], { type: "text/html" });
-//       const url = URL.createObjectURL(blob);
+interface PassResultMessage {
+  type: typeof PASS_RESULT_MESSAGE;
+  success: boolean;
+  data?: PassInfo;
+  error?: string;
+}
 
-//       // 돌아올 페이지 저장
-//       localStorage.setItem("returnAfterAuth", "/user-info");
+export const usePassVerification = (onVerified?: (passInfo: PassInfo) => void) => {
+  const popupRef = useRef<Window | null>(null);
+  const onVerifiedRef = useRef(onVerified);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-//       window.location.replace(url);
-//     },
-//     onError: error => {
-//       console.error("PASS 인증 페이지 생성 실패:", error);
-//     },
-//   });
+  useEffect(() => {
+    onVerifiedRef.current = onVerified;
+  }, [onVerified]);
 
-//   const verifyQuery = useQuery({
-//     queryKey: ["pass-verify", mdlToken],
-//     queryFn: async () => {
-//       if (!mdlToken) throw new Error("토큰이 없습니다.");
-//       const data = await getPassVerifyInfo(mdlToken);
-//       return data;
-//     },
-//     enabled: !!mdlToken,
-//     retry: 3,
-//     retryDelay: 1000,
-//   });
+  useEffect(() => {
+    const receivePassResult = (event: MessageEvent<PassResultMessage>) => {
+      if (event.origin !== window.location.origin || event.data?.type !== PASS_RESULT_MESSAGE) return;
+      if (popupRef.current && event.source !== popupRef.current) return;
 
-//   useEffect(() => {
-//     const urlParams = new URLSearchParams(window.location.search);
-//     const mdlTokenFromUrl = urlParams.get("mdl_tkn");
+      setIsLoading(false);
+      if (!event.data.success || !event.data.data) {
+        setError(event.data.error ?? "PASS 인증 결과를 확인하지 못했습니다.");
+        return;
+      }
 
-//     if (mdlTokenFromUrl) {
-//       setMdlToken(mdlTokenFromUrl);
-//       setIsRedirectedFromPass(true);
-//       localStorage.setItem("mdlToken", mdlTokenFromUrl);
+      setError(null);
+      onVerifiedRef.current?.(event.data.data);
+    };
 
-//       const newUrl = new URL(window.location.href);
-//       newUrl.searchParams.delete("mdl_tkn");
-//       window.history.replaceState({}, "", newUrl.toString());
-//     }
-//   }, []);
+    window.addEventListener("message", receivePassResult);
+    return () => window.removeEventListener("message", receivePassResult);
+  }, []);
 
-//   const startVerification = () => {
-//     setMdlToken(null);
-//     setIsRedirectedFromPass(false);
-//     popupMutation.mutate();
-//   };
+  useEffect(() => {
+    if (!isLoading) return;
 
-//   const reset = () => {
-//     setMdlToken(null);
-//     setIsRedirectedFromPass(false);
-//     localStorage.removeItem("passReturnUrl");
-//     popupMutation.reset();
-//   };
+    const popupWatcher = window.setInterval(() => {
+      if (!popupRef.current?.closed) return;
+      popupRef.current = null;
+      setIsLoading(false);
+      setError("PASS 인증 창이 닫혔습니다. 인증을 다시 진행해 주세요.");
+    }, 500);
 
-//   return {
-//     startVerification,
-//     isLoading: popupMutation.isPending || verifyQuery.isFetching,
-//     isVerified: !!verifyQuery.data,
-//     verifyData: verifyQuery.data,
-//     error: popupMutation.error || verifyQuery.error,
-//     isRedirectedFromPass,
-//     reset,
-//   };
-// };
+    return () => window.clearInterval(popupWatcher);
+  }, [isLoading]);
+
+  const startVerification = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+
+    const popup = window.open("", "entrydsm-pass-auth", "width=500,height=720,scrollbars=yes,resizable=yes");
+    if (!popup) {
+      setIsLoading(false);
+      setError("팝업이 차단되었습니다. 브라우저에서 팝업을 허용해 주세요.");
+      return;
+    }
+
+    popupRef.current = popup;
+    popup.document.write(
+      '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>PASS 인증</title></head>' +
+        '<body style="font-family:sans-serif;text-align:center;padding-top:48px">PASS 인증을 준비하고 있습니다.</body></html>'
+    );
+    popup.document.close();
+
+    try {
+      const redirectUrl = `${window.location.origin}/pass/result`;
+      const popupHtml = await createPassPopup(redirectUrl);
+
+      if (popup.closed) throw new Error("PASS 인증 창이 닫혔습니다.");
+      popup.document.open();
+      popup.document.write(popupHtml);
+      popup.document.close();
+    } catch (cause) {
+      popup.close();
+      setIsLoading(false);
+      setError(cause instanceof Error ? cause.message : "PASS 인증을 시작하지 못했습니다.");
+    }
+  }, []);
+
+  const cancelVerification = useCallback(() => {
+    popupRef.current?.close();
+    popupRef.current = null;
+    setIsLoading(false);
+    setError(null);
+  }, []);
+
+  return { startVerification, cancelVerification, isLoading, error };
+};
+
+export { PASS_RESULT_MESSAGE };
