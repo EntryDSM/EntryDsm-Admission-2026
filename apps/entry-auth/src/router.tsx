@@ -1,8 +1,12 @@
 import { createBrowserRouter } from "react-router";
 import { AppLayout } from "./layout";
-import { FindPasswordPage, SignUpPage, LoginPage } from "./pages";
+import { FindPasswordPage, SignUpPage, LoginPage, PassResultPage } from "./pages";
 
 export const Router = createBrowserRouter([
+  {
+    path: "/pass/result",
+    element: <PassResultPage />,
+  },
   {
     path: "/",
     element: <AppLayout />,
