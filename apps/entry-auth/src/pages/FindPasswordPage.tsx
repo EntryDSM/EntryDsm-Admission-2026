@@ -10,12 +10,12 @@ import { ChangePassword } from "../components";
 export const FindPasswordPage = () => {
   const navigate = useNavigate();
 
-  const { currentStep, handleNextStep } = useStepFlow(1, 2);
+  const { currentStep } = useStepFlow(1, 2);
 
   const renderContent = () => {
     switch (currentStep) {
       case 1:
-        return <SelectUser onNext={handleNextStep} />;
+        return <SelectUser />;
       case 2:
         return <ChangePassword />;
       default:
