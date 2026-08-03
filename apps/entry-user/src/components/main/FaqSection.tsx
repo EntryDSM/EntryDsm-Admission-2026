@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { useState } from "react";
 import { colors } from "@entry/design";
 import { upArrowIcon, downArrowIcon, MoveRightArrow } from "../../assets";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const faqList = [
   {
