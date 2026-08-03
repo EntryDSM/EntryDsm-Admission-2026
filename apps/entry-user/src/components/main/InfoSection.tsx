@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { noticeIcon, downloadIcon, noticeMoveArrowIcon } from "../../assets";
 interface NoticeItem {
   id: number;

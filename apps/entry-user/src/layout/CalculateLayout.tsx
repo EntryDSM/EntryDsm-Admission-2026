@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { colors, Text } from "@entry/design";
 import { ScorePageNav, TabSection, Btn } from "@entry/ui";
 import { ScoreResultModal } from "../components";

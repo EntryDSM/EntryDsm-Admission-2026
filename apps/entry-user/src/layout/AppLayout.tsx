@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router";
 import { CommonHeader, Footer } from "@entry/ui";
 import { useEffect } from "react";
 import { CalculationDataProvider } from "../contexts";
