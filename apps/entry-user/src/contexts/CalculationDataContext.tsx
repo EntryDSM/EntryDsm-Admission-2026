@@ -182,7 +182,7 @@ export const calculationReducer = (state: CalculationState, action: CalculationA
 
 export interface CalculationContextType {
   state: CalculationState;
-  updatePageData: (page: keyof CalculationState, data) => void;
+  updatePageData: <T extends keyof CalculationState>(page: T, data: CalculationState[T]) => void;
   saveToStorage: () => Promise<void>;
   loadFromStorage: () => Promise<void>;
   clearAllData: () => void;
