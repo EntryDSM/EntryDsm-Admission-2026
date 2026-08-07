@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router";
 import { AppLayout } from "./layout";
 import { MonitoringPage } from "./pages/MonitoringPage";
 import { mockMonitoringData } from "./pages/mockMonitoringData";
+import { downloadCurrentPage, reloadCurrentPage } from "./utils";
 
 export const Router = createBrowserRouter([
   {
@@ -11,7 +12,9 @@ export const Router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <MonitoringPage data={mockMonitoringData} />,
+        element: (
+          <MonitoringPage data={mockMonitoringData} onReload={reloadCurrentPage} onDownload={downloadCurrentPage} />
+        ),
       },
     ],
   },
