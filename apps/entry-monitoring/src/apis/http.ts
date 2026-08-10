@@ -1,5 +1,4 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
-const ACCESS_TOKEN_COOKIE_KEY = "accessToken";
 
 export class HttpError extends Error {
   status: number;
@@ -22,19 +21,12 @@ interface ApiEnvelope<T> extends ErrorBody {
   data: T | null;
 }
 
-const getAccessToken = () => {
-  const match = document.cookie.split("; ").find(row => row.startsWith(`${ACCESS_TOKEN_COOKIE_KEY}=`));
-  return match ? decodeURIComponent(match.slice(ACCESS_TOKEN_COOKIE_KEY.length + 1)) : undefined;
-};
-
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
-  const token = getAccessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
     headers: {
       Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
