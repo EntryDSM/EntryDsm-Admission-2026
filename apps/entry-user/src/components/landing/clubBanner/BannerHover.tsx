@@ -1,8 +1,9 @@
 import styled from "@emotion/styled";
 import { dmsLogo, jobisLogo, pickLogo } from "../../../assets";
+import { type BannerId } from "./BannerContainer";
 
 interface IBannerHoverType {
-  selectedBanner: string;
+  selectedBanner: BannerId;
 }
 
 export const BannerHover = ({ selectedBanner }: IBannerHoverType) => {
