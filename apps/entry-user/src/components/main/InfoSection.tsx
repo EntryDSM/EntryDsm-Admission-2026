@@ -2,7 +2,8 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { useNavigate } from "react-router";
 import { noticeIcon, downloadIcon, noticeMoveArrowIcon } from "../../assets";
-interface NoticeItem {
+
+interface Notice {
   id: number;
   title: string;
   createdAt: string;
@@ -10,10 +11,10 @@ interface NoticeItem {
   type: "GUIDE" | "NOTICE";
 }
 
+const noticeItems: Notice[] = [{ id: 1, title: "공지 1", createdAt: "2026-08-03", isPinned: false, type: "NOTICE" }];
+
 export const InfoSection = () => {
   const navigate = useNavigate();
-
-  const noticeItems = [{ id: 1, title: "공지 1", createdAt: "2026-08-03", isPinned: false, type: "NOTICE" }];
 
   const currentPeriod = "원서 접수 기간입니다.";
 
@@ -30,26 +31,6 @@ export const InfoSection = () => {
     link.download = "2026학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형요강.pdf";
     link.click();
   };
-
-  // const notices = [
-  //   {
-  //     title: '기숙사 탈출하면 벌점 몇 점인지에 대해',
-  //     date: '2024.03.21',
-  //     badge: 'NEW',
-  //   },
-  //   {
-  //     title: '입학 공지지사항에 대해서',
-  //     date: '2024.03.21',
-  //   },
-  //   {
-  //     title: '지후의 디자인 건',
-  //     date: '2024.03.21',
-  //   },
-  //   {
-  //     title: '입학 안내사항 파일 다운로드',
-  //     date: '2024.03.21',
-  //   },
-  // ];
 
   return (
     <Container>
@@ -74,18 +55,15 @@ export const InfoSection = () => {
             <DownloadIcon onClick={downloadPdfBtn} src={downloadIcon} alt="다운로드" />
           </MainNoticeCard>
           {noticeItems.map((notice, index) => (
-            <NoticeItem key={index} onClick={() => navigate(`/notice/${notice.id}`)}>
+            <NoticeCard key={index} onClick={() => navigate(`/notice/${notice.id}`)}>
               <NoticeContent>
                 <NoticeInfo>
-                  <NoticeTitle>
-                    {notice.title}
-                    {/* {notice.badge && <BadgeHot>{notice.badge}</BadgeHot>} */}
-                  </NoticeTitle>
+                  <NoticeTitle>{notice.title}</NoticeTitle>
                   {notice.createdAt && <NoticeDate>{notice.createdAt}</NoticeDate>}
                 </NoticeInfo>
               </NoticeContent>
               <ArrowIcon src={noticeMoveArrowIcon} alt="이동" />
-            </NoticeItem>
+            </NoticeCard>
           ))}
         </NoticeContainer>
       </ContentWrapper>
@@ -234,7 +212,7 @@ const MainNoticeCard = styled.div`
   }
 `;
 
-const NoticeItem = styled.div`
+const NoticeCard = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;

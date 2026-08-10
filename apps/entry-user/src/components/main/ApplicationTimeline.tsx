@@ -24,38 +24,15 @@ export const ApplicationTimeline = () => {
       <DesktopTimeline>
         <TimelineContainer>
           <TimelineLine />
-
-          <TimelineItem style={{ left: "80px" }}>
-            <TimelineLabel>
-              <LabelTitle>원서 제출</LabelTitle>
-              <LabelDate>{timelineData[0].date}</LabelDate>
-            </TimelineLabel>
-            <TimelineDot />
-          </TimelineItem>
-
-          <TimelineItem style={{ left: "35%" }}>
-            <TimelineLabel>
-              <LabelTitle>1차 발표</LabelTitle>
-              <LabelDate>{timelineData[1].date}</LabelDate>
-            </TimelineLabel>
-            <TimelineDot />
-          </TimelineItem>
-
-          <TimelineItem style={{ left: "62%" }}>
-            <TimelineLabel>
-              <LabelTitle>2차 전형</LabelTitle>
-              <LabelDate>{timelineData[2].date}</LabelDate>
-            </TimelineLabel>
-            <TimelineDot />
-          </TimelineItem>
-
-          <TimelineItem style={{ right: "80px" }}>
-            <TimelineLabel>
-              <LabelTitle>최종 발표</LabelTitle>
-              <LabelDate>{timelineData[3].date}</LabelDate>
-            </TimelineLabel>
-            <TimelineDot />
-          </TimelineItem>
+          {timelineData.map(item => (
+            <TimelineItem style={{ left: "80px" }} key={item.title}>
+              <TimelineLabel>
+                <LabelTitle>{item.title}</LabelTitle>
+                <LabelDate>{item.date}</LabelDate>
+              </TimelineLabel>
+              <TimelineDot />
+            </TimelineItem>
+          ))}
         </TimelineContainer>
       </DesktopTimeline>
 
@@ -133,26 +110,6 @@ const TimelineItem = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  &:first-of-type {
-    left: 80px !important;
-    @media (max-width: 1200px) {
-      left: 60px !important;
-    }
-    @media (max-width: 1024px) {
-      left: 40px !important;
-    }
-  }
-
-  &:last-of-type {
-    right: 80px !important;
-    @media (max-width: 1200px) {
-      right: 60px !important;
-    }
-    @media (max-width: 1024px) {
-      right: 40px !important;
-    }
-  }
 `;
 
 const TimelineDot = styled.div`

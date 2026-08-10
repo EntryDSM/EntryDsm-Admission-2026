@@ -3,7 +3,7 @@ import { colors } from "@entry/design";
 
 export const ConsultationSection = () => {
   const handleHomepageClick = () => {
-    window.open("https://dsmhs.djsch.kr/main.do", "_blank");
+    window.open("https://dsmhs.djsch.kr/main.do", "_blank", "noopener,noreferrer");
   };
 
   return (

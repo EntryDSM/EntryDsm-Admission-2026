@@ -185,7 +185,7 @@ export interface CalculationContextType {
   updatePageData: <T extends keyof CalculationState>(page: T, data: CalculationState[T]) => void;
   saveToStorage: () => Promise<void>;
   loadFromStorage: () => Promise<void>;
-  clearAllData: () => void;
+  clearAllData: () => Promise<void>;
 }
 
 export const CalculationDataContext = createContext<CalculationContextType | undefined>(undefined);

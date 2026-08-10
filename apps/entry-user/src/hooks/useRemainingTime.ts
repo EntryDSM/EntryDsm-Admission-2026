@@ -18,6 +18,7 @@ export const useRemainingTime = (schedules?: Schedule[], hasApplication?: boolea
 
       if (!startDateSchedule || !endDateSchedule) {
         setIsAvailable(false);
+        setRemainingTime("");
         return;
       }
 
