@@ -164,11 +164,10 @@ const Question = styled.div`
   }
 `;
 
-const AnswerWrapper = styled.div<{ isOpen: boolean }>`
-  max-height: ${({ isOpen }) => (isOpen ? "500px" : "0")};
-  opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
-  overflow: hidden;
-  transition: all 0.3s ease;
+const AnswerWrapper = styled.button<{ isOpen: boolean }>`
+  display: grid;
+  grid-template-rows: ${({ isOpen }) => (isOpen ? "1fr" : "0fr")};
+  transition: grid-template-rows 0.3s ease;
 `;
 
 const Answer = styled.div`

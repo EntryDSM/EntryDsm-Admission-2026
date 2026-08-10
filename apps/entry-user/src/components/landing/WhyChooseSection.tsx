@@ -40,7 +40,7 @@ export const WhyChooseSection = () => {
           {cards.map(card => (
             <Card key={card.id}>
               <ImageWrapper>
-                <CardImage src={card.image} alt="학생 이미지" />
+                <CardImage src={card.image} alt={`${card.students} 인터뷰 사진`} />
               </ImageWrapper>
 
               <CardTitle>{card.title}</CardTitle>

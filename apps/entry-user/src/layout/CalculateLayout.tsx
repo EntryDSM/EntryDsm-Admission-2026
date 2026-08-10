@@ -60,7 +60,7 @@ export const CalculateLayout = () => {
     return "primary";
   };
 
-  const [activeType, setActiveType] = useState<CalculationType>(getCurrentType());
+  const activeType = getCurrentType();
 
   const getScoreNavData = () => {
     const basePath = CALCULATION_TYPES.find(t => t.key === activeType)?.basePath;
@@ -84,7 +84,6 @@ export const CalculateLayout = () => {
   const handleTypeChange = (type: string) => {
     if (!isCalculationType(type)) return;
 
-    setActiveType(type);
     const firstPage = SCORE_PAGES[type][0];
     const basePath = CALCULATION_TYPES.find(t => t.key === type)?.basePath;
 

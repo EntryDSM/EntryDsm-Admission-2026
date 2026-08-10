@@ -1,4 +1,6 @@
 import styled from "@emotion/styled";
+import { useEffect } from "react";
+
 import { Text } from "@entry/design";
 import { Btn } from "@entry/ui";
 
@@ -18,6 +20,22 @@ const MOCK_RESULTS: ScoreResult[] = [{ name: "졸업 예정자", score: "100", t
 export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => {
   const loading = false;
   const error = null;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

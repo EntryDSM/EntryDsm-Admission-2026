@@ -3,32 +3,35 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { PrizeImg } from "../../assets";
 
-export const StatisticsSection: React.FC = () => {
-  const statistics = [
-    {
-      icon: "97%",
-      title: "취업률",
-      description: "작년 취업률은 97%이며,\n모든 취업을 향해 달리고 있어요!",
-    },
-    {
-      icon: PrizeImg,
-      title: "수상",
-      description: "다양한 소프트웨어 경진 대회,\nTOPCIT 등에서 우수한\n성적을 거두고 있어요!",
-    },
-    {
-      icon: PrizeImg,
-      title: "MOU",
-      description: "다양한 기업과 MOU를 체결하여,\n매년 학생들의 취업으로\n이어지고 있어요!",
-    },
-  ];
+const statistics = [
+  {
+    kind: "text",
+    icon: "97%",
+    title: "취업률",
+    description: "작년 취업률은 97%이며,\n모든 취업을 향해 달리고 있어요!",
+  },
+  {
+    kind: "img",
+    icon: PrizeImg,
+    title: "수상",
+    description: "다양한 소프트웨어 경진 대회,\nTOPCIT 등에서 우수한\n성적을 거두고 있어요!",
+  },
+  {
+    kind: "img",
+    icon: PrizeImg,
+    title: "MOU",
+    description: "다양한 기업과 MOU를 체결하여,\n매년 학생들의 취업으로\n이어지고 있어요!",
+  },
+];
 
+export const StatisticsSection: React.FC = () => {
   return (
     <Container>
       {statistics.map((stat, index) => (
         <StatCard key={index}>
           <IconWrapper>
-            <Icon isText={stat.icon === "97%"}>
-              {stat.icon === "97%" ? stat.icon : <img src={stat.icon} alt={stat.title} />}
+            <Icon isText={stat.kind === "text"}>
+              {stat.icon === "text" ? stat.icon : <img src={stat.icon} alt={stat.title} />}
             </Icon>
           </IconWrapper>
           <Title>{stat.title}</Title>

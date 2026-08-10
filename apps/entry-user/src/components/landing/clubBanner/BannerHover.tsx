@@ -24,11 +24,12 @@ export const BannerHover = ({ selectedBanner }: IBannerHoverType) => {
       description:
         "학생들의 취업을 위한 교내의 단 하나뿐인 서비스입니다.\n학생뿐만 아니라 기업에서도 사용하고 있으며, 앱/웹으로 지원하고 있습니다!",
     },
-    xquare: {
-      icon: dmsLogo,
-      title: "XQUARE",
-      description: "아직 값 없어용.",
-    },
+    // 아직 값이 없음
+    // xquare: {
+    //   icon: dmsLogo,
+    //   title: "XQUARE",
+    //   description: "아직 값 없어용.",
+    // },
   };
 
   const content = bannerContent[selectedBanner as keyof typeof bannerContent];

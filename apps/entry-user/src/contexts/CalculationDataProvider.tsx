@@ -27,31 +27,47 @@ const openDB = (): Promise<IDBDatabase> => {
   });
 };
 
+const waitForTransaction = (transaction: IDBTransaction): Promise<void> =>
+  new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error ?? new Error("IndexedDB transaction aborted"));
+  });
+
 const saveToIndexedDB = async (data: CalculationState): Promise<void> => {
   const db = await openDB();
-  const transaction = db.transaction([STORE_NAME], "readwrite");
-  const store = transaction.objectStore(STORE_NAME);
 
-  await new Promise<void>((resolve, reject) => {
-    const request = store.put({ id: "calculationData", data });
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
+  try {
+    const transaction = db.transaction([STORE_NAME], "readwrite");
+    const store = transaction.objectStore(STORE_NAME);
+
+    store.put({ id: "calculationData", data });
+
+    await waitForTransaction(transaction);
+  } finally {
+    db.close();
+  }
 };
 
 const loadFromIndexedDB = async (): Promise<CalculationState | null> => {
   const db = await openDB();
-  const transaction = db.transaction([STORE_NAME], "readonly");
-  const store = transaction.objectStore(STORE_NAME);
 
-  return new Promise((resolve, reject) => {
-    const request = store.get("calculationData");
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      const result = request.result;
-      resolve(result ? result.data : null);
-    };
-  });
+  try {
+    const transaction = db.transaction([STORE_NAME], "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+
+    const result = await new Promise<{ id: string; data: CalculationState } | undefined>((resolve, reject) => {
+      const request = store.get("calculationData");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    await waitForTransaction(transaction);
+
+    return result ? result.data : null;
+  } finally {
+    db.close();
+  }
 };
 
 export const CalculationDataProvider: React.FC<{
@@ -72,6 +88,21 @@ export const CalculationDataProvider: React.FC<{
     }
   }, [state]);
 
+  const deleteFromIndexedDB = async (): Promise<void> => {
+    const db = await openDB();
+
+    try {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+
+      store.delete("calculationData");
+
+      await waitForTransaction(transaction);
+    } finally {
+      db.close();
+    }
+  };
+
   const loadFromStorage = useCallback(async () => {
     try {
       const savedData = await loadFromIndexedDB();
@@ -84,10 +115,14 @@ export const CalculationDataProvider: React.FC<{
     }
   }, []);
 
-  const clearAllData = useCallback(() => {
-    dispatch({ type: "CLEAR_ALL_DATA" });
+  const clearAllData = useCallback(async () => {
+    try {
+      await deleteFromIndexedDB();
+      dispatch({ type: "CLEAR_ALL_DATA" });
+    } catch (error) {
+      console.error("계산 데이터 삭제 실패:", error);
+    }
   }, []);
-
   const value: CalculationContextType = {
     state,
     updatePageData,

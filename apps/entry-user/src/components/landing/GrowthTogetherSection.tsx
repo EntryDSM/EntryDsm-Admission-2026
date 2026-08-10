@@ -14,9 +14,9 @@ export const GrowthTogetherSection = ({ backgroundImage }: GrowthTogetherSection
           <HighlightText>우리</HighlightText>가 도와드려요!
         </Subtitle>
         <Description>
-          개발 학습을 위한 노트북 제공, 기숙사 무료운영, 학업장진을 위한 방과후 운영 등
+          개발 학습을 위한 노트북 제공, 기숙사 무료운영, 학업 증진을 위한 방과후 운영 등
           <br />
-          이외에도 여러가지 지원을 통해 학생이 학교에 적응하고 성장할 수 있는 최적의 환경을 제공합니다.
+          이외에도 여러 가지 지원을 통해 학생이 학교에 적응하고 성장할 수 있는 최적의 환경을 제공합니다.
         </Description>
       </ContentWrapper>
     </Container>
@@ -101,7 +101,7 @@ const HighlightText = styled.span`
 `;
 
 const Description = styled.p`
-  font-size: 17 px;
+  font-size: 17px;
   line-height: 1.8;
   color: ${colors.gray[100]};
   max-width: 800px;

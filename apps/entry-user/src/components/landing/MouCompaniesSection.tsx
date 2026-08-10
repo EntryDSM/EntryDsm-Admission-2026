@@ -43,7 +43,7 @@ const MentContainer = styled.div`
   }
 `;
 
-const Best = styled.span`
+const Best = styled.p`
   color: ${colors.orange[800]};
 `;
 
@@ -63,7 +63,7 @@ const Middle = styled.div`
   }
 `;
 
-const Top = styled.div`
+const Top = styled.h2`
   font-size: 42px;
   font-weight: 700;
   margin-bottom: 15px;
