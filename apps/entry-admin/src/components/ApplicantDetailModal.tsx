@@ -2,30 +2,9 @@ import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
+import { useApplicantDetail } from "../hooks";
 import { cancel } from "../assets";
-import { getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
-
-interface ApplicantDetail {
-  photoUrl?: string;
-  name?: string;
-  birthDay?: string;
-  gender?: string;
-  phoneNumber?: string;
-  examinationNumber?: string;
-  isDaejeon?: boolean;
-  applicationType?: string;
-  educationalStatus?: string;
-  totalScore?: number;
-  applicationStatus?: string;
-  selfIntroduce?: string;
-  studyPlan?: string;
-  totalGradeScore?: number;
-  attendanceScore?: number;
-  volunteerScore?: number;
-  extraScore?: number;
-  parentName?: string;
-  parentTel?: string;
-}
+import { getApplicantStatusLabel, getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -37,13 +16,25 @@ const FOCUSABLE_SELECTOR = [
 ].join(", ");
 
 interface IApplicantDetailModalType {
-  receiptCode?: number;
+  applicantId?: number;
   isOpen: boolean;
   onClose: () => void;
-  applicant?: ApplicantDetail;
 }
 
-export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }: IApplicantDetailModalType) => {
+const getMaxScore = (applicationType?: string) => {
+  if (applicationType === "GENERAL" || applicationType === "COMMON") {
+    return 170;
+  }
+
+  if (applicationType === "SOCIAL" || applicationType === "MEISTER") {
+    return 110;
+  }
+
+  return "-";
+};
+
+export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplicantDetailModalType) => {
+  const { detail, isLoading } = useApplicantDetail(applicantId, isOpen);
   const scrollPositionRef = useRef(0);
   const modalContentRef = useRef<HTMLDivElement>(null);
 
@@ -121,7 +112,7 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
     }
   };
 
-  // 원서 \n 적용
+  // 원서 \n 적용 (API 미제공 항목은 null 반환 → 안내 문구로 대체)
   const formatTextWithLineBreaks = (text?: string): ReactNode => {
     if (!text) {
       return null;
@@ -136,33 +127,8 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
     ));
   };
 
-  const getApplicationStatusLabel = (status?: string) => {
-    const statusMap: Record<string, string> = {
-      NOT_APPLIED: "미지원",
-      WRITING: "원서 작성 중",
-      SUBMITTED: "지원 완료",
-      WAITING_DOCUMENTS: "서류 도착 대기",
-      DOCUMENTS_RECEIVED: "서류 접수 완료",
-      SCREENING_IN_PROGRESS: "전형 진행 중",
-      RESULT_ANNOUNCED: "합격 여부 확인",
-    };
-
-    return status ? (statusMap[status] ?? status) : "-";
-  };
-
-  const getMaxScore = (applicationType?: string) => {
-    if (applicationType === "COMMON") {
-      return 170;
-    }
-
-    if (applicationType === "SOCIAL" || applicationType === "MEISTER") {
-      return 110;
-    }
-
-    return "-";
-  };
-
-  const regionLabel = applicant?.isDaejeon === undefined ? "-" : applicant.isDaejeon ? "대전" : "전국";
+  const regionLabel = detail ? (detail.isDaejeon ? "대전" : "전국") : "-";
+  const maxScore = getMaxScore(detail?.applicationType);
 
   if (!isOpen) {
     return null;
@@ -177,8 +143,11 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
         role="dialog"
         aria-modal="true"
         aria-labelledby="applicant-detail-modal-title"
+        aria-busy={isLoading}
         tabIndex={-1}
       >
+        {isLoading && <LoadingOverlay role="status">지원자 정보를 불러오는 중...</LoadingOverlay>}
+
         <CloseButton type="button" onClick={onClose} aria-label="닫기">
           <img src={cancel} alt="" aria-hidden="true" />
         </CloseButton>
@@ -189,47 +158,39 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
             <ApplicantNumberGroup>
               <ApplicantNumber>
                 접수번호
-                <NumberBadge>{receiptCode ?? "-"}</NumberBadge>
+                <NumberBadge>{detail?.receiptCode ?? "-"}</NumberBadge>
               </ApplicantNumber>
 
               <ApplicantNumber>
                 수험번호
-                <NumberBadge>{applicant?.examinationNumber ?? "-"}</NumberBadge>
+                <NumberBadge>{detail?.examinationNumber ?? "-"}</NumberBadge>
               </ApplicantNumber>
             </ApplicantNumberGroup>
 
             <ApplicantImage>
-              {applicant?.photoUrl ? (
-                <img
-                  src={applicant.photoUrl}
-                  alt="지원자 사진"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                <ProfilePlaceholder />
-              )}
+              <ProfilePlaceholder />
             </ApplicantImage>
           </ApplicantPhotoArea>
 
           <ApplicantInfo>
             <InfoRow>
               <InfoLabel>이름</InfoLabel>
-              <InfoValue>{applicant?.name ?? "-"}</InfoValue>
+              <InfoValue>{detail?.name ?? "-"}</InfoValue>
             </InfoRow>
 
             <InfoRow>
               <InfoLabel>생년월일</InfoLabel>
-              <InfoValue>{applicant?.birthDay ?? "-"}</InfoValue>
+              <InfoValue>{detail?.birthDay ?? "-"}</InfoValue>
             </InfoRow>
 
             <InfoRow>
-              <InfoLabel>성별</InfoLabel>
-              <InfoValue>{applicant?.gender ?? "-"}</InfoValue>
+              <InfoLabel>학교</InfoLabel>
+              <InfoValue>{detail?.schoolName ?? "-"}</InfoValue>
             </InfoRow>
 
             <InfoRow>
               <InfoLabel>연락처</InfoLabel>
-              <InfoValue>{applicant?.phoneNumber ?? "-"}</InfoValue>
+              <InfoValue>{detail?.phoneNumber ?? "-"}</InfoValue>
             </InfoRow>
 
             <InfoRow>
@@ -239,65 +200,47 @@ export const ApplicantDetailModal = ({ receiptCode, isOpen, onClose, applicant }
 
             <InfoRow>
               <InfoLabel>전형</InfoLabel>
-              <InfoValue>{getApplicationTypeLabel(applicant?.applicationType)}</InfoValue>
+              <InfoValue>{getApplicationTypeLabel(detail?.applicationType)}</InfoValue>
             </InfoRow>
 
             <InfoRow>
               <InfoLabel>구분</InfoLabel>
-              <InfoValue>{getEducationalStatusLabel(applicant?.educationalStatus)}</InfoValue>
+              <InfoValue>{getEducationalStatusLabel(detail?.educationalStatus)}</InfoValue>
             </InfoRow>
 
             <InfoRow>
               <InfoLabel>성적</InfoLabel>
               <ScoreValue>
-                {applicant?.totalScore ?? "-"}/{getMaxScore(applicant?.applicationType)}
+                {detail?.totalScore ?? "-"}/{maxScore}
               </ScoreValue>
             </InfoRow>
 
             <InfoRow>
               <InfoLabel>상태</InfoLabel>
-              <InfoValue>{getApplicationStatusLabel(applicant?.applicationStatus)}</InfoValue>
+              <InfoValue>{getApplicantStatusLabel(detail?.status)}</InfoValue>
             </InfoRow>
           </ApplicantInfo>
         </ModalHeader>
 
         <ModalSection>
           <SectionTitle>자기소개서</SectionTitle>
-          <SectionContent>
-            {formatTextWithLineBreaks(applicant?.selfIntroduce) ?? "작성된 자기소개서가 없습니다."}
-          </SectionContent>
+          <SectionContent>{formatTextWithLineBreaks(undefined) ?? "작성된 자기소개서가 없습니다."}</SectionContent>
         </ModalSection>
 
         <ModalSection>
           <SectionTitle>학업 계획서</SectionTitle>
-          <SectionContent>
-            {formatTextWithLineBreaks(applicant?.studyPlan) ?? "작성된 학업 계획서가 없습니다."}
-          </SectionContent>
+          <SectionContent>{formatTextWithLineBreaks(undefined) ?? "작성된 학업 계획서가 없습니다."}</SectionContent>
         </ModalSection>
 
         <ModalSection>
           <SectionTitle>점수 상세</SectionTitle>
           <SectionContent>
-            <ScoreRow>과목 점수: {applicant?.totalGradeScore ?? "-"}</ScoreRow>
-            <ScoreRow>출결 점수: {applicant?.attendanceScore ?? "-"}</ScoreRow>
-            <ScoreRow>봉사 점수: {applicant?.volunteerScore ?? "-"}</ScoreRow>
-            <ScoreRow>가산점: {applicant?.extraScore ?? "-"}</ScoreRow>
+            <ScoreRow>과목 점수: {detail?.subjectScore ?? "-"}</ScoreRow>
+            <ScoreRow>출결 점수: {detail?.attendanceScore ?? "-"}</ScoreRow>
+            <ScoreRow>봉사 점수: {detail?.volunteerScore ?? "-"}</ScoreRow>
+            <ScoreRow>총점: {detail?.totalScore ?? "-"}</ScoreRow>
           </SectionContent>
         </ModalSection>
-
-        <ParentSection>
-          <SectionTitle>보호자 정보</SectionTitle>
-          <SectionContent>
-            <InfoRow>
-              <InfoLabel>부모님 성명</InfoLabel>
-              <InfoValue>{applicant?.parentName ?? "-"}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>부모님 연락처</InfoLabel>
-              <InfoValue>{applicant?.parentTel ?? "-"}</InfoValue>
-            </InfoRow>
-          </SectionContent>
-        </ParentSection>
       </ModalContent>
     </ModalOverlay>
   );
@@ -368,6 +311,19 @@ const ModalContent = styled.div`
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+`;
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  color: ${colors.gray[400]};
+  font-size: 18px;
+  font-weight: 500;
 `;
 
 const CloseButton = styled.button`
@@ -509,16 +465,6 @@ const ModalSection = styled.div`
 
   @media (max-width: 768px) {
     padding: 20px;
-  }
-`;
-
-const ParentSection = styled.div`
-  padding: 24px 32px;
-  margin-bottom: 65px;
-
-  @media (max-width: 768px) {
-    padding: 20px;
-    margin-bottom: 60px;
   }
 `;
 
