@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { StatCard, ErrorLogCard, BarChartCard, DeviceChartCard } from "../components";
-import type { MonitoringData } from "./mockMonitoringData";
+import type { MonitoringData } from "../types";
 import { DownloadIcon } from "@entry/ui";
 
 interface MonitoringPageProps {
