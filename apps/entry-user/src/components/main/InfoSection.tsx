@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { noticeIcon, downloadIcon, noticeMoveArrowIcon } from "../../assets";
 
 interface Notice {
@@ -52,10 +52,12 @@ export const InfoSection = () => {
               <NoticeIconImg src={mainNotice.icon} alt="공지 아이콘" />
               <MainNoticeTitle>{mainNotice.title}</MainNoticeTitle>
             </NoticeContent>
-            <DownloadIcon onClick={downloadPdfBtn} src={downloadIcon} alt="다운로드" />
+            <DownloadButton>
+              <DownloadIcon onClick={downloadPdfBtn} src={downloadIcon} alt="다운로드" />
+            </DownloadButton>
           </MainNoticeCard>
           {noticeItems.map((notice, index) => (
-            <NoticeCard key={index} onClick={() => navigate(`/notice/${notice.id}`)}>
+            <NoticeCard key={index} to={`/notice/${notice.id}`}>
               <NoticeContent>
                 <NoticeInfo>
                   <NoticeTitle>{notice.title}</NoticeTitle>
@@ -212,7 +214,7 @@ const MainNoticeCard = styled.div`
   }
 `;
 
-const NoticeCard = styled.div`
+const NoticeCard = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -301,14 +303,21 @@ const NoticeDate = styled.div`
   }
 `;
 
-// const BadgeHot = styled.span`
-//   background: ${colors.orange[800]};
-//   color: white;
-//   padding: 2px 7px;
-//   border-radius: 3px;
-//   font-size: 10px;
-//   font-weight: 600;
-// `;
+const DownloadButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[700]};
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+`;
 
 const DownloadIcon = styled.img`
   width: 18px;

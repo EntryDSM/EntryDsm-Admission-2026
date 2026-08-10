@@ -1,13 +1,14 @@
 import styled from "@emotion/styled";
 import { dms, jobis, pick } from "../../../assets";
 import { BannerHover } from "./BannerHover";
+import { type BannerId } from "./BannerContainer";
 
 interface IBannerDisplayType {
-  selectedBanner: string;
+  selectedBanner: BannerId;
 }
 
 export const BannerDisplay = ({ selectedBanner }: IBannerDisplayType) => {
-  const bannerImages = {
+  const bannerImages: Record<BannerId, string> = {
     dms,
     pick,
     jobis,
@@ -19,7 +20,7 @@ export const BannerDisplay = ({ selectedBanner }: IBannerDisplayType) => {
   return (
     <DisplayContainer>
       <BannerWrapper>
-        <BannerImage src={bannerImages[selectedBanner as keyof typeof bannerImages]} alt={selectedBanner} />
+        <BannerImage src={bannerImages[selectedBanner]} alt={selectedBanner} />
         <BannerHover selectedBanner={selectedBanner} />
       </BannerWrapper>
       <IndicatorGroup>

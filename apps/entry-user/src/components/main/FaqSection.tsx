@@ -52,8 +52,8 @@ export const FaqSection = () => {
         {faqList.map((faq, index) => {
           const isOpen = openIndex === index;
           return (
-            <FaqItem key={index} onClick={() => toggleIndex(index)} isOpen={isOpen}>
-              <QuestionWrapper>
+            <FaqItem key={index} isOpen={isOpen}>
+              <QuestionWrapper onClick={() => toggleIndex(index)}>
                 <Question>
                   <Number isOpen={isOpen}>{`0${index + 1}`}</Number>
                   {faq.question}
