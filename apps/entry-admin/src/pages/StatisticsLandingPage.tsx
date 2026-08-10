@@ -1,15 +1,15 @@
+import { useStatistics } from "../hooks";
 import {
   CompetitionSection,
   GenderSection,
   ProcessStepsSection,
   RegionSection,
   StatCardsGrid,
+  StatisticsErrorNotice,
   StatisticsPageLayout,
 } from "./StatisticsLandingPageSections";
 import {
-  type CompetitionData,
   type GenderData,
-  type RegionData,
   type ScheduleData,
   useScheduleDeadline,
   useStatisticsSummary,
@@ -17,6 +17,7 @@ import {
 
 const TOTAL_CAPACITY = 128;
 
+// 일정(schedule)·성비(gender)는 통계 API 범위 밖이라 아직 목업을 사용한다.
 const MOCK_SCHEDULE_DATA: ScheduleData = {
   schedules: [
     { type: "START_DATE", date: "2026-10-20T09:00:00" },
@@ -27,58 +28,49 @@ const MOCK_SCHEDULE_DATA: ScheduleData = {
   ],
 };
 
-const MOCK_REGION_DATA: RegionData = {
-  대전: 8,
-  전국: 63,
-  서울: 22,
-  경기: 31,
-  충청: 18,
-  기타: 11,
-};
-
 const MOCK_GENDER_DATA: GenderData = {
   남자: 104,
   여자: 43,
 };
 
-const MOCK_COMPETITION_DATA: CompetitionData = [
-  { applicationType: "COMMON", count: 92 },
-  { applicationType: "MEISTER", count: 35 },
-  { applicationType: "SOCIAL", count: 20 },
-];
-
 export const StatisticsLandingPage = () => {
-  const isLoading = false;
-  const isRegionLoading = false;
-  const isCompetitionLoading = false;
-  const isGenderLoading = false;
+  const {
+    competitionData,
+    regionData,
+    isLoading: isStatisticsLoading,
+    isError: isStatisticsError,
+    refetch: refetchStatistics,
+  } = useStatistics();
+
   const scheduleDeadline = useScheduleDeadline(MOCK_SCHEDULE_DATA);
   const { regionItems, genderItems, competitionSummary, applicationPeriod, processSchedule } = useStatisticsSummary({
     scheduleDeadline,
-    regionData: MOCK_REGION_DATA,
+    regionData,
     genderData: MOCK_GENDER_DATA,
-    competitionData: MOCK_COMPETITION_DATA,
-    isLoading,
+    competitionData,
+    isLoading: false,
   });
 
   return (
     <StatisticsPageLayout>
-      <ProcessStepsSection
-        processSchedule={processSchedule}
-        scheduleDeadline={scheduleDeadline}
-        isLoading={isLoading}
-      />
-      <StatCardsGrid
-        applicationPeriod={applicationPeriod}
-        competitionSummary={competitionSummary}
-        scheduleDeadline={scheduleDeadline}
-        totalCapacity={TOTAL_CAPACITY}
-        isLoading={isLoading}
-        isCompetitionLoading={isCompetitionLoading}
-      />
-      <CompetitionSection competitionSummary={competitionSummary} isCompetitionLoading={isCompetitionLoading} />
-      <GenderSection genderItems={genderItems} isGenderLoading={isGenderLoading} />
-      <RegionSection regionItems={regionItems} isRegionLoading={isRegionLoading} />
+      <ProcessStepsSection processSchedule={processSchedule} scheduleDeadline={scheduleDeadline} isLoading={false} />
+      {isStatisticsError ? (
+        <StatisticsErrorNotice onRetry={() => refetchStatistics()} />
+      ) : (
+        <>
+          <StatCardsGrid
+            applicationPeriod={applicationPeriod}
+            competitionSummary={competitionSummary}
+            scheduleDeadline={scheduleDeadline}
+            totalCapacity={TOTAL_CAPACITY}
+            isLoading={false}
+            isCompetitionLoading={isStatisticsLoading}
+          />
+          <CompetitionSection competitionSummary={competitionSummary} isCompetitionLoading={isStatisticsLoading} />
+          <GenderSection genderItems={genderItems} isGenderLoading={false} />
+          <RegionSection regionItems={regionItems} isRegionLoading={isStatisticsLoading} />
+        </>
+      )}
     </StatisticsPageLayout>
   );
 };

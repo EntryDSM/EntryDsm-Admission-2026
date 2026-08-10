@@ -4,9 +4,14 @@ import { colors } from "@entry/design";
 import { Btn, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 
+import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
+import { useApplicants } from "../hooks";
+import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
+
+const APPLICANTS_PER_PAGE = 10;
 
 const REGION_OPTIONS = [
   { key: "daejeon", label: "대전", isNationwide: false },
@@ -54,39 +59,26 @@ type AdmissionKey = (typeof ADMISSION_OPTIONS)[number]["key"];
 type StatusKey = (typeof STATUS_OPTIONS)[number]["key"];
 type EducationKey = (typeof EDUCATION_OPTIONS)[number]["key"];
 
-type ApplicationType = {
-  receiptCode: number;
-  applicantName: string;
-  birthDay?: string;
-  gender?: string;
-  phoneNumber?: string;
-  examinationNumber?: string;
-  applicationType: "COMMON" | "MEISTER" | "SOCIAL";
-  educationalStatus: "PROSPECTIVE_GRADUATE" | "GRADUATE" | "QUALIFICATION_EXAM";
-  isDaejeon: boolean;
-  isArrived: boolean;
+// 필터 체크박스 키 → 백엔드 enum 파라미터 매핑
+const REGION_PARAM: Record<RegionKey, Region> = { daejeon: "DAEJEON", nationwide: "NATIONWIDE" };
+const ADMISSION_PARAM: Record<AdmissionKey, AdmissionType> = {
+  general: "GENERAL",
+  meister: "MEISTER",
+  social: "SOCIAL",
+};
+const EDUCATION_PARAM: Record<EducationKey, GraduationStatus> = {
+  prospective: "EXPECTED",
+  graduate: "GRADUATED",
+  exam: "GED",
 };
 
-const MOCK_APPLICANTS: ApplicationType[] = [
-  {
-    receiptCode: 1,
-    applicantName: "홍길동",
-    birthDay: "2010.03.12",
-    gender: "남자",
-    phoneNumber: "010-1234-0001",
-    examinationNumber: "260001",
-    applicationType: "MEISTER",
-    educationalStatus: "PROSPECTIVE_GRADUATE",
-    isDaejeon: true,
-    isArrived: true,
-  },
-];
+/** `{ key: boolean }` 필터 상태에서 체크된 키만 뽑아낸다. */
+const getSelectedKeys = <K extends string>(record: Record<K, boolean>) =>
+  (Object.entries(record) as [K, boolean][]).filter(([, isChecked]) => isChecked).map(([key]) => key);
 
 export const ApplicantsList = () => {
-  const APPLICANTS_PER_PAGE = 10;
-  const applicantsList = MOCK_APPLICANTS;
   const [searchKeyword, setSearchKeyword] = useState<string>("");
-  const [selectedApplicant, setSelectedApplicant] = useState<ApplicationType | null>(null);
+  const [selectedApplicant, setSelectedApplicant] = useState<ApplicantListItem | null>(null);
   const [filters, setFilters] = useState<{
     region: Record<RegionKey, boolean>;
     admission: Record<AdmissionKey, boolean>;
@@ -101,7 +93,25 @@ export const ApplicantsList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const { isOpen, open, close } = useModal();
-  const isLoading = false;
+
+  const queryParams = useMemo<GetApplicantsParams>(() => {
+    const regions = getSelectedKeys(filters.region).map(key => REGION_PARAM[key]);
+    const admissionTypes = getSelectedKeys(filters.admission).map(key => ADMISSION_PARAM[key]);
+    const graduationStatuses = getSelectedKeys(filters.education).map(key => EDUCATION_PARAM[key]);
+
+    return {
+      keyword: searchKeyword || undefined,
+      regions: regions.length > 0 ? regions : undefined,
+      admissionTypes: admissionTypes.length > 0 ? admissionTypes : undefined,
+      graduationStatuses: graduationStatuses.length > 0 ? graduationStatuses : undefined,
+      isSubmitted: filters.status.received ? true : undefined,
+      page: currentPage,
+      size: APPLICANTS_PER_PAGE,
+    };
+  }, [filters, searchKeyword, currentPage]);
+
+  const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
+  const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
@@ -123,70 +133,10 @@ export const ApplicantsList = () => {
     setCurrentPage(1);
   };
 
-  const handleApplicantClick = (applicant: ApplicationType) => {
-    if (!applicant.receiptCode) {
-      return;
-    }
-
+  const handleApplicantClick = (applicant: ApplicantListItem) => {
     setSelectedApplicant(applicant);
     open();
   };
-
-  const filteredApplicants = useMemo(() => {
-    let filtered = applicantsList;
-
-    const isDaejeonSelected = filters.region.daejeon;
-    const isNationwideSelected = filters.region.nationwide;
-    if (isDaejeonSelected !== isNationwideSelected) {
-      filtered = filtered.filter(a => a.isDaejeon === isDaejeonSelected);
-    }
-
-    if (searchKeyword) {
-      filtered = filtered.filter(a => a.applicantName.toLocaleLowerCase().includes(searchKeyword.toLocaleLowerCase()));
-    }
-
-    const selectedAdmissions = Object.entries(filters.admission)
-      .filter(([, v]) => v)
-      .map(([k]) => k as AdmissionKey);
-
-    if (selectedAdmissions.length > 0) {
-      const admissionMap: Record<AdmissionKey, string> = {
-        general: "COMMON",
-        meister: "MEISTER",
-        social: "SOCIAL",
-      };
-      const allowedTypes = selectedAdmissions.map(k => admissionMap[k]);
-      filtered = filtered.filter(a => allowedTypes.includes(a.applicationType));
-    }
-
-    const selectedEducation = Object.entries(filters.education)
-      .filter(([, v]) => v)
-      .map(([k]) => k as EducationKey);
-
-    if (selectedEducation.length > 0) {
-      const educationMap: Record<EducationKey, string> = {
-        prospective: "PROSPECTIVE_GRADUATE",
-        graduate: "GRADUATE",
-        exam: "QUALIFICATION_EXAM",
-      };
-      const allowedEducation = selectedEducation.map(k => educationMap[k]);
-      filtered = filtered.filter(a => allowedEducation.includes(a.educationalStatus));
-    }
-
-    if (filters.status.received) {
-      filtered = filtered.filter(a => a.isArrived === true);
-    }
-
-    return [...filtered].sort((a, b) => a.receiptCode - b.receiptCode);
-  }, [applicantsList, searchKeyword, filters]);
-
-  const totalPage = Math.max(1, Math.ceil(filteredApplicants.length / APPLICANTS_PER_PAGE));
-
-  const paginatedApplicants = useMemo(() => {
-    const startIndex = (currentPage - 1) * APPLICANTS_PER_PAGE;
-    const endIndex = startIndex + APPLICANTS_PER_PAGE;
-    return filteredApplicants.slice(startIndex, endIndex);
-  }, [filteredApplicants, currentPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -276,16 +226,16 @@ export const ApplicantsList = () => {
                 지원자 조회 데이터 기다리는 중...
               </LoadingMessage>
             </LoadingContent>
-          ) : paginatedApplicants.length === 0 ? (
+          ) : applicants.length === 0 ? (
             <LoadingContent role="row">
               <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
                 지원자 내역이 없습니다.
               </LoadingMessage>
             </LoadingContent>
           ) : (
-            paginatedApplicants.map(applicant => (
+            applicants.map(applicant => (
               <Applicant
-                key={applicant.receiptCode}
+                key={applicant.applicantId}
                 receiptCode={applicant.receiptCode}
                 applicationType={applicant.applicationType}
                 applicantName={applicant.applicantName}
@@ -301,22 +251,8 @@ export const ApplicantsList = () => {
         </ApplicantsAllList>
       </TableScroll>
 
-      {selectedApplicant?.receiptCode && (
-        <ApplicantDetailModal
-          receiptCode={selectedApplicant.receiptCode}
-          isOpen={isOpen}
-          onClose={close}
-          applicant={{
-            name: selectedApplicant.applicantName,
-            birthDay: selectedApplicant.birthDay,
-            gender: selectedApplicant.gender,
-            phoneNumber: selectedApplicant.phoneNumber,
-            examinationNumber: selectedApplicant.examinationNumber,
-            isDaejeon: selectedApplicant.isDaejeon,
-            applicationType: selectedApplicant.applicationType,
-            educationalStatus: selectedApplicant.educationalStatus,
-          }}
-        />
+      {selectedApplicant && (
+        <ApplicantDetailModal applicantId={selectedApplicant.applicantId} isOpen={isOpen} onClose={close} />
       )}
 
       <PagiNation currentPage={currentPage} totalPage={totalPage} onPageChange={handlePageChange} />

@@ -289,11 +289,59 @@ export const RegionSection = ({ regionItems, isRegionLoading }: RegionSectionPro
   );
 };
 
+interface StatisticsErrorNoticeProps {
+  onRetry: () => void;
+}
+
+export const StatisticsErrorNotice = ({ onRetry }: StatisticsErrorNoticeProps) => {
+  return (
+    <ErrorContainer role="alert">
+      <ErrorMessage>통계 데이터를 불러오지 못했어요.</ErrorMessage>
+      <RetryButton type="button" onClick={onRetry}>
+        다시 시도
+      </RetryButton>
+    </ErrorContainer>
+  );
+};
+
 const StatisticsPageContainer = styled.div`
   width: 100%;
   min-height: 100vh;
   background-color: ${colors.extra.realWhite};
   margin: 0 auto;
+`;
+
+const ErrorContainer = styled.section`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 64px 32px;
+  background-color: ${colors.extra.realWhite};
+  border-radius: 12px;
+  border: 1px solid ${colors.gray[200]};
+`;
+
+const ErrorMessage = styled.p`
+  font-size: 20px;
+  font-weight: 500;
+  color: ${colors.gray[400]};
+`;
+
+const RetryButton = styled.button`
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
+  background-color: ${colors.green[400]};
+  color: ${colors.gray[50]};
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${colors.green[500]};
+  }
 `;
 
 const ProcessSection = styled.div`
