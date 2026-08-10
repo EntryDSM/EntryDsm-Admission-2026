@@ -48,12 +48,12 @@ export const AdminHeader = () => {
 
   return (
     <HeaderContainer>
-      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+      <AdminHeaderLogoSection onClick={() => navigate("/")}>
         <EntryLogo isAdmin={true} />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryAdmin
         </Text>
-      </Flex>
+      </AdminHeaderLogoSection>
       <Flex gap={52} alignItems="center" height="fit-content" width="fit-content">
         <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
           {navData.map(data => (
@@ -216,6 +216,15 @@ const LogoContainer = styled.a`
   cursor: pointer;
   text-decoration: none;
   color: inherit;
+`;
+
+const AdminHeaderLogoSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  height: fit-content;
+  cursor: pointer;
 `;
 
 const CommonHeaderLogoSection = styled.div`
