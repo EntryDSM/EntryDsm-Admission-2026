@@ -4,10 +4,12 @@ import { BannerSelector } from "./BannerSelector";
 import { BannerDisplay } from "./BannerDisplay";
 import { colors } from "@entry/design";
 
-export const BannerContainer = () => {
-  const [selectedBanner, setSelectedBanner] = useState<string>("dms");
+type BannerId = "dms" | "pick" | "jobis" | "xquare";
 
-  const handleBannerChange = (banner: string) => {
+export const BannerContainer = () => {
+  const [selectedBanner, setSelectedBanner] = useState<BannerId>("dms");
+
+  const handleBannerChange = (banner: BannerId) => {
     setSelectedBanner(banner);
   };
 
