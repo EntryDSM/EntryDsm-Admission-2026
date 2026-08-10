@@ -8,4 +8,5 @@ export const adminQueryKeys = {
     detail: (applicantId: number) => ["admin", "applicants", "detail", applicantId] as const,
   },
   statistics: (metrics: StatisticsMetric[]) => ["admin", "statistics", metrics] as const,
+  schedules: ["admin", "schedules"] as const,
 };

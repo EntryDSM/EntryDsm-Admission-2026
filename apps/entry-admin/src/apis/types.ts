@@ -141,3 +141,38 @@ export interface GetStatisticsResponse {
   generatedAt: string;
   metrics: StatisticsMetrics;
 }
+
+/* ───────────────── 전형 일정 (GET/PATCH /schedules) ───────────────── */
+
+/** 요일 (백엔드 표기) */
+export type DayOfWeek = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
+
+/** 일정의 시각. 백엔드는 연·월·일·요일·시·분·초로 분해해 주고받는다. */
+export interface ScheduleDateTime {
+  year: number;
+  month: number;
+  day: number;
+  dayOfWeek: DayOfWeek;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+/** 단일 전형 일정 (조회 응답 항목) */
+export interface AdminSchedule {
+  scheduleId: number;
+  title: string;
+  startAt: ScheduleDateTime;
+  endAt: ScheduleDateTime;
+}
+
+/**
+ * 일정 수정 요청 항목.
+ * 엔드포인트가 `/schedules/bulk` 라 배열로 보내며, 각 항목을 `scheduleId` 로 식별하도록 함께 전송한다.
+ */
+export interface UpdateScheduleItem {
+  scheduleId: number;
+  title: string;
+  startAt: ScheduleDateTime;
+  endAt: ScheduleDateTime;
+}

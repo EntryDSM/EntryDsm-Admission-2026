@@ -5,3 +5,4 @@ export * from "./format";
 export * from "./applicantLabel";
 export * from "./applicantMapper";
 export * from "./statisticsMapper";
+export * from "./scheduleMapper";

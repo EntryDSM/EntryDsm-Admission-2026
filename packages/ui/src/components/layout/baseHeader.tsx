@@ -1,5 +1,5 @@
 ﻿import styled from "@emotion/styled";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation, Link } from "react-router";
 import { useState } from "react";
 
 import { colors, Flex, Text } from "@entry/design";
@@ -48,12 +48,12 @@ export const AdminHeader = () => {
 
   return (
     <HeaderContainer>
-      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+      <AdminHeaderLogoSection to="/" aria-label="EntryAdmin 홈으로 이동">
         <EntryLogo isAdmin={true} />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryAdmin
         </Text>
-      </Flex>
+      </AdminHeaderLogoSection>
       <Flex gap={52} alignItems="center" height="fit-content" width="fit-content">
         <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
           {navData.map(data => (
@@ -213,6 +213,17 @@ export const MonitoringHeader = () => {
 const LogoContainer = styled.a`
   display: flex;
   gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+`;
+
+const AdminHeaderLogoSection = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  height: fit-content;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
