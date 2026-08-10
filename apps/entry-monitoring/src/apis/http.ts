@@ -40,12 +40,23 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   });
 
   const isJson = response.headers.get("content-type")?.includes("application/json") ?? false;
-  const body = isJson ? await response.json().catch(() => null) : null;
+  let body: unknown = null;
+  if (isJson) {
+    try {
+      body = await response.json();
+    } catch {
+      throw new HttpError(response.status, "응답 JSON 형식이 올바르지 않습니다.");
+    }
+  }
   const error = (body as ErrorBody | null)?.error;
   const errorInfo = typeof error === "string" ? { message: error } : error;
 
   if (!response.ok) {
     throw new HttpError(response.status, errorInfo?.message ?? response.statusText, errorInfo?.code);
+  }
+
+  if (!isJson || body === null) {
+    throw new HttpError(response.status, "응답 데이터가 없습니다.");
   }
 
   if (body && typeof body === "object" && "success" in body && "data" in body) {
