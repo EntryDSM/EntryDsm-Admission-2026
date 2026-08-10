@@ -1,8 +1,8 @@
 // router.tsx
 import { createBrowserRouter } from "react-router";
+import { downloadCurrentPage, reloadCurrentPage, showStatusPreparingToast } from "./actions";
 import { AppLayout } from "./layout";
-import { MonitoringPage } from "./pages/MonitoringPage";
-import { mockMonitoringData } from "./pages/mockMonitoringData";
+import { MonitoringPageContainer } from "./pages";
 
 export const Router = createBrowserRouter([
   {
@@ -11,7 +11,13 @@ export const Router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <MonitoringPage data={mockMonitoringData} />,
+        element: (
+          <MonitoringPageContainer
+            onReload={reloadCurrentPage}
+            onDownload={downloadCurrentPage}
+            onStatus={showStatusPreparingToast}
+          />
+        ),
       },
     ],
   },

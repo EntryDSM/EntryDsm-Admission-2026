@@ -115,10 +115,12 @@
         "@entry/hooks": "^0.0.0",
         "@entry/ui": "^0.0.0",
         "@entry/utils": "^0.0.0",
+        "@tanstack/react-query": "^5.101.2",
         "chart.js": "^4.5.1",
         "react": "^19.2.4",
         "react-chartjs-2": "^5.3.1",
         "react-dom": "^19.2.4",
+        "react-toastify": "^11.1.0",
       },
       "devDependencies": {
         "@eslint/js": "^9.39.4",

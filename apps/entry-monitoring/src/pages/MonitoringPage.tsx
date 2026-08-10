@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { StatCard, ErrorLogCard, BarChartCard, DeviceChartCard } from "../components";
-import type { MonitoringData } from "./mockMonitoringData";
+import type { MonitoringData } from "../types";
 import { DownloadIcon } from "@entry/ui";
 
 interface MonitoringPageProps {
@@ -86,7 +86,7 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       <ClientLogArea>
         <ErrorLogCard
           label="최근 1시간 클라이언트 오류/경고"
-          value={`${data.clientErrorLogs.length}건`}
+          value={`${data.clientLogTotalCount}건`}
           items={data.clientErrorLogs}
         />
       </ClientLogArea>
@@ -94,7 +94,7 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       <ServerLogArea>
         <ErrorLogCard
           label="최근 1시간 서버 API 오류"
-          value={`${data.serverErrorLogs.length}건`}
+          value={`${data.serverLogTotalCount}건`}
           items={data.serverErrorLogs}
         />
       </ServerLogArea>
