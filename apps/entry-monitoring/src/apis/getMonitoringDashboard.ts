@@ -85,7 +85,9 @@ const toMonitoringData = (dashboard: DashboardData): MonitoringData => ({
   pdfFail: dashboard.business.pdfDownload.failure,
   visitorChart: [],
   clientErrorLogs: [],
+  clientLogTotalCount: 0,
   serverErrorLogs: [],
+  serverLogTotalCount: 0,
   summary: {
     total: getActiveUsers(dashboard.services.items, "TOTAL"),
     user: getActiveUsers(dashboard.services.items, "IDENTITY"),
