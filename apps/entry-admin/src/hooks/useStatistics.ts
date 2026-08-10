@@ -21,5 +21,6 @@ export const useStatistics = (metrics: StatisticsMetric[] = DEFAULT_METRICS) => 
     regionData: query.data ? toRegionData(query.data.metrics) : {},
     isLoading: query.isLoading,
     isError: query.isError,
+    refetch: query.refetch,
   };
 };

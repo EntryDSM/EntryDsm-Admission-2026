@@ -5,6 +5,7 @@ import {
   ProcessStepsSection,
   RegionSection,
   StatCardsGrid,
+  StatisticsErrorNotice,
   StatisticsPageLayout,
 } from "./StatisticsLandingPageSections";
 import {
@@ -33,7 +34,13 @@ const MOCK_GENDER_DATA: GenderData = {
 };
 
 export const StatisticsLandingPage = () => {
-  const { competitionData, regionData, isLoading: isStatisticsLoading } = useStatistics();
+  const {
+    competitionData,
+    regionData,
+    isLoading: isStatisticsLoading,
+    isError: isStatisticsError,
+    refetch: refetchStatistics,
+  } = useStatistics();
 
   const scheduleDeadline = useScheduleDeadline(MOCK_SCHEDULE_DATA);
   const { regionItems, genderItems, competitionSummary, applicationPeriod, processSchedule } = useStatisticsSummary({
@@ -47,17 +54,23 @@ export const StatisticsLandingPage = () => {
   return (
     <StatisticsPageLayout>
       <ProcessStepsSection processSchedule={processSchedule} scheduleDeadline={scheduleDeadline} isLoading={false} />
-      <StatCardsGrid
-        applicationPeriod={applicationPeriod}
-        competitionSummary={competitionSummary}
-        scheduleDeadline={scheduleDeadline}
-        totalCapacity={TOTAL_CAPACITY}
-        isLoading={false}
-        isCompetitionLoading={isStatisticsLoading}
-      />
-      <CompetitionSection competitionSummary={competitionSummary} isCompetitionLoading={isStatisticsLoading} />
-      <GenderSection genderItems={genderItems} isGenderLoading={false} />
-      <RegionSection regionItems={regionItems} isRegionLoading={isStatisticsLoading} />
+      {isStatisticsError ? (
+        <StatisticsErrorNotice onRetry={() => refetchStatistics()} />
+      ) : (
+        <>
+          <StatCardsGrid
+            applicationPeriod={applicationPeriod}
+            competitionSummary={competitionSummary}
+            scheduleDeadline={scheduleDeadline}
+            totalCapacity={TOTAL_CAPACITY}
+            isLoading={false}
+            isCompetitionLoading={isStatisticsLoading}
+          />
+          <CompetitionSection competitionSummary={competitionSummary} isCompetitionLoading={isStatisticsLoading} />
+          <GenderSection genderItems={genderItems} isGenderLoading={false} />
+          <RegionSection regionItems={regionItems} isRegionLoading={isStatisticsLoading} />
+        </>
+      )}
     </StatisticsPageLayout>
   );
 };
