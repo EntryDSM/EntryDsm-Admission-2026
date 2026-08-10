@@ -52,8 +52,8 @@ export const InfoSection = () => {
               <NoticeIconImg src={mainNotice.icon} alt="공지 아이콘" />
               <MainNoticeTitle>{mainNotice.title}</MainNoticeTitle>
             </NoticeContent>
-            <DownloadButton>
-              <DownloadIcon onClick={downloadPdfBtn} src={downloadIcon} alt="다운로드" />
+            <DownloadButton onClick={downloadPdfBtn}>
+              <DownloadIcon src={downloadIcon} alt="다운로드" />
             </DownloadButton>
           </MainNoticeCard>
           {noticeItems.map((notice, index) => (

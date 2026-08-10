@@ -7,7 +7,7 @@ interface IBannerHoverType {
 }
 
 export const BannerHover = ({ selectedBanner }: IBannerHoverType) => {
-  const bannerContent = {
+  const bannerContent: Record<BannerId, { icon: string; title: string; description: string }> = {
     dms: {
       icon: dmsLogo,
       title: "DMS",
@@ -33,7 +33,7 @@ export const BannerHover = ({ selectedBanner }: IBannerHoverType) => {
     // },
   };
 
-  const content = bannerContent[selectedBanner as keyof typeof bannerContent];
+  const content = bannerContent[selectedBanner];
 
   return (
     <HoverContainer>
