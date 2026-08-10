@@ -70,7 +70,7 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
           <StatCard label="종합" value={`${data.summary.total}명`} variant="primary" />
           <StatCard label="유저" value={`${data.summary.user}명`} variant="gray" />
           <StatCard label="인증" value={`${data.summary.auth}명`} variant="gray" />
-          <StatCard label="접수" value={`${data.summary.visitor}명`} variant="gray" />
+          <StatCard label="접수" value={`${data.summary.application}명`} variant="gray" />
         </SummaryGrid>
         <SummaryArea>
           <StatCard label="Client 오류" value={`${data.clientErrorCount}회`} variant="gray" />

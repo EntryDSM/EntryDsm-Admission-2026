@@ -26,7 +26,7 @@ export interface MonitoringData {
   clientLogTotalCount: number;
   serverErrorLogs: string[];
   serverLogTotalCount: number;
-  summary: { total: number; user: number; auth: number; visitor: number };
+  summary: { total: number; user: number; auth: number; application: number };
   dbUsageMb: number;
   bucketUsageMb: number;
   clientErrorCount: number;
