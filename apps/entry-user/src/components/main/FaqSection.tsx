@@ -145,7 +145,7 @@ const FaqItem = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-const QuestionWrapper = styled.div`
+const QuestionWrapper = styled.button`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -164,7 +164,7 @@ const Question = styled.div`
   }
 `;
 
-const AnswerWrapper = styled.button<{ isOpen: boolean }>`
+const AnswerWrapper = styled.div<{ isOpen: boolean }>`
   display: grid;
   grid-template-rows: ${({ isOpen }) => (isOpen ? "1fr" : "0fr")};
   transition: grid-template-rows 0.3s ease;
