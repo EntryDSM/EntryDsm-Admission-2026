@@ -1,5 +1,5 @@
 ﻿import styled from "@emotion/styled";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation, Link } from "react-router";
 import { useState } from "react";
 
 import { colors, Flex, Text } from "@entry/design";
@@ -48,7 +48,7 @@ export const AdminHeader = () => {
 
   return (
     <HeaderContainer>
-      <AdminHeaderLogoSection onClick={() => navigate("/")}>
+      <AdminHeaderLogoSection to="/" aria-label="EntryAdmin 홈으로 이동">
         <EntryLogo isAdmin={true} />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryAdmin
@@ -218,13 +218,15 @@ const LogoContainer = styled.a`
   color: inherit;
 `;
 
-const AdminHeaderLogoSection = styled.div`
+const AdminHeaderLogoSection = styled(Link)`
   display: flex;
   align-items: center;
   gap: 12px;
   width: fit-content;
   height: fit-content;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 `;
 
 const CommonHeaderLogoSection = styled.div`
