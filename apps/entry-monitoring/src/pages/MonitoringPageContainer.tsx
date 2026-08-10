@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import type { ClientLogItem, ServerLogItem } from "../apis";
-import { useClientLogs, useMetricSeries, useMonitoringDashboard, useServerLogs } from "../hooks";
+import { useClientLogs, useMetricSeries, useMonitoringDashboard, useResources, useServerLogs } from "../hooks";
 import { MonitoringPage } from "./MonitoringPage";
 
 interface MonitoringPageContainerProps {
@@ -20,22 +20,32 @@ export const MonitoringPageContainer = ({ onReload, onDownload, onStatus }: Moni
   const clientLogsQuery = useClientLogs();
   const serverLogsQuery = useServerLogs();
   const metricSeriesQuery = useMetricSeries();
+  const resourcesQuery = useResources();
   const isLoading =
-    dashboardQuery.isLoading || clientLogsQuery.isLoading || serverLogsQuery.isLoading || metricSeriesQuery.isLoading;
-  const error = dashboardQuery.error ?? clientLogsQuery.error ?? serverLogsQuery.error ?? metricSeriesQuery.error;
+    dashboardQuery.isLoading ||
+    clientLogsQuery.isLoading ||
+    serverLogsQuery.isLoading ||
+    metricSeriesQuery.isLoading ||
+    resourcesQuery.isLoading;
+  const error =
+    dashboardQuery.error ??
+    clientLogsQuery.error ??
+    serverLogsQuery.error ??
+    metricSeriesQuery.error ??
+    resourcesQuery.error;
 
   const data =
-    dashboardQuery.data && clientLogsQuery.data && serverLogsQuery.data && metricSeriesQuery.data
+    dashboardQuery.data && clientLogsQuery.data && serverLogsQuery.data && metricSeriesQuery.data && resourcesQuery.data
       ? {
           ...dashboardQuery.data,
+          dbUsageMb: resourcesQuery.data.dbUsageMb,
+          bucketUsageMb: resourcesQuery.data.bucketUsageMb,
           apiRequestChartLabels: metricSeriesQuery.data.apiRequest.labels,
           apiRequestChart: metricSeriesQuery.data.apiRequest.values,
           visitorChartLabels: metricSeriesQuery.data.visitor.labels,
           visitorChart: metricSeriesQuery.data.visitor.values,
           clientErrorLogs: clientLogsQuery.data.items.map(formatClientLog),
           clientLogTotalCount: clientLogsQuery.data.totalCount,
-          clientErrorCount: clientLogsQuery.data.errorCount,
-          clientWarnCount: clientLogsQuery.data.warnCount,
           serverErrorLogs: serverLogsQuery.data.items.map(formatServerLog),
           serverLogTotalCount: serverLogsQuery.data.totalCount,
         }

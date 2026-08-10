@@ -1,4 +1,5 @@
 import type { MonitoringData } from "../types";
+import { bytesToMegabytes } from "../utils";
 import { http } from "./http";
 
 interface DashboardDevice {
@@ -47,7 +48,6 @@ interface DashboardData {
 }
 
 const DEFAULT_ADMISSION_ROUND = import.meta.env.VITE_ADMISSION_ROUND ?? "2026-1";
-const BYTES_PER_MEGABYTE = 1024 * 1024;
 
 const formatDuration = (totalSeconds: number) => {
   const hours = Math.floor(totalSeconds / 3600);
@@ -58,8 +58,6 @@ const formatDuration = (totalSeconds: number) => {
 };
 
 const ratioToPercentage = (ratio: number) => Number((ratio * 100).toFixed(2));
-
-const bytesToMegabytes = (bytes: number) => Number((bytes / BYTES_PER_MEGABYTE).toFixed(2));
 
 const getActiveUsers = (services: DashboardService[], serviceName: string) =>
   services.find(({ service }) => service === serviceName)?.activeUsers ?? 0;
@@ -94,7 +92,7 @@ const toMonitoringData = (dashboard: DashboardData): MonitoringData => ({
     total: getActiveUsers(dashboard.services.items, "TOTAL"),
     user: getActiveUsers(dashboard.services.items, "IDENTITY"),
     auth: getActiveUsers(dashboard.services.items, "AUTH"),
-    visitor: getActiveUsers(dashboard.services.items, "APPLICATION"),
+    application: getActiveUsers(dashboard.services.items, "APPLICATION"),
   },
   dbUsageMb: bytesToMegabytes(dashboard.resource.dbUsedBytes),
   bucketUsageMb: bytesToMegabytes(dashboard.resource.bucketUsedBytes),
