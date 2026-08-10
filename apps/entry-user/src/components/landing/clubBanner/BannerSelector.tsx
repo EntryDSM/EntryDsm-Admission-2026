@@ -1,13 +1,14 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+import { type BannerId } from "./BannerContainer";
 
 interface IBannerSelectorType {
-  selectedBanner: string;
-  onBannerChange: (banner: string) => void;
+  selectedBanner: BannerId;
+  onBannerChange: (banner: BannerId) => void;
 }
 
 export const BannerSelector = ({ selectedBanner, onBannerChange }: IBannerSelectorType) => {
-  const banners = [
+  const banners: { id: BannerId; label: string }[] = [
     { id: "dms", label: "DMS" },
     { id: "pick", label: "PiCK" },
     { id: "jobis", label: "JOBIS" },

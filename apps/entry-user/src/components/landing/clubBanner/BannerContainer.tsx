@@ -4,7 +4,7 @@ import { BannerSelector } from "./BannerSelector";
 import { BannerDisplay } from "./BannerDisplay";
 import { colors } from "@entry/design";
 
-type BannerId = "dms" | "pick" | "jobis" | "xquare";
+export type BannerId = "dms" | "pick" | "jobis" | "xquare";
 
 export const BannerContainer = () => {
   const [selectedBanner, setSelectedBanner] = useState<BannerId>("dms");
