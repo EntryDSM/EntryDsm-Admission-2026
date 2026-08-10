@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import type { ClientLogItem, ServerLogItem } from "../apis";
-import { useClientLogs, useMonitoringDashboard, useServerLogs } from "../hooks";
+import { useClientLogs, useMetricSeries, useMonitoringDashboard, useServerLogs } from "../hooks";
 import { MonitoringPage } from "./MonitoringPage";
 
 interface MonitoringPageContainerProps {
@@ -19,13 +19,19 @@ export const MonitoringPageContainer = ({ onReload, onDownload, onStatus }: Moni
   const dashboardQuery = useMonitoringDashboard();
   const clientLogsQuery = useClientLogs();
   const serverLogsQuery = useServerLogs();
-  const isLoading = dashboardQuery.isLoading || clientLogsQuery.isLoading || serverLogsQuery.isLoading;
-  const error = dashboardQuery.error ?? clientLogsQuery.error ?? serverLogsQuery.error;
+  const metricSeriesQuery = useMetricSeries();
+  const isLoading =
+    dashboardQuery.isLoading || clientLogsQuery.isLoading || serverLogsQuery.isLoading || metricSeriesQuery.isLoading;
+  const error = dashboardQuery.error ?? clientLogsQuery.error ?? serverLogsQuery.error ?? metricSeriesQuery.error;
 
   const data =
-    dashboardQuery.data && clientLogsQuery.data && serverLogsQuery.data
+    dashboardQuery.data && clientLogsQuery.data && serverLogsQuery.data && metricSeriesQuery.data
       ? {
           ...dashboardQuery.data,
+          apiRequestChartLabels: metricSeriesQuery.data.apiRequest.labels,
+          apiRequestChart: metricSeriesQuery.data.apiRequest.values,
+          visitorChartLabels: metricSeriesQuery.data.visitor.labels,
+          visitorChart: metricSeriesQuery.data.visitor.values,
           clientErrorLogs: clientLogsQuery.data.items.map(formatClientLog),
           clientLogTotalCount: clientLogsQuery.data.totalCount,
           clientErrorCount: clientLogsQuery.data.errorCount,

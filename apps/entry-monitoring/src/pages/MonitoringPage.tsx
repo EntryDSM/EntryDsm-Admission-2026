@@ -25,7 +25,7 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       <ApiChartArea>
         <BarChartCard
           title="API 요청 수"
-          labels={data.apiRequestChart.map((_, i) => `${i}:00`)}
+          labels={data.apiRequestChartLabels}
           values={data.apiRequestChart}
           unit="회"
           height="100%"
@@ -65,12 +65,7 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       </AppFailArea>
 
       <VisChartArea>
-        <BarChartCard
-          title="접속자 수"
-          labels={data.visitorChart.map((_, i) => `${i}:00`)}
-          values={data.visitorChart}
-          unit="명"
-        />
+        <BarChartCard title="접속자 수" labels={data.visitorChartLabels} values={data.visitorChart} unit="명" />
         <SummaryGrid>
           <StatCard label="종합" value={`${data.summary.total}명`} variant="primary" />
           <StatCard label="유저" value={`${data.summary.user}명`} variant="gray" />

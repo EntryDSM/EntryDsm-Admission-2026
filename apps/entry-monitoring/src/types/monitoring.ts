@@ -10,6 +10,7 @@ export interface MonitoringData {
   apiSuccessCount: number;
   apiFailCount: number;
   apiFailRate: number;
+  apiRequestChartLabels: string[];
   apiRequestChart: number[];
   totalUsers: number;
   concurrentMax: number;
@@ -19,6 +20,7 @@ export interface MonitoringData {
   applicationFail: number;
   pdfSuccess: number;
   pdfFail: number;
+  visitorChartLabels: string[];
   visitorChart: number[];
   clientErrorLogs: string[];
   clientLogTotalCount: number;
