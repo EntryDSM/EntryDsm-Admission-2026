@@ -9,6 +9,7 @@ import {
   useServerLogs,
   type MonitoringStreamLog,
 } from "../hooks";
+import { isWithinLastHour } from "../utils";
 import { MonitoringPage } from "./MonitoringPage";
 
 interface MonitoringPageContainerProps {
@@ -40,8 +41,19 @@ export const MonitoringPageContainer = ({ onReload, onDownload, onStatus }: Moni
   const monitoringStream = useMonitoringStream();
   const liveDashboardData = monitoringStream.dashboard ? toMonitoringData(monitoringStream.dashboard) : undefined;
   const dashboardData = liveDashboardData ?? dashboardQuery.data;
-  const liveClientLogs = monitoringStream.logs.filter(({ kind }) => kind === "CLIENT");
-  const liveServerLogs = monitoringStream.logs.filter(({ kind }) => kind === "SERVER");
+  const liveClientLogs = monitoringStream.logs.filter(
+    ({ kind, level, occurredAt }) =>
+      kind === "CLIENT" && (level === "ERROR" || level === "WARN") && isWithinLastHour(occurredAt)
+  );
+  const liveServerLogs = monitoringStream.logs.filter(
+    ({ kind, service, status, occurredAt }) =>
+      kind === "SERVER" &&
+      service === "APPLICATION" &&
+      typeof status === "number" &&
+      status >= 500 &&
+      status < 600 &&
+      isWithinLastHour(occurredAt)
+  );
   const isLoading =
     dashboardQuery.isLoading ||
     clientLogsQuery.isLoading ||
