@@ -1,6 +1,15 @@
 import styled from "@emotion/styled";
-import type { ClientLogItem, ServerLogItem } from "../apis";
-import { useClientLogs, useMonitoringDashboard, useServerLogs } from "../hooks";
+import { toMonitoringData, type ClientLogItem, type ServerLogItem } from "../apis";
+import {
+  useClientLogs,
+  useMetricSeries,
+  useMonitoringDashboard,
+  useMonitoringStream,
+  useResources,
+  useServerLogs,
+  type MonitoringStreamLog,
+} from "../hooks";
+import { isWithinLastHour } from "../utils";
 import { MonitoringPage } from "./MonitoringPage";
 
 interface MonitoringPageContainerProps {
@@ -15,23 +24,71 @@ const formatClientLog = ({ level, message, source, pageUrl, browser, os, count }
 const formatServerLog = ({ service, status, method, path, code, message, count }: ServerLogItem) =>
   `[${service}/${status}] ${method} ${path} · ${code} · ${message} · ${count}회`;
 
+const formatStreamLog = (log: MonitoringStreamLog) => {
+  if (log.kind === "SERVER") {
+    return `[${log.service ?? "SERVER"}/${log.status ?? log.level}] ${log.method ?? ""} ${log.path ?? ""} · ${log.code ?? log.message ?? "서버 오류"} · ${log.count}회`;
+  }
+
+  return `[${log.level}] ${log.message ?? log.code ?? "클라이언트 오류"} · ${log.source ?? log.pageUrl ?? "CLIENT"} · ${log.count}회`;
+};
+
 export const MonitoringPageContainer = ({ onReload, onDownload, onStatus }: MonitoringPageContainerProps) => {
   const dashboardQuery = useMonitoringDashboard();
   const clientLogsQuery = useClientLogs();
   const serverLogsQuery = useServerLogs();
-  const isLoading = dashboardQuery.isLoading || clientLogsQuery.isLoading || serverLogsQuery.isLoading;
-  const error = dashboardQuery.error ?? clientLogsQuery.error ?? serverLogsQuery.error;
+  const metricSeriesQuery = useMetricSeries();
+  const resourcesQuery = useResources();
+  const monitoringStream = useMonitoringStream();
+  const liveDashboardData = monitoringStream.dashboard ? toMonitoringData(monitoringStream.dashboard) : undefined;
+  const dashboardData = liveDashboardData ?? dashboardQuery.data;
+  const liveClientLogs = monitoringStream.logs.filter(
+    ({ kind, level, occurredAt }) =>
+      kind === "CLIENT" && (level === "ERROR" || level === "WARN") && isWithinLastHour(occurredAt)
+  );
+  const liveServerLogs = monitoringStream.logs.filter(
+    ({ kind, service, status, occurredAt }) =>
+      kind === "SERVER" &&
+      service === "APPLICATION" &&
+      typeof status === "number" &&
+      status >= 500 &&
+      status < 600 &&
+      isWithinLastHour(occurredAt)
+  );
+  const isLoading =
+    dashboardQuery.isLoading ||
+    clientLogsQuery.isLoading ||
+    serverLogsQuery.isLoading ||
+    metricSeriesQuery.isLoading ||
+    resourcesQuery.isLoading;
+  const error =
+    dashboardQuery.error ??
+    clientLogsQuery.error ??
+    serverLogsQuery.error ??
+    metricSeriesQuery.error ??
+    resourcesQuery.error;
 
   const data =
-    dashboardQuery.data && clientLogsQuery.data && serverLogsQuery.data
+    dashboardData && clientLogsQuery.data && serverLogsQuery.data && metricSeriesQuery.data && resourcesQuery.data
       ? {
-          ...dashboardQuery.data,
-          clientErrorLogs: clientLogsQuery.data.items.map(formatClientLog),
-          clientLogTotalCount: clientLogsQuery.data.totalCount,
-          clientErrorCount: clientLogsQuery.data.errorCount,
-          clientWarnCount: clientLogsQuery.data.warnCount,
-          serverErrorLogs: serverLogsQuery.data.items.map(formatServerLog),
-          serverLogTotalCount: serverLogsQuery.data.totalCount,
+          ...dashboardData,
+          dbUsageMb: monitoringStream.hasResourceUpdate ? dashboardData.dbUsageMb : resourcesQuery.data.dbUsageMb,
+          bucketUsageMb: monitoringStream.hasResourceUpdate
+            ? dashboardData.bucketUsageMb
+            : resourcesQuery.data.bucketUsageMb,
+          apiRequestChartLabels: metricSeriesQuery.data.apiRequest.labels,
+          apiRequestChart: metricSeriesQuery.data.apiRequest.values,
+          visitorChartLabels: metricSeriesQuery.data.visitor.labels,
+          visitorChart: metricSeriesQuery.data.visitor.values,
+          clientErrorLogs: [
+            ...liveClientLogs.map(formatStreamLog),
+            ...clientLogsQuery.data.items.map(formatClientLog),
+          ].slice(0, 100),
+          clientLogTotalCount: clientLogsQuery.data.totalCount + liveClientLogs.length,
+          serverErrorLogs: [
+            ...liveServerLogs.map(formatStreamLog),
+            ...serverLogsQuery.data.items.map(formatServerLog),
+          ].slice(0, 100),
+          serverLogTotalCount: serverLogsQuery.data.totalCount + liveServerLogs.length,
         }
       : undefined;
 
