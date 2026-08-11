@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   API_BASE_URL,
   type DashboardApi,
@@ -8,6 +8,9 @@ import {
   type DashboardServices,
   type DashboardTraffic,
 } from "../apis";
+import { isWithinLastHour } from "../utils";
+
+const LOG_EXPIRATION_CHECK_INTERVAL = 60 * 1000;
 
 export interface MonitoringStreamLog {
   eventId: string;
@@ -46,9 +49,15 @@ export const useMonitoringStream = () => {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [logs, setLogs] = useState<MonitoringStreamLog[]>([]);
   const [hasResourceUpdate, setHasResourceUpdate] = useState(false);
+  const recentLogEventIds = useRef(new Set<string>());
+  const recentLogEventIdQueue = useRef<string[]>([]);
 
   useEffect(() => {
     const eventSource = new EventSource(`${API_BASE_URL}/api/monitor/v11/stream`, { withCredentials: true });
+    const expirationTimer = window.setInterval(
+      () => setLogs(current => current.filter(({ occurredAt }) => isWithinLastHour(occurredAt))),
+      LOG_EXPIRATION_CHECK_INTERVAL
+    );
     const cleanups: Array<() => void> = [];
 
     const listen = <T>(eventName: string, handler: (data: T, event: Event) => void) => {
@@ -79,10 +88,21 @@ export const useMonitoringStream = () => {
     listen<Omit<MonitoringStreamLog, "eventId">>("log", (data, event) => {
       const eventId = (event as MessageEvent<string>).lastEventId;
 
-      setLogs(current => {
-        if (eventId && current.some(log => log.eventId === eventId)) return current;
-        return [{ ...data, eventId }, ...current].slice(0, 100);
-      });
+      if (eventId) {
+        if (recentLogEventIds.current.has(eventId)) return;
+
+        recentLogEventIds.current.add(eventId);
+        recentLogEventIdQueue.current.push(eventId);
+
+        if (recentLogEventIdQueue.current.length > 100) {
+          const expiredEventId = recentLogEventIdQueue.current.shift();
+          if (expiredEventId) recentLogEventIds.current.delete(expiredEventId);
+        }
+      }
+
+      setLogs(current =>
+        [{ ...data, eventId }, ...current].filter(({ occurredAt }) => isWithinLastHour(occurredAt)).slice(0, 100)
+      );
 
       if (data.kind === "CLIENT" && (data.level === "ERROR" || data.level === "WARN")) {
         setDashboard(current => {
@@ -101,6 +121,7 @@ export const useMonitoringStream = () => {
 
     return () => {
       cleanups.forEach(cleanup => cleanup());
+      window.clearInterval(expirationTimer);
       eventSource.close();
     };
   }, []);
