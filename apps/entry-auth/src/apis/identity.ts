@@ -117,3 +117,10 @@ export const login = (payload: LoginRequest) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
+export const refreshToken = () =>
+  request<null>("/api/identity/v11/auth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  });
