@@ -22,6 +22,13 @@ export interface LoginResponse {
   status: string;
 }
 
+export interface PasswordResetRequest {
+  loginId: string;
+  name: string;
+  birthdate: string;
+  newPassword: string;
+}
+
 export type SignupType = "SELF" | "PARENT";
 
 export interface SignupRequest extends PassInfo {
@@ -123,4 +130,11 @@ export const refreshToken = () =>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),
+  });
+
+export const resetPassword = (payload: PasswordResetRequest) =>
+  request<null>("/api/identity/v11/auth/password-reset", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
