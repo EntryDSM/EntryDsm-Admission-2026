@@ -11,6 +11,17 @@ export interface PassInfo {
   name: string;
 }
 
+export interface LoginRequest {
+  loginId: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  userId: string;
+  role: string;
+  status: string;
+}
+
 export type SignupType = "SELF" | "PARENT";
 
 export interface SignupRequest extends PassInfo {
@@ -59,7 +70,10 @@ const getErrorDetails = (body: unknown) => {
 };
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
-  const response = await fetch(`${API_BASE_URL}${path}`, init);
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
+    ...init,
+  });
   const contentType = response.headers.get("content-type") ?? "";
   const body = contentType.includes("application/json") ? await response.json() : await response.text();
 
@@ -92,6 +106,13 @@ export const getPassInfo = (modelToken: string) =>
 
 export const signup = (payload: SignupRequest) =>
   request<SignupResponse>("/api/identity/v11/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+export const login = (payload: LoginRequest) =>
+  request<LoginResponse>("/api/identity/v11/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

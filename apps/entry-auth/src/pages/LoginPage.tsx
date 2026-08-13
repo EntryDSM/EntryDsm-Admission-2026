@@ -1,19 +1,21 @@
 import styled from "@emotion/styled";
 import { useEffect, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
 import { EntryAuthTitle } from "../components/index";
 import { useNavigate } from "react-router";
-// import { useUserLogin } from "../hooks/useLogin";
+import { useLogin } from "../hooks/useLogin";
 
 export const LoginPage = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { submitLogin, isPending } = useLogin();
 
-  const isPhoneValid = phoneNumber.replace(/[^\d]/g, "").length >= 10;
+  const normalizedPhoneNumber = phoneNumber.replace(/[^\d]/g, "");
+  const isPhoneValid = /^\d{10,11}$/.test(normalizedPhoneNumber);
   const isPasswordValid = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isFormValid = isPhoneValid && isPasswordValid;
 
@@ -43,24 +45,12 @@ export const LoginPage = () => {
     setPassword(value);
   };
 
-  // const loginMutation = useUserLogin();
+  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isFormValid || isPending) return;
 
-  // const handleLogin = () => {
-  // if (!isFormValid) return;
-
-  //   loginMutation.mutate(
-  //     {
-  //       phoneNumber: phoneNumber.replace(/[^\d]/g, ""),
-  //       password,
-  //     },
-  //     {
-  //       onSuccess: data => {
-  //         // 페이지 이동 추가
-  //         navigate("/");
-  //       },
-  //     }
-  //   );
-  // };
+    void submitLogin({ loginId: normalizedPhoneNumber, password });
+  };
 
   if (isMobile) {
     return (
@@ -83,7 +73,7 @@ export const LoginPage = () => {
 
   return (
     <BackGroundWrapper>
-      <LoginPageContainer>
+      <LoginPageContainer onSubmit={handleLogin}>
         <TitleWrapper>
           <EntryAuthTitle children="EntryDSM 로그인" />
         </TitleWrapper>
@@ -108,8 +98,8 @@ export const LoginPage = () => {
             errorMsg="＊8자 이상, 숫자, 특수문자를 포함해 비밀번호를 입력해 주세요."
           />
         </InputWrapper>
-        <LoginButton $disabled={!isFormValid} disabled={!isFormValid}>
-          로그인
+        <LoginButton type="submit" $disabled={!isFormValid || isPending} disabled={!isFormValid || isPending}>
+          {isPending ? "로그인 중..." : "로그인"}
         </LoginButton>
         <LoginKindContainer>
           <div style={{ cursor: "pointer" }} onClick={() => navigate("/signup")}>
@@ -138,7 +128,7 @@ const InputWrapper = styled.div`
   min-width: 360px;
 `;
 
-const LoginPageContainer = styled.div`
+const LoginPageContainer = styled.form`
   display: flex;
   flex-direction: column;
   align-items: center;
