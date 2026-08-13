@@ -71,8 +71,8 @@ const getErrorDetails = (body: unknown) => {
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: "include",
     ...init,
+    credentials: "include",
   });
   const contentType = response.headers.get("content-type") ?? "";
   const body = contentType.includes("application/json") ? await response.json() : await response.text();
