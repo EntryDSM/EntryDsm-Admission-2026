@@ -1,8 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { getPassInfo } from "../apis";
+import { getPassInfo, IdentityApiError } from "../apis";
 import { PASS_RESULT_MESSAGE } from "../hooks/usePassVerification";
+
+const getPassResultErrorMessage = (error: unknown) => {
+  if (!(error instanceof IdentityApiError)) {
+    return "PASS 인증 결과 조회에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+
+  switch (error.code) {
+    case "INVALID_REQUEST_BODY":
+      return "인증 토큰이 올바르지 않습니다. 인증을 다시 진행해 주세요.";
+    case "INVALID_PASS":
+      return "PASS 인증이 정상적으로 완료되지 않았습니다. 인증을 다시 진행해 주세요.";
+    case "OKCERT_CONNECTION_ERROR":
+      return "PASS 인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    default:
+      if (error.status === 400) return "인증 토큰이 올바르지 않습니다. 인증을 다시 진행해 주세요.";
+      if (error.status === 401) return "PASS 인증이 정상적으로 완료되지 않았습니다. 인증을 다시 진행해 주세요.";
+      if (error.status >= 500) return "PASS 인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+      return error.message;
+  }
+};
 
 export const PassResultPage = () => {
   const requestedRef = useRef(false);
@@ -16,7 +36,17 @@ export const PassResultPage = () => {
     if (requestedRef.current) return;
     requestedRef.current = true;
 
-    if (!modelToken) return;
+    if (!modelToken) {
+      window.opener?.postMessage(
+        {
+          type: PASS_RESULT_MESSAGE,
+          success: false,
+          error: "인증 토큰이 없습니다. 인증을 다시 진행해 주세요.",
+        },
+        window.location.origin
+      );
+      return;
+    }
 
     void getPassInfo(modelToken)
       .then(data => {
@@ -25,7 +55,7 @@ export const PassResultPage = () => {
         window.setTimeout(() => window.close(), 500);
       })
       .catch((cause: unknown) => {
-        const error = cause instanceof Error ? cause.message : "PASS 인증 결과 조회에 실패했습니다.";
+        const error = getPassResultErrorMessage(cause);
         window.opener?.postMessage({ type: PASS_RESULT_MESSAGE, success: false, error }, window.location.origin);
         setIsError(true);
         setMessage(error);

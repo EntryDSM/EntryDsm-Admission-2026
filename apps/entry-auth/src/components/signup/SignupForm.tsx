@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
+import { toast } from "react-toastify";
 import { IdentityApiError, signup } from "../../apis";
 import type { PassInfo, SignupType } from "../../apis";
 
@@ -14,9 +15,16 @@ interface SignupFormProps {
 
 const getSignupErrorMessage = (error: unknown) => {
   if (error instanceof IdentityApiError) {
-    if (error.status === 409 || error.code === "ACCOUNT_ALREADY_EXISTS") return "이미 가입된 전화번호입니다.";
-    if (error.status === 404) return "본인인증 정보가 만료되었습니다. PASS 인증을 다시 진행해 주세요.";
-    return error.message;
+    switch (error.code) {
+      case "INVALID_REQUEST_BODY":
+        return "회원가입 정보를 올바르게 입력해 주세요.";
+      case "ACCOUNT_ALREADY_EXISTS":
+        return "이미 가입된 전화번호입니다.";
+      default:
+        if (error.status === 400) return "회원가입 정보를 올바르게 입력해 주세요.";
+        if (error.status === 409) return "이미 가입된 전화번호입니다.";
+        return error.message;
+    }
   }
   return "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 };
@@ -42,11 +50,13 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
     setSubmitError(null);
     try {
       await signup({
-        ...passInfo,
+        name: passInfo.name,
+        phone: passInfo.phone.replace(/\D/g, ""),
         birthdate,
         password,
         signupType,
       });
+      toast.success("회원가입이 완료되었습니다. 로그인해 주세요.");
       navigate("/", { replace: true, state: { signupCompleted: true } });
     } catch (error) {
       setSubmitError(getSignupErrorMessage(error));
