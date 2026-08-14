@@ -1,11 +1,14 @@
 import styled from "@emotion/styled";
+import { useState } from "react";
 import { toMonitoringData, type ClientLogItem, type ServerLogItem } from "../apis";
+import { ServiceHealthModal } from "../components";
 import {
   useClientLogs,
   useMetricSeries,
   useMonitoringDashboard,
   useMonitoringStream,
   useResources,
+  useServiceHealth,
   useServerLogs,
   type MonitoringStreamLog,
 } from "../hooks";
@@ -15,7 +18,6 @@ import { MonitoringPage } from "./MonitoringPage";
 interface MonitoringPageContainerProps {
   onReload?: () => void;
   onDownload?: () => void;
-  onStatus?: () => void;
 }
 
 const formatClientLog = ({ level, message, source, pageUrl, browser, os, count }: ClientLogItem) =>
@@ -32,12 +34,14 @@ const formatStreamLog = (log: MonitoringStreamLog) => {
   return `[${log.level}] ${log.message ?? log.code ?? "클라이언트 오류"} · ${log.source ?? log.pageUrl ?? "CLIENT"} · ${log.count}회`;
 };
 
-export const MonitoringPageContainer = ({ onReload, onDownload, onStatus }: MonitoringPageContainerProps) => {
+export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPageContainerProps) => {
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
   const dashboardQuery = useMonitoringDashboard();
   const clientLogsQuery = useClientLogs();
   const serverLogsQuery = useServerLogs();
   const metricSeriesQuery = useMetricSeries();
   const resourcesQuery = useResources();
+  const serviceHealthQuery = useServiceHealth(isStatusOpen);
   const monitoringStream = useMonitoringStream();
   const liveDashboardData = monitoringStream.dashboard ? toMonitoringData(monitoringStream.dashboard) : undefined;
   const dashboardData = liveDashboardData ?? dashboardQuery.data;
@@ -105,7 +109,20 @@ export const MonitoringPageContainer = ({ onReload, onDownload, onStatus }: Moni
     );
   }
 
-  return <MonitoringPage data={data} onReload={onReload} onDownload={onDownload} onStatus={onStatus} />;
+  return (
+    <>
+      <MonitoringPage data={data} onReload={onReload} onDownload={onDownload} onStatus={() => setIsStatusOpen(true)} />
+      <ServiceHealthModal
+        isOpen={isStatusOpen}
+        data={serviceHealthQuery.data}
+        error={serviceHealthQuery.error}
+        isLoading={serviceHealthQuery.isLoading}
+        isFetching={serviceHealthQuery.isFetching}
+        onClose={() => setIsStatusOpen(false)}
+        onRetry={() => void serviceHealthQuery.refetch()}
+      />
+    </>
+  );
 };
 
 const PageState = styled.div`
