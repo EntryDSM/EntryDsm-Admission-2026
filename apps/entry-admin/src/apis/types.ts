@@ -143,12 +143,22 @@ export interface AdminDocumentJob {
 
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
+/**
+ * 조회 가능한 메트릭.
+ * `GENDER_RATIO`/`REGION_STATUS` 는 명세의 파라미터 표에는 아직 없지만 응답 예시에 추가된 값이라,
+ * 응답 키와 동일한 이름으로 요청할 수 있다고 가정한다.
+ */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
-  | "DAILY_TREND";
+  | "DAILY_TREND"
+  | "GENDER_RATIO"
+  | "REGION_STATUS";
+
+/** 성별 (백엔드 표기) */
+export type Gender = "MALE" | "FEMALE";
 
 /** 지원자 수 (명세 확정) */
 export interface ApplicantCountMetric {
@@ -168,12 +178,32 @@ export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
 /** 일자별 추이 — 명세에 응답 예시가 없어 `[{ 날짜, 수 }]` 형태로 가정 */
 export type DailyTrendMetric = { date: string; count: number }[];
 
+/** 지원 성비 (명세 확정) */
+export interface GenderRatioMetric {
+  total: number;
+  byGender: Partial<Record<Gender, number>>;
+  /** 남성 비율 (0~1) */
+  maleRatio: number;
+  byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
+}
+
+/** 지역별 접수 현황 (명세 확정) */
+export interface RegionStatusMetric {
+  total: number;
+  /** 관내(LOCAL)/전국(NATIONWIDE) 구분 */
+  byScope: Partial<Record<"LOCAL" | "NATIONWIDE", number>>;
+  /** 시·도 코드 → 수 (예: DAEJEON, SEJONG, …, ETC) */
+  byRegion: Record<string, number>;
+}
+
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
   COMPETITION_RATE?: CompetitionRateMetric;
   REGION_DISTRIBUTION?: RegionDistributionMetric;
   TYPE_DISTRIBUTION?: TypeDistributionMetric;
   DAILY_TREND?: DailyTrendMetric;
+  GENDER_RATIO?: GenderRatioMetric;
+  REGION_STATUS?: RegionStatusMetric;
 }
 
 export interface GetStatisticsResponse {

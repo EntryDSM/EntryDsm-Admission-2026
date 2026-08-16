@@ -9,19 +9,14 @@ import {
   StatisticsErrorNotice,
   StatisticsPageLayout,
 } from "./StatisticsLandingPageSections";
-import { type GenderData, useScheduleDeadline, useStatisticsSummary } from "./StatisticsLandingPageHooks";
+import { useScheduleDeadline, useStatisticsSummary } from "./StatisticsLandingPageHooks";
 
 const TOTAL_CAPACITY = 128;
-
-// 성비(gender)는 통계 API 범위 밖이라 아직 목업을 사용한다.
-const MOCK_GENDER_DATA: GenderData = {
-  남자: 104,
-  여자: 43,
-};
 
 export const StatisticsLandingPage = () => {
   const {
     competitionData,
+    genderData,
     regionData,
     isLoading: isStatisticsLoading,
     isError: isStatisticsError,
@@ -33,7 +28,7 @@ export const StatisticsLandingPage = () => {
   const { regionItems, genderItems, competitionSummary, applicationPeriod, processSchedule } = useStatisticsSummary({
     scheduleDeadline,
     regionData,
-    genderData: MOCK_GENDER_DATA,
+    genderData,
     competitionData,
     isLoading: isScheduleLoading,
   });
@@ -58,7 +53,7 @@ export const StatisticsLandingPage = () => {
             isCompetitionLoading={isStatisticsLoading}
           />
           <CompetitionSection competitionSummary={competitionSummary} isCompetitionLoading={isStatisticsLoading} />
-          <GenderSection genderItems={genderItems} isGenderLoading={false} />
+          <GenderSection genderItems={genderItems} isGenderLoading={isStatisticsLoading} />
           <RegionSection regionItems={regionItems} isRegionLoading={isStatisticsLoading} />
         </>
       )}
