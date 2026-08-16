@@ -17,5 +17,6 @@ export const useNoticeDetail = (noticeId?: number) => {
     notice: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
+    refetch: query.refetch,
   };
 };

@@ -15,7 +15,7 @@ export const NoticeEdit = () => {
   const { id } = useParams<{ id: string }>();
 
   const noticeId = id && !Number.isNaN(Number(id)) ? Number(id) : undefined;
-  const { notice, isLoading } = useNoticeDetail(noticeId);
+  const { notice, isLoading, isError, refetch } = useNoticeDetail(noticeId);
 
   useEffect(() => {
     if (noticeId === undefined) {
@@ -34,6 +34,24 @@ export const NoticeEdit = () => {
           <Text fontSize={16} color={colors.gray[400]}>
             공지사항을 불러오는 중...
           </Text>
+        </LoadingState>
+      </Container>
+    );
+  }
+
+  // 조회 실패 시 빈 수정 폼이 노출되지 않도록 에러 상태로 분기한다.
+  if (isError) {
+    return (
+      <Container>
+        <LoadingState>
+          <Flex isColumn={true} gap={12} width="fit-content" height="fit-content">
+            <Text fontSize={16} color={colors.gray[400]}>
+              공지사항을 불러오지 못했습니다.
+            </Text>
+            <Btn backgroundColor="#22c55e" hoverBackgroundColor="#16a34a" onClick={() => refetch()}>
+              다시 시도
+            </Btn>
+          </Flex>
         </LoadingState>
       </Container>
     );

@@ -177,7 +177,7 @@ export interface UpdateScheduleItem {
   endAt: ScheduleDateTime;
 }
 
-/* ───────────────── 공지사항 (GET /notifications/notification, POST /admin/notices) ───────────────── */
+/* ───────────── 공지사항·QnA (GET /notifications/..., POST /admin/notices) ───────────── */
 
 /**
  * 공지 구분. 등록 명세의 예시(`"Admissions Notice/Prospective Students Notice"`)에서 따온 값으로,
@@ -186,14 +186,29 @@ export interface UpdateScheduleItem {
 export type NoticeDivision = "Admissions Notice" | "Prospective Students Notice";
 
 /**
- * 목록 조회 파라미터. 명세에 쿼리 파라미터가 없어 응답의 `page: 0` 을 근거로
+ * notification 도메인 목록 조회 파라미터. 명세에 쿼리 파라미터가 없어 응답의 `page: 0` 을 근거로
  * Spring Pageable 형식(`page` 0-indexed, `size`)을 가정한다.
  */
-export type GetNoticesParams = {
+export type PageParams = {
   /** 0-indexed */
   page?: number;
   size?: number;
 };
+
+/** `division` 필터 파라미터는 명세 미기재 가정 — 서버가 지원하면 탭별 서버 필터링이 된다. */
+export type GetNoticesParams = PageParams & { division?: NoticeDivision };
+export type GetQnasParams = PageParams;
+
+/** notification 도메인 목록 응답 공통 형태 */
+export interface PageResponse<T> {
+  content: T[];
+  /** 0-indexed */
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
 
 /**
  * 목록 응답의 단일 공지 요약.
@@ -209,14 +224,25 @@ export interface NoticeSummary {
   isPinned?: boolean;
 }
 
-export interface GetNoticesResponse {
-  content: NoticeSummary[];
-  /** 0-indexed */
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
+export type GetNoticesResponse = PageResponse<NoticeSummary>;
+
+/** 목록 응답의 단일 QnA(자주 묻는 질문) 요약 */
+export interface QnaSummary {
+  faqId: number;
+  category: string;
+  question: string;
+  answer: string;
+}
+
+export type GetQnasResponse = PageResponse<QnaSummary>;
+
+/** QnA 상세 응답 */
+export interface QnaDetail extends QnaSummary {
+  viewCount: number;
+  /** ISO datetime */
+  createdAt: string;
+  /** ISO datetime */
+  updatedAt: string;
 }
 
 /** 상세 응답. `division`/`isPinned` 는 목록과 같은 이유로 optional. */

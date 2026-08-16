@@ -6,3 +6,5 @@ export * from "./useUpdateSchedules";
 export * from "./useNotices";
 export * from "./useNoticeDetail";
 export * from "./useCreateNotice";
+export * from "./useQnas";
+export * from "./useQnaDetail";

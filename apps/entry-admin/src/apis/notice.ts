@@ -1,8 +1,17 @@
 import { buildQueryString } from "../utils/queryString";
 import { http } from "./http";
-import type { CreateNoticePayload, GetNoticesParams, GetNoticesResponse, NoticeDetail } from "./types";
+import type {
+  CreateNoticePayload,
+  GetNoticesParams,
+  GetNoticesResponse,
+  GetQnasParams,
+  GetQnasResponse,
+  NoticeDetail,
+  QnaDetail,
+} from "./types";
 
 const NOTIFICATIONS_ENDPOINT = "/api/notification/v11/notifications/notification";
+const QNA_ENDPOINT = "/api/notification/v11/notifications/qna";
 const ADMIN_NOTICES_ENDPOINT = "/api/v11/admin/notices";
 
 /**
@@ -34,3 +43,16 @@ export const getNoticeDetail = async (noticeId: number) => {
 
 /** 공지 등록 (201 Created, 본문 없음) */
 export const createNotice = (payload: CreateNoticePayload) => http.post<void>(ADMIN_NOTICES_ENDPOINT, payload);
+
+/** QnA(자주 묻는 질문) 전체 조회 (페이지네이션) */
+export const getQnas = async (params: GetQnasParams = {}) => {
+  const queryString = buildQueryString({ ...params });
+  const body = await http.get<NoticeEnvelope<GetQnasResponse> | GetQnasResponse>(`${QNA_ENDPOINT}${queryString}`);
+  return unwrap(body);
+};
+
+/** QnA(자주 묻는 질문) 상세 조회 */
+export const getQnaDetail = async (faqId: number) => {
+  const body = await http.get<NoticeEnvelope<QnaDetail> | QnaDetail>(`${QNA_ENDPOINT}/${faqId}`);
+  return unwrap(body);
+};
