@@ -124,7 +124,8 @@ export const QnaDetailModal = ({ faqId, isOpen, onClose }: IQnaDetailModalType) 
 
         <ModalTitle id="qna-detail-modal-title">Q&A 상세 정보</ModalTitle>
 
-        {isError ? (
+        {/* 캐시 데이터가 있는 백그라운드 refetch 실패는 기존 내용을 유지한다. */}
+        {isError && !qna ? (
           <ErrorMessage>Q&A 정보를 불러오지 못했습니다.</ErrorMessage>
         ) : (
           <>

@@ -52,20 +52,18 @@ export interface NoticeListItem {
   noticeId: number;
   title: string;
   author: string;
-  isPinned: boolean;
+  /** 목록 응답 명세에 없는 필드 — 미제공(undefined)을 false 로 단정하지 않도록 optional 로 전달한다. */
+  isPinned?: boolean;
   /** ISO datetime */
   createdAt: string;
-  /** 목록 응답 명세에는 없는 필드 — 백엔드가 내려줄 때만 탭 보조 분류에 쓴다. */
-  division?: NoticeDivision;
 }
 
 export const toNoticeListItem = (dto: NoticeSummary): NoticeListItem => ({
   noticeId: dto.noticeId,
   title: dto.title,
   author: dto.author,
-  isPinned: dto.isPinned ?? false,
+  isPinned: dto.isPinned,
   createdAt: dto.createdAt,
-  division: dto.division,
 });
 
 /** 상세 응답 → 수정 폼 초기값. division/isPinned 미제공 시 폼 기본값으로 둔다. */

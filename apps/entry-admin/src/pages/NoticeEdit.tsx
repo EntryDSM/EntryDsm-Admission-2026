@@ -40,7 +40,8 @@ export const NoticeEdit = () => {
   }
 
   // 조회 실패 시 빈 수정 폼이 노출되지 않도록 에러 상태로 분기한다.
-  if (isError) {
+  // 단, 캐시 데이터가 있는 백그라운드 refetch 실패는 폼(작성 중 내용)을 유지한다.
+  if (isError && !notice) {
     return (
       <Container>
         <LoadingState>
