@@ -5,7 +5,7 @@ import { Btn, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
-import { useApplicants, useUpdateApplicantArrival } from "../hooks";
+import { useApplicants, useUpdateApplicantArrival, useUpdateApplicantStatus } from "../hooks";
 import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
@@ -114,9 +114,31 @@ export const ApplicantsList = () => {
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
+  const { updateStatus, isUpdatingStatus } = useUpdateApplicantStatus();
 
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
+  };
+
+  // "합격자 등록" 버튼 → 개별 상태 변경(정정) API 로 최종 합격 처리한다.
+  const handleRegisterClick = (applicant: ApplicantListItem) => {
+    if (isUpdatingStatus) {
+      return;
+    }
+
+    const reason = prompt(
+      `${applicant.applicantName} 지원자를 최종 합격(FINAL_PASS) 처리합니다.\n변경 사유를 입력하세요.`,
+      "관리자 개별 상태 변경"
+    );
+
+    if (reason === null) {
+      return;
+    }
+
+    updateStatus({
+      applicantId: applicant.applicantId,
+      payload: { status: "FINAL_PASS", force: false, reason: reason.trim() || "관리자 개별 상태 변경" },
+    });
   };
 
   const handleArrivalClick = (applicant: ApplicantListItem) => {
@@ -262,7 +284,7 @@ export const ApplicantsList = () => {
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
                 onClick={() => handleApplicantClick(applicant)}
-                onRegisterClick={handlePublishOnlyClick}
+                onRegisterClick={() => handleRegisterClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))

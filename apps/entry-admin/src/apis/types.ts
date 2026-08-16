@@ -101,6 +101,17 @@ export interface AdminApplicantDetail {
   updatedAt: string;
 }
 
+/* ───────────── 상태 변경 (PATCH /applicants/{id}/status → 204) ───────────── */
+
+/** 개별 상태 변경(정정) 요청 */
+export interface UpdateApplicantStatusPayload {
+  status: ApplicantStatus;
+  /** 검증(예: 전형 단계 순서)을 무시하고 강제 변경할지 여부 */
+  force: boolean;
+  /** 변경 사유 (감사 기록용) */
+  reason: string;
+}
+
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
 export type StatisticsMetric =

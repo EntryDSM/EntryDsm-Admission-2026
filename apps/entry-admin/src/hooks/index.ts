@@ -9,3 +9,4 @@ export * from "./useCreateNotice";
 export * from "./useQnas";
 export * from "./useQnaDetail";
 export * from "./useUpdateApplicantArrival";
+export * from "./useUpdateApplicantStatus";
