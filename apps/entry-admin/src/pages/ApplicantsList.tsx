@@ -5,7 +5,13 @@ import { Btn, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
-import { useApplicants, useFirstScreening, useUpdateApplicantArrival, useUpdateApplicantStatus } from "../hooks";
+import {
+  useApplicants,
+  useFinalScreening,
+  useFirstScreening,
+  useUpdateApplicantArrival,
+  useUpdateApplicantStatus,
+} from "../hooks";
 import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
@@ -116,6 +122,7 @@ export const ApplicantsList = () => {
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { updateStatus, isUpdatingStatus } = useUpdateApplicantStatus();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
+  const { runFinalScreening, isRunningFinalScreening } = useFinalScreening();
 
   const handleFirstScreeningClick = () => {
     if (isRunningFirstScreening) {
@@ -124,6 +131,16 @@ export const ApplicantsList = () => {
 
     if (confirm("1차(서류) 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
       runFirstScreening(false);
+    }
+  };
+
+  const handleFinalScreeningClick = () => {
+    if (isRunningFinalScreening) {
+      return;
+    }
+
+    if (confirm("최종 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
+      runFinalScreening(false);
     }
   };
 
@@ -219,6 +236,14 @@ export const ApplicantsList = () => {
             onClick={handleFirstScreeningClick}
           >
             {isRunningFirstScreening ? "1차 합격자 산출 중..." : "1차 합격자 산출"}
+          </Btn>
+          <Btn
+            color={colors.gray[50]}
+            backgroundColor={colors.green[400]}
+            hoverBackgroundColor={colors.green[500]}
+            onClick={handleFinalScreeningClick}
+          >
+            {isRunningFinalScreening ? "최종 합격자 산출 중..." : "최종 합격자 산출"}
           </Btn>
         </ButtonContainer>
 
