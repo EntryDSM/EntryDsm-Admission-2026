@@ -3,3 +3,6 @@ export * from "./useApplicantDetail";
 export * from "./useStatistics";
 export * from "./useSchedules";
 export * from "./useUpdateSchedules";
+export * from "./useNotices";
+export * from "./useNoticeDetail";
+export * from "./useCreateNotice";

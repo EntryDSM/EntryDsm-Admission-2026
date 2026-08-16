@@ -3,46 +3,51 @@ import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn, TabSection } from "@entry/ui";
 import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
+
+import { useNotices } from "../hooks";
+import { PagiNation, type NoticeType } from "../components";
 
 const TAB_OPTIONS = [
   { key: "NOTICE", label: "입학 공지사항" },
   { key: "GUIDE", label: "예비 신입생 안내" },
 ];
 
-type NoticeType = "NOTICE" | "GUIDE";
-
-type Notice = {
-  id: string;
-  title: string;
-  type: NoticeType;
-  isPinned: boolean;
-  createdAt: string;
-};
+const NOTICES_PER_PAGE = 10;
 
 export const NoticeList = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<NoticeType>("NOTICE");
-  const [noticeList, setNoticeList] = useState<Notice[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 명세상 목록 응답의 page 는 0 부터 시작하므로, UI 의 1-based 페이지를 변환해 보낸다.
+  const { notices: allNotices, totalPages, isLoading } = useNotices({ page: currentPage - 1, size: NOTICES_PER_PAGE });
+  const totalPage = Math.max(1, totalPages ?? 1);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as NoticeType);
+    setCurrentPage(1);
   };
 
   const handleCreateClick = () => {
     navigate("/notice/create");
   };
 
-  const handleEditClick = (id: string) => {
+  const handleEditClick = (id: number) => {
     navigate(`/notice/edit/${id}`);
   };
 
-  const handleDeleteClick = (id: string) => {
-    if (confirm("정말 삭제하시겠습니까?")) {
-      setNoticeList(prev => prev.filter(notice => notice.id !== id));
-    }
+  const handleDeleteClick = () => {
+    // 공지 삭제 API 는 명세에 없어 아직 연동하지 않는다.
+    toast.info("아직 지원하지 않는 기능입니다.");
   };
 
-  const notices = noticeList.filter(notice => notice.type === activeTab);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // 목록 API 에 division 필터 파라미터가 없어(명세 미기재) 현재 페이지 항목을 클라이언트에서 분류한다.
+  const notices = allNotices.filter(notice => notice.type === activeTab);
 
   return (
     <Container>
@@ -64,18 +69,20 @@ export const NoticeList = () => {
             <HeaderColumn flex={1} justifyLeft>
               제목
             </HeaderColumn>
+            <HeaderColumn width="100px">작성자</HeaderColumn>
             <HeaderColumn width="100px">고정</HeaderColumn>
             <HeaderColumn width="150px">작성일</HeaderColumn>
             <HeaderColumn width="140px">관리</HeaderColumn>
           </TableHeader>
 
           <TableBody>
-            {notices.map((notice, index) => (
-              <TableRow key={notice.id}>
-                <TableCell width="80px">{notices.length - index}</TableCell>
+            {notices.map(notice => (
+              <TableRow key={notice.noticeId}>
+                <TableCell width="80px">{notice.noticeId}</TableCell>
                 <TableCell flex={1} justifyLeft>
                   <TitleCell>{notice.title}</TitleCell>
                 </TableCell>
+                <TableCell width="100px">{notice.author}</TableCell>
                 <TableCell width="100px">
                   {notice.isPinned ? (
                     <PinBadge>고정</PinBadge>
@@ -88,10 +95,10 @@ export const NoticeList = () => {
                 <TableCell width="150px">{new Date(notice.createdAt).toLocaleDateString("ko-KR")}</TableCell>
                 <TableCell width="140px">
                   <ActionButtons>
-                    <ActionButton onClick={() => handleEditClick(notice.id)} color="#3b82f6">
+                    <ActionButton onClick={() => handleEditClick(notice.noticeId)} color="#3b82f6">
                       수정
                     </ActionButton>
-                    <ActionButton onClick={() => handleDeleteClick(notice.id)} color="#ef4444">
+                    <ActionButton onClick={handleDeleteClick} color="#ef4444">
                       삭제
                     </ActionButton>
                   </ActionButtons>
@@ -101,13 +108,23 @@ export const NoticeList = () => {
           </TableBody>
         </NoticeTable>
 
-        {notices.length === 0 && (
+        {isLoading ? (
           <EmptyState>
             <Text fontSize={16} color={colors.gray[400]}>
-              등록된 공지사항이 없습니다.
+              공지사항을 불러오는 중...
             </Text>
           </EmptyState>
+        ) : (
+          notices.length === 0 && (
+            <EmptyState>
+              <Text fontSize={16} color={colors.gray[400]}>
+                등록된 공지사항이 없습니다.
+              </Text>
+            </EmptyState>
+          )
         )}
+
+        <PagiNation currentPage={currentPage} totalPage={totalPage} onPageChange={handlePageChange} />
       </Flex>
     </Container>
   );

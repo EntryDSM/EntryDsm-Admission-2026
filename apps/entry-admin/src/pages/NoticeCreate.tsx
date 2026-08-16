@@ -3,6 +3,10 @@ import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn } from "@entry/ui";
 import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
+
+import { useCreateNotice } from "../hooks";
+import { toCreateNoticePayload } from "../utils";
 import { INITIAL_NOTICE_FORM_VALUE, NoticeForm, type NoticeAttachment, type NoticeFormValue } from "../components";
 
 export const NoticeCreate = () => {
@@ -10,7 +14,12 @@ export const NoticeCreate = () => {
   const [formData, setFormData] = useState<NoticeFormValue>(() => ({ ...INITIAL_NOTICE_FORM_VALUE }));
   const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
 
+  const { createNotice, isCreating } = useCreateNotice();
+
   const handleSubmit = () => {
+    if (isCreating) {
+      return;
+    }
     if (!formData.title.trim()) {
       alert("제목을 입력해주세요.");
       return;
@@ -20,7 +29,14 @@ export const NoticeCreate = () => {
       return;
     }
 
-    navigate("/notice");
+    // 파일 업로드(document) API 미연동이라 첨부파일은 아직 서버로 전송하지 못한다.
+    if (attachments.length > 0) {
+      toast.info("첨부파일 업로드는 아직 지원되지 않아 제외하고 등록합니다.");
+    }
+
+    createNotice(toCreateNoticePayload(formData), {
+      onSuccess: () => navigate("/notice"),
+    });
   };
 
   const handleCancel = () => {
@@ -53,7 +69,7 @@ export const NoticeCreate = () => {
             취소
           </Btn>
           <Btn backgroundColor="#22c55e" hoverBackgroundColor="#16a34a" onClick={handleSubmit}>
-            작성 완료
+            {isCreating ? "등록 중..." : "작성 완료"}
           </Btn>
         </ButtonSection>
       </Flex>

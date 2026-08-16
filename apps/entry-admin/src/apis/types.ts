@@ -176,3 +176,70 @@ export interface UpdateScheduleItem {
   startAt: ScheduleDateTime;
   endAt: ScheduleDateTime;
 }
+
+/* ───────────────── 공지사항 (GET /notifications/notification, POST /admin/notices) ───────────────── */
+
+/**
+ * 공지 구분. 등록 명세의 예시(`"Admissions Notice/Prospective Students Notice"`)에서 따온 값으로,
+ * 실제 백엔드 enum 표기가 다르면 `utils/noticeMapper.ts` 의 매핑 상수만 교체하면 된다.
+ */
+export type NoticeDivision = "Admissions Notice" | "Prospective Students Notice";
+
+/**
+ * 목록 조회 파라미터. 명세에 쿼리 파라미터가 없어 응답의 `page: 0` 을 근거로
+ * Spring Pageable 형식(`page` 0-indexed, `size`)을 가정한다.
+ */
+export type GetNoticesParams = {
+  /** 0-indexed */
+  page?: number;
+  size?: number;
+};
+
+/**
+ * 목록 응답의 단일 공지 요약.
+ * `division`/`isPinned` 는 명세 응답 예시에는 없지만 등록 요청에는 있어, 내려올 경우를 대비해 optional 로 둔다.
+ */
+export interface NoticeSummary {
+  noticeId: number;
+  title: string;
+  author: string;
+  /** ISO datetime */
+  createdAt: string;
+  division?: NoticeDivision;
+  isPinned?: boolean;
+}
+
+export interface GetNoticesResponse {
+  content: NoticeSummary[];
+  /** 0-indexed */
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+/** 상세 응답. `division`/`isPinned` 는 목록과 같은 이유로 optional. */
+export interface NoticeDetail {
+  noticeId: number;
+  title: string;
+  content: string;
+  author: string;
+  viewCount: number;
+  /** ISO datetime */
+  createdAt: string;
+  /** ISO datetime */
+  updatedAt: string;
+  division?: NoticeDivision;
+  isPinned?: boolean;
+}
+
+/** 공지 등록 요청 (POST /api/v11/admin/notices → 201) */
+export interface CreateNoticePayload {
+  title: string;
+  division: NoticeDivision;
+  content: string;
+  isPinned: boolean;
+  /** 파일관리(document) 업로드 API 미연동이라 현재는 보내지 않는다. */
+  attachmentIds?: string[];
+}

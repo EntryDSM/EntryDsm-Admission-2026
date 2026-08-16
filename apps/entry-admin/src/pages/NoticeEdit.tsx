@@ -3,19 +3,57 @@ import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn } from "@entry/ui";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "react-toastify";
+
+import type { NoticeDetail } from "../apis";
+import { useNoticeDetail } from "../hooks";
+import { toNoticeFormValue } from "../utils";
 import { INITIAL_NOTICE_FORM_VALUE, NoticeForm, type NoticeAttachment, type NoticeFormValue } from "../components";
 
 export const NoticeEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [formData, setFormData] = useState<NoticeFormValue>(() => ({ ...INITIAL_NOTICE_FORM_VALUE }));
-  const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
+
+  const noticeId = id && !Number.isNaN(Number(id)) ? Number(id) : undefined;
+  const { notice, isLoading } = useNoticeDetail(noticeId);
 
   useEffect(() => {
-    if (!id) {
+    if (noticeId === undefined) {
       navigate("/notice", { replace: true });
     }
-  }, [id, navigate]);
+  }, [noticeId, navigate]);
+
+  if (noticeId === undefined) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <Container>
+        <LoadingState>
+          <Text fontSize={16} color={colors.gray[400]}>
+            공지사항을 불러오는 중...
+          </Text>
+        </LoadingState>
+      </Container>
+    );
+  }
+
+  // 상세 조회가 끝난 뒤에 폼을 마운트해 응답을 초기값으로 주입한다. (key 로 공지가 바뀌면 재마운트)
+  return <NoticeEditForm key={noticeId} noticeId={noticeId} notice={notice} />;
+};
+
+type NoticeEditFormProps = {
+  noticeId: number;
+  notice?: NoticeDetail;
+};
+
+const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<NoticeFormValue>(() =>
+    notice ? toNoticeFormValue(notice) : { ...INITIAL_NOTICE_FORM_VALUE }
+  );
+  const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
 
   const handleSubmit = () => {
     if (!formData.title.trim()) {
@@ -27,7 +65,8 @@ export const NoticeEdit = () => {
       return;
     }
 
-    navigate("/notice");
+    // 공지 수정 API 는 명세에 없어 아직 연동하지 않는다.
+    toast.info("아직 지원하지 않는 기능입니다.");
   };
 
   const handleCancel = () => {
@@ -35,10 +74,6 @@ export const NoticeEdit = () => {
       navigate("/notice");
     }
   };
-
-  if (!id) {
-    return null;
-  }
 
   return (
     <Container>
@@ -49,7 +84,7 @@ export const NoticeEdit = () => {
           </Text>
           <NoticeIdText>
             <Text fontSize={14} color={colors.gray[400]}>
-              공지사항 번호: {id}
+              공지사항 번호: {noticeId}
             </Text>
           </NoticeIdText>
         </HeaderSection>
@@ -93,6 +128,13 @@ const HeaderSection = styled.div`
 const NoticeIdText = styled.div`
   display: flex;
   align-items: center;
+`;
+
+const LoadingState = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
 `;
 
 const ButtonSection = styled.div`
