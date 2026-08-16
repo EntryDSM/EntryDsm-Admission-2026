@@ -5,7 +5,7 @@ import { Btn, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
-import { useApplicants } from "../hooks";
+import { useApplicants, useUpdateApplicantArrival } from "../hooks";
 import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
@@ -113,8 +113,26 @@ export const ApplicantsList = () => {
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
+  const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
+
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
+  };
+
+  const handleArrivalClick = (applicant: ApplicantListItem) => {
+    // 도착 취소 API 는 명세에 없어 이미 도착 처리된 원서는 되돌릴 수 없다.
+    if (applicant.isArrived) {
+      toast.info("이미 도착 처리된 원서입니다. (취소 미지원)");
+      return;
+    }
+
+    if (isUpdatingArrival) {
+      return;
+    }
+
+    if (confirm(`${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`)) {
+      updateArrival(applicant.applicantId);
+    }
   };
 
   const handleSearchChange = useCallback((keyword: string) => {
@@ -245,6 +263,7 @@ export const ApplicantsList = () => {
                 isArrived={applicant.isArrived}
                 onClick={() => handleApplicantClick(applicant)}
                 onRegisterClick={handlePublishOnlyClick}
+                onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))
           )}
