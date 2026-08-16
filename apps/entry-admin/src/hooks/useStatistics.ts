@@ -3,8 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { adminQueryKeys, getStatistics, type StatisticsMetric } from "../apis";
 import { toCompetitionData, toGenderData, toRegionData } from "../utils";
 
-// 지역은 시·도 상세가 있는 REGION_STATUS 를 기본으로 쓰고, 매퍼가 REGION_DISTRIBUTION 폴백을 처리한다.
-const DEFAULT_METRICS: StatisticsMetric[] = ["APPLICANT_COUNT", "COMPETITION_RATE", "GENDER_RATIO", "REGION_STATUS"];
+// 지역은 시·도 상세가 있는 REGION_STATUS 를 우선 쓰되, 새 메트릭 키가 요청 파라미터로 아직
+// 지원되지 않을 가능성(명세 미기재 가정)에 대비해 기존 REGION_DISTRIBUTION 도 함께 요청한다.
+// (매퍼 폴백은 응답에 실제로 담겨 온 값이 있어야 발동할 수 있다.)
+const DEFAULT_METRICS: StatisticsMetric[] = [
+  "APPLICANT_COUNT",
+  "COMPETITION_RATE",
+  "GENDER_RATIO",
+  "REGION_STATUS",
+  "REGION_DISTRIBUTION",
+];
 
 /**
  * 지원 현황 통계 조회 훅.

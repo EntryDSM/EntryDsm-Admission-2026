@@ -34,6 +34,11 @@ const REGION_LABELS: Record<string, string> = {
   ETC: "기타",
 };
 
+const GENDER_LABELS: Record<string, string> = {
+  MALE: "남자",
+  FEMALE: "여자",
+};
+
 const APPLICANT_STATUS_LABELS: Record<string, string> = {
   NOT_SUBMITTED: "미제출",
   SUBMITTED: "제출 완료",
@@ -46,4 +51,5 @@ const APPLICANT_STATUS_LABELS: Record<string, string> = {
 export const getApplicationTypeLabel = withLabel(APPLICATION_TYPE_LABELS);
 export const getEducationalStatusLabel = withLabel(EDUCATIONAL_STATUS_LABELS);
 export const getRegionLabel = withLabel(REGION_LABELS);
+export const getGenderLabel = withLabel(GENDER_LABELS);
 export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
