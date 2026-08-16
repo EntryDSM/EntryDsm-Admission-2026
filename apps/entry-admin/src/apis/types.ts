@@ -112,6 +112,19 @@ export interface UpdateApplicantStatusPayload {
   reason: string;
 }
 
+/* ───────────── 합격자 일괄 산출 (POST /screenings/{stage}/results) ───────────── */
+
+/** 일괄 산출 결과 집계 */
+export interface ScreeningResult {
+  /** true 면 상태를 변경하지 않고 산출 결과만 반환한 것(검토용) */
+  dryRun: boolean;
+  passCount: number;
+  failCount: number;
+  excludedCount: number;
+  /** ISO datetime */
+  processedAt: string;
+}
+
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
 export type StatisticsMetric =

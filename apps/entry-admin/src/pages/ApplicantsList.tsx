@@ -5,7 +5,7 @@ import { Btn, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
-import { useApplicants, useUpdateApplicantArrival, useUpdateApplicantStatus } from "../hooks";
+import { useApplicants, useFirstScreening, useUpdateApplicantArrival, useUpdateApplicantStatus } from "../hooks";
 import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
@@ -115,6 +115,17 @@ export const ApplicantsList = () => {
 
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { updateStatus, isUpdatingStatus } = useUpdateApplicantStatus();
+  const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
+
+  const handleFirstScreeningClick = () => {
+    if (isRunningFirstScreening) {
+      return;
+    }
+
+    if (confirm("1차(서류) 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
+      runFirstScreening(false);
+    }
+  };
 
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
@@ -201,6 +212,14 @@ export const ApplicantsList = () => {
               {label}
             </Btn>
           ))}
+          <Btn
+            color={colors.gray[50]}
+            backgroundColor={colors.green[400]}
+            hoverBackgroundColor={colors.green[500]}
+            onClick={handleFirstScreeningClick}
+          >
+            {isRunningFirstScreening ? "1차 합격자 산출 중..." : "1차 합격자 산출"}
+          </Btn>
         </ButtonContainer>
 
         <FilterControl>
