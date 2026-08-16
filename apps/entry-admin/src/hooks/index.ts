@@ -12,3 +12,4 @@ export * from "./useUpdateApplicantArrival";
 export * from "./useUpdateApplicantStatus";
 export * from "./useFirstScreening";
 export * from "./useFinalScreening";
+export * from "./useDocumentDownloads";

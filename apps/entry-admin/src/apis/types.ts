@@ -125,6 +125,22 @@ export interface ScreeningResult {
   processedAt: string;
 }
 
+/* ───── 문서 생성 잡 (GET /application-checklist, /admission-ticket-jobs) ───── */
+
+/** 문서 생성 잡 상태 — `COMPLETED` 외 값은 명세 미기재라 임의 문자열을 허용한다. */
+export type DocumentJobStatus = "COMPLETED" | (string & {});
+
+/** 점검표/수험표 등 문서 생성 잡 응답. 완료 시 서명된 `downloadUrl` 이 내려온다. */
+export interface AdminDocumentJob {
+  jobId: string;
+  status: DocumentJobStatus;
+  totalCount: number;
+  processedCount: number;
+  downloadUrl?: string;
+  /** ISO datetime — downloadUrl 만료 시각 */
+  expiresAt?: string;
+}
+
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
 export type StatisticsMetric =
