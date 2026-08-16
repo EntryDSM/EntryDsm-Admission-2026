@@ -5,3 +5,6 @@ import type { AdminDocumentJob } from "./types";
 
 /** 지원서 점검표 생성 잡 조회 (완료 시 downloadUrl 포함) */
 export const getApplicationChecklist = () => http.get<AdminDocumentJob>("/api/v1/admin/application-checklist");
+
+/** 수험표 일괄 생성 잡 조회 (완료 시 downloadUrl 포함) */
+export const getAdmissionTicketJobs = () => http.get<AdminDocumentJob>("/api/v1/admin/admission-ticket-jobs");

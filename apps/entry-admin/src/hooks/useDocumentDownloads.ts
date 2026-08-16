@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
-import { getApplicationChecklist, HttpError, type AdminDocumentJob } from "../apis";
+import { getAdmissionTicketJobs, getApplicationChecklist, HttpError, type AdminDocumentJob } from "../apis";
 
 /**
  * 문서 생성 잡(job) 조회 → 다운로드 공통 훅.
@@ -38,5 +38,15 @@ export const useDownloadChecklist = () => {
   return {
     downloadChecklist: download,
     isDownloadingChecklist: isDownloading,
+  };
+};
+
+/** 수험표 일괄 다운로드 훅 */
+export const useDownloadAdmissionTickets = () => {
+  const { download, isDownloading } = useDocumentJobDownload(getAdmissionTicketJobs, "수험표");
+
+  return {
+    downloadAdmissionTickets: download,
+    isDownloadingAdmissionTickets: isDownloading,
   };
 };

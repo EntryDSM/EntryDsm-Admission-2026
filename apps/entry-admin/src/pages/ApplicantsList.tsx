@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
 import {
   useApplicants,
+  useDownloadAdmissionTickets,
   useDownloadChecklist,
   useFinalScreening,
   useFirstScreening,
@@ -138,6 +139,7 @@ export const ApplicantsList = () => {
   };
 
   const { downloadChecklist, isDownloadingChecklist } = useDownloadChecklist();
+  const { downloadAdmissionTickets, isDownloadingAdmissionTickets } = useDownloadAdmissionTickets();
 
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
@@ -152,13 +154,22 @@ export const ApplicantsList = () => {
     downloadChecklist();
   };
 
+  // "수험표 출력" → 수험표 일괄 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  const handleAdmissionTicketsClick = () => {
+    if (isDownloadingAdmissionTickets) {
+      return;
+    }
+
+    downloadAdmissionTickets();
+  };
+
   // 출력/다운로드 액션 모음. 아직 API 미연동 항목은 안내 토스트만 띄운다.
   const printActions = [
     { label: "수험번호 발급", onClick: handlePublishOnlyClick },
     { label: "지원자 점검표 출력", onClick: handleChecklistClick },
     { label: "전형 자료 출력", onClick: handlePublishOnlyClick },
     { label: "1차 합격자 명단 출력", onClick: handlePublishOnlyClick },
-    { label: "수험표 출력", onClick: handlePublishOnlyClick },
+    { label: "수험표 출력", onClick: handleAdmissionTicketsClick },
   ];
 
   // "합격자 등록" 버튼 → 개별 상태 변경(정정) API 로 최종 합격 처리한다.
