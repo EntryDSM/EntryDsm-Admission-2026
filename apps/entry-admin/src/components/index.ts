@@ -6,6 +6,7 @@ export * from "./Applicant";
 export * from "./Pagination";
 export * from "./ApplicantDetailModal";
 export * from "./QnaDetailModal";
+export * from "./UnderConstructionRedirect";
 export * from "./DropDownSection";
 export * from "./InputSection";
 export * from "./NoticeForm";
