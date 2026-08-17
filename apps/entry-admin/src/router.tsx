@@ -2,15 +2,14 @@ import { createBrowserRouter } from "react-router";
 import { ErrorPage } from "@entry/ui";
 
 import { AppLayout } from "./layout";
+import { UnderConstructionRedirect } from "./components";
 import {
   AdmissionsSchedule,
   ApplicantsList,
-  FormulaCalculator,
   NoticeList,
   NoticeCreate,
   NoticeEdit,
   StatisticsLandingPage,
-  AdmissionsQuota,
 } from "./pages";
 
 export const Router = createBrowserRouter([
@@ -23,8 +22,9 @@ export const Router = createBrowserRouter([
         element: <StatisticsLandingPage />,
       },
       {
+        // 준비 중 — 페이지(FormulaCalculator)는 유지하되 라우트만 임시 차단한다.
         path: "formula-calculator",
-        element: <FormulaCalculator />,
+        element: <UnderConstructionRedirect pageName="계산식 수정" />,
       },
       {
         path: "applicants-list",
@@ -47,8 +47,9 @@ export const Router = createBrowserRouter([
         element: <NoticeEdit />,
       },
       {
+        // 준비 중 — 페이지(AdmissionsQuota)는 유지하되 라우트만 임시 차단한다.
         path: "admissions-quota",
-        element: <AdmissionsQuota />,
+        element: <UnderConstructionRedirect pageName="정원 수정" />,
       },
     ],
   },

@@ -22,7 +22,14 @@ export const NoPathHeader = () => {
   );
 };
 
-export const AdminHeader = () => {
+type AdminHeaderProps = {
+  /** 이동을 막을 경로 목록 (예: 준비 중 페이지) */
+  disabledPaths?: string[];
+  /** 막힌 메뉴 클릭 시 호출된다 (토스트 안내 등은 앱에서 처리) */
+  onDisabledNavClick?: (name: string, path: string) => void;
+};
+
+export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderProps = {}) => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -36,8 +43,14 @@ export const AdminHeader = () => {
     { name: "공지사항", path: "/notice" },
   ];
 
-  const navClick = (path: string) => {
+  const navClick = (name: string, path: string) => {
     setIsSideClick(false);
+
+    if (disabledPaths?.includes(path)) {
+      onDisabledNavClick?.(name, path);
+      return;
+    }
+
     navigate(path);
   };
 
@@ -57,7 +70,11 @@ export const AdminHeader = () => {
       <Flex gap={52} alignItems="center" height="fit-content" width="fit-content">
         <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
           {navData.map(data => (
-            <NavContent key={data.path} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
+            <NavContent
+              key={data.path}
+              isPath={pathname.includes(data.path)}
+              onClick={() => navClick(data.name, data.path)}
+            >
               {data.name}
             </NavContent>
           ))}
@@ -68,7 +85,7 @@ export const AdminHeader = () => {
       {isSideClick && (
         <SideNavContainer>
           {navData.map(data => (
-            <SideNavContent key={data.path} onClick={() => navClick(data.path)}>
+            <SideNavContent key={data.path} onClick={() => navClick(data.name, data.path)}>
               {data.name}
             </SideNavContent>
           ))}

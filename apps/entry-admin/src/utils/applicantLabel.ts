@@ -25,6 +25,18 @@ const EDUCATIONAL_STATUS_LABELS: Record<string, string> = {
 const REGION_LABELS: Record<string, string> = {
   DAEJEON: "대전",
   NATIONWIDE: "전국",
+  // 통계(REGION_STATUS.byRegion)의 시·도 코드
+  SEJONG: "세종",
+  GYEONGGI: "경기",
+  CHUNGNAM: "충남",
+  CHUNGBUK: "충북",
+  SEOUL: "서울",
+  ETC: "기타",
+};
+
+const GENDER_LABELS: Record<string, string> = {
+  MALE: "남자",
+  FEMALE: "여자",
 };
 
 const APPLICANT_STATUS_LABELS: Record<string, string> = {
@@ -39,4 +51,5 @@ const APPLICANT_STATUS_LABELS: Record<string, string> = {
 export const getApplicationTypeLabel = withLabel(APPLICATION_TYPE_LABELS);
 export const getEducationalStatusLabel = withLabel(EDUCATIONAL_STATUS_LABELS);
 export const getRegionLabel = withLabel(REGION_LABELS);
+export const getGenderLabel = withLabel(GENDER_LABELS);
 export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);

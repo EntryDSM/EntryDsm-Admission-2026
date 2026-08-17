@@ -5,7 +5,15 @@ import { Btn, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
-import { useApplicants } from "../hooks";
+import {
+  useApplicants,
+  useDownloadAdmissionTickets,
+  useDownloadChecklist,
+  useFinalScreening,
+  useFirstScreening,
+  useUpdateApplicantArrival,
+  useUpdateApplicantStatus,
+} from "../hooks";
 import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
@@ -30,14 +38,6 @@ const EDUCATION_OPTIONS = [
   { key: "prospective", label: "졸업 예정" },
   { key: "graduate", label: "졸업" },
   { key: "exam", label: "검정고시" },
-] as const;
-
-const PRINT_ACTION_LABELS = [
-  "수험번호 발급",
-  "지원자 점검표 출력",
-  "전형 자료 출력",
-  "1차 합격자 명단 출력",
-  "수험표 출력",
 ] as const;
 
 const PRINT_ACTION_UNAVAILABLE_MESSAGE = "아직 지원하지 않는 기능입니다.";
@@ -113,8 +113,100 @@ export const ApplicantsList = () => {
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
+  const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
+  const { updateStatus, isUpdatingStatus } = useUpdateApplicantStatus();
+  const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
+  const { runFinalScreening, isRunningFinalScreening } = useFinalScreening();
+
+  const handleFirstScreeningClick = () => {
+    if (isRunningFirstScreening) {
+      return;
+    }
+
+    if (confirm("1차(서류) 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
+      runFirstScreening(false);
+    }
+  };
+
+  const handleFinalScreeningClick = () => {
+    if (isRunningFinalScreening) {
+      return;
+    }
+
+    if (confirm("최종 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
+      runFinalScreening(false);
+    }
+  };
+
+  const { downloadChecklist, isDownloadingChecklist } = useDownloadChecklist();
+  const { downloadAdmissionTickets, isDownloadingAdmissionTickets } = useDownloadAdmissionTickets();
+
   const handlePublishOnlyClick = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
+  };
+
+  // "지원자 점검표 출력" → 점검표 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  const handleChecklistClick = () => {
+    if (isDownloadingChecklist) {
+      return;
+    }
+
+    downloadChecklist();
+  };
+
+  // "수험표 출력" → 수험표 일괄 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  const handleAdmissionTicketsClick = () => {
+    if (isDownloadingAdmissionTickets) {
+      return;
+    }
+
+    downloadAdmissionTickets();
+  };
+
+  // 출력/다운로드 액션 모음. 아직 API 미연동 항목은 안내 토스트만 띄운다.
+  const printActions = [
+    { label: "수험번호 발급", onClick: handlePublishOnlyClick },
+    { label: "지원자 점검표 출력", onClick: handleChecklistClick },
+    { label: "전형 자료 출력", onClick: handlePublishOnlyClick },
+    { label: "1차 합격자 명단 출력", onClick: handlePublishOnlyClick },
+    { label: "수험표 출력", onClick: handleAdmissionTicketsClick },
+  ];
+
+  // "합격자 등록" 버튼 → 개별 상태 변경(정정) API 로 최종 합격 처리한다.
+  const handleRegisterClick = (applicant: ApplicantListItem) => {
+    if (isUpdatingStatus) {
+      return;
+    }
+
+    const reason = prompt(
+      `${applicant.applicantName} 지원자를 최종 합격(FINAL_PASS) 처리합니다.\n변경 사유를 입력하세요.`,
+      "관리자 개별 상태 변경"
+    );
+
+    if (reason === null) {
+      return;
+    }
+
+    updateStatus({
+      applicantId: applicant.applicantId,
+      payload: { status: "FINAL_PASS", force: false, reason: reason.trim() || "관리자 개별 상태 변경" },
+    });
+  };
+
+  const handleArrivalClick = (applicant: ApplicantListItem) => {
+    // 도착 취소 API 는 명세에 없어 이미 도착 처리된 원서는 되돌릴 수 없다.
+    if (applicant.isArrived) {
+      toast.info("이미 도착 처리된 원서입니다. (취소 미지원)");
+      return;
+    }
+
+    if (isUpdatingArrival) {
+      return;
+    }
+
+    if (confirm(`${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`)) {
+      updateArrival(applicant.applicantId);
+    }
   };
 
   const handleSearchChange = useCallback((keyword: string) => {
@@ -150,17 +242,33 @@ export const ApplicantsList = () => {
 
       <Toolbar>
         <ButtonContainer>
-          {PRINT_ACTION_LABELS.map(label => (
+          {printActions.map(action => (
             <Btn
-              key={label}
+              key={action.label}
               color={colors.gray[50]}
               backgroundColor={colors.green[400]}
               hoverBackgroundColor={colors.green[500]}
-              onClick={handlePublishOnlyClick}
+              onClick={action.onClick}
             >
-              {label}
+              {action.label}
             </Btn>
           ))}
+          <Btn
+            color={colors.gray[50]}
+            backgroundColor={colors.green[400]}
+            hoverBackgroundColor={colors.green[500]}
+            onClick={handleFirstScreeningClick}
+          >
+            {isRunningFirstScreening ? "1차 합격자 산출 중..." : "1차 합격자 산출"}
+          </Btn>
+          <Btn
+            color={colors.gray[50]}
+            backgroundColor={colors.green[400]}
+            hoverBackgroundColor={colors.green[500]}
+            onClick={handleFinalScreeningClick}
+          >
+            {isRunningFinalScreening ? "최종 합격자 산출 중..." : "최종 합격자 산출"}
+          </Btn>
         </ButtonContainer>
 
         <FilterControl>
@@ -244,7 +352,8 @@ export const ApplicantsList = () => {
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
                 onClick={() => handleApplicantClick(applicant)}
-                onRegisterClick={handlePublishOnlyClick}
+                onRegisterClick={() => handleRegisterClick(applicant)}
+                onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))
           )}

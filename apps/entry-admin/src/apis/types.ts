@@ -101,14 +101,64 @@ export interface AdminApplicantDetail {
   updatedAt: string;
 }
 
+/* ───────────── 상태 변경 (PATCH /applicants/{id}/status → 204) ───────────── */
+
+/** 개별 상태 변경(정정) 요청 */
+export interface UpdateApplicantStatusPayload {
+  status: ApplicantStatus;
+  /** 검증(예: 전형 단계 순서)을 무시하고 강제 변경할지 여부 */
+  force: boolean;
+  /** 변경 사유 (감사 기록용) */
+  reason: string;
+}
+
+/* ───────────── 합격자 일괄 산출 (POST /screenings/{stage}/results) ───────────── */
+
+/** 일괄 산출 결과 집계 */
+export interface ScreeningResult {
+  /** true 면 상태를 변경하지 않고 산출 결과만 반환한 것(검토용) */
+  dryRun: boolean;
+  passCount: number;
+  failCount: number;
+  excludedCount: number;
+  /** ISO datetime */
+  processedAt: string;
+}
+
+/* ───── 문서 생성 잡 (GET /application-checklist, /admission-ticket-jobs) ───── */
+
+/** 문서 생성 잡 상태 — `COMPLETED` 외 값은 명세 미기재라 임의 문자열을 허용한다. */
+export type DocumentJobStatus = "COMPLETED" | (string & {});
+
+/** 점검표/수험표 등 문서 생성 잡 응답. 완료 시 서명된 `downloadUrl` 이 내려온다. */
+export interface AdminDocumentJob {
+  jobId: string;
+  status: DocumentJobStatus;
+  totalCount: number;
+  processedCount: number;
+  downloadUrl?: string;
+  /** ISO datetime — downloadUrl 만료 시각 */
+  expiresAt?: string;
+}
+
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
+/**
+ * 조회 가능한 메트릭.
+ * `GENDER_RATIO`/`REGION_STATUS` 는 명세의 파라미터 표에는 아직 없지만 응답 예시에 추가된 값이라,
+ * 응답 키와 동일한 이름으로 요청할 수 있다고 가정한다.
+ */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
-  | "DAILY_TREND";
+  | "DAILY_TREND"
+  | "GENDER_RATIO"
+  | "REGION_STATUS";
+
+/** 성별 (백엔드 표기) */
+export type Gender = "MALE" | "FEMALE";
 
 /** 지원자 수 (명세 확정) */
 export interface ApplicantCountMetric {
@@ -128,12 +178,32 @@ export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
 /** 일자별 추이 — 명세에 응답 예시가 없어 `[{ 날짜, 수 }]` 형태로 가정 */
 export type DailyTrendMetric = { date: string; count: number }[];
 
+/** 지원 성비 (명세 확정) */
+export interface GenderRatioMetric {
+  total: number;
+  byGender: Partial<Record<Gender, number>>;
+  /** 남성 비율 (0~1) */
+  maleRatio: number;
+  byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
+}
+
+/** 지역별 접수 현황 (명세 확정) */
+export interface RegionStatusMetric {
+  total: number;
+  /** 관내(LOCAL)/전국(NATIONWIDE) 구분 */
+  byScope: Partial<Record<"LOCAL" | "NATIONWIDE", number>>;
+  /** 시·도 코드 → 수 (예: DAEJEON, SEJONG, …, ETC) */
+  byRegion: Record<string, number>;
+}
+
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
   COMPETITION_RATE?: CompetitionRateMetric;
   REGION_DISTRIBUTION?: RegionDistributionMetric;
   TYPE_DISTRIBUTION?: TypeDistributionMetric;
   DAILY_TREND?: DailyTrendMetric;
+  GENDER_RATIO?: GenderRatioMetric;
+  REGION_STATUS?: RegionStatusMetric;
 }
 
 export interface GetStatisticsResponse {

@@ -13,6 +13,7 @@ type IApplicationComponentType = {
   isArrived?: boolean;
   onClick: () => void;
   onRegisterClick?: () => void;
+  onArrivalClick?: () => void;
 };
 
 export const Applicant = ({
@@ -25,6 +26,7 @@ export const Applicant = ({
   isArrived,
   onClick,
   onRegisterClick,
+  onArrivalClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
   const statusLabel = isArrived ? "원서 도착" : "-";
@@ -32,6 +34,11 @@ export const Applicant = ({
   const handleRegisterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onRegisterClick?.();
+  };
+
+  const handleArrivalClick = (event: React.MouseEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    onArrivalClick?.();
   };
 
   return (
@@ -43,7 +50,7 @@ export const Applicant = ({
       <Cell role="cell">{getEducationalStatusLabel(educationalStatus)}</Cell>
       <Cell role="cell">{examinationNumber ?? "-"}</Cell>
       <CheckboxCell role="cell">
-        <StyledCheckbox type="checkbox" checked={!!isArrived} onClick={event => event.stopPropagation()} readOnly />
+        <StyledCheckbox type="checkbox" checked={!!isArrived} onClick={handleArrivalClick} readOnly />
       </CheckboxCell>
       <Cell role="cell">{statusLabel}</Cell>
       <RegisterCell role="cell">
