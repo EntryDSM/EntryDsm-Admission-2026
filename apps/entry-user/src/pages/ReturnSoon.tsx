@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { ErrorPage } from "@entry/ui";
 
 export const ReturnSoon = () => {
