@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { dmsLogo, jobisLogo, pickLogo } from "../../../assets";
+import { dmsLogo, jobisLogo, pickLogo, xquareLogo } from "../../../assets";
 import { type BannerId } from "./BannerContainer";
 
 interface IBannerHoverType {
@@ -25,12 +25,12 @@ export const BannerHover = ({ selectedBanner }: IBannerHoverType) => {
       description:
         "학생들의 취업을 위한 교내의 단 하나뿐인 서비스입니다.\n학생뿐만 아니라 기업에서도 사용하고 있으며, 앱/웹으로 지원하고 있습니다!",
     },
-    // 아직 값이 없음
-    // xquare: {
-    //   icon: dmsLogo,
-    //   title: "XQUARE",
-    //   description: "아직 값 없어용.",
-    // },
+    xquare: {
+      icon: xquareLogo,
+      title: "XQUARE",
+      description:
+        "학생들의 프로젝트를 배포하는 동아리입니다.\n동아리원들이 직접 관리하는 서버를 통하여 서비스를 배포하고 운영할 수 있도록 돕고 있습니다!",
+    },
   };
 
   const content = bannerContent[selectedBanner];

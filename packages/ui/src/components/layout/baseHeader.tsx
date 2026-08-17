@@ -96,12 +96,13 @@ export const CommonHeader = () => {
     navigate(path);
   };
 
-  // const handleLoginClick = () => {
-  //   window.location.href = "https://auth.entrydsm.kr";
-  // };
+  const handleLoginClick = () => {
+    window.location.href = "https://auth.entrydsm.kr";
+  };
 
-  // const isLoggedIn = accessToken && userInfo && !isError;
-  // const isLoading = accessToken && isPending;
+  //TODO: api 연동하기 전
+  const isLoggedIn = false;
+  const isLoading = false;
 
   return (
     <HeaderContainer>
@@ -110,29 +111,30 @@ export const CommonHeader = () => {
         <CommonHeaderLogoText>EntryDSM</CommonHeaderLogoText>
       </CommonHeaderLogoSection>
       <CommonHeaderActionSection>
-        {/* <Flex width="fit-content" height="fit-content" gap={28} alignItems="center"> */}
-        {navData.map(data => (
-          <NavContent key={data.name} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
-            {data.name}
-          </NavContent>
-        ))}
-        {/* </Flex>
+        <Flex width="fit-content" height="fit-content" gap={28} alignItems="center">
+          {navData.map(data => (
+            <NavContent key={data.name} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
+              {data.name}
+            </NavContent>
+          ))}
+        </Flex>
         {isLoading ? (
           <Flex gap={20} alignItems="center" width="fit-content" height="fit-content">
-            <SkeletonBox width="90px" height="22px" />
-            <SkeletonBox width="80px" height="22px" />
+            {/* <SkeletonBox width="90px" height="22px" />
+            <SkeletonBox width="80px" height="22px" /> */}
           </Flex>
         ) : isLoggedIn ? (
           <Flex gap={20} alignItems="center" width="fit-content" height="fit-content">
             <NavContent onClick={() => navClick("/mypage")} isPath={pathname === "/mypage"}>
               마이페이지
             </NavContent>
-            <Text isSpan fontSize={18} fontWeight={500} color={colors.gray[500]}>
+            {/* TODO: userInfo 연동 후 사용자 이름 표시 복구 */}
+            {/* <Text isSpan fontSize={18} fontWeight={500} color={colors.gray[500]}>
               {userInfo?.name || "사용자"}
               <Text isSpan fontSize={18} fontWeight={400} color={colors.gray[500]}>
                 님
               </Text>
-            </Text>
+            </Text> */}
           </Flex>
         ) : (
           <Btn
@@ -143,7 +145,7 @@ export const CommonHeader = () => {
           >
             로그인
           </Btn>
-        )} */}
+        )}
         <SideBarBtnIcon onClick={() => setIsSideClick(!isSideClick)} />
       </CommonHeaderActionSection>
       {isSideClick && (
@@ -153,7 +155,7 @@ export const CommonHeader = () => {
               {data.name}
             </SideNavContent>
           ))}
-          {/* {isLoggedIn && <SideNavContent onClick={() => navClick("/mypage")}>마이페이지</SideNavContent>} */}
+          {isLoggedIn && <SideNavContent onClick={() => navClick("/mypage")}>마이페이지</SideNavContent>}
         </SideNavContainer>
       )}
     </HeaderContainer>

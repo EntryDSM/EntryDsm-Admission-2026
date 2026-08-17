@@ -15,7 +15,11 @@ interface ScoreResult {
   total: string;
 }
 
-const MOCK_RESULTS: ScoreResult[] = [{ name: "졸업 예정자", score: "100", total: "200" }];
+const MOCK_RESULTS: ScoreResult[] = [
+  { name: "졸업 예정자", score: "100", total: "200" },
+  { name: "사회통합 전형", score: "100", total: "200" },
+  { name: "마이스터 인재", score: "100", total: "200" },
+];
 
 export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => {
   const loading = false;
@@ -64,7 +68,7 @@ export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => 
           <ResultList>
             {MOCK_RESULTS.map((result, index) => (
               <ResultItem key={index}>
-                <Text fontSize={24} fontWeight={400}>
+                <Text fontSize={24} fontWeight={500}>
                   {result.name}
                 </Text>
                 <ScoreText>

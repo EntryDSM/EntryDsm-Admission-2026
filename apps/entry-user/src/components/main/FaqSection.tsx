@@ -31,7 +31,7 @@ const faqList = [
 ];
 
 export const FaqSection = () => {
-  const [openIndex, setOpenIndex] = useState(0);
+  const [openIndex, setOpenIndex] = useState(-1);
   const navigate = useNavigate();
 
   const toggleIndex = (index: number) => {
@@ -53,7 +53,7 @@ export const FaqSection = () => {
           const isOpen = openIndex === index;
           return (
             <FaqItem key={index} isOpen={isOpen}>
-              <QuestionWrapper onClick={() => toggleIndex(index)}>
+              <QuestionWrapper isOpen={isOpen} onClick={() => toggleIndex(index)}>
                 <Question>
                   <Number isOpen={isOpen}>{`0${index + 1}`}</Number>
                   {faq.question}
@@ -61,7 +61,7 @@ export const FaqSection = () => {
                 <Icon src={isOpen ? upArrowIcon : downArrowIcon} alt="toggle" />
               </QuestionWrapper>
               <AnswerWrapper isOpen={isOpen}>
-                <Answer>{faq.answer}</Answer>
+                <Answer isOpen={isOpen}>{faq.answer}</Answer>
               </AnswerWrapper>
             </FaqItem>
           );
@@ -137,7 +137,6 @@ const FaqItem = styled.div<{ isOpen: boolean }>`
   padding: 20px;
   margin-bottom: 10px;
   cursor: pointer;
-  border: 1.5px solid ${colors.gray[100]};
   transition: background-color 0.3s;
 
   &:hover {
@@ -145,10 +144,15 @@ const FaqItem = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-const QuestionWrapper = styled.button`
+const QuestionWrapper = styled.button<{ isOpen: boolean }>`
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: transparent;
+  border: none;
+  padding-bottom: ${({ isOpen }) => (isOpen ? "10px" : "0px")};
+  cursor: pointer;
 `;
 
 const Question = styled.div`
@@ -167,17 +171,19 @@ const Question = styled.div`
 const AnswerWrapper = styled.div<{ isOpen: boolean }>`
   display: grid;
   grid-template-rows: ${({ isOpen }) => (isOpen ? "1fr" : "0fr")};
-  transition: grid-template-rows 0.3s ease;
+  border-top: ${({ isOpen }) => (isOpen ? `1px solid ${colors.orange[400]}` : "none")};
+  padding: ${({ isOpen }) => (isOpen ? "10px" : "0px")};
+  transition: grid-template-rows 0.2s ease;
+  overflow: hidden;
 `;
 
-const Answer = styled.div`
-  padding-top: 16px;
-  font-size: 15px;
+const Answer = styled.div<{ isOpen: boolean }>`
+  font-size: 16px;
+  font-weight: 500;
   color: ${colors.gray[500]};
   line-height: 1.6;
-  border-top: 1px solid ${colors.orange[400]};
   width: 93%;
-  margin: 16px auto 0;
+  min-height: 0;
 
   @media (max-width: 480px) {
     font-size: 14px;
