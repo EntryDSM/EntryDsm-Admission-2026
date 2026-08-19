@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { AppLayout, CalculateLayout } from "./layout";
+import { AdmissionOverviewPage } from "./pages";
 
 // TODO: 자기가 개발한 부분 라우터만 주석 해제하고 수정하기 - 작년 라우터 코드임
 
 // import {
 //   Landing,
 //   NoticeDetailPage,
-//   AdmissionOverviewPage,
 //   MyPage,
 //   FaqPage,
 //   ScoreFirst,
@@ -48,7 +48,7 @@ export const Router = createBrowserRouter([
       },
       {
         path: "/admission-overview",
-        // element: <AdmissionOverviewPage />,
+        element: <AdmissionOverviewPage />,
       },
       {
         path: "/mypage",
