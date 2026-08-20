@@ -285,18 +285,19 @@ const AuthHeaderContainer = styled.div`
   background-color: ${colors.extra.realWhite};
 `;
 
-const SideNavContainer = styled.nav`
+const SideNavContainer = styled.button`
   width: 100%;
   height: auto;
   position: absolute;
   top: 70px;
   left: 0;
+
   @media (min-width: 1200px) {
     display: none;
   }
 `;
 
-const SideNavContent = styled.nav`
+const SideNavContent = styled.button`
   transition: 0.2s ease-in;
   width: 100%;
   height: 52px;
@@ -336,7 +337,7 @@ const NoPathHeaderContainer = styled(HeaderContainer)`
   justify-content: flex-start;
 `;
 
-const NavContent = styled.nav<{ isPath?: boolean }>`
+const NavContent = styled.button<{ isPath?: boolean }>`
   padding: 8px 12px;
   border-radius: 12px;
   display: flex;
@@ -390,9 +391,4 @@ const ButtonName = styled.button`
   border: none;
   cursor: pointer;
   font-size: 22px;
-
-  &:focus-visible {
-    outline: 2px solid ${colors.gray[300]};
-    outline-offset: 2px;
-  }
 `;

@@ -31,7 +31,7 @@ export const StatisticsSection: React.FC = () => {
         <StatCard key={index}>
           <IconWrapper>
             <Icon isText={stat.kind === "text"}>
-              {stat.kind === "text" ? stat.icon : <img src={stat.icon} alt={stat.title} />}
+              {stat.kind === "text" ? stat.icon : <img src={stat.icon} alt="" />}
             </Icon>
           </IconWrapper>
           <Title>{stat.title}</Title>

@@ -58,7 +58,7 @@ const STEP_EXPLANATIONS: Record<CalculationType, Record<string, string>> = {
   },
   qe: {
     "/score": "검정고시 점수를 입력해 주세요.",
-    "/activity": "결석, 지각, 조퇴 등이 없는 경우에는 0을 입력해 주세요.",
+    "/activity": "자격증 보유 여부를 기입해 주세요.",
   },
 };
 
