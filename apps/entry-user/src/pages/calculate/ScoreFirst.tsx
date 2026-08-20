@@ -19,7 +19,7 @@ interface ScorePageProps {
 }
 
 export const ScoreFirst = ({ pageKey }: ScorePageProps) => {
-  const subjects = ["국어", "사회", "역사", "수학", "과학", "기술 · 가정", "영어"];
+  const subjects = ["국어", "사회", "역사", "수학", "과학", "기술·가정", "영어"];
   const [globalGrade, setGlobalGrade] = useState<string | null>(null);
   const [subjectGrades, setSubjectGrades] = useCalculationPageData(pageKey);
 

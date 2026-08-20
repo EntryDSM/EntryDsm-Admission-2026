@@ -82,21 +82,22 @@ export const Landing = () => {
 
     const timeout = setTimeout(() => {
       isScrolling.current = false;
-    }, 1200);
+    }, 1000);
     return () => clearTimeout(timeout);
   }, [step]);
 
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
+      console.log(y);
       const contentStartY = window.innerHeight * maxStep;
-
+      console.log(contentStartY);
       if (y >= contentStartY) {
         if (step !== maxStep) {
           setStep(maxStep);
         }
       }
-      setFixed(y <= window.innerHeight * (maxStep + 0.2));
+      setFixed(y <= window.innerHeight * (maxStep + 0.3));
     };
 
     window.addEventListener("scroll", onScroll);

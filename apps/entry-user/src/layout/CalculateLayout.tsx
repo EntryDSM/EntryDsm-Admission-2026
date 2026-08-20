@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { colors, Text } from "@entry/design";
 import { ScorePageNav, TabSection, Btn } from "@entry/ui";
@@ -80,14 +80,26 @@ export const CalculateLayout = () => {
 
   const activeType = getCurrentType();
 
-  const getScoreNavData = () => {
-    const basePath = CALCULATION_TYPES.find(t => t.key === activeType)?.basePath;
+  const basePath = CALCULATION_TYPES.find(t => t.key === activeType)?.basePath;
+  const scoreNavData = SCORE_PAGES[activeType].map(data => ({
+    ...data,
+    path: `${basePath}${data.path}`,
+  }));
 
-    return SCORE_PAGES[activeType].map(data => ({
-      ...data,
-      path: `${basePath}${data.path}`,
-    }));
-  };
+  useEffect(() => {
+    const routes = SCORE_PAGES[activeType].map(data => `${basePath}${data.path}`);
+    const currentRouteIndex = routes.indexOf(location.pathname);
+
+    if (currentRouteIndex <= 0) return;
+
+    const firstBlockedRoute = routes
+      .slice(0, currentRouteIndex)
+      .find(route => !canProceedToNextCalculationStep(state, route).canProceed);
+
+    if (firstBlockedRoute) {
+      navigate(firstBlockedRoute, { replace: true });
+    }
+  }, [activeType, basePath, location.pathname, navigate, state]);
 
   const currentData = SCORE_PAGES[activeType].find(data => location.pathname.includes(data.path));
   const currentExplanation = (currentData && STEP_EXPLANATIONS[activeType][currentData.path]) || DEFAULT_EXPLANATION;
@@ -149,7 +161,7 @@ export const CalculateLayout = () => {
               </Text>
             </TitleSection>
             <NavigationSection>
-              <ScorePageNav datas={getScoreNavData()} />
+              <ScorePageNav datas={scoreNavData} />
             </NavigationSection>
           </HeaderSection>
 

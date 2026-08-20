@@ -12,21 +12,24 @@ export const createRequiredFieldsValidator =
   (data: TData) =>
     fields.filter(field => isEmptyValue(getObjectFieldValue(data, field)));
 
-interface ValidateRouteDataParams<TState, TRoute extends string, TStateKey extends keyof TState> {
+interface ValidateRouteDataParams<TState, TRouteToStateKey extends Record<string, keyof TState>> {
   state: TState;
   route: string;
-  pageValidations: Partial<Record<TRoute, (data: any) => string[]>>;
-  routeToStateKey: Record<TRoute, TStateKey>;
+  pageValidations: {
+    [R in keyof TRouteToStateKey]?: (data: TState[TRouteToStateKey[R]]) => string[];
+  };
+  routeToStateKey: TRouteToStateKey;
 }
 
-export const validateRouteData = <TState, TRoute extends string, TStateKey extends keyof TState>({
+export const validateRouteData = <TState, TRouteToStateKey extends Record<string, keyof TState>>({
   state,
   route,
   pageValidations,
   routeToStateKey,
-}: ValidateRouteDataParams<TState, TRoute, TStateKey>) => {
-  const validator = pageValidations[route as TRoute];
-  const stateKey = routeToStateKey[route as TRoute];
+}: ValidateRouteDataParams<TState, TRouteToStateKey>) => {
+  const typedRoute = route as keyof TRouteToStateKey;
+  const validator = pageValidations[typedRoute];
+  const stateKey = routeToStateKey[typedRoute];
 
   if (!validator || !stateKey) {
     return { isValid: true, missingFields: [] as string[] };
