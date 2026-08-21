@@ -7,7 +7,7 @@ import {
   NoticeDetailPage,
   AdmissionOverviewPage,
   MyPage,
-  //FaqPage,
+  FaqPage,
   ScoreFirst,
   ScoreSecond,
   ScoreThird,
@@ -44,7 +44,7 @@ export const Router = createBrowserRouter([
       },
       {
         path: "/faq",
-        // element: <FaqPage />,
+        element: <FaqPage />,
       },
       {
         path: "/admission-overview",
