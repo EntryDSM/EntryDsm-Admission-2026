@@ -34,6 +34,7 @@ export const useGetAllNotice = (category: NoticeCategory) => {
   return useQuery({
     queryKey: ["notice", category],
     queryFn: () => getNotice<NoticePageResponse>(`${path}?${searchParams.toString()}`),
+    retry: false,
   });
 };
 
@@ -41,6 +42,7 @@ export const useGetDetailNotice = (noticeId?: string) => {
   return useQuery({
     queryKey: ["notice", noticeId],
     queryFn: () => getNotice<NoticeDetail>(`${path}/${noticeId}`),
+    retry: false,
     enabled: Boolean(noticeId),
   });
 };
