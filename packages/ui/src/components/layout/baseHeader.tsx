@@ -297,7 +297,7 @@ const SideNavContainer = styled.button`
   }
 `;
 
-const SideNavContent = styled.button`
+const SideNavContent = styled.nav`
   transition: 0.2s ease-in;
   width: 100%;
   height: 52px;
