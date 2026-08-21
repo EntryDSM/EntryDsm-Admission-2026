@@ -23,16 +23,22 @@ export const ApplicationTimeline = () => {
       {/* 데스크톱 타임라인 */}
       <DesktopTimeline>
         <TimelineContainer>
-          <TimelineLine />
-          {timelineData.map(item => (
-            <TimelineItem style={{ left: "80px" }} key={item.title}>
-              <TimelineLabel>
-                <LabelTitle>{item.title}</LabelTitle>
-                <LabelDate>{item.date}</LabelDate>
-              </TimelineLabel>
-              <TimelineDot />
-            </TimelineItem>
-          ))}
+          <TimelineInset>
+            <TimelineTrack>
+              <TimelineLine />
+              <TimelineItemsRow>
+                {timelineData.map(item => (
+                  <TimelineItem key={item.title}>
+                    <TimelineLabel>
+                      <LabelTitle>{item.title}</LabelTitle>
+                      <LabelDate>{item.date}</LabelDate>
+                    </TimelineLabel>
+                    <TimelineDot />
+                  </TimelineItem>
+                ))}
+              </TimelineItemsRow>
+            </TimelineTrack>
+          </TimelineInset>
         </TimelineContainer>
       </DesktopTimeline>
 
@@ -67,10 +73,19 @@ const DesktopTimeline = styled.div`
 `;
 
 const TimelineContainer = styled.div`
-  position: relative;
   width: 100%;
   height: 60px;
+
+  @media (max-width: 1024px) {
+    height: 50px;
+  }
+`;
+
+const TimelineInset = styled.div`
+  width: 100%;
+  height: 100%;
   padding: 0 80px;
+  box-sizing: border-box;
 
   @media (max-width: 1200px) {
     padding: 0 60px;
@@ -78,37 +93,44 @@ const TimelineContainer = styled.div`
 
   @media (max-width: 1024px) {
     padding: 0 40px;
-    height: 50px;
   }
+`;
+
+const TimelineTrack = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
 `;
 
 const TimelineLine = styled.div`
   position: absolute;
   top: 50%;
-  left: 80px;
-  right: 80px;
+  left: 0;
+  right: 0;
   height: 3px;
   background: ${colors.orange[700]};
   transform: translateY(-50%);
 
-  @media (max-width: 1200px) {
-    left: 60px;
-    right: 60px;
-  }
-
   @media (max-width: 1024px) {
-    left: 40px;
-    right: 40px;
     height: 2px;
   }
 `;
 
 const TimelineItem = styled.div`
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  position: relative;
+`;
+
+const TimelineItemsRow = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 `;
 
