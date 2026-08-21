@@ -86,7 +86,7 @@ export const NoticeDetailPage = () => {
               {noticeDetail.attachments.map((file, index) => (
                 <AttachmentItem key={index}>
                   <AttachmentName>첨부 파일 | {file.name}</AttachmentName>
-                  <DownloadButton>
+                  <DownloadButton href={file.url} aria-label={`${file.name} 다운로드`}>
                     <DownloadIcon />
                   </DownloadButton>
                 </AttachmentItem>
@@ -190,7 +190,7 @@ const AttachmentName = styled.span`
   color: ${colors.gray[500]};
 `;
 
-const DownloadButton = styled.div`
+const DownloadButton = styled.a`
   display: flex;
   align-items: center;
   justify-content: center;

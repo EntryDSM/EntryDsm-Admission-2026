@@ -68,7 +68,7 @@ export const NoticePage = () => {
                 <NoDataRow>공지사항을 불러오지 못했습니다.</NoDataRow>
               ) : noticeItems.length > 0 ? (
                 noticeItems.map((item: NoticeItem) => (
-                  <TableRow key={item.id} onClick={() => handleNoticeClick(item.id)}>
+                  <TableRow type="button" key={item.id} onClick={() => handleNoticeClick(item.id)}>
                     <ColumnNum>공지</ColumnNum>
                     <ColumnTitle>
                       {item.isPinned && (
@@ -144,7 +144,10 @@ const TableBody = styled.div`
   flex-direction: column;
 `;
 
-const TableRow = styled.div`
+const TableRow = styled.button`
+  width: 100%;
+  background: transparent;
+  text-align: left;
   display: flex;
   align-items: center;
   padding: 16px 0;
@@ -154,6 +157,11 @@ const TableRow = styled.div`
 
   &:hover {
     background-color: ${colors.gray[50]};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    outline-offset: 2px;
   }
 `;
 
