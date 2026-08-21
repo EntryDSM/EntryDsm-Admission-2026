@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { dms, jobis, pick } from "../../../assets";
+import { dms, jobis, pick, xquare } from "../../../assets";
 import { BannerHover } from "./BannerHover";
 import { type BannerId } from "./BannerContainer";
 
@@ -12,6 +12,7 @@ export const BannerDisplay = ({ selectedBanner }: IBannerDisplayType) => {
     dms,
     pick,
     jobis,
+    xquare,
   };
 
   const banners = Object.keys(bannerImages);

@@ -43,7 +43,7 @@ const MentContainer = styled.div`
   }
 `;
 
-const Best = styled.p`
+const Best = styled.span`
   color: ${colors.orange[800]};
 `;
 

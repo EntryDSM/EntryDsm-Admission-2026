@@ -1,26 +1,18 @@
+import { createRequiredFieldsValidator, getObjectFieldValue, isEmptyValue, validateRouteData } from "@entry/utils";
 import type { ApplicationState } from "./ApplicationDataContext";
-
-const isEmpty = (value: unknown) =>
-  value === null ||
-  value === undefined ||
-  (typeof value === "string" && value.trim() === "") ||
-  (Array.isArray(value) && value.length === 0);
-
-const getFieldValue = (obj: unknown, field: string) =>
-  obj && typeof obj === "object" ? (obj as Record<string, unknown>)[field] : undefined;
 
 const validateApplicationClassificationPage = (data: unknown) => {
   const missingFields: string[] = [];
 
   ["typeSelection", "regionSelection", "graduationType"].forEach(field => {
-    if (isEmpty(getFieldValue(data, field))) {
+    if (isEmptyValue(getObjectFieldValue(data, field))) {
       missingFields.push(field);
     }
   });
 
-  const graduationType = getFieldValue(data, "graduationType");
+  const graduationType = getObjectFieldValue(data, "graduationType");
   if (graduationType && graduationType !== "검정고시(중학교 졸업 학력)") {
-    if (isEmpty(getFieldValue(data, "graduationDate"))) {
+    if (isEmptyValue(getObjectFieldValue(data, "graduationDate"))) {
       missingFields.push("graduationDate");
     }
   }
@@ -32,12 +24,12 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
   const missingFields: string[] = [];
 
   ["schoolName", "studentId", "schoolPhone", "teacherName"].forEach(field => {
-    if (isEmpty(getFieldValue(data, field))) {
+    if (isEmptyValue(getObjectFieldValue(data, field))) {
       missingFields.push(field);
     }
   });
 
-  const studentId = getFieldValue(data, "studentId");
+  const studentId = getObjectFieldValue(data, "studentId");
   if (studentId !== null && studentId !== undefined) {
     const studentIdStr = String(studentId);
     if (studentIdStr.length !== 5) {
@@ -49,7 +41,7 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
 };
 
 const validateGuardianInfoPage = (data: unknown) => {
-  const missingFields = requiredFields([
+  const missingFields = createRequiredFieldsValidator([
     "guardianName",
     "guardianNumber",
     "relationship",
@@ -58,25 +50,22 @@ const validateGuardianInfoPage = (data: unknown) => {
     "addressDetail",
   ])(data);
 
-  const relationship = getFieldValue(data, "relationship");
+  const relationship = getObjectFieldValue(data, "relationship");
   const selectedRelationship = Array.isArray(relationship) ? relationship[0] : undefined;
 
-  if (selectedRelationship === "기타" && isEmpty(getFieldValue(data, "otherRelationship"))) {
+  if (selectedRelationship === "기타" && isEmptyValue(getObjectFieldValue(data, "otherRelationship"))) {
     missingFields.push("otherRelationship");
   }
 
   return missingFields;
 };
 
-const requiredFields = (fields: string[]) => (data: unknown) =>
-  fields.filter(field => isEmpty(getFieldValue(data, field)));
-
 const scoreFields = ["kor", "soc", "his", "math", "sci", "tech", "eng"];
 const activityFields = ["earlyLeave", "tardiness", "classExit", "absence", "volunteer", "dsmAlgorithm", "certificate"];
 
 const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/application-classification": validateApplicationClassificationPage,
-  "/applicant-info": requiredFields([
+  "/applicant-info": createRequiredFieldsValidator([
     "idPhoto",
     "applicantName",
     "applicantNumber",
@@ -86,19 +75,19 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   ]),
   "/guardian-info": validateGuardianInfoPage,
   "/middle-school-info": validateMiddleSchoolInfoPage,
-  "/personal-statements": requiredFields(["personalStmt"]),
-  "/statement-of-purpose": requiredFields(["studyPlan"]),
-  "/first-graduate": requiredFields(scoreFields),
-  "/second-graduate": requiredFields(scoreFields),
-  "/third-graduate": requiredFields(scoreFields),
-  "/fourth-graduate": requiredFields(scoreFields),
-  "/activity-graduate": requiredFields(activityFields),
-  "/first-prospective-graduate": requiredFields(scoreFields),
-  "/second-prospective-graduate": requiredFields(scoreFields),
-  "/third-prospective-graduate": requiredFields(scoreFields),
-  "/activity-prospective-graduate": requiredFields(activityFields),
-  "/ged/score": requiredFields(["kor", "soc", "his", "sci", "math", "eng"]),
-  "/ged/attendance-volunteer": requiredFields(["dsmAlgorithm", "certificate"]),
+  "/personal-statements": createRequiredFieldsValidator(["personalStmt"]),
+  "/statement-of-purpose": createRequiredFieldsValidator(["studyPlan"]),
+  "/first-graduate": createRequiredFieldsValidator(scoreFields),
+  "/second-graduate": createRequiredFieldsValidator(scoreFields),
+  "/third-graduate": createRequiredFieldsValidator(scoreFields),
+  "/fourth-graduate": createRequiredFieldsValidator(scoreFields),
+  "/activity-graduate": createRequiredFieldsValidator(activityFields),
+  "/first-prospective-graduate": createRequiredFieldsValidator(scoreFields),
+  "/second-prospective-graduate": createRequiredFieldsValidator(scoreFields),
+  "/third-prospective-graduate": createRequiredFieldsValidator(scoreFields),
+  "/activity-prospective-graduate": createRequiredFieldsValidator(activityFields),
+  "/ged/score": createRequiredFieldsValidator(["kor", "soc", "his", "sci", "math", "eng"]),
+  "/ged/attendance-volunteer": createRequiredFieldsValidator(["dsmAlgorithm", "certificate"]),
 };
 
 const routeToStateKey = {
@@ -120,8 +109,6 @@ const routeToStateKey = {
   "/ged/score": "gedScore",
   "/ged/attendance-volunteer": "attendanceVolunteer",
 } as const satisfies Record<string, keyof ApplicationState>;
-
-const hasMappedStateRoute = (route: string): route is keyof typeof routeToStateKey => route in routeToStateKey;
 
 const fieldNameMap: Record<string, string> = {
   typeSelection: "유형 선택",
@@ -165,14 +152,12 @@ const fieldNameMap: Record<string, string> = {
 };
 
 export const validatePageData = (state: ApplicationState, route: string) => {
-  const validator = pageValidations[route];
-  if (!validator) return { isValid: true, missingFields: [] };
-
-  if (!hasMappedStateRoute(route)) return { isValid: true, missingFields: [] };
-
-  const data = state[routeToStateKey[route]];
-  const missingFields = validator(data);
-  return { isValid: missingFields.length === 0, missingFields };
+  return validateRouteData({
+    state,
+    route,
+    pageValidations,
+    routeToStateKey,
+  });
 };
 
 export const canProceedToNext = (state: ApplicationState, currentRoute: string) => {
