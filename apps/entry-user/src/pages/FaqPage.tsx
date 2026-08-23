@@ -3,14 +3,17 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { TabSection, PageNav } from "@entry/ui";
 
+type FaqCategory = "admission" | "career" | "school" | "dormitory" | "etc";
+type FaqTab = "all" | FaqCategory;
+
 interface FaqItem {
   id: number;
   title: string;
   content: string;
-  category: "admission" | "career" | "school" | "dormitory" | "etc";
+  category: FaqCategory;
 }
 
-const TAB_OPTIONS = [
+const TAB_OPTIONS: { key: FaqTab; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "admission", label: "입학 문의" },
   { key: "career", label: "진로" },
@@ -28,7 +31,7 @@ const CATEGORY_LABELS = {
 };
 
 export const FaqPage = () => {
-  const [activeTab, setActiveTab] = useState<"all" | "admission" | "career" | "school" | "dormitory" | "etc">("all");
+  const [activeTab, setActiveTab] = useState<FaqTab>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
 
@@ -37,7 +40,11 @@ export const FaqPage = () => {
   };
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab as "all" | "admission" | "career" | "school" | "dormitory" | "etc");
+    const selectedTab = TAB_OPTIONS.find(option => option.key === tab);
+
+    if (!selectedTab) return;
+
+    setActiveTab(selectedTab.key);
     setCurrentPage(1);
   };
 
@@ -46,14 +53,14 @@ export const FaqPage = () => {
       id: 1,
       title: "입학 전형 일정은 어떻게 되나요?",
       content:
-        "2026학년도 입학전형 일정은 다음과 같습니다. 원서접수: 10월 20일 오전 9시부터 ~ 23일 오후 5시, 1차 합격자 발표: 10월 27일 오후 3시, 2차 전형 면접: 10월 31일, 최종 합격자 발표: 11월 6일 오전 10시 입니다.",
+        "2027학년도 입학전형 일정은 다음과 같습니다. 원서접수: 10월 19일 오전 9시부터 ~ 22일 오후 5시, 1차 합격자 발표: 10월 26일 오후 3시, 2차 전형 면접: 10월 30일, 최종 합격자 발표: 11월 4일 오전 10시 입니다.",
       category: "admission",
     },
     {
       id: 2,
       title: "합격자 등록은 어떻게 하나요?",
       content:
-        "입학동의서를 11월 7일부터 14일 오후 5시 본교 등록 또는 등기 우편으로 제출하면 됩니다. (본교 접수 시간은 오전 10시부터 오후 5시입니다.)",
+        "입학동의서를 11월 6일부터 13일 오후 5시 본교 등록 또는 등기 우편으로 제출하면 됩니다. (본교 접수 시간은 오전 10시부터 오후 5시입니다.)",
       category: "admission",
     },
     {
@@ -120,7 +127,7 @@ export const FaqPage = () => {
       <ContentWrapper>
         <TitleSection>
           <Title>자주 묻는 질문</Title>
-          <SubTitle>답변 내용은 2026학년도 신입생 전형에 적용되는 내용입니다</SubTitle>
+          <SubTitle>답변 내용은 2027학년도 신입생 전형에 적용되는 내용입니다</SubTitle>
         </TitleSection>
 
         <TabSection options={TAB_OPTIONS} activeType={activeTab} onTypeChange={handleTabChange} />
@@ -135,12 +142,25 @@ export const FaqPage = () => {
             {currentItems.length > 0 ? (
               currentItems.map(item => (
                 <FaqItemContainer key={item.id}>
-                  <TableRow isExpanded={expandedItems.includes(item.id)} onClick={() => handleFaqClick(item.id)}>
+                  <TableRow
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={expandedItems.includes(item.id)}
+                    aria-controls={`faq-answer-${item.id}`}
+                    isExpanded={expandedItems.includes(item.id)}
+                    onClick={() => handleFaqClick(item.id)}
+                    onKeyDown={event => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleFaqClick(item.id);
+                      }
+                    }}
+                  >
                     <ColumnCategory>{CATEGORY_LABELS[item.category]}</ColumnCategory>
                     <ColumnTitle>{item.title}</ColumnTitle>
                   </TableRow>
                   {expandedItems.includes(item.id) && (
-                    <AnswerSection>
+                    <AnswerSection id={`faq-answer-${item.id}`}>
                       <AnswerLabel>답변</AnswerLabel>
                       <AnswerContent>{item.content}</AnswerContent>
                     </AnswerSection>
@@ -153,7 +173,9 @@ export const FaqPage = () => {
           </TableBody>
         </TableContainer>
 
-        <PageNav totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+        {totalPages > 0 && (
+          <PageNav totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+        )}
       </ContentWrapper>
     </PageContainer>
   );
@@ -235,6 +257,11 @@ const TableRow = styled.div<{ isExpanded: boolean }>`
 
   &:hover {
     background-color: ${props => (props.isExpanded ? colors.orange[300] : colors.gray[50])};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    outline-offset: -2px;
   }
 `;
 
