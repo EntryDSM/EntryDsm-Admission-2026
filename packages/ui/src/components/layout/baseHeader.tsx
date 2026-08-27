@@ -113,9 +113,9 @@ export const CommonHeader = () => {
     navigate(path);
   };
 
-  const handleLoginClick = () => {
-    window.location.href = "https://auth.entrydsm.hs.kr";
-  };
+  // const handleLoginClick = () => {
+  //   window.location.href = "https://auth.entrydsm.hs.kr";
+  // };
 
   // const isLoggedIn = accessToken && userInfo && !isError;
   // const isLoading = accessToken && isPending;
