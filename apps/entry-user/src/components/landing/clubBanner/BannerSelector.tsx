@@ -12,6 +12,7 @@ export const BannerSelector = ({ selectedBanner, onBannerChange }: IBannerSelect
     { id: "dms", label: "DMS" },
     { id: "pick", label: "PiCK" },
     { id: "jobis", label: "JOBIS" },
+    { id: "xquare", label: "XQUARE" },
   ];
 
   return (

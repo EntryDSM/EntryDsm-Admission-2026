@@ -8,12 +8,12 @@ const faqList = [
   {
     question: "입학 전형 일정은 어떻게 되나요?",
     answer:
-      "2026학년도 입학전형 일정은 다음과 같습니다. 원서접수: 10월 20일 오전 9시부터 ~ 23일 오후 5시, 1차 합격자 발표: 10월 27일 오후 3시, 2차 전형 면접: 10월 31일, 최종 합격자 발표: 11월 6일 오전 10시 입니다.",
+      "2027학년도 입학전형 일정은 다음과 같습니다. 원서접수: 10월 19일 오전 9시부터 ~ 22일 오후 5시, 1차 합격자 발표: 10월 26일 오후 3시, 2차 전형 면접: 10월 30일, 최종 합격자 발표: 11월 4일 오전 10시 입니다.",
   },
   {
     question: "합격자 등록은 어떻게 하나요?",
     answer:
-      "입학동의서를 11월 7일부터 14일 오후 5시 본교 등록 또는 등기 우편으로 제출하면 됩니다. (본교 접수 시간은 오전 10시부터 오후 5시입니다.)",
+      "입학동의서를 11월 6일부터 13일 오후 5시 본교 등록 또는 등기 우편으로 제출하면 됩니다. (본교 접수 시간은 오전 10시부터 오후 5시입니다.)",
   },
   {
     question: "졸업 후 진로는 어떻게 되나요?",
@@ -31,7 +31,7 @@ const faqList = [
 ];
 
 export const FaqSection = () => {
-  const [openIndex, setOpenIndex] = useState(0);
+  const [openIndex, setOpenIndex] = useState(-1);
   const navigate = useNavigate();
 
   const toggleIndex = (index: number) => {
@@ -53,7 +53,7 @@ export const FaqSection = () => {
           const isOpen = openIndex === index;
           return (
             <FaqItem key={index} isOpen={isOpen}>
-              <QuestionWrapper onClick={() => toggleIndex(index)}>
+              <QuestionWrapper isOpen={isOpen} onClick={() => toggleIndex(index)}>
                 <Question>
                   <Number isOpen={isOpen}>{`0${index + 1}`}</Number>
                   {faq.question}
@@ -61,7 +61,7 @@ export const FaqSection = () => {
                 <Icon src={isOpen ? upArrowIcon : downArrowIcon} alt="toggle" />
               </QuestionWrapper>
               <AnswerWrapper isOpen={isOpen}>
-                <Answer>{faq.answer}</Answer>
+                <Answer isOpen={isOpen}>{faq.answer}</Answer>
               </AnswerWrapper>
             </FaqItem>
           );
@@ -137,7 +137,6 @@ const FaqItem = styled.div<{ isOpen: boolean }>`
   padding: 20px;
   margin-bottom: 10px;
   cursor: pointer;
-  border: 1.5px solid ${colors.gray[100]};
   transition: background-color 0.3s;
 
   &:hover {
@@ -145,10 +144,15 @@ const FaqItem = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-const QuestionWrapper = styled.button`
+const QuestionWrapper = styled.button<{ isOpen: boolean }>`
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: transparent;
+  border: none;
+  padding-bottom: ${({ isOpen }) => (isOpen ? "10px" : "0px")};
+  cursor: pointer;
 `;
 
 const Question = styled.div`
@@ -167,17 +171,19 @@ const Question = styled.div`
 const AnswerWrapper = styled.div<{ isOpen: boolean }>`
   display: grid;
   grid-template-rows: ${({ isOpen }) => (isOpen ? "1fr" : "0fr")};
-  transition: grid-template-rows 0.3s ease;
+  border-top: ${({ isOpen }) => (isOpen ? `1px solid ${colors.orange[400]}` : "none")};
+  padding: ${({ isOpen }) => (isOpen ? "10px" : "0px")};
+  transition: grid-template-rows 0.2s ease;
+  overflow: hidden;
 `;
 
-const Answer = styled.div`
-  padding-top: 16px;
-  font-size: 15px;
+const Answer = styled.div<{ isOpen: boolean }>`
+  font-size: 16px;
+  font-weight: 500;
   color: ${colors.gray[500]};
   line-height: 1.6;
-  border-top: 1px solid ${colors.orange[400]};
   width: 93%;
-  margin: 16px auto 0;
+  min-height: 0;
 
   @media (max-width: 480px) {
     font-size: 14px;

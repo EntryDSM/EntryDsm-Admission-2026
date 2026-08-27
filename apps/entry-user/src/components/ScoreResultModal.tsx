@@ -15,8 +15,13 @@ interface ScoreResult {
   total: string;
 }
 
-const MOCK_RESULTS: ScoreResult[] = [{ name: "졸업 예정자", score: "100", total: "200" }];
-
+//TODO: api 연동할 때 계산된 값 가지고 오기!!
+const MOCK_RESULTS: ScoreResult[] = [
+  { name: "졸업 예정자", score: "100", total: "200" },
+  { name: "사회통합 전형", score: "100", total: "200" },
+  { name: "마이스터 인재", score: "100", total: "200" },
+];
+//TODO: focus trap 활성화 및 esc 버튼 눌렀을 때 모달창 나갈 수 있게 접근성 향상 시키기
 export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => {
   const loading = false;
   const error = null;
@@ -64,7 +69,7 @@ export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => 
           <ResultList>
             {MOCK_RESULTS.map((result, index) => (
               <ResultItem key={index}>
-                <Text fontSize={24} fontWeight={400}>
+                <Text fontSize={24} fontWeight={500}>
                   {result.name}
                 </Text>
                 <ScoreText>
