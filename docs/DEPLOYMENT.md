@@ -11,22 +11,22 @@ push (main → prod / develop → stag)
        ├─ build job:  turbo build → artifact 업로드   (AWS 자격증명 없음)
        └─ deploy job: artifact 다운로드 → aws s3 sync → CloudFront 무효화 + smoke test
             └─ S3 단일 버킷 (ap-northeast-2, 비공개)  ← OAC ── CloudFront (ACM, SPA rewrite)
-                 └─ {env}/{app}/ 폴더로 구분                 │ 배포별 Origin path = /{env}/{app}
+                 └─ dsm-Entry/frontend/{app}(prod)·dsm-Entry/frontend/stag/{app} 폴더로 구분 │ 배포별 Origin path = /폴더
                                                                    ↑
                                                  Cloudflare DNS (CNAME, 회색 구름 = DNS 전용)
 ```
 
-| 앱               | prod 도메인                | stag 도메인                     | 버킷 폴더 (prod / stag)                           | CloudFront ID (prod / stag 기입) |
-| ---------------- | -------------------------- | ------------------------------- | ------------------------------------------------- | -------------------------------- |
-| entry-user       | `entrydsm.hs.kr`           | `stag.entrydsm.hs.kr`           | `prod/entry-user` / `stag/entry-user`             |                                  |
-| entry-auth       | `auth.entrydsm.hs.kr`      | `auth-stag.entrydsm.hs.kr`      | `prod/entry-auth` / `stag/entry-auth`             |                                  |
-| entry-admin      | `admin.entrydsm.hs.kr`     | `admin-stag.entrydsm.hs.kr`     | `prod/entry-admin` / `stag/entry-admin`           |                                  |
-| entry-admission  | `admission.entrydsm.hs.kr` | `admission-stag.entrydsm.hs.kr` | `prod/entry-admission` / `stag/entry-admission`   |                                  |
-| entry-monitoring | `monitor.entrydsm.hs.kr`   | `monitor-stag.entrydsm.hs.kr`   | `prod/entry-monitoring` / `stag/entry-monitoring` |                                  |
+| 앱               | prod 도메인                | stag 도메인                     | 버킷 폴더 (prod / stag)                                                            | CloudFront ID (prod / stag 기입) |
+| ---------------- | -------------------------- | ------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------- |
+| entry-user       | `entrydsm.hs.kr`           | `stag.entrydsm.hs.kr`           | `dsm-Entry/frontend/entry-user` / `dsm-Entry/frontend/stag/entry-user`             |                                  |
+| entry-auth       | `auth.entrydsm.hs.kr`      | `auth-stag.entrydsm.hs.kr`      | `dsm-Entry/frontend/entry-auth` / `dsm-Entry/frontend/stag/entry-auth`             |                                  |
+| entry-admin      | `admin.entrydsm.hs.kr`     | `admin-stag.entrydsm.hs.kr`     | `dsm-Entry/frontend/entry-admin` / `dsm-Entry/frontend/stag/entry-admin`           |                                  |
+| entry-admission  | `admission.entrydsm.hs.kr` | `admission-stag.entrydsm.hs.kr` | `dsm-Entry/frontend/entry-admission` / `dsm-Entry/frontend/stag/entry-admission`   |                                  |
+| entry-monitoring | `monitor.entrydsm.hs.kr`   | `monitor-stag.entrydsm.hs.kr`   | `dsm-Entry/frontend/entry-monitoring` / `dsm-Entry/frontend/stag/entry-monitoring` |                                  |
 
 stag는 `-stag` 접미사가 붙는 **플랫 서브도메인** 방식이라 모든 도메인이 `entrydsm.hs.kr`의 한 단계 아래다 → 와일드카드 인증서 1장으로 전부 커버된다(2단계). smoke test도 이 규칙(`{sub}.entrydsm.hs.kr` / `{sub}-stag.entrydsm.hs.kr`)으로 도메인을 계산하므로 임의로 바꾸면 배포 검증이 실패한다.
 
-- **S3 버킷은 1개를 전 앱·환경이 공유**하고 `{env}/{앱 이름}` 폴더(prefix)로 구분한다: `prod/entry-user`, `prod/entry-auth`, … `stag/entry-user`, … (총 10개 폴더). 폴더 이름은 워크플로우가 이 규칙으로 자동 계산하므로 임의로 바꿀 수 없고, 배포 시 자동 생성되므로 미리 만들 필요도 없다.
+- **S3 버킷은 1개를 전 앱·환경이 공유**하고 폴더(prefix)로 구분한다: prod는 `dsm-Entry/frontend/{앱 이름}`, stag는 `dsm-Entry/frontend/stag/{앱 이름}` (총 10개 폴더). 폴더 이름은 워크플로우가 이 규칙으로 자동 계산하므로 임의로 바꿀 수 없고, 배포 시 자동 생성되므로 미리 만들 필요도 없다.
 - CloudFront 배포는 도메인마다 1개씩 **총 10개**. 각 배포의 **Origin path**가 자기 폴더를 가리킨다(4단계).
 - Cloudflare는 프록시(오렌지 구름)가 아니라 **DNS 전용(회색 구름)** 으로만 쓴다. TLS는 CloudFront가 ACM 인증서로 종료한다.
 
@@ -52,7 +52,7 @@ CloudFront는 **버지니아 북부(us-east-1)** 리전의 ACM 인증서만 사�
 - [ ] **퍼블릭 액세스 차단 4개 항목 전부 ON** (버킷은 CloudFront를 통해서만 읽힌다)
 - [ ] 속성 → **정적 웹 사이트 호스팅: 비활성화** (REST 엔드포인트를 원본으로 쓴다)
 - [ ] 기존에 퍼블릭 정책이나 ACL이 있으면 제거 (버킷 정책은 4단계에서 OAC용으로 교체)
-- [ ] `prod/`·`stag/` 폴더 경로에 배포 산출물 외 다른 파일이 없어야 한다 (다른 용도 파일은 별도 경로에 두면 배포가 건드리지 않음)
+- [ ] `dsm-Entry/frontend/` 폴더 경로에 배포 산출물 외 다른 파일이 없어야 한다 (다른 용도 파일은 별도 경로에 두면 배포가 건드리지 않음)
 - [ ] (선택) 버저닝 활성화 + 수명 주기 규칙 — 만료는 반드시 **이전 버전(NoncurrentVersionExpiration, 예: 30일)에만** 적용. ⚠️ 현재(Current) 객체에 만료 규칙을 걸면 서비스 중인 파일이 삭제된다
 
 ## 4. CloudFront 배포 10개 생성
@@ -61,13 +61,13 @@ CloudFront는 **버지니아 북부(us-east-1)** 리전의 ACM 인증서만 사�
 
 ### 4-1. 원본(Origin) — 공유 버킷 + Origin path
 
-| 항목            | 값                                                                                                                                                              |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Origin domain   | 공유 버킷 선택 시 자동 완성되는 `버킷명.s3.ap-northeast-2.amazonaws.com` — **"웹 사이트 엔드포인트 사용" 버튼이 떠도 누르지 않는다**                            |
-| **Origin path** | 이 배포가 서비스할 폴더. 슬래시로 시작, 끝 슬래시 없음. 예: prod user 배포는 `/prod/entry-user`, stag admin 배포는 `/stag/entry-admin` (1단계 표의 폴더와 일치) |
-| Origin access   | **Origin access control settings (OAC)** 선택 → 첫 배포에서 `Create new OAC` 생성, **나머지 9개 배포는 같은 OAC를 재사용**                                      |
+| 항목            | 값                                                                                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Origin domain   | 공유 버킷 선택 시 자동 완성되는 `버킷명.s3.ap-northeast-2.amazonaws.com` — **"웹 사이트 엔드포인트 사용" 버튼이 떠도 누르지 않는다**                                                             |
+| **Origin path** | 이 배포가 서비스할 폴더. 슬래시로 시작, 끝 슬래시 없음. 예: prod user 배포는 `/dsm-Entry/frontend/entry-user`, stag admin 배포는 `/dsm-Entry/frontend/stag/entry-admin` (1단계 표의 폴더와 일치) |
+| Origin access   | **Origin access control settings (OAC)** 선택 → 첫 배포에서 `Create new OAC` 생성, **나머지 9개 배포는 같은 OAC를 재사용**                                                                       |
 
-Origin path를 설정하면 뷰어의 `/index.html` 요청이 S3 키 `prod/entry-user/index.html`로 매핑된다. 배포마다 폴더가 다르므로 **10개 배포 전부 Origin path를 정확히 입력하는 것이 핵심**이다.
+Origin path를 설정하면 뷰어의 `/index.html` 요청이 S3 키 `dsm-Entry/frontend/entry-user/index.html`로 매핑된다. 배포마다 폴더가 다르므로 **10개 배포 전부 Origin path를 정확히 입력하는 것이 핵심**이다.
 
 버킷 정책은 공유 버킷에 **한 번만** 설정하되, 10개 배포 ARN을 전부 나열한다 (콘솔이 배포 생성 시 보여주는 정책은 배포 1개짜리이므로 그대로 붙여넣지 말고 아래처럼 합친다. `<>` 부분을 실제 값으로 교체):
 
@@ -187,7 +187,7 @@ Cloudflare → **entrydsm.hs.kr zone** → DNS → 레코드 10개 추가. **전
 GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성화, 프로그래밍 방식 액세스만).
 
 1. IAM → 사용자 → 생성: `github-actions-entry-deploy`
-2. 인라인 정책으로 아래 최소 권한 부여 (`<>`를 실제 버킷명·계정ID·배포ID로 교체, 10개씩 전부 나열):
+2. 인라인 정책으로 아래 최소 권한 부여 (`<>`를 실제 버킷명·계정ID·배포ID로 교체, 배포 ID는 10개 전부 나열):
 
 ```json
 {
@@ -202,8 +202,8 @@ GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성�
     {
       "Sid": "SyncWrite",
       "Effect": "Allow",
-      "Action": ["s3:PutObject", "s3:DeleteObject"],
-      "Resource": ["arn:aws:s3:::<버킷명>/prod/*", "arn:aws:s3:::<버킷명>/stag/*"]
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/*"
     },
     {
       "Sid": "Invalidate",
@@ -255,7 +255,7 @@ Settings → Secrets and variables → Actions → **Secrets**:
 ### 7-3. 환경별 Secrets (prod / stag 각각, 같은 이름·다른 값)
 
 배포 ID는 비밀은 아니지만 **secret으로 넣어야 퍼블릭 Actions 로그에서 자동 마스킹**된다.
-폴더 경로는 워크플로우가 `{env}/{앱}` 규칙으로 계산하므로 별도 설정이 없다.
+폴더 경로는 워크플로우가 계산하므로 별도 설정이 없다 (prod `dsm-Entry/frontend/{앱}`, stag `dsm-Entry/frontend/stag/{앱}`).
 
 | 이름                          | 값                           |
 | ----------------------------- | ---------------------------- |
@@ -277,7 +277,7 @@ Settings → Secrets and variables → Actions → **Secrets**:
 | `VITE_ADMISSION_ROUND`  | `2026-1`                 | `2026-1`                      | monitoring                   |
 
 ⚠️ **변수를 만들어 두지 않으면 빈 문자열이 번들에 박히고**, 코드의 `?? "기본값"` 은 빈 문자열에는 동작하지 않는다.
-[deploy.yaml](../.github/workflows/deploy.yaml)의 `Validate environment configuration` 스텝이 앱별 필수 변수가 비어 있으면 배포를 실패시키므로, 빨간불이 나면 이 표를 다시 확인한다.
+[deploy.yaml](../.github/workflows/deploy.yaml)의 `Validate build variables` 스텝(build job)이 **4개 변수 전부** 비어 있지 않은지 빌드 전에 검사해 실패시키고, `Validate deploy configuration` 스텝(deploy job)이 `S3_BUCKET_NAME`·`CF_DIST_ID_*` secret을 검사한다. 빨간불이 나면 이 표와 7-2·7-3을 다시 확인한다.
 
 ## 8. 배포 파이프라인 동작
 
@@ -319,7 +319,7 @@ git push origin main   # 또는 develop
 
 - 브랜치 보호·PR 규칙·Environment 브랜치 정책을 전부 통과하므로 우회 경로가 없고, 무엇이 배포됐는지 git 이력에 그대로 남는다.
 - 워크플로우에 "임의 SHA 배포" 입력을 일부러 두지 않았다 — Environment 브랜치 정책은 워크플로우 실행의 ref만 검사하므로, main에서 실행하며 다른 SHA를 체크아웃하면 prod 보호가 우회되기 때문.
-- Actions 탭의 **Run workflow**(workflow_dispatch)는 해당 브랜치 **HEAD 재배포**용이다 (GitHub 변수 수정 후 재배포 등).
+- Actions 탭의 **Run workflow**(workflow_dispatch)는 해당 브랜치 **HEAD 재배포**용이다 (GitHub 변수 수정 후 재배포 등). 워크플로우의 브랜치 가드 때문에 **main·develop에서만 동작**하며, 다른 브랜치를 선택해 실행하면 job이 스킵된다.
 - S3 버저닝을 켜 두었다면 콘솔에서 개별 객체 복원도 가능하다.
 
 ## 11. 트러블슈팅

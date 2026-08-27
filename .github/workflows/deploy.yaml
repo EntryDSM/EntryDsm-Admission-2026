@@ -24,6 +24,9 @@ jobs:
   # AWS 자격증명을 일절 참조하지 않아 공급망 공격 시에도 키가 노출되지 않는다.
   build:
     name: Build all apps
+    # workflow_dispatch는 아무 브랜치에서나 실행될 수 있으므로 배포 대상 브랜치만 허용
+    # (Environment 배포 브랜치 정책과 이중 방어)
+    if: github.ref_name == 'main' || github.ref_name == 'develop'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: ${{ github.ref_name == 'main' && 'prod' || 'stag' }}
@@ -141,9 +144,10 @@ jobs:
             dist_secret: CF_DIST_ID_ENTRY_MONITORING
     env:
       # 버킷명·배포 ID는 secret으로 두어 퍼블릭 Actions 로그에서 자동 마스킹.
-      # 버킷은 전 앱·환경이 공유하고 {env}/{app} 폴더로 구분한다 (CloudFront Origin path가 매핑).
+      # 버킷은 전 앱·환경이 공유하고 폴더로 구분한다 (CloudFront Origin path가 매핑, 대소문자 구분):
+      # prod = dsm-Entry/frontend/{app}, stag = dsm-Entry/frontend/stag/{app}
       S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-      DEPLOY_PREFIX: ${{ format('{0}/{1}', github.ref_name == 'main' && 'prod' || 'stag', matrix.app) }}
+      DEPLOY_PREFIX: ${{ format('{0}/{1}', github.ref_name == 'main' && 'dsm-Entry/frontend' || 'dsm-Entry/frontend/stag', matrix.app) }}
       CF_DIST_ID: ${{ secrets[matrix.dist_secret] }}
     steps:
       - name: Validate deploy configuration
@@ -210,8 +214,9 @@ jobs:
         run: |
           # prod: entrydsm.hs.kr, auth.entrydsm.hs.kr, ...
           # stag(플랫): stag.entrydsm.hs.kr, auth-stag.entrydsm.hs.kr, ...
+          # 브랜치명은 템플릿 보간 대신 러너 기본 환경변수로 읽는다 (스크립트 인젝션 방지)
           SUB="${{ matrix.subdomain }}"
-          if [ "${{ github.ref_name }}" = "main" ]; then
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
             DOMAIN="${SUB:+$SUB.}entrydsm.hs.kr"
           else
             DOMAIN="${SUB:+$SUB-}stag.entrydsm.hs.kr"
