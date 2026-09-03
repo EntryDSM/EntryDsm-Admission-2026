@@ -1,0 +1,10 @@
+# SHA로 핀된 GitHub Actions를 주기적으로 최신 커밋으로 갱신
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

@@ -56,7 +56,7 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderPr
 
   const handleLogout = () => {
     // 로그아웃 로직 (예: 토큰 삭제)
-    window.location.href = "https://entrydsm.kr/";
+    window.location.href = "https://entrydsm.hs.kr/";
   };
 
   return (
@@ -114,7 +114,7 @@ export const CommonHeader = () => {
   };
 
   const handleLoginClick = () => {
-    window.location.href = "https://auth.entrydsm.kr";
+    window.location.href = "https://auth.entrydsm.hs.kr";
   };
 
   //TODO: api 연동하기 전
@@ -182,7 +182,7 @@ export const CommonHeader = () => {
 export const AuthHeader = () => {
   return (
     <AuthHeaderContainer>
-      <LogoContainer href="https://entrydsm.kr/" aria-label="EntryDSM 홈으로 이동">
+      <LogoContainer href="https://entrydsm.hs.kr/" aria-label="EntryDSM 홈으로 이동">
         <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
@@ -205,7 +205,7 @@ export const MonitoringHeader = () => {
       </Flex>
       <Flex gap={20} alignItems="center" height="fit-content" width="fit-content">
         <Btn
-          onClick={() => window.open("https://entrydsm.kr", "_blank", "noopener,noreferrer")}
+          onClick={() => window.open("https://entrydsm.hs.kr", "_blank", "noopener,noreferrer")}
           aria-label="EntryDSM 홈으로 이동"
           backgroundColor={"#6668F1"}
           hoverBackgroundColor={"#6668F1"}
