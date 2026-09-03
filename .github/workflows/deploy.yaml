@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths-ignore:
       - "**.md"
       - "docs/**"
@@ -26,10 +26,10 @@ jobs:
     name: Build all apps
     # workflow_dispatch는 아무 브랜치에서나 실행될 수 있으므로 배포 대상 브랜치만 허용
     # (Environment 배포 브랜치 정책과 이중 방어)
-    if: github.ref_name == 'main' || github.ref_name == 'develop'
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: ${{ github.ref_name == 'main' && 'prod' || 'stag' }}
+    environment: prod
     env:
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       VITE_IDENTITY_API_URL: ${{ vars.VITE_IDENTITY_API_URL }}
@@ -52,7 +52,7 @@ jobs:
           fail=0
           for v in VITE_API_BASE_URL VITE_IDENTITY_API_URL VITE_USER_APP_URL VITE_AUTH_APP_URL VITE_ADMISSION_APP_URL VITE_SCHOOL_HOMEPAGE_URL VITE_AWS_CONSOLE_URL VITE_ADMISSION_ROUND; do
             if [ -z "${!v}" ]; then
-              echo "::error::$v 가 비어 있습니다. '${{ github.ref_name == 'main' && 'prod' || 'stag' }}' GitHub Environment의 Variables를 확인하세요."
+              echo "::error::$v 가 비어 있습니다. 'prod' GitHub Environment의 Variables를 확인하세요."
               fail=1
             fi
           done
@@ -126,7 +126,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: ${{ github.ref_name == 'main' && 'prod' || 'stag' }}
+    environment: prod
     strategy:
       fail-fast: false
       matrix:
@@ -148,10 +148,10 @@ jobs:
             dist_secret: CF_DIST_ID_ENTRY_MONITORING
     env:
       # 버킷명·배포 ID는 secret으로 두어 퍼블릭 Actions 로그에서 자동 마스킹.
-      # 버킷은 전 앱·환경이 공유하고 폴더로 구분한다 (CloudFront Origin path가 매핑, 대소문자 구분):
-      # prod = dsm-Entry/frontend/{app}, stag = dsm-Entry/frontend/stag/{app}
+      # 버킷은 전 앱이 공유하고 폴더로 구분한다 (CloudFront Origin path가 매핑, 대소문자 구분):
+      # dsm-Entry/frontend/{app}
       S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-      DEPLOY_PREFIX: ${{ format('{0}/{1}', github.ref_name == 'main' && 'dsm-Entry/frontend' || 'dsm-Entry/frontend/stag', matrix.app) }}
+      DEPLOY_PREFIX: dsm-Entry/frontend/${{ matrix.app }}
       CF_DIST_ID: ${{ secrets[matrix.dist_secret] }}
     steps:
       - name: Validate deploy configuration
@@ -162,7 +162,7 @@ jobs:
             fail=1
           fi
           if [ -z "$CF_DIST_ID" ]; then
-            echo "::error::${{ matrix.app }}의 ${{ matrix.dist_secret }} secret이 비어 있습니다. '${{ github.ref_name == 'main' && 'prod' || 'stag' }}' GitHub Environment의 Secrets를 확인하세요."
+            echo "::error::${{ matrix.app }}의 ${{ matrix.dist_secret }} secret이 비어 있습니다. 'prod' GitHub Environment의 Secrets를 확인하세요."
             fail=1
           fi
           exit $fail
@@ -216,15 +216,9 @@ jobs:
 
       - name: Smoke test
         run: |
-          # prod: entrydsm.hs.kr, auth.entrydsm.hs.kr, ...
-          # stag(플랫): stag.entrydsm.hs.kr, auth-stag.entrydsm.hs.kr, ...
-          # 브랜치명은 템플릿 보간 대신 러너 기본 환경변수로 읽는다 (스크립트 인젝션 방지)
+          # entrydsm.hs.kr, auth.entrydsm.hs.kr, ...
           SUB="${{ matrix.subdomain }}"
-          if [ "$GITHUB_REF_NAME" = "main" ]; then
-            DOMAIN="${SUB:+$SUB.}entrydsm.hs.kr"
-          else
-            DOMAIN="${SUB:+$SUB-}stag.entrydsm.hs.kr"
-          fi
+          DOMAIN="${SUB:+$SUB.}entrydsm.hs.kr"
 
           # 1) SPA 딥링크: 200 + text/html 이어야 한다 (CloudFront Function rewrite 동작 확인)
           out=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code} %{content_type}" "https://$DOMAIN/__deploy_smoke__") || {
