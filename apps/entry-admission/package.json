@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "@entry/ui": "^0.0.0",
+    "@entry/design": "^0.0.0",
+    "@entry/utils": "^0.0.0",
+    "@entry/hooks": "^0.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

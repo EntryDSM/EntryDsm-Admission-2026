@@ -1,12 +1,9 @@
 {
-  "name": "utils",
-  "module": "index.ts",
-  "type": "module",
+  "name": "@entry/utils",
+  "version": "0.0.0",
   "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
   }
 }

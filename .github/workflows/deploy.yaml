@@ -1,0 +1,240 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  # 같은 브랜치 HEAD 재배포용. 임의 SHA/브랜치 입력은 Environment 브랜치 정책을
+  # 우회할 수 있으므로 제공하지 않는다 — 롤백은 revert 커밋 후 push (docs/DEPLOYMENT.md 참고)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+# sync 도중 취소되면 반쪽 배포가 되므로 취소하지 않고 순차 실행
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # 빌드 job: 저장소 코드(의존성 스크립트 포함)를 실행하는 유일한 job.
+  # AWS 자격증명을 일절 참조하지 않아 공급망 공격 시에도 키가 노출되지 않는다.
+  build:
+    name: Build all apps
+    # workflow_dispatch는 아무 브랜치에서나 실행될 수 있으므로 배포 대상 브랜치만 허용
+    # (Environment 배포 브랜치 정책과 이중 방어)
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: prod
+    env:
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_IDENTITY_API_URL: ${{ vars.VITE_IDENTITY_API_URL }}
+      VITE_USER_APP_URL: ${{ vars.VITE_USER_APP_URL }}
+      VITE_AUTH_APP_URL: ${{ vars.VITE_AUTH_APP_URL }}
+      VITE_ADMISSION_APP_URL: ${{ vars.VITE_ADMISSION_APP_URL }}
+      VITE_SCHOOL_HOMEPAGE_URL: ${{ vars.VITE_SCHOOL_HOMEPAGE_URL }}
+      VITE_AWS_CONSOLE_URL: ${{ vars.VITE_AWS_CONSOLE_URL }}
+      VITE_ADMISSION_ROUND: ${{ vars.VITE_ADMISSION_ROUND }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      # 미설정 변수는 빈 문자열로 번들에 박히고 코드의 `??` 기본값도 동작하지 않으므로
+      # 빌드 전에 실패로 잡는다 (entry-admin은 런타임에 흰 화면이 나는 케이스)
+      - name: Validate build variables
+        run: |
+          fail=0
+          for v in VITE_API_BASE_URL VITE_IDENTITY_API_URL VITE_USER_APP_URL VITE_AUTH_APP_URL VITE_ADMISSION_APP_URL VITE_SCHOOL_HOMEPAGE_URL VITE_AWS_CONSOLE_URL VITE_ADMISSION_ROUND; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v 가 비어 있습니다. 'prod' GitHub Environment의 Variables를 확인하세요."
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bunx --no-install turbo run build
+
+      # 배포 산출물에 비밀·디버그 파일이 섞여 나가는 것을 차단
+      - name: Check dist for forbidden files
+        run: |
+          found=$(find apps/*/dist -type f \( -name ".env*" -o -name "*.map" -o -name "*.pem" -o -name "*.key" \) 2>/dev/null || true)
+          if [ -n "$found" ]; then
+            echo "::error::배포 산출물에 공개하면 안 되는 파일이 있습니다:"
+            echo "$found"
+            exit 1
+          fi
+
+      - name: Upload entry-user dist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist-entry-user
+          path: apps/entry-user/dist
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload entry-auth dist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist-entry-auth
+          path: apps/entry-auth/dist
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload entry-admin dist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist-entry-admin
+          path: apps/entry-admin/dist
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload entry-admission dist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist-entry-admission
+          path: apps/entry-admission/dist
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload entry-monitoring dist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist-entry-monitoring
+          path: apps/entry-monitoring/dist
+          retention-days: 14
+          if-no-files-found: error
+
+  # 배포 job: 저장소 코드를 체크아웃하지도, 실행하지도 않는다.
+  # 검증된 artifact를 받아 aws CLI만 실행하므로 자격증명이 빌드 스크립트와 격리된다.
+  deploy:
+    name: Deploy ${{ matrix.app }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: prod
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: entry-user
+            subdomain: ""
+            dist_secret: CF_DIST_ID_ENTRY_USER
+          - app: entry-auth
+            subdomain: auth
+            dist_secret: CF_DIST_ID_ENTRY_AUTH
+          - app: entry-admin
+            subdomain: admin
+            dist_secret: CF_DIST_ID_ENTRY_ADMIN
+          - app: entry-admission
+            subdomain: admission
+            dist_secret: CF_DIST_ID_ENTRY_ADMISSION
+          - app: entry-monitoring
+            subdomain: monitor
+            dist_secret: CF_DIST_ID_ENTRY_MONITORING
+    env:
+      # 버킷명·배포 ID는 secret으로 두어 퍼블릭 Actions 로그에서 자동 마스킹.
+      # 버킷은 전 앱이 공유하고 폴더로 구분한다 (CloudFront Origin path가 매핑, 대소문자 구분):
+      # dsm-Entry/frontend/{app}
+      S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      DEPLOY_PREFIX: dsm-Entry/frontend/${{ matrix.app }}
+      CF_DIST_ID: ${{ secrets[matrix.dist_secret] }}
+    steps:
+      - name: Validate deploy configuration
+        run: |
+          fail=0
+          if [ -z "$S3_BUCKET" ]; then
+            echo "::error::S3_BUCKET_NAME secret이 비어 있습니다. 저장소 Secrets를 확인하세요."
+            fail=1
+          fi
+          if [ -z "$CF_DIST_ID" ]; then
+            echo "::error::${{ matrix.app }}의 ${{ matrix.dist_secret }} secret이 비어 있습니다. 'prod' GitHub Environment의 Secrets를 확인하세요."
+            fail=1
+          fi
+          exit $fail
+
+      - name: Download build artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist-${{ matrix.app }}
+          path: dist
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # 업로드 순서: 해시 자산 → 고정 이름 파일 → HTML.
+      # --delete를 쓰지 않는다: 배포 중 이전 해시 자산을 지우면 이미 열려 있는 탭과
+      # 캐시된 이전 HTML이 참조하는 파일이 사라져 장애가 난다. 오래된 자산 정리는
+      # 배포와 분리해 주기적으로 수행한다 (docs/DEPLOYMENT.md 참고).
+      - name: Upload hashed assets (immutable)
+        run: >
+          aws s3 sync dist/assets "s3://$S3_BUCKET/$DEPLOY_PREFIX/assets"
+          --only-show-errors --no-follow-symlinks
+          --cache-control "public,max-age=31536000,immutable"
+
+      - name: Upload fixed-name root files (short TTL)
+        run: >
+          aws s3 sync dist "s3://$S3_BUCKET/$DEPLOY_PREFIX"
+          --only-show-errors --no-follow-symlinks
+          --exclude "assets/*" --exclude "*.html"
+          --cache-control "public,max-age=300"
+
+      - name: Upload HTML (no-cache, last)
+        run: >
+          aws s3 sync dist "s3://$S3_BUCKET/$DEPLOY_PREFIX"
+          --only-show-errors --no-follow-symlinks
+          --exclude "*" --include "*.html"
+          --cache-control "no-cache"
+          --content-type "text/html; charset=utf-8"
+
+      - name: Invalidate CloudFront and wait
+        run: |
+          INV_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "$CF_DIST_ID" --paths "/*" \
+            --query 'Invalidation.Id' --output text)
+          echo "Invalidation $INV_ID 생성됨. 완료 대기 중..."
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$CF_DIST_ID" --id "$INV_ID"
+
+      - name: Smoke test
+        run: |
+          # entrydsm.hs.kr, auth.entrydsm.hs.kr, ...
+          SUB="${{ matrix.subdomain }}"
+          DOMAIN="${SUB:+$SUB.}entrydsm.hs.kr"
+
+          # 1) SPA 딥링크: 200 + text/html 이어야 한다 (CloudFront Function rewrite 동작 확인)
+          out=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code} %{content_type}" "https://$DOMAIN/__deploy_smoke__") || {
+            echo "::error::https://$DOMAIN 접속 실패. 최초 구축 중이라면 Cloudflare DNS 설정 후 워크플로우를 다시 실행하세요."
+            exit 1
+          }
+          code="${out%% *}"; ctype="${out#* }"
+          if [ "$code" != "200" ] || [ "${ctype#text/html}" = "$ctype" ]; then
+            echo "::error::딥링크 응답 이상: $out — CloudFront Function(SPA rewrite) 연결을 확인하세요."
+            exit 1
+          fi
+
+          # 2) 없는 자산은 200이면 안 된다 (오류를 HTML 200으로 가리는 설정 방지)
+          code=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "https://$DOMAIN/assets/__missing__${GITHUB_RUN_ID}.js")
+          if [ "$code" = "200" ]; then
+            echo "::error::존재하지 않는 자산이 200으로 응답합니다. 403/404→200 오류 페이지 매핑을 제거하고 CloudFront Function rewrite 방식을 사용하세요."
+            exit 1
+          fi
+          echo "Smoke test 통과: https://$DOMAIN (딥링크 200, 누락 자산 $code)"

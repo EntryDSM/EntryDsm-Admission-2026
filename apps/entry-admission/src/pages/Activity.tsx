@@ -1,0 +1,141 @@
+import { useLocation } from "react-router";
+import { colors, Flex, Text } from "@entry/design";
+import { AttendanceForm, Caution, CertCheckForm, usePageData } from "@entry/ui";
+
+interface ActivityPagePropsType {
+  pageKey: "activityGraduate" | "activityGraduateProspective";
+}
+
+export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
+  const [datas, setDatas] = usePageData(pageKey);
+  const currentlocation = useLocation();
+  const prospectiveGraduation = "/activity-prospective-graduate";
+
+  const safeData = datas || { dsmAlgorithm: null, certificate: null };
+
+  const dsmAlgorithmChange = (value: "O" | "X" | null) => {
+    setDatas({ ...safeData, dsmAlgorithm: value });
+  };
+  const certificateChange = (value: "O" | "X" | null) => {
+    setDatas({ ...safeData, certificate: value });
+  };
+
+  const earlyLeaveChange = (value: string) => {
+    setDatas({ ...safeData, earlyLeave: value });
+  };
+
+  const tardinessChange = (value: string) => {
+    setDatas({ ...safeData, tardiness: value });
+  };
+
+  const classExitChange = (value: string) => {
+    setDatas({ ...safeData, classExit: value });
+  };
+
+  const absenceChange = (value: string) => {
+    setDatas({ ...safeData, absence: value });
+  };
+
+  const volunteerChange = (value: string) => {
+    setDatas({ ...safeData, volunteer: value });
+  };
+
+  return (
+    <Flex isColumn={true} gap={40} width="100%" height="100%">
+      <Flex isColumn={true} gap={24} width="100%" height="fit-content">
+        <Flex flexWrap="wrap" width="fit-content" height="fit-content" alignItems="center" gap={20}>
+          <Text fontSize={24} fontWeight={600}>
+            출결
+          </Text>
+          <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
+            <Caution />
+            {currentlocation.pathname === prospectiveGraduation ? (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 9월 30일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            ) : (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 졸업일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            )}
+          </Flex>
+        </Flex>
+        <Flex height="fit-content" flexWrap="wrap" width="100%" gapX={22} gapY={24}>
+          <AttendanceForm
+            width={"48%"}
+            title="미인정 결석"
+            text="미인정 결석을 입력하세요"
+            defaultCount={10}
+            onChange={absenceChange}
+            value={datas.absence}
+          />
+          <AttendanceForm
+            width={"48%"}
+            title="미인정 조퇴"
+            text="미인정 조퇴를 입력하세요"
+            defaultCount={10}
+            onChange={earlyLeaveChange}
+            value={datas.earlyLeave}
+          />
+          <AttendanceForm
+            width={"48%"}
+            title="미인정 지각"
+            text="미인정 지각을 입력하세요"
+            defaultCount={10}
+            onChange={tardinessChange}
+            value={datas.tardiness}
+          />
+          <AttendanceForm
+            width={"48%"}
+            title="미인정 결과"
+            text="미인정 결과를 입력하세요"
+            defaultCount={10}
+            value={datas.classExit}
+            onChange={classExitChange}
+          />
+        </Flex>
+      </Flex>
+      <Flex isColumn={true} gap={24} width="fit-content" height="fit-content">
+        <Flex flexWrap="wrap" width="fit-content" height="fit-content" alignItems="center" gap={20}>
+          <Text fontSize={24} fontWeight={600}>
+            봉사
+          </Text>
+          <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
+            <Caution />
+            {currentlocation.pathname === prospectiveGraduation ? (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 9월 30일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            ) : (
+              <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
+                봉사 시간은 졸업일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+              </Text>
+            )}
+          </Flex>
+        </Flex>
+        <AttendanceForm
+          onChange={volunteerChange}
+          value={datas.volunteer}
+          width={"400px"}
+          title="봉사시간"
+          text="봉사시간을 입력하세요"
+          defaultCount={10}
+        />
+      </Flex>
+      <Flex isColumn={true} gap={24} width="100%" height="fit-content">
+        <Text fontSize={24} fontWeight={600}>
+          자격증
+        </Text>
+        <Flex isColumn={true} width="100%" gap={0} height="fit-content">
+          <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
+          <CertCheckForm
+            onChange={certificateChange}
+            title="프로그래밍 기능사 자격증"
+            value={safeData.certificate}
+            helperText="＊프로그래밍 기능사 자격증 취득여부 가산점은 일반전형일 경우 들어가지 않습니다."
+          />
+        </Flex>
+      </Flex>
+    </Flex>
+  );
+};

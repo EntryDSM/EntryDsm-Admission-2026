@@ -1,0 +1,338 @@
+import styled from "@emotion/styled";
+import { colors } from "@entry/design";
+import { useNavigate, Link } from "react-router";
+import { noticeIcon, downloadIcon, noticeMoveArrowIcon } from "../../assets";
+
+interface Notice {
+  id: number;
+  title: string;
+  createdAt: string;
+  isPinned: boolean;
+  type: "GUIDE" | "NOTICE";
+}
+
+const noticeItems: Notice[] = [{ id: 1, title: "공지 1", createdAt: "2026-08-03", isPinned: false, type: "NOTICE" }];
+
+export const InfoSection = () => {
+  const navigate = useNavigate();
+
+  const currentPeriod = "원서 접수 기간입니다.";
+
+  const mainNotice = {
+    icon: noticeIcon,
+    title: "신입생 전형 요강 PDF 파일 다운로드",
+    hasDownload: true,
+  };
+
+  // pdf 다운로드
+  const downloadPdfBtn = () => {
+    const link = document.createElement("a");
+    link.href = "/2026학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형요강.pdf";
+    link.download = "2026학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형요강.pdf";
+    link.click();
+  };
+
+  return (
+    <Container>
+      <ContentWrapper>
+        <Title>
+          <HighlightText>지금은</HighlightText>
+        </Title>
+        <SubTitle>{currentPeriod}</SubTitle>
+        <Divider />
+
+        <SectionHeader>
+          <SectionTitle>입학 공지사항</SectionTitle>
+          <MoreButton onClick={() => navigate("/notice")}>이동하기</MoreButton>
+        </SectionHeader>
+
+        <NoticeContainer>
+          <MainNoticeCard>
+            <NoticeContent>
+              <NoticeIconImg src={mainNotice.icon} alt="공지 아이콘" />
+              <MainNoticeTitle>{mainNotice.title}</MainNoticeTitle>
+            </NoticeContent>
+            <DownloadButton onClick={downloadPdfBtn}>
+              <DownloadIcon src={downloadIcon} alt="다운로드" />
+            </DownloadButton>
+          </MainNoticeCard>
+          {noticeItems.map((notice, index) => (
+            <NoticeCard key={index} to={`/notice/${notice.id}`}>
+              <NoticeContent>
+                <NoticeInfo>
+                  <NoticeTitle>{notice.title}</NoticeTitle>
+                  {notice.createdAt && <NoticeDate>{notice.createdAt}</NoticeDate>}
+                </NoticeInfo>
+              </NoticeContent>
+              <ArrowIcon src={noticeMoveArrowIcon} alt="이동" />
+            </NoticeCard>
+          ))}
+        </NoticeContainer>
+      </ContentWrapper>
+    </Container>
+  );
+};
+
+const Container = styled.div`
+  width: 100%;
+  padding: 80px 0 100px 0;
+
+  @media (max-width: 768px) {
+    padding: 60px 0 80px 0;
+  }
+
+  @media (max-width: 480px) {
+    padding: 40px 0 60px 0;
+  }
+`;
+
+const ContentWrapper = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 100px;
+
+  @media (max-width: 1200px) {
+    padding: 0 80px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0 40px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 20px;
+  }
+`;
+
+const Title = styled.h2`
+  font-size: 36px;
+  font-weight: 700;
+  color: ${colors.gray[500]};
+  margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 30px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 26px;
+  }
+`;
+
+const SubTitle = styled.div`
+  font-size: 36px;
+  font-weight: 700;
+  color: ${colors.gray[500]};
+  margin-bottom: 40px;
+
+  @media (max-width: 768px) {
+    font-size: 30px;
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 26px;
+    margin-bottom: 25px;
+  }
+`;
+
+const HighlightText = styled.span`
+  color: ${colors.orange[800]};
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  height: 2px;
+  background: ${colors.orange[800]};
+  margin-bottom: 80px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 60px;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: 40px;
+  }
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 24px;
+  font-weight: 550;
+  color: #333;
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+`;
+
+const MoreButton = styled.button`
+  background: none;
+  border: none;
+  color: ${colors.orange[800]};
+  background-color: #fff2ea;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+  border-radius: 8px;
+
+  &:hover {
+    background-color: #f5e9e2;
+  }
+`;
+
+const NoticeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+`;
+
+const MainNoticeCard = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 13px;
+  background: #fff5f0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    padding: 5px 11px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 4px 9px;
+    margin-bottom: 18px;
+  }
+`;
+
+const NoticeCard = styled(Link)`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 13px;
+  margin-bottom: 8px;
+  border: 2px solid ${colors.gray[100]};
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: ${colors.gray[200]};
+    background-color: ${colors.gray[50]};
+  }
+
+  @media (max-width: 768px) {
+    padding: 18px 0;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px 0;
+    margin-bottom: 14px;
+  }
+`;
+
+const NoticeContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+`;
+
+const NoticeIconImg = styled.img`
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+`;
+
+const MainNoticeTitle = styled.div`
+  font-size: 15px;
+  color: ${colors.gray[500]};
+  font-weight: 500;
+  line-height: 1.4;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+  }
+`;
+
+const NoticeInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+`;
+
+const NoticeTitle = styled.div`
+  font-size: 17px;
+  color: ${colors.gray[500]};
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+  }
+`;
+
+const NoticeDate = styled.div`
+  font-size: 12px;
+  color: #999;
+
+  @media (max-width: 480px) {
+    font-size: 11px;
+  }
+`;
+
+const DownloadButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[700]};
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+`;
+
+const DownloadIcon = styled.img`
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
+const ArrowIcon = styled.img`
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-right: 5px;
+`;
