@@ -55,12 +55,20 @@ const guardianRelations = {
   기타: "OTHER",
 } as const;
 
-const getRequiredValue = <T,>(value: T | undefined, fieldName: string): T => {
-  if (value === undefined) {
+const getRequiredValue = <T,>(value: T | null | undefined, fieldName: string): T => {
+  if (value === null || value === undefined) {
     throw new Error(`${fieldName} 값을 확인해 주세요.`);
   }
 
   return value;
+};
+
+const getMappedValue = <T extends Record<string, string>>(values: T, key: string, fieldName: string): T[keyof T] => {
+  if (!(key in values)) {
+    throw new Error(`${fieldName} 값을 확인해 주세요.`);
+  }
+
+  return values[key as keyof T];
 };
 
 const formatYearMonth = (date: (string | number)[]) => {
@@ -253,14 +261,15 @@ export const AppLayout = () => {
     try {
       switch (currentPath) {
         case "/application-classification": {
-          const graduationTypeValue = getRequiredValue(
-            graduationTypes[state.applicationClassification.graduationType],
+          const graduationTypeValue = getMappedValue(
+            graduationTypes,
+            state.applicationClassification.graduationType,
             "졸업 구분"
           );
           await updateApplicationClassification({
             applicantId,
-            admissionType: getRequiredValue(admissionTypes[state.applicationClassification.typeSelection], "전형"),
-            region: getRequiredValue(regions[state.applicationClassification.regionSelection], "지역"),
+            admissionType: getMappedValue(admissionTypes, state.applicationClassification.typeSelection, "전형"),
+            region: getMappedValue(regions, state.applicationClassification.regionSelection, "지역"),
             graduationType: graduationTypeValue,
             graduationDate:
               graduationTypeValue === "GED" ? null : formatYearMonth(state.applicationClassification.graduationDate),
@@ -275,9 +284,9 @@ export const AppLayout = () => {
             profileImage: getRequiredValue(idPhoto, "증명사진"),
             name: applicantName,
             phoneNumber: applicantNumber,
-            gender: getRequiredValue(genders[gender], "성별"),
+            gender: getMappedValue(genders, gender, "성별"),
             birthdate: formatBirthdate(dateOfBirth),
-            specialAdmissionType: getRequiredValue(specialAdmissionTypes[specialNotes], "특기 사항"),
+            specialAdmissionType: getMappedValue(specialAdmissionTypes, specialNotes, "특기 사항"),
           });
           break;
         }
@@ -288,8 +297,8 @@ export const AppLayout = () => {
             applicantId,
             guardianName,
             guardianPhoneNumber: guardianNumber,
-            guardianGender: getRequiredValue(genders[guardianGender], "보호자 성별"),
-            guardianRelation: getRequiredValue(guardianRelations[String(relationship[0])], "보호자 관계"),
+            guardianGender: getMappedValue(genders, guardianGender, "보호자 성별"),
+            guardianRelation: getMappedValue(guardianRelations, String(relationship[0]), "보호자 관계"),
             address: { zipCode: postalCode, addressBase: address, addressDetail },
           });
           break;
