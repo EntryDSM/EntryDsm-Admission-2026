@@ -339,15 +339,21 @@ Settings → Environments → 해당 환경 → **Environment secrets**. deploy 
 
 `VITE_*` 값은 어차피 번들에 그대로 노출되므로 Variables로 관리한다. **진짜 비밀값(API 키 등)은 절대 `VITE_*`로 넣지 말 것.**
 
-| 이름                    | prod 예시                | stag 예시                     | 사용 앱                      |
-| ----------------------- | ------------------------ | ----------------------------- | ---------------------------- |
-| `VITE_API_BASE_URL`     | 백엔드 prod API URL      | 백엔드 stag API URL           | admin, admission, monitoring |
-| `VITE_IDENTITY_API_URL` | 인증 백엔드 prod URL     | 인증 백엔드 stag URL          | auth                         |
-| `VITE_USER_APP_URL`     | `https://entrydsm.hs.kr` | `https://stag.entrydsm.hs.kr` | auth (로그인 후 리디렉션)    |
-| `VITE_ADMISSION_ROUND`  | `2026-1`                 | `2026-1`                      | monitoring                   |
+| 이름                       | prod 예시                          | stag 예시                               | 사용 앱                                            |
+| -------------------------- | ---------------------------------- | --------------------------------------- | -------------------------------------------------- |
+| `VITE_API_BASE_URL`        | 백엔드 prod API URL                | 백엔드 stag API URL                     | admin, admission, monitoring, user                 |
+| `VITE_IDENTITY_API_URL`    | 인증 백엔드 prod URL               | 인증 백엔드 stag URL                    | auth                                               |
+| `VITE_USER_APP_URL`        | `https://entrydsm.hs.kr`           | `https://stag.entrydsm.hs.kr`           | **전 앱** (공용 헤더 링크, auth 로그인 리디렉션)   |
+| `VITE_AUTH_APP_URL`        | `https://auth.entrydsm.hs.kr`      | `https://auth-stag.entrydsm.hs.kr`      | **전 앱** (공용 헤더 로그인 링크)                  |
+| `VITE_ADMISSION_APP_URL`   | `https://admission.entrydsm.hs.kr` | `https://admission-stag.entrydsm.hs.kr` | user (지원하기 링크)                               |
+| `VITE_SCHOOL_HOMEPAGE_URL` | `https://dsmhs.djsch.kr/main.do`   | prod와 동일                             | user (학교 홈페이지 링크)                          |
+| `VITE_AWS_CONSOLE_URL`     | AWS 콘솔 로그인 URL                | prod와 동일                             | **전 앱** 빌드에 필수, 실제 사용은 monitoring 헤더 |
+| `VITE_ADMISSION_ROUND`     | `2026-1`                           | `2026-1`                                | monitoring                                         |
+
+`VITE_USER_APP_URL`·`VITE_AUTH_APP_URL`·`VITE_AWS_CONSOLE_URL`은 공용 패키지(`@entry/ui`)의 env 모듈이 앱 로드 시 검증하므로, 프로덕션 빌드에서 값이 비면 **모든 앱이 로드 시점에 에러를 던진다** (조용한 오작동 방지).
 
 ⚠️ **변수를 만들어 두지 않으면 빈 문자열이 번들에 박히고**, 코드의 `?? "기본값"` 은 빈 문자열에는 동작하지 않는다.
-[deploy.yaml](../.github/workflows/deploy.yaml)의 `Validate build variables` 스텝(build job)이 **4개 변수 전부** 비어 있지 않은지 빌드 전에 검사해 실패시키고, `Validate deploy configuration` 스텝(deploy job)이 `S3_BUCKET_NAME`·`CF_DIST_ID_*` secret을 검사한다. 빨간불이 나면 이 표와 7-2·7-3을 다시 확인한다.
+[deploy.yaml](../.github/workflows/deploy.yaml)의 `Validate build variables` 스텝(build job)이 **8개 변수 전부** 비어 있지 않은지 빌드 전에 검사해 실패시키고, `Validate deploy configuration` 스텝(deploy job)이 `S3_BUCKET_NAME`·`CF_DIST_ID_*` secret을 검사한다. 빨간불이 나면 이 표와 7-2·7-3을 다시 확인한다.
 
 ## 8. 배포 파이프라인 동작
 

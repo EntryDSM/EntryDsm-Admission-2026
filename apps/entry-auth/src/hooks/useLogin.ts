@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { USER_APP_URL } from "@entry/ui";
 import { IdentityApiError, login } from "../apis";
 import type { LoginRequest } from "../apis";
-
-const USER_APP_URL = import.meta.env.VITE_USER_APP_URL?.replace(/\/$/, "") ?? "https://entrydsm.hs.kr";
 
 const getLoginErrorMessage = (error: unknown) => {
   if (!(error instanceof IdentityApiError)) {
