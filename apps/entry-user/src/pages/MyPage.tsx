@@ -1,9 +1,19 @@
 import { useState, useCallback } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
-import { Btn, CancelModal, ShowResultModal, PasswordModal, ChangePasswordModal, useModal } from "@entry/ui";
+import {
+  AUTH_APP_URL,
+  Btn,
+  CancelModal,
+  ShowResultModal,
+  PasswordModal,
+  ChangePasswordModal,
+  USER_APP_URL,
+  useModal,
+} from "@entry/ui";
 import { toast } from "react-toastify";
 import { ADMISSION_TYPE_LABEL } from "../constants/admissionType";
+import { ADMISSION_APP_URL } from "../utils/env";
 
 // API 연동 비활성화
 // import {
@@ -71,7 +81,7 @@ export const MyPage = () => {
     toast.success("회원 탈퇴가 완료되었습니다.");
     closeModalHandler("password");
     closeModalHandler("delete");
-    window.location.href = "https://auth.entrydsm.hs.kr";
+    window.location.href = AUTH_APP_URL;
   };
 
   const handleChangePasswordConfirm = () => {
@@ -85,7 +95,7 @@ export const MyPage = () => {
       return;
     }
 
-    window.open("https://admission.entrydsm.hs.kr", "_blank");
+    window.open(ADMISSION_APP_URL, "_blank");
   };
 
   const handleDownloadApplication = () => {
@@ -114,7 +124,7 @@ export const MyPage = () => {
   };
 
   const handleLogout = () => {
-    window.location.href = "https://entrydsm.hs.kr/";
+    window.location.href = USER_APP_URL;
   };
 
   return (

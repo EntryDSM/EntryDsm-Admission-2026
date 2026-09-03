@@ -34,6 +34,10 @@ jobs:
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       VITE_IDENTITY_API_URL: ${{ vars.VITE_IDENTITY_API_URL }}
       VITE_USER_APP_URL: ${{ vars.VITE_USER_APP_URL }}
+      VITE_AUTH_APP_URL: ${{ vars.VITE_AUTH_APP_URL }}
+      VITE_ADMISSION_APP_URL: ${{ vars.VITE_ADMISSION_APP_URL }}
+      VITE_SCHOOL_HOMEPAGE_URL: ${{ vars.VITE_SCHOOL_HOMEPAGE_URL }}
+      VITE_AWS_CONSOLE_URL: ${{ vars.VITE_AWS_CONSOLE_URL }}
       VITE_ADMISSION_ROUND: ${{ vars.VITE_ADMISSION_ROUND }}
     steps:
       - name: Checkout
@@ -46,7 +50,7 @@ jobs:
       - name: Validate build variables
         run: |
           fail=0
-          for v in VITE_API_BASE_URL VITE_IDENTITY_API_URL VITE_USER_APP_URL VITE_ADMISSION_ROUND; do
+          for v in VITE_API_BASE_URL VITE_IDENTITY_API_URL VITE_USER_APP_URL VITE_AUTH_APP_URL VITE_ADMISSION_APP_URL VITE_SCHOOL_HOMEPAGE_URL VITE_AWS_CONSOLE_URL VITE_ADMISSION_ROUND; do
             if [ -z "${!v}" ]; then
               echo "::error::$v 가 비어 있습니다. '${{ github.ref_name == 'main' && 'prod' || 'stag' }}' GitHub Environment의 Variables를 확인하세요."
               fail=1

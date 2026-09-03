@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { ApplicationTimeline, FaqSection, InfoSection } from "../components";
 import { school } from "../assets";
+import { ADMISSION_APP_URL } from "../utils/env";
 
 // API 연동 비활성화
 // import { getAccessToken } from '@entry/utils';
@@ -12,7 +13,7 @@ import { school } from "../assets";
 
 export const Main = () => {
   const handleApplyClick = () => {
-    window.location.href = "https://admission.entrydsm.hs.kr";
+    window.location.href = ADMISSION_APP_URL;
   };
 
   return (
