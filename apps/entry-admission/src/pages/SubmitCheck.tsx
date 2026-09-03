@@ -1,13 +1,17 @@
 ﻿import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
-import { Btn, InputContent, PreviousBtn } from "@entry/ui";
+import { Btn, InputContent, PreviousBtn, useApplicationData } from "@entry/ui";
 import { ApplicationPreview } from "./applicationCheck/index";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
+import { clearStartedApplicantId, getApplicationStorageKey, getStartedApplicantId, submitApplication } from "../apis";
 
 export const SubmitCheck = () => {
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { clearAllData } = useApplicationData();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
@@ -17,9 +21,22 @@ export const SubmitCheck = () => {
     navigate("/application-preview");
   };
 
-  const handleSubmit = () => {
-    if (message === "확인했습니다") {
+  const handleSubmit = async () => {
+    if (message !== "확인했습니다" || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitApplication();
+      const applicantId = getStartedApplicantId();
+      await clearAllData(applicantId === null ? undefined : getApplicationStorageKey(applicantId));
+      clearStartedApplicantId();
       navigate("/submitted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "원서 제출 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -56,14 +73,14 @@ export const SubmitCheck = () => {
               </PreviousBtn>
               <Btn
                 width="83px"
-                onClick={handleSubmit}
+                onClick={() => void handleSubmit()}
                 backgroundColor={colors.orange[100]}
                 color={colors.orange[700]}
                 borderColor={colors.orange[300]}
                 hoverBackgroundColor={colors.orange[100]}
-                isBlocked={message !== "확인했습니다"}
+                isBlocked={message !== "확인했습니다" || isSubmitting}
               >
-                제출
+                {isSubmitting ? "제출 중" : "제출"}
               </Btn>
             </ButtonRow>
           </Flex>

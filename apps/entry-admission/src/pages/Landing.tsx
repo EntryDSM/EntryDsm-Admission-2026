@@ -1,14 +1,28 @@
-﻿import { colors, Flex, Text } from "@entry/design";
+import { colors, Flex, Text } from "@entry/design";
 import { Btn, EntryLogo } from "@entry/ui";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router";
+import { getStartedApplicantId, useStartApplication } from "../apis";
 
 export const Landing = () => {
   const navigate = useNavigate();
+  const { mutateAsync: startApplication, isPending } = useStartApplication();
   const scheduleDatas = {
     startDate: "00월 00일",
     endDate: "00월 00일",
     resultDate: "00월 00일",
+  };
+
+  const handleStartApplication = async () => {
+    const startedApplicantId = getStartedApplicantId();
+
+    if (startedApplicantId !== null) {
+      navigate("/application-classification");
+      return;
+    }
+
+    await startApplication();
+    navigate("/application-classification");
   };
 
   return (
@@ -41,7 +55,7 @@ export const Landing = () => {
             </Text>
           </ContentContainer>
         </Flex>
-        <Btn width="100%" onClick={() => navigate("/application-classification")}>
+        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isPending}>
           접수하기
         </Btn>
       </Flex>
