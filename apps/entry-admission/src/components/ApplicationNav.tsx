@@ -9,6 +9,8 @@ interface IApplicationNavType {
   progressSteps: number;
   setCurrentPage: (page: number) => void;
   graduationType?: string;
+  onNext?: () => Promise<boolean>;
+  isSaving?: boolean;
   validateCurrentPage?: (page: number) => {
     canProceed: boolean;
     message?: string;
@@ -22,6 +24,8 @@ export const ApplicationNav = ({
   progressSteps,
   setCurrentPage,
   graduationType,
+  onNext,
+  isSaving = false,
   validateCurrentPage,
 }: IApplicationNavType) => {
   const isGraduationTypeSelected = Boolean(graduationType && graduationType.trim());
@@ -31,13 +35,16 @@ export const ApplicationNav = ({
     setCurrentPage(currentPage - 1);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentPage >= totalPage) return;
 
     const validationResult = validateCurrentPage?.(currentPage);
     if (validationResult && !validationResult.canProceed) return;
 
-    setCurrentPage(currentPage + 1);
+    const shouldProceed = (await onNext?.()) ?? true;
+    if (shouldProceed) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   return (
@@ -72,7 +79,9 @@ export const ApplicationNav = ({
           <NavButton isBlocked={true}>다음</NavButton>
         )
       ) : (
-        <NavButton onClick={handleNext}>다음</NavButton>
+        <NavButton isBlocked={isSaving} onClick={() => void handleNext()}>
+          {isSaving ? "저장 중" : "다음"}
+        </NavButton>
       )}
     </Flex>
   );

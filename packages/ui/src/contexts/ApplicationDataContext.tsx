@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useReducer, useCallback } from "react";
+﻿import React, { createContext, useContext, useReducer, useCallback, useState } from "react";
 
 export const GRADUATION_TYPES = ["검정고시(중학교 졸업 학력)", "졸업 예정", "졸업"] as const;
 
@@ -23,6 +23,7 @@ interface IApplicantInfoType {
 interface IGuardianInfoType {
   guardianName: string;
   guardianNumber: string;
+  guardianGender: string;
   relationship: string[];
   otherRelationship: string;
   postalCode: string; // 우편번호
@@ -129,6 +130,7 @@ const initialState: ApplicationState = {
   guardianInfo: {
     guardianName: "",
     guardianNumber: "",
+    guardianGender: "",
     relationship: [],
     otherRelationship: "",
     postalCode: "",
@@ -267,10 +269,11 @@ const applicationReducer = (state: ApplicationState, action: ApplicationAction):
 
 interface ApplicationContextType {
   state: ApplicationState;
+  loadedStorageKey: string | null;
   updatePageData: (page: keyof ApplicationState, data: any) => void;
-  saveToStorage: () => Promise<void>;
-  loadFromStorage: () => Promise<void>;
-  clearAllData: () => void;
+  saveToStorage: (storageKey: string) => Promise<void>;
+  loadFromStorage: (storageKey: string) => Promise<void>;
+  clearAllData: (storageKey?: string) => Promise<void>;
 }
 
 const ApplicationDataContext = createContext<ApplicationContextType | undefined>(undefined);
@@ -295,7 +298,7 @@ const openDB = (): Promise<IDBDatabase> => {
   });
 };
 
-const saveToIndexedDB = async (data: ApplicationState): Promise<void> => {
+const saveToIndexedDB = async (storageKey: string, data: ApplicationState): Promise<void> => {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = transaction.objectStore(STORE_NAME);
@@ -310,7 +313,7 @@ const saveToIndexedDB = async (data: ApplicationState): Promise<void> => {
       reject(error);
     };
 
-    const req = store.put({ id: "applicationData", data });
+    const req = store.put({ id: storageKey, data });
     req.onerror = () => rejectWithCleanup(req.error);
 
     transaction.oncomplete = () => {
@@ -324,7 +327,7 @@ const saveToIndexedDB = async (data: ApplicationState): Promise<void> => {
   });
 };
 
-const loadFromIndexedDB = async (): Promise<ApplicationState | null> => {
+const loadFromIndexedDB = async (storageKey: string): Promise<ApplicationState | null> => {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = transaction.objectStore(STORE_NAME);
@@ -340,7 +343,7 @@ const loadFromIndexedDB = async (): Promise<ApplicationState | null> => {
       reject(error);
     };
 
-    const req = store.get("applicationData");
+    const req = store.get(storageKey);
     req.onerror = () => rejectWithCleanup(req.error);
     req.onsuccess = () => {
       const result = req.result;
@@ -358,42 +361,88 @@ const loadFromIndexedDB = async (): Promise<ApplicationState | null> => {
   });
 };
 
+const deleteFromIndexedDB = async (storageKey: string): Promise<void> => {
+  const db = await openDB();
+  const transaction = db.transaction([STORE_NAME], "readwrite");
+  const store = transaction.objectStore(STORE_NAME);
+
+  await new Promise<void>((resolve, reject) => {
+    let isSettled = false;
+
+    const rejectWithCleanup = (error: unknown) => {
+      if (isSettled) return;
+      isSettled = true;
+      db.close();
+      reject(error);
+    };
+
+    const req = store.delete(storageKey);
+    req.onerror = () => rejectWithCleanup(req.error);
+
+    transaction.oncomplete = () => {
+      if (isSettled) return;
+      isSettled = true;
+      db.close();
+      resolve();
+    };
+    transaction.onabort = () => rejectWithCleanup(transaction.error);
+    transaction.onerror = () => rejectWithCleanup(transaction.error);
+  });
+};
+
 export const ApplicationDataProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [state, dispatch] = useReducer(applicationReducer, initialState);
+  const [loadedStorageKey, setLoadedStorageKey] = useState<string | null>(null);
 
   const updatePageData = useCallback((page: keyof ApplicationState, data: any) => {
     dispatch({ type: "UPDATE_PAGE_DATA", payload: { page, data } });
   }, []);
 
-  const saveToStorage = useCallback(async () => {
-    try {
-      await saveToIndexedDB(state);
-      // console.log('데이터가 임시저장되었습니다.');
-    } catch (error) {
-      // console.error('임시저장 실패:', error);
-    }
-  }, [state]);
+  const saveToStorage = useCallback(
+    async (storageKey: string) => {
+      try {
+        await saveToIndexedDB(storageKey, state);
+        // console.log('데이터가 임시저장되었습니다.');
+      } catch (error) {
+        // console.error('임시저장 실패:', error);
+      }
+    },
+    [state]
+  );
 
-  const loadFromStorage = useCallback(async () => {
+  const loadFromStorage = useCallback(async (storageKey: string) => {
     try {
-      const savedData = await loadFromIndexedDB();
+      const savedData = await loadFromIndexedDB(storageKey);
       if (savedData) {
         dispatch({ type: "LOAD_FROM_STORAGE", payload: savedData });
-        // console.log('저장된 데이터를 불러왔습니다.');
+      } else {
+        dispatch({ type: "CLEAR_ALL_DATA" });
       }
     } catch (error) {
       // console.error('데이터 로드 실패:', error);
+    } finally {
+      setLoadedStorageKey(storageKey);
     }
   }, []);
 
-  const clearAllData = useCallback(() => {
+  const clearAllData = useCallback(async (storageKey?: string) => {
     dispatch({ type: "CLEAR_ALL_DATA" });
+    setLoadedStorageKey(null);
+
+    if (storageKey) {
+      try {
+        await deleteFromIndexedDB(storageKey);
+      } catch (error) {
+        console.error("원서 임시저장 데이터 삭제 실패:", error);
+      }
+    }
   }, []);
 
   const value: ApplicationContextType = {
     state,
+    loadedStorageKey,
     updatePageData,
     saveToStorage,
     loadFromStorage,

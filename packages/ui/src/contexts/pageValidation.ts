@@ -44,6 +44,7 @@ const validateGuardianInfoPage = (data: unknown) => {
   const missingFields = createRequiredFieldsValidator([
     "guardianName",
     "guardianNumber",
+    "guardianGender",
     "relationship",
     "postalCode",
     "address",
@@ -86,7 +87,7 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/second-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/third-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/activity-prospective-graduate": createRequiredFieldsValidator(activityFields),
-  "/ged/score": createRequiredFieldsValidator(["kor", "soc", "his", "sci", "math", "eng"]),
+  "/ged/score": createRequiredFieldsValidator(scoreFields),
   "/ged/attendance-volunteer": createRequiredFieldsValidator(["dsmAlgorithm", "certificate"]),
 };
 
@@ -123,6 +124,7 @@ const fieldNameMap: Record<string, string> = {
   gender: "성별",
   guardianName: "보호자 성명",
   guardianNumber: "보호자 연락처",
+  guardianGender: "보호자 성별",
   relationship: "지원자와의 관계",
   otherRelationship: "지원자와의 관계(기타)",
   postalCode: "우편번호",
