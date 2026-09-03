@@ -71,7 +71,7 @@ export const MyPage = () => {
     toast.success("회원 탈퇴가 완료되었습니다.");
     closeModalHandler("password");
     closeModalHandler("delete");
-    window.location.href = "https://auth.entrydsm.kr";
+    window.location.href = "https://auth.entrydsm.hs.kr";
   };
 
   const handleChangePasswordConfirm = () => {
@@ -85,7 +85,7 @@ export const MyPage = () => {
       return;
     }
 
-    window.open("https://admission.entrydsm.kr", "_blank");
+    window.open("https://admission.entrydsm.hs.kr", "_blank");
   };
 
   const handleDownloadApplication = () => {
@@ -114,7 +114,7 @@ export const MyPage = () => {
   };
 
   const handleLogout = () => {
-    window.location.href = "https://entrydsm.kr/";
+    window.location.href = "https://entrydsm.hs.kr/";
   };
 
   return (

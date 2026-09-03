@@ -182,12 +182,15 @@ Cloudflare → **entrydsm.hs.kr zone** → DNS → 레코드 10개 추가. **전
 - 회색 구름이면 트래픽이 Cloudflare를 경유하지 않으므로 **Cloudflare의 SSL/TLS 모드 설정은 이 도메인들에 영향이 없다.**
 - 오렌지 구름으로 켜면 Cloudflare↔CloudFront 이중 CDN이 되어 인증서·캐시·리디렉션 문제가 생긴다. 켜지 말 것.
 
-## 6. IAM 배포 사용자
+## 6. IAM 배포 사용자 (환경별 분리)
 
-GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성화, 프로그래밍 방식 액세스만).
+GitHub Actions가 쓸 전용 사용자를 **prod / stag 각각** 만든다 (콘솔 로그인 비활성화, 프로그래밍 방식 액세스만).
+사용자를 환경별로 분리하는 이유: 키 하나가 양쪽 환경에 접근 가능하면 stag 쪽 키가 유출·오용되거나 워크플로우가 변조됐을 때 prod 객체를 덮어쓰거나 prod 캐시를 무효화할 수 있다. 각 키는 자기 환경의 S3 prefix와 CloudFront 배포 5개까지만 접근하도록 제한한다.
 
-1. IAM → 사용자 → 생성: `github-actions-entry-deploy`
-2. 인라인 정책으로 아래 최소 권한 부여 (`<>`를 실제 버킷명·계정ID·배포ID로 교체, 배포 ID는 10개 전부 나열):
+1. IAM → 사용자 → 생성: `github-actions-entry-deploy-prod`, `github-actions-entry-deploy-stag` 2개
+2. 각 사용자에 인라인 정책으로 아래 최소 권한 부여 (`<>`를 실제 버킷명·계정ID·배포ID로 교체)
+
+**prod 사용자 정책** — `s3:ListBucket`은 `s3:prefix` 조건으로 prod 앱 폴더만 조회 가능하게 제한하고, 쓰기·무효화도 prod 리소스만 나열한다 (`stag/` 폴더는 패턴에 걸리지 않아 자동 제외):
 
 ```json
 {
@@ -196,14 +199,37 @@ GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성�
     {
       "Sid": "SyncList",
       "Effect": "Allow",
-      "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::<버킷명>",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "dsm-Entry/frontend/entry-user/*",
+            "dsm-Entry/frontend/entry-auth/*",
+            "dsm-Entry/frontend/entry-admin/*",
+            "dsm-Entry/frontend/entry-admission/*",
+            "dsm-Entry/frontend/entry-monitoring/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "BucketLocation",
+      "Effect": "Allow",
+      "Action": "s3:GetBucketLocation",
       "Resource": "arn:aws:s3:::<버킷명>"
     },
     {
       "Sid": "SyncWrite",
       "Effect": "Allow",
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/*"
+      "Resource": [
+        "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/entry-user/*",
+        "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/entry-auth/*",
+        "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/entry-admin/*",
+        "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/entry-admission/*",
+        "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/entry-monitoring/*"
+      ]
     },
     {
       "Sid": "Invalidate",
@@ -214,7 +240,45 @@ GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성�
         "arn:aws:cloudfront::<계정ID>:distribution/<prod-auth-배포ID>",
         "arn:aws:cloudfront::<계정ID>:distribution/<prod-admin-배포ID>",
         "arn:aws:cloudfront::<계정ID>:distribution/<prod-admission-배포ID>",
-        "arn:aws:cloudfront::<계정ID>:distribution/<prod-monitoring-배포ID>",
+        "arn:aws:cloudfront::<계정ID>:distribution/<prod-monitoring-배포ID>"
+      ]
+    }
+  ]
+}
+```
+
+**stag 사용자 정책** — 같은 구조에서 S3 범위를 `dsm-Entry/frontend/stag/*` 하나로, 배포 ID를 stag 5개로 바꾼다:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SyncList",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::<버킷명>",
+      "Condition": {
+        "StringLike": { "s3:prefix": "dsm-Entry/frontend/stag/*" }
+      }
+    },
+    {
+      "Sid": "BucketLocation",
+      "Effect": "Allow",
+      "Action": "s3:GetBucketLocation",
+      "Resource": "arn:aws:s3:::<버킷명>"
+    },
+    {
+      "Sid": "SyncWrite",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::<버킷명>/dsm-Entry/frontend/stag/*"
+    },
+    {
+      "Sid": "Invalidate",
+      "Effect": "Allow",
+      "Action": ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"],
+      "Resource": [
         "arn:aws:cloudfront::<계정ID>:distribution/<stag-user-배포ID>",
         "arn:aws:cloudfront::<계정ID>:distribution/<stag-auth-배포ID>",
         "arn:aws:cloudfront::<계정ID>:distribution/<stag-admin-배포ID>",
@@ -226,8 +290,10 @@ GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성�
 }
 ```
 
-3. 보안 자격 증명 → **액세스 키 생성**(용도: 서드파티 서비스) → 키 2개 값을 7단계에서 GitHub Secrets에 넣는다.
-4. ⚠️ 키가 노출되면 즉시 이 화면에서 **비활성화 → 삭제** 후 재발급한다. 퍼블릭 레포이므로 키를 코드·이슈·PR에 절대 붙여넣지 말 것.
+- `s3:GetBucketLocation`을 별도 Statement로 두는 이유: 이 액션의 요청에는 `s3:prefix` 컨텍스트 키가 없어서, prefix 조건이 걸린 Statement에 같이 넣으면 조건 불일치로 거부된다.
+- 사용자별로 보안 자격 증명 → **액세스 키 생성**(용도: 서드파티 서비스) → 키 값을 7단계에서 해당 환경의 GitHub **environment secrets**에 넣는다 (prod 키 → prod 환경, stag 키 → stag 환경).
+- ⚠️ 키가 노출되면 즉시 이 화면에서 **비활성화 → 삭제** 후 재발급한다. 퍼블릭 레포이므로 키를 코드·이슈·PR에 절대 붙여넣지 말 것.
+- (마이그레이션) 기존 단일 사용자 `github-actions-entry-deploy`를 쓰고 있었다면, 새 키 2세트로 prod·stag 배포가 각각 정상 동작하는 것을 확인한 뒤 기존 사용자 키를 비활성화 → 삭제한다.
 
 ## 7. GitHub 설정 (Environments / Secrets / Variables)
 
@@ -246,24 +312,28 @@ GitHub Actions가 쓸 전용 사용자를 만든다 (콘솔 로그인 비활성�
 
 Settings → Secrets and variables → Actions → **Secrets**:
 
-| 이름                    | 값                                                                                       |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| `AWS_ACCESS_KEY_ID`     | 6단계에서 발급한 키                                                                      |
-| `AWS_SECRET_ACCESS_KEY` | 6단계에서 발급한 키                                                                      |
-| `S3_BUCKET_NAME`        | 공유 버킷 이름 (비밀은 아니지만 secret으로 넣어야 퍼블릭 Actions 로그에서 자동 마스킹됨) |
+| 이름             | 값                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `S3_BUCKET_NAME` | 공유 버킷 이름 (비밀은 아니지만 secret으로 넣어야 퍼블릭 Actions 로그에서 자동 마스킹됨) |
+
+AWS 액세스 키는 공통 Secrets에 넣지 않는다 — 환경별 사용자 키이므로 7-3의 environment secrets로 관리한다.
 
 ### 7-3. 환경별 Secrets (prod / stag 각각, 같은 이름·다른 값)
+
+Settings → Environments → 해당 환경 → **Environment secrets**. deploy job이 `environment:`를 참조하므로 같은 이름의 environment secret이 자동으로 적용된다 (워크플로우 수정 불필요).
 
 배포 ID는 비밀은 아니지만 **secret으로 넣어야 퍼블릭 Actions 로그에서 자동 마스킹**된다.
 폴더 경로는 워크플로우가 계산하므로 별도 설정이 없다 (prod `dsm-Entry/frontend/{앱}`, stag `dsm-Entry/frontend/stag/{앱}`).
 
-| 이름                          | 값                           |
-| ----------------------------- | ---------------------------- |
-| `CF_DIST_ID_ENTRY_USER`       | 해당 환경 user 배포 ID       |
-| `CF_DIST_ID_ENTRY_AUTH`       | 해당 환경 auth 배포 ID       |
-| `CF_DIST_ID_ENTRY_ADMIN`      | 해당 환경 admin 배포 ID      |
-| `CF_DIST_ID_ENTRY_ADMISSION`  | 해당 환경 admission 배포 ID  |
-| `CF_DIST_ID_ENTRY_MONITORING` | 해당 환경 monitoring 배포 ID |
+| 이름                          | 값                                         |
+| ----------------------------- | ------------------------------------------ |
+| `AWS_ACCESS_KEY_ID`           | 6단계에서 발급한 **해당 환경 사용자**의 키 |
+| `AWS_SECRET_ACCESS_KEY`       | 6단계에서 발급한 **해당 환경 사용자**의 키 |
+| `CF_DIST_ID_ENTRY_USER`       | 해당 환경 user 배포 ID                     |
+| `CF_DIST_ID_ENTRY_AUTH`       | 해당 환경 auth 배포 ID                     |
+| `CF_DIST_ID_ENTRY_ADMIN`      | 해당 환경 admin 배포 ID                    |
+| `CF_DIST_ID_ENTRY_ADMISSION`  | 해당 환경 admission 배포 ID                |
+| `CF_DIST_ID_ENTRY_MONITORING` | 해당 환경 monitoring 배포 ID               |
 
 ### 7-4. 환경별 Variables (prod / stag 각각)
 
@@ -306,7 +376,9 @@ Settings → Secrets and variables → Actions → **Secrets**:
   - stag: `https://stag.entrydsm.hs.kr`, `https://auth-stag.entrydsm.hs.kr`, `https://admin-stag.entrydsm.hs.kr`, `https://admission-stag.entrydsm.hs.kr`, `https://monitor-stag.entrydsm.hs.kr`
 - **쿠키**: 서브도메인 간 공유가 필요하면 `Set-Cookie`에 `Domain=.entrydsm.hs.kr; Secure; SameSite=Lax`.
   - entry-admin은 `document.cookie`에서 `accessToken`을 읽으므로 해당 쿠키는 `HttpOnly`를 붙일 수 없고 `Domain=.entrydsm.hs.kr`가 필수다.
-  - stag 도메인도 전부 `entrydsm.hs.kr` 바로 아래라(플랫 방식) `.entrydsm.hs.kr` 쿠키 범위에 포함된다 → **stag와 prod가 쿠키를 공유**하게 된다. 플랫 구조에서는 도메인으로 좁힐 수 없으므로 stag 백엔드는 **쿠키 이름을 다르게** 쓰는 것을 권장.
+  - stag 도메인도 전부 `entrydsm.hs.kr` 바로 아래라(플랫 방식) `.entrydsm.hs.kr` 쿠키 범위에 포함된다 → **stag와 prod가 쿠키를 공유**하게 된다.
+  - ⚠️ **보안 경계 주의**: 이 구조에서는 stag 앱 어디든 XSS가 뚫리면 `document.cookie`로 **prod 토큰까지 읽을 수 있다** (non-HttpOnly + 상위 도메인 쿠키라서). 쿠키 **이름을 다르게 지정해도 접근 범위 자체는 좁아지지 않으므로** 이름 분리는 혼선 방지책이지 보안 경계가 아니다. 그래도 stag 백엔드의 **쿠키 이름 분리는 필수**로 한다 (stag 로그인이 prod 세션을 덮어쓰는 사고 방지).
+  - 근본 대책은 앱별 host-only `HttpOnly; Secure; SameSite=Lax` 쿠키 + 서버 측 세션(또는 앱 간 토큰 교환)으로 가는 것 — entry-admin의 `document.cookie` 토큰 읽기 제거와 백엔드 변경이 필요하므로 추후 과제로 남긴다.
 
 ## 10. 롤백
 

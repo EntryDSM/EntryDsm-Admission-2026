@@ -114,7 +114,7 @@ export const CommonHeader = () => {
   };
 
   const handleLoginClick = () => {
-    window.location.href = "https://auth.entrydsm.kr";
+    window.location.href = "https://auth.entrydsm.hs.kr";
   };
 
   //TODO: api 연동하기 전
