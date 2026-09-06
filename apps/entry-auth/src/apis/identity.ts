@@ -1,4 +1,10 @@
-const API_BASE_URL = import.meta.env.VITE_IDENTITY_API_URL?.replace(/\/$/, "") ?? "";
+import { resolveRequiredUrl } from "@entry/utils";
+
+const API_BASE_URL = resolveRequiredUrl(
+  "VITE_IDENTITY_API_URL",
+  import.meta.env.VITE_IDENTITY_API_URL as string | undefined,
+  import.meta.env.PROD
+);
 
 interface ApiEnvelope<T> {
   success: boolean;

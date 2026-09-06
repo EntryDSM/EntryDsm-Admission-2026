@@ -1,9 +1,10 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+import { SCHOOL_HOMEPAGE_URL } from "../../utils/env";
 
 export const ConsultationSection = () => {
   const handleHomepageClick = () => {
-    window.open("https://dsmhs.djsch.kr/main.do", "_blank", "noopener,noreferrer");
+    window.open(SCHOOL_HOMEPAGE_URL, "_blank", "noopener,noreferrer");
   };
 
   return (
