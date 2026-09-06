@@ -4,6 +4,9 @@ import { FormElement } from "../../components";
 import { usePageData } from "@entry/ui";
 import { GRADUATION_TYPES, type GraduationType } from "@entry/ui";
 
+const GENERAL_ONLY_SPECIAL_NOTES = ["국가유공자", "특례입학 대상자"] as const;
+const SPECIAL_NOTE_OPTIONS = [...GENERAL_ONLY_SPECIAL_NOTES, "해당 없음"];
+
 export const ApplicationClassification = () => {
   const [datas, setDatas] = usePageData("applicationClassification");
   const graduationType = datas?.graduationType as GraduationType | undefined;
@@ -59,8 +62,28 @@ export const ApplicationClassification = () => {
   ];
 
   const handleTypeSelection = (value: string) => {
+    if (GENERAL_ONLY_SPECIAL_NOTES.includes(datas.specialNotes as (typeof GENERAL_ONLY_SPECIAL_NOTES)[number])) {
+      return;
+    }
+
     setDatas({ ...datas, typeSelection: value });
   };
+
+  const handleSpecialNotesSelection = (value: string) => {
+    const requiresRegularAdmission = GENERAL_ONLY_SPECIAL_NOTES.includes(
+      value as (typeof GENERAL_ONLY_SPECIAL_NOTES)[number]
+    );
+
+    setDatas({
+      ...datas,
+      specialNotes: value,
+      typeSelection: requiresRegularAdmission ? "일반" : datas.typeSelection,
+    });
+  };
+
+  const requiresRegularAdmission = GENERAL_ONLY_SPECIAL_NOTES.includes(
+    datas.specialNotes as (typeof GENERAL_ONLY_SPECIAL_NOTES)[number]
+  );
 
   const handleRegionSelection = (value: string) => {
     setDatas({ ...datas, regionSelection: value });
@@ -80,14 +103,23 @@ export const ApplicationClassification = () => {
   return (
     <Flex width="100%" height="fit-content" isColumn={true} gap={16}>
       <FormElement
+        label="특기 사항"
+        type="radio"
+        groupName="특기 사항"
+        radioDatas={SPECIAL_NOTE_OPTIONS}
+        selectedRadio={datas?.specialNotes}
+        setSelectedRadio={handleSpecialNotesSelection}
+        explanation="＊국가유공자 및 특례입학 대상자는 일반 전형으로만 접수할 수 있습니다."
+      />
+      <FormElement
         label="전형 선택"
         type="radio"
         groupName="전형 선택"
         radioDatas={formRadioData[0].data}
         selectedRadio={datas?.typeSelection}
         setSelectedRadio={handleTypeSelection}
+        disabledRadioDatas={requiresRegularAdmission ? ["마이스터 인재", "사회통합"] : []}
       />
-
       <FormElement
         label="지역 선택"
         type="radio"
@@ -96,7 +128,6 @@ export const ApplicationClassification = () => {
         selectedRadio={datas?.regionSelection}
         setSelectedRadio={handleRegionSelection}
       />
-
       <FormElement
         label="졸업 구분"
         type="radio"
@@ -105,7 +136,6 @@ export const ApplicationClassification = () => {
         selectedRadio={datas?.graduationType}
         setSelectedRadio={handleGraduationTypeSelection}
       />
-
       {datas?.graduationType &&
         datas?.graduationType !== "검정고시(중학교 졸업 학력)" &&
         formDropDownData.length > 0 && (

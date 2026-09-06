@@ -8,12 +8,21 @@ interface IRadioType {
   isSelected: boolean;
   onSelect: () => void;
   groupName: string;
+  disabled?: boolean;
 }
 
-export const RadioContent = ({ label, isSelected, onSelect, groupName }: IRadioType) => (
-  <RadioLabel>
+export const RadioContent = ({ label, isSelected, onSelect, groupName, disabled = false }: IRadioType) => (
+  <RadioLabel $disabled={disabled}>
     <Flex width="fit-content" height="fit-content" gap={8} alignItems="center">
-      <Radio type="radio" name={groupName} value={label} checked={isSelected} onChange={onSelect} aria-label={label} />
+      <Radio
+        type="radio"
+        name={groupName}
+        value={label}
+        checked={isSelected}
+        onChange={onSelect}
+        aria-label={label}
+        disabled={disabled}
+      />
       <RadioIndicator isClick={isSelected}>
         <Check color={isSelected ? colors.extra.realWhite : "transparent"} />
       </RadioIndicator>
@@ -22,9 +31,10 @@ export const RadioContent = ({ label, isSelected, onSelect, groupName }: IRadioT
   </RadioLabel>
 );
 
-const RadioLabel = styled.label`
+const RadioLabel = styled.label<{ $disabled: boolean }>`
   display: inline-flex;
-  cursor: pointer;
+  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+  opacity: ${({ $disabled }) => ($disabled ? 0.45 : 1)};
   position: relative;
 
   &:has(input:focus-visible) span {
@@ -37,6 +47,10 @@ const Radio = styled.input`
   position: absolute;
   opacity: 0;
   cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 `;
 
 const RadioIndicator = styled.span<{ isClick: boolean }>`
@@ -49,5 +63,5 @@ const RadioIndicator = styled.span<{ isClick: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
+  cursor: inherit;
 `;

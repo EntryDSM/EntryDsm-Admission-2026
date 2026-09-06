@@ -44,6 +44,7 @@ interface RadioProps {
   groupName: string;
   selectedRadio?: string;
   setSelectedRadio?: (value: string) => void;
+  disabledRadioDatas?: string[];
 }
 
 interface DropDownProps {
@@ -202,7 +203,12 @@ export const FormElement = React.memo<FormElementProps>(props => {
                 label={data}
                 isSelected={props.selectedRadio === data}
                 groupName={props.groupName}
+                disabled={props.disabledRadioDatas?.includes(data)}
                 onSelect={() => {
+                  if (props.disabledRadioDatas?.includes(data)) {
+                    return;
+                  }
+
                   if (props.selectedRadio === data) {
                     props.setSelectedRadio?.("");
                   } else {

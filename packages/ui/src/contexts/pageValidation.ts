@@ -4,7 +4,7 @@ import type { ApplicationState } from "./ApplicationDataContext";
 const validateApplicationClassificationPage = (data: unknown) => {
   const missingFields: string[] = [];
 
-  ["typeSelection", "regionSelection", "graduationType"].forEach(field => {
+  ["typeSelection", "regionSelection", "graduationType", "specialNotes"].forEach(field => {
     if (isEmptyValue(getObjectFieldValue(data, field))) {
       missingFields.push(field);
     }
@@ -44,6 +44,7 @@ const validateGuardianInfoPage = (data: unknown) => {
   const missingFields = createRequiredFieldsValidator([
     "guardianName",
     "guardianNumber",
+    "guardianGender",
     "relationship",
     "postalCode",
     "address",
@@ -71,7 +72,6 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
     "applicantNumber",
     "dateOfBirth",
     "gender",
-    "specialNotes",
   ]),
   "/guardian-info": validateGuardianInfoPage,
   "/middle-school-info": validateMiddleSchoolInfoPage,
@@ -86,7 +86,7 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/second-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/third-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/activity-prospective-graduate": createRequiredFieldsValidator(activityFields),
-  "/ged/score": createRequiredFieldsValidator(["kor", "soc", "his", "sci", "math", "eng"]),
+  "/ged/score": createRequiredFieldsValidator(scoreFields),
   "/ged/attendance-volunteer": createRequiredFieldsValidator(["dsmAlgorithm", "certificate"]),
 };
 
@@ -115,14 +115,15 @@ const fieldNameMap: Record<string, string> = {
   regionSelection: "지역 선택",
   graduationType: "졸업 구분",
   graduationDate: "졸업 연월",
-  idPhoto: "증명 사진",
   specialNotes: "특기 사항",
+  idPhoto: "증명 사진",
   applicantName: "지원자 성명",
   applicantNumber: "지원자 연락처",
   dateOfBirth: "생년월일",
   gender: "성별",
   guardianName: "보호자 성명",
   guardianNumber: "보호자 연락처",
+  guardianGender: "보호자 성별",
   relationship: "지원자와의 관계",
   otherRelationship: "지원자와의 관계(기타)",
   postalCode: "우편번호",
