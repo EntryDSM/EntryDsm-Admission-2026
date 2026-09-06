@@ -4,8 +4,6 @@ import { ApplicationTimeline, FaqSection, InfoSection } from "../components";
 import { school } from "../assets";
 import { ADMISSION_APP_URL } from "../utils/env";
 
-const ADMISSION_APP_URL = import.meta.env.VITE_ADMISSION_APP_URL ?? "https://entry-admission.dsmhs.kr/";
-
 // API 연동 비활성화
 // import { getAccessToken } from '@entry/utils';
 // import { useSchedule } from '../hooks/useSchedule';
