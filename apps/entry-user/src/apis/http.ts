@@ -57,6 +57,19 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
   return requestOptions;
 };
 
+// 프록시나 서버 장애로 JSON이 아닌 오류 본문이 와도 HTTP 상태와 본문을 함께 보존합니다.
+const parseResponseBody = <T>(responseText: string): ApiResponse<T> | string | null => {
+  if (!responseText) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(responseText) as ApiResponse<T>;
+  } catch {
+    return responseText;
+  }
+};
+
 const request = async <T>(
   path: string,
   method: string,
@@ -71,7 +84,7 @@ const request = async <T>(
   });
 
   const responseText = await response.text();
-  const responseBody = responseText ? (JSON.parse(responseText) as ApiResponse<T>) : null;
+  const responseBody = parseResponseBody<T>(responseText);
 
   if (!response.ok) {
     throw new HttpError("API 요청이 실패했습니다.", response.status, responseBody);

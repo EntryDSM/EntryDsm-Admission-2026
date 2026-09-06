@@ -11,16 +11,16 @@ export const ApplicationPreview = () => {
 
   return (
     <Container>
-      {isPending ? (
-        <ApplicationLoadingContainer>
-          <Text fontSize={20} color={colors.gray[400]}>
-            원서 파일을 조회하고 있습니다.
-          </Text>
-        </ApplicationLoadingContainer>
-      ) : !receiptCode ? (
+      {!receiptCode ? (
         <ApplicationLoadingContainer>
           <Text fontSize={20} color={colors.gray[400]}>
             작성 중인 원서 정보를 찾을 수 없습니다.
+          </Text>
+        </ApplicationLoadingContainer>
+      ) : isPending ? (
+        <ApplicationLoadingContainer>
+          <Text fontSize={20} color={colors.gray[400]}>
+            원서 파일을 조회하고 있습니다.
           </Text>
         </ApplicationLoadingContainer>
       ) : isError ? (

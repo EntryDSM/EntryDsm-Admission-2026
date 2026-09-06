@@ -19,6 +19,7 @@ import {
   submitGrades,
 } from "../apis";
 import { ApplicationNav } from "../components";
+import { getAccessToken } from "../utils/token";
 
 const admissionTypes = {
   일반: "REGULAR",
@@ -112,45 +113,25 @@ export const AppLayout = () => {
   const [classificationData] = usePageData("applicationClassification");
   const { state, loadedStorageKey, loadFromStorage, saveToStorage } = useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
-  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
+  const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
+  const isAuthenticated = Boolean(getAccessToken());
+  const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
 
   useEffect(() => {
-    let isMounted = true;
-
-    if (!storageKey) {
-      setIsStorageLoaded(true);
-      return () => {
-        isMounted = false;
-      };
+    if (isAuthenticated && storageKey && loadedStorageKey !== storageKey) {
+      setHasStorageLoadError(false);
+      void loadFromStorage(storageKey).catch(error => {
+        console.error("원서 임시저장 데이터를 불러오지 못했습니다.", error);
+        toast.error("원서 임시저장 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.");
+        setHasStorageLoadError(true);
+      });
     }
-
-    if (loadedStorageKey === storageKey) {
-      setIsStorageLoaded(true);
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    setIsStorageLoaded(false);
-
-    const restoreApplicationData = async () => {
-      await loadFromStorage(storageKey);
-      if (isMounted) {
-        setIsStorageLoaded(true);
-      }
-    };
-
-    void restoreApplicationData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [loadFromStorage, loadedStorageKey, storageKey]);
+  }, [isAuthenticated, loadFromStorage, loadedStorageKey, storageKey]);
 
   useEffect(() => {
-    if (!isStorageLoaded || !storageKey || loadedStorageKey !== storageKey) {
+    if (!isAuthenticated || !isStorageLoaded || !storageKey || loadedStorageKey !== storageKey) {
       return;
     }
 
@@ -161,7 +142,7 @@ export const AppLayout = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
+  }, [isAuthenticated, isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
   const pageGraduateRoutes = [
     { path: "/application-classification", step: 0 },
     { path: "/applicant-info", step: 1 },
@@ -214,9 +195,15 @@ export const AppLayout = () => {
   const currentPath = location.pathname;
   const currentIndex = routes.findIndex(path => currentPath.includes(path));
   const currentPage = currentIndex >= 0 ? currentIndex + 1 : 1;
+  const currentRoute = routes[currentPage - 1];
   const currentStep = routesConfig[currentPage - 1]?.step ?? 0;
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/", { replace: true });
+      return;
+    }
+
     if (!isStorageLoaded) {
       return;
     }
@@ -238,7 +225,7 @@ export const AppLayout = () => {
     if (firstIncompleteRoute) {
       navigate(firstIncompleteRoute, { replace: true });
     }
-  }, [applicantId, currentIndex, isStorageLoaded, navigate, routes, state]);
+  }, [applicantId, currentIndex, isAuthenticated, isStorageLoaded, navigate, routes, state]);
 
   const setCurrentPage = (page: number) => {
     const path = routes[page - 1];
@@ -246,7 +233,6 @@ export const AppLayout = () => {
   };
 
   const validateCurrentPage = () => {
-    const currentRoute = routes[currentPage - 1];
     return currentRoute ? canProceedToNext(state, currentRoute) : { canProceed: true };
   };
 
@@ -259,7 +245,7 @@ export const AppLayout = () => {
 
     setIsSaving(true);
     try {
-      switch (currentPath) {
+      switch (currentRoute) {
         case "/application-classification": {
           const graduationTypeValue = getMappedValue(
             graduationTypes,
@@ -277,7 +263,7 @@ export const AppLayout = () => {
           break;
         }
         case "/applicant-info": {
-          const { idPhoto, applicantName, applicantNumber, gender, dateOfBirth, specialNotes } = state.applicantInfo;
+          const { idPhoto, applicantName, applicantNumber, gender, dateOfBirth } = state.applicantInfo;
 
           await updateApplicantPersonalInformation({
             applicantId,
@@ -286,7 +272,11 @@ export const AppLayout = () => {
             phoneNumber: applicantNumber,
             gender: getMappedValue(genders, gender, "성별"),
             birthdate: formatBirthdate(dateOfBirth),
-            specialAdmissionType: getMappedValue(specialAdmissionTypes, specialNotes, "특기 사항"),
+            specialAdmissionType: getMappedValue(
+              specialAdmissionTypes,
+              state.applicationClassification.specialNotes,
+              "특기 사항"
+            ),
           });
           break;
         }
@@ -307,10 +297,10 @@ export const AppLayout = () => {
           const { schoolName, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
           await updateMiddleSchoolInformation({
             applicantId,
-            schoolName: getRequiredValue(schoolName ?? undefined, "중학교 이름"),
-            studentNumber: String(getRequiredValue(studentId ?? undefined, "중학교 학번")),
-            schoolPhone: getRequiredValue(schoolPhone ?? undefined, "중학교 전화번호"),
-            teacherName: getRequiredValue(teacherName ?? undefined, "중학교 교사 성명"),
+            schoolName: getRequiredValue(schoolName, "중학교 이름"),
+            studentNumber: String(getRequiredValue(studentId, "중학교 학번")),
+            schoolPhone: getRequiredValue(schoolPhone, "중학교 전화번호"),
+            teacherName: getRequiredValue(teacherName, "중학교 교사 성명"),
           });
           break;
         }
@@ -355,7 +345,7 @@ export const AppLayout = () => {
         case "/activity-graduate":
         case "/activity-prospective-graduate": {
           const activity =
-            currentPath === "/activity-graduate" ? state.activityGraduate : state.activityGraduateProspective;
+            currentRoute === "/activity-graduate" ? state.activityGraduate : state.activityGraduateProspective;
 
           await Promise.all([
             submitAcademicRecords({
@@ -384,8 +374,12 @@ export const AppLayout = () => {
             ),
           });
           break;
-        default:
+        case "/application-preview":
+        case "/submit-check":
           break;
+        default:
+          console.error("저장할 수 없는 원서 경로입니다.", { currentPath, currentRoute });
+          return false;
       }
 
       return true;
@@ -398,6 +392,18 @@ export const AppLayout = () => {
   };
 
   const shouldRemoveTopPadding = currentPath.includes("/application-preview") || currentPath.includes("/submit-check");
+
+  if (!isAuthenticated) {
+    return <StorageLoadingMessage>로그인 후 원서 작성 서비스를 이용할 수 있습니다.</StorageLoadingMessage>;
+  }
+
+  if (hasStorageLoadError) {
+    return (
+      <StorageLoadingMessage>
+        원서 임시저장 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.
+      </StorageLoadingMessage>
+    );
+  }
 
   if (!isStorageLoaded || applicantId === null) {
     return <StorageLoadingMessage>원서 작성 정보를 불러오고 있습니다.</StorageLoadingMessage>;

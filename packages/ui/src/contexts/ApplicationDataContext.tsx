@@ -9,6 +9,7 @@ interface IApplicationClassificationType {
   regionSelection: string;
   graduationType: GraduationType | "";
   graduationDate: (string | number)[];
+  specialNotes: string;
 }
 
 interface IApplicantInfoType {
@@ -16,7 +17,6 @@ interface IApplicantInfoType {
   applicantNumber: string;
   applicantName: string;
   dateOfBirth: (string | number)[];
-  specialNotes: string;
   gender: string;
 }
 
@@ -118,13 +118,13 @@ const initialState: ApplicationState = {
     regionSelection: "",
     graduationType: "",
     graduationDate: [],
+    specialNotes: "",
   },
   applicantInfo: {
     idPhoto: null,
     applicantNumber: "",
     applicantName: "",
     dateOfBirth: [],
-    specialNotes: "",
     gender: "",
   },
   guardianInfo: {
@@ -279,8 +279,9 @@ interface ApplicationContextType {
 const ApplicationDataContext = createContext<ApplicationContextType | undefined>(undefined);
 
 const DB_NAME = "ApplicationFormDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "formData";
+const LEGACY_STORAGE_KEY = "applicationData";
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -293,6 +294,12 @@ const openDB = (): Promise<IDBDatabase> => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: "id" });
+        return;
+      }
+
+      if ((event as IDBVersionChangeEvent).oldVersion < DB_VERSION) {
+        // 원서별 키 도입 전의 단일 임시저장 레코드는 더 이상 복원하지 않으므로 삭제합니다.
+        (event.target as IDBOpenDBRequest).transaction?.objectStore(STORE_NAME).delete(LEGACY_STORAGE_KEY);
       }
     };
   });
@@ -413,24 +420,18 @@ export const ApplicationDataProvider: React.FC<{
   );
 
   const loadFromStorage = useCallback(async (storageKey: string) => {
-    try {
-      const savedData = await loadFromIndexedDB(storageKey);
-      if (savedData) {
-        dispatch({ type: "LOAD_FROM_STORAGE", payload: savedData });
-      } else {
-        dispatch({ type: "CLEAR_ALL_DATA" });
-      }
-    } catch (error) {
-      // console.error('데이터 로드 실패:', error);
-    } finally {
-      setLoadedStorageKey(storageKey);
+    const savedData = await loadFromIndexedDB(storageKey);
+    if (savedData) {
+      dispatch({ type: "LOAD_FROM_STORAGE", payload: savedData });
+    } else {
+      dispatch({ type: "CLEAR_ALL_DATA" });
     }
+
+    // IndexedDB를 정상적으로 읽은 경우에만 자동 저장을 허용합니다.
+    setLoadedStorageKey(storageKey);
   }, []);
 
   const clearAllData = useCallback(async (storageKey?: string) => {
-    dispatch({ type: "CLEAR_ALL_DATA" });
-    setLoadedStorageKey(null);
-
     if (storageKey) {
       try {
         await deleteFromIndexedDB(storageKey);
@@ -438,6 +439,10 @@ export const ApplicationDataProvider: React.FC<{
         console.error("원서 임시저장 데이터 삭제 실패:", error);
       }
     }
+
+    // 삭제 중에는 기존 키를 유지해 AppLayout이 데이터를 다시 복원하지 않도록 합니다.
+    dispatch({ type: "CLEAR_ALL_DATA" });
+    setLoadedStorageKey(null);
   }, []);
 
   const value: ApplicationContextType = {

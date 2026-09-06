@@ -38,7 +38,7 @@ export const getStartedApplicantId = () => {
   }
 
   const applicantId = Number(savedApplicantId);
-  return Number.isFinite(applicantId) ? applicantId : null;
+  return Number.isInteger(applicantId) && applicantId > 0 ? applicantId : null;
 };
 
 export const setStartedApplicantId = (applicantId: number) => {

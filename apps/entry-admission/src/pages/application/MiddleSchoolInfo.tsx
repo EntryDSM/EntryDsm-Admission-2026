@@ -1,12 +1,17 @@
 import { Flex } from "@entry/design";
 import { usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
-import { useEffect, useState } from "react";
 
 export const MiddleSchoolInfo = () => {
   const [datas, setDatas] = usePageData("middleSchoolInfo");
-  const [selectedName, setSelectedName] = useState<string | null>(datas.schoolName || null);
-  const [selectedCode, setSelectedCode] = useState<string | null>(datas.schoolCode || null);
+  // TODO: 검색 api 없어서 임시로 모달창 없이 입력창에 입력하는 형식으로 임시 대체함
+  // const [selectedName, setSelectedName] = useState<string | null>(datas.schoolName || null);
+  // const [selectedCode, setSelectedCode] = useState<string | null>(datas.schoolCode || null);
+
+  const handleSchoolNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setDatas({ ...datas, schoolName: value });
+  };
 
   const handleSchoolPhoneChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -23,19 +28,18 @@ export const MiddleSchoolInfo = () => {
     setDatas({ ...datas, teacherName: value });
   };
 
-  useEffect(() => {
-    setDatas({ ...datas, schoolCode: selectedCode, schoolName: selectedName });
-  }, [selectedName, selectedCode]);
+  // useEffect(() => {
+  //   setDatas({ ...datas, schoolCode: selectedCode, schoolName: selectedName });
+  // }, [selectedName, selectedCode]);
 
   return (
     <Flex isColumn={true} width="100%" height="fit-content">
       <FormElement
-        selectedName={datas.schoolName}
-        setSelectedName={setSelectedName}
-        selectedCode={datas.schoolCode}
-        setSelectedCode={setSelectedCode}
-        type="search"
+        type="input"
         label="중학교 이름"
+        inputType="text"
+        onInputChange={handleSchoolNameChange}
+        value={datas.schoolName}
       />
       <FormElement
         width="300px"

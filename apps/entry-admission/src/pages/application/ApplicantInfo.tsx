@@ -31,15 +31,7 @@ export const ApplicantInfo = () => {
     },
   ];
 
-  const formRadioData = [
-    {
-      data: ["국가유공자", "특례입학 대상자", "해당 없음"],
-    },
-    {
-      name: "성별",
-      data: ["남성", "여성"],
-    },
-  ];
+  const formRadioData = [{ name: "성별", data: ["남성", "여성"] }];
 
   const handleInputChange = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -48,10 +40,6 @@ export const ApplicantInfo = () => {
 
   const handleDropdownChange = (values: (string | number)[]) => {
     setDatas({ ...datas, dateOfBirth: values });
-  };
-
-  const handleEtcChange = (value: string) => {
-    setDatas({ ...datas, specialNotes: value });
   };
 
   const handleImgChange = async (file: File | null) => {
@@ -96,10 +84,10 @@ export const ApplicantInfo = () => {
         readonly={userInfoDatas.isParent ? false : true}
       />
       <FormElement
-        label={formRadioData[1].name}
+        label={formRadioData[0].name}
         type="radio"
         groupName="성별"
-        radioDatas={formRadioData[1].data}
+        radioDatas={formRadioData[0].data}
         selectedRadio={datas.gender}
         setSelectedRadio={handleGenderSelection}
       />
@@ -109,15 +97,6 @@ export const ApplicantInfo = () => {
         onDropDownChange={handleDropdownChange}
         dropDownDatas={formDropDownData[0].data}
         dropDownValues={datas.dateOfBirth || [2010, 1, 1]}
-      />
-      <FormElement
-        type="radio"
-        label="특기 사항"
-        groupName="특기 사항"
-        radioDatas={formRadioData[0].data}
-        setSelectedRadio={handleEtcChange}
-        selectedRadio={datas.specialNotes}
-        explanation="＊특기사항에 해당하는 항목이 있으면 체크해주세요"
       />
     </Flex>
   );

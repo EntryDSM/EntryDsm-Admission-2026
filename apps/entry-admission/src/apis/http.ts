@@ -1,5 +1,14 @@
 import type { ApiResponse } from "./types";
-import { getAccessToken } from "../utils/token";
+import { getAccessToken, removeAccessToken } from "../utils/token";
+
+const DEFAULT_TIMEOUT_MS = 30_000;
+// access token이 만료됐을 때 HttpOnly refresh cookie로 재발급을 요청하는 인증 API입니다.
+const REFRESH_TOKEN_ENDPOINT = "/api/identity/v11/auth/token";
+// 재발급 실패 시 이동할 인증 앱 주소이며, 배포 환경에서 VITE_AUTH_APP_URL로 교체할 수 있습니다.
+const AUTH_APP_URL = import.meta.env.VITE_AUTH_APP_URL?.replace(/\/$/, "") ?? "https://entry-auth.dsmhs.kr/";
+
+// 동시에 여러 요청이 401을 받아도 refresh 요청은 하나만 실행하도록 공유합니다.
+let refreshPromise: Promise<boolean> | null = null;
 
 // HTTP 실패 상태와 서버 응답 본문을 호출 화면까지 전달하는 공통 오류 객체.
 export class HttpError extends Error {
@@ -16,7 +25,9 @@ export class HttpError extends Error {
 interface HttpRequestOptions extends Omit<RequestInit, "body" | "headers" | "method"> {
   // false이면 공개 API 요청으로 처리해 Authorization 헤더를 넣지 않습니다.
   auth?: boolean;
+  // 호출 화면이 추가 헤더나 AbortSignal을 전달할 때 사용합니다.
   headers?: HeadersInit;
+  // undefined가 아닌 값만 URL query string으로 직렬화합니다.
   params?: Record<string, string | number | boolean | undefined>;
 }
 
@@ -62,6 +73,71 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
   return requestOptions;
 };
 
+// 호출자가 취소 신호를 주지 않은 요청만 공통 타임아웃으로 중단합니다.
+const createSignal = (options: HttpRequestOptions) => options.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
+
+const createRequestUrl = (path: string, options: HttpRequestOptions) =>
+  `${import.meta.env.VITE_BASE_URL}${createPath(path, options.params)}`;
+
+const redirectToLogin = () => {
+  if (typeof window !== "undefined") {
+    window.location.assign(AUTH_APP_URL);
+  }
+};
+
+// HttpOnly refresh cookie를 서버에 전송해 새 access token 쿠키를 발급받습니다.
+const refreshAccessToken = () => {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${import.meta.env.VITE_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+      credentials: "include",
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+    })
+      .then(response => response.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+};
+
+// 인증 API는 401에서 refresh 후 원 요청을 한 번만 재시도해 무한 재시도를 방지합니다.
+const fetchWithAuthentication = async (
+  path: string,
+  method: string,
+  body: BodyInit | null | undefined,
+  options: HttpRequestOptions
+) => {
+  const fetchRequest = () =>
+    fetch(createRequestUrl(path, options), {
+      ...createRequestOptions(options),
+      method,
+      body,
+      headers: createHeaders(body, options),
+      signal: createSignal(options),
+    });
+
+  let response = await fetchRequest();
+  if (response.status !== 401 || options.auth === false) {
+    return response;
+  }
+
+  if (await refreshAccessToken()) {
+    response = await fetchRequest();
+    if (response.status !== 401) {
+      return response;
+    }
+  }
+
+  removeAccessToken();
+  redirectToLogin();
+  return response;
+};
+
 // 프록시나 서버 장애로 JSON이 아닌 오류 본문이 와도 HTTP 상태와 본문을 함께 보존합니다.
 const parseResponseBody = <T>(responseText: string): ApiResponse<T> | string | null => {
   if (!responseText) {
@@ -82,12 +158,7 @@ const request = async <T>(
   body?: BodyInit | null,
   options: HttpRequestOptions = {}
 ): Promise<T> => {
-  const response = await fetch(`${import.meta.env.VITE_BASE_URL}${createPath(path, options.params)}`, {
-    ...createRequestOptions(options),
-    method,
-    body,
-    headers: createHeaders(body, options),
-  });
+  const response = await fetchWithAuthentication(path, method, body, options);
 
   const responseText = await response.text();
   const responseBody = parseResponseBody<T>(responseText);
@@ -109,12 +180,7 @@ const request = async <T>(
 
 // PDF처럼 JSON이 아닌 바이너리 응답을 Blob으로 반환합니다.
 const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
-  const response = await fetch(`${import.meta.env.VITE_BASE_URL}${createPath(path, options.params)}`, {
-    ...createRequestOptions(options),
-    method,
-    body,
-    headers: createHeaders(body, options),
-  });
+  const response = await fetchWithAuthentication(path, method, body, options);
 
   if (!response.ok) {
     throw new HttpError("API 요청이 실패했습니다.", response.status, await response.text());

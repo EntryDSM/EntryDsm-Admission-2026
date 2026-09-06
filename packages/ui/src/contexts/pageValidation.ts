@@ -4,7 +4,7 @@ import type { ApplicationState } from "./ApplicationDataContext";
 const validateApplicationClassificationPage = (data: unknown) => {
   const missingFields: string[] = [];
 
-  ["typeSelection", "regionSelection", "graduationType"].forEach(field => {
+  ["typeSelection", "regionSelection", "graduationType", "specialNotes"].forEach(field => {
     if (isEmptyValue(getObjectFieldValue(data, field))) {
       missingFields.push(field);
     }
@@ -72,7 +72,6 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
     "applicantNumber",
     "dateOfBirth",
     "gender",
-    "specialNotes",
   ]),
   "/guardian-info": validateGuardianInfoPage,
   "/middle-school-info": validateMiddleSchoolInfoPage,
@@ -116,8 +115,8 @@ const fieldNameMap: Record<string, string> = {
   regionSelection: "지역 선택",
   graduationType: "졸업 구분",
   graduationDate: "졸업 연월",
-  idPhoto: "증명 사진",
   specialNotes: "특기 사항",
+  idPhoto: "증명 사진",
   applicantName: "지원자 성명",
   applicantNumber: "지원자 연락처",
   dateOfBirth: "생년월일",

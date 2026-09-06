@@ -1,11 +1,31 @@
 import { colors, Flex, Text } from "@entry/design";
 import styled from "@emotion/styled";
-import { useNavigate } from "react-router";
 import { Btn } from "@entry/ui";
+import { useGetAllSchedule } from "../apis";
+
+const USER_APP_URL = import.meta.env.VITE_USER_APP_URL?.replace(/\/$/, "") ?? "https://entrydsm.kr";
+
+const formatResultDate = (date: string | undefined) => {
+  if (!date) return "일정 미정";
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return "일정 미정";
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  }).format(parsedDate);
+};
 
 export const Submitted = () => {
-  const resultDate = "2026년 00월 00일 00시 00분";
-  const navigate = useNavigate();
+  const { data: scheduleData } = useGetAllSchedule();
+  const resultDate = formatResultDate(
+    scheduleData?.schedules.find(schedule => schedule.type === "FIRST_ANNOUNCEMENT")?.date
+  );
+
   return (
     <Flex width="100%" height="calc(100vh - 100px)" justifyContent="center" alignItems="center">
       <Flex width="40%" height="fit-content" isColumn={true} gap={60} alignItems="center">
@@ -25,7 +45,7 @@ export const Submitted = () => {
             </Text>
           </MsgWrapper>
         </Flex>
-        <Btn width="100%" onClick={() => navigate("/")}>
+        <Btn width="100%" onClick={() => window.location.assign(`${USER_APP_URL}/mypage`)}>
           마이페이지
         </Btn>
       </Flex>

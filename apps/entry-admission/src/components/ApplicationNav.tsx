@@ -16,7 +16,7 @@ interface IApplicationNavType {
     message?: string;
   };
 }
-
+//TODO: 나중에 오류 토스트로 표시하기
 export const ApplicationNav = ({
   totalPage,
   currentStep,

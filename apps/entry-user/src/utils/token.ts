@@ -1,5 +1,4 @@
 const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
 
 const readCookie = (name: string) => {
   if (typeof document === "undefined") {
@@ -15,7 +14,7 @@ const writeCookie = (name: string, value: string) => {
     return;
   }
 
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax`;
+  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Secure`;
 };
 
 const removeCookie = (name: string) => {
@@ -23,7 +22,7 @@ const removeCookie = (name: string) => {
     return;
   }
 
-  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
 };
 
 export const getAccessToken = () => readCookie(ACCESS_TOKEN_KEY);
@@ -34,14 +33,4 @@ export const setAccessToken = (token: string) => {
 
 export const removeAccessToken = () => {
   removeCookie(ACCESS_TOKEN_KEY);
-};
-
-export const getRefreshToken = () => readCookie(REFRESH_TOKEN_KEY);
-
-export const setRefreshToken = (token: string) => {
-  writeCookie(REFRESH_TOKEN_KEY, token);
-};
-
-export const removeRefreshToken = () => {
-  removeCookie(REFRESH_TOKEN_KEY);
 };

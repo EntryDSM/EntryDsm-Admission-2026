@@ -1,7 +1,5 @@
 // API Authorization 헤더에 사용할 토큰의 쿠키 이름입니다.
 const ACCESS_TOKEN_KEY = "accessToken";
-// access token 재발급에 사용할 refresh token의 쿠키 이름입니다.
-const REFRESH_TOKEN_KEY = "refreshToken";
 
 // 브라우저 쿠키에서 토큰을 읽고 URL 인코딩을 되돌립니다.
 const readCookie = (name: string) => {
@@ -13,22 +11,22 @@ const readCookie = (name: string) => {
   return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : null;
 };
 
-// 토큰이 모든 원서 경로에서 공유되도록 Path=/와 SameSite=Lax로 저장합니다.
+// 토큰이 모든 원서 경로에서 HTTPS로만 공유되도록 보안 속성을 적용합니다.
 const writeCookie = (name: string, value: string) => {
   if (typeof document === "undefined") {
     return;
   }
 
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax`;
+  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Secure`;
 };
 
-// 같은 Path/SameSite 설정으로 만료 쿠키를 써서 토큰을 삭제합니다.
+// 같은 보안 속성으로 만료 쿠키를 써서 토큰을 삭제합니다.
 const removeCookie = (name: string) => {
   if (typeof document === "undefined") {
     return;
   }
 
-  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
 };
 
 // Http 클라이언트가 Authorization 헤더를 만들 때 사용합니다.
@@ -42,15 +40,4 @@ export const setAccessToken = (token: string) => {
 // 로그아웃 또는 인증 만료 처리에서 access token을 제거합니다.
 export const removeAccessToken = () => {
   removeCookie(ACCESS_TOKEN_KEY);
-};
-
-// refresh token은 재발급 흐름에서만 직접 읽고 갱신합니다.
-export const getRefreshToken = () => readCookie(REFRESH_TOKEN_KEY);
-
-export const setRefreshToken = (token: string) => {
-  writeCookie(REFRESH_TOKEN_KEY, token);
-};
-
-export const removeRefreshToken = () => {
-  removeCookie(REFRESH_TOKEN_KEY);
 };

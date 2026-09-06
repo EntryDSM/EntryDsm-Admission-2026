@@ -4,6 +4,5 @@ export * from "./schedule";
 export * from "./application";
 export * from "./applicationDocument";
 export * from "./pdfPreview";
-export * from "./submittedCheck";
 export * from "./evaluation";
 export * from "./types";
