@@ -1,6 +1,11 @@
+interface DocumentConsentProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
 // Supplied consent documents, effective 2026-09-30. Internal publishing notes omitted.
 export const consentDocuments = {
-  terms: (
+  terms: ({ checked, onChange }: DocumentConsentProps) => (
     <>
       <h2>{"서비스 이용약관 〔필수〕"}</h2>
       <p>{"대덕소프트웨어마이스터고등학교 입학 전형 시스템"}</p>
@@ -150,10 +155,13 @@ export const consentDocuments = {
       <h3>{"부칙"}</h3>
       <p>{"이 약관은 2026년 9월 30일부터 시행합니다."}</p>
       <hr />
-      <p>
-        {"☐ 서비스 이용약관에 동의합니다. "}
-        <strong>{"(필수)"}</strong>
-      </p>
+      <label className="document-consent">
+        <input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} />
+        <span>
+          {"서비스 이용약관에 동의합니다. "}
+          <strong>{"(필수)"}</strong>
+        </span>
+      </label>
       <hr />
       <p>
         <strong>{"대덕소프트웨어마이스터고등학교"}</strong>
@@ -162,7 +170,7 @@ export const consentDocuments = {
       <p>{"교무실 042-866-8822 · 행정실 042-866-8885 · 팩스 042-867-9900 · dsmhs@korea.kr"}</p>
     </>
   ),
-  privacy: (
+  privacy: ({ checked, onChange }: DocumentConsentProps) => (
     <>
       <h2>{"개인정보 수집·이용 동의 〔필수〕"}</h2>
       <p>{"대덕소프트웨어마이스터고등학교 입학 전형 시스템"}</p>
@@ -227,10 +235,13 @@ export const consentDocuments = {
         {"합니다."}
       </p>
       <hr />
-      <p>
-        {"☐ 위 내용을 모두 확인하였으며, 개인정보 수집·이용에 동의합니다. "}
-        <strong>{"(필수)"}</strong>
-      </p>
+      <label className="document-consent">
+        <input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} />
+        <span>
+          {"위 내용을 모두 확인하였으며, 개인정보 수집·이용에 동의합니다. "}
+          <strong>{"(필수)"}</strong>
+        </span>
+      </label>
       <hr />
       <p>
         <strong>{"대덕소프트웨어마이스터고등학교"}</strong>
@@ -239,7 +250,7 @@ export const consentDocuments = {
       <p>{"교무실 042-866-8822 · 행정실 042-866-8885 · 팩스 042-867-9900 · dsmhs@korea.kr"}</p>
     </>
   ),
-  sensitive: (
+  sensitive: ({ checked, onChange }: DocumentConsentProps) => (
     <>
       <h2>{"민감정보 처리 동의 〔선택 · 별도 동의〕"}</h2>
       <p>{"대덕소프트웨어마이스터고등학교 입학 전형 시스템"}</p>
@@ -278,10 +289,13 @@ export const consentDocuments = {
         <strong>{"일반전형 지원에는 아무런 제한이 없으며, 회원 가입도 정상적으로 완료됩니다."}</strong>
       </p>
       <hr />
-      <p>
-        {"☐ 위 민감정보의 처리에 동의합니다. "}
-        <strong>{"(선택)"}</strong>
-      </p>
+      <label className="document-consent">
+        <input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} />
+        <span>
+          {"위 민감정보의 처리에 동의합니다. "}
+          <strong>{"(선택)"}</strong>
+        </span>
+      </label>
       <hr />
       <p>
         <strong>{"대덕소프트웨어마이스터고등학교"}</strong>
