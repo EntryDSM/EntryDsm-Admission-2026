@@ -2,15 +2,7 @@ import { useState, useCallback } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AUTH_APP_URL,
-  Btn,
-  CancelModal,
-  ShowResultModal,
-  ChangePasswordModal,
-  USER_APP_URL,
-  useModal,
-} from "@entry/ui";
+import { AUTH_APP_URL, Btn, CancelModal, ShowResultModal, USER_APP_URL, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 import {
   type ApplicantStatus,
@@ -22,7 +14,6 @@ import {
   getApplicationStatus,
   getMyAccount,
   logout,
-  resetPassword,
 } from "../apis/mypage";
 
 const APPLICATION_STATUS_LABEL: Record<ApplicantStatus, string> = {
@@ -39,7 +30,6 @@ const SUBMITTED_STATUSES: ApplicantStatus[] = ["SUBMITTED", "REVIEWING", "COMPLE
 export const MyPage = () => {
   const [openModal, setOpenModal] = useState({
     delete: false,
-    changePassword: false,
     cancelApplication: false,
     cancelCredentials: false,
     download: false,
@@ -82,14 +72,6 @@ export const MyPage = () => {
     },
     onError: () => toast.error("회원 탈퇴에 실패했습니다."),
   });
-  const resetPasswordMutation = useMutation({
-    mutationFn: resetPassword,
-    onSuccess: () => {
-      toast.success("비밀번호가 성공적으로 변경되었습니다.");
-      closeModalHandler("changePassword");
-    },
-    onError: () => toast.error("비밀번호 변경에 실패했습니다."),
-  });
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
@@ -120,20 +102,6 @@ export const MyPage = () => {
   const hasApplication = applicantStatus !== "NONE";
   const isSubmitted = SUBMITTED_STATUSES.includes(applicantStatus);
   const canCancelApplication = applicantStatus === "SUBMITTED";
-
-  const handleChangePasswordConfirm = (loginId: string, newPassword: string) => {
-    if (!userInfo) {
-      toast.error("사용자 정보를 불러온 뒤 다시 시도해주세요.");
-      return;
-    }
-
-    resetPasswordMutation.mutate({
-      loginId,
-      name: userInfo.name,
-      birthdate: userInfo.birthdate,
-      newPassword,
-    });
-  };
 
   const handleDownloadApplication = () => {
     openModalHandler("download");
@@ -166,7 +134,7 @@ export const MyPage = () => {
   };
 
   const handleChangePassword = () => {
-    openModalHandler("changePassword");
+    window.location.href = `${AUTH_APP_URL.replace(/\/$/, "")}/find-password`;
   };
 
   const handleCheckResult = async () => {
@@ -291,15 +259,6 @@ export const MyPage = () => {
         content="탈퇴 시 모든 정보가 삭제되며, 다시 복구할 수 없습니다."
         btnText="탈퇴하기"
         onClick={() => deleteAccountMutation.mutate()}
-      />
-
-      <ChangePasswordModal
-        setIsOpen={() => closeModalHandler("changePassword")}
-        isOpen={openModal.changePassword}
-        onConfirm={handleChangePasswordConfirm}
-        isLoading={resetPasswordMutation.isPending}
-        userPhoneNumber={userInfo?.phone}
-        passVerifiedPhoneNumber={userInfo?.phone}
       />
 
       <CancelModal

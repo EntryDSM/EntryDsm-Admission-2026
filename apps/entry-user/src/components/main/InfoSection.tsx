@@ -2,16 +2,7 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { useNavigate, Link } from "react-router";
 import { noticeIcon, downloadIcon, noticeMoveArrowIcon } from "../../assets";
-
-interface Notice {
-  id: number;
-  title: string;
-  createdAt: string;
-  isPinned: boolean;
-  type: "GUIDE" | "NOTICE";
-}
-
-const noticeItems: Notice[] = [{ id: 1, title: "공지 1", createdAt: "2026-08-03", isPinned: false, type: "NOTICE" }];
+import { useGetAllNotice } from "../../apis";
 
 interface InfoSectionProps {
   subtitle: string;
@@ -19,6 +10,8 @@ interface InfoSectionProps {
 
 export const InfoSection = ({ subtitle }: InfoSectionProps) => {
   const navigate = useNavigate();
+  const { data, isLoading, isError } = useGetAllNotice("ADMISSION_NOTICE");
+  const noticeItems = data?.content.slice(0, 3) ?? [];
 
   const mainNotice = {
     icon: noticeIcon,
@@ -29,8 +22,8 @@ export const InfoSection = ({ subtitle }: InfoSectionProps) => {
   // pdf 다운로드
   const downloadPdfBtn = () => {
     const link = document.createElement("a");
-    link.href = "/2026학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형요강.pdf";
-    link.download = "2026학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형요강.pdf";
+    link.href = "/2027학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형 요강.pdf";
+    link.download = "2027학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형 요강.pdf";
     link.click();
   };
 
@@ -58,17 +51,25 @@ export const InfoSection = ({ subtitle }: InfoSectionProps) => {
               <DownloadIcon src={downloadIcon} alt="다운로드" />
             </DownloadButton>
           </MainNoticeCard>
-          {noticeItems.map((notice, index) => (
-            <NoticeCard key={index} to={`/notice/${notice.id}`}>
-              <NoticeContent>
-                <NoticeInfo>
-                  <NoticeTitle>{notice.title}</NoticeTitle>
-                  {notice.createdAt && <NoticeDate>{notice.createdAt}</NoticeDate>}
-                </NoticeInfo>
-              </NoticeContent>
-              <ArrowIcon src={noticeMoveArrowIcon} alt="이동" />
-            </NoticeCard>
-          ))}
+          {isLoading ? (
+            <NoticeState>공지사항을 불러오고 있습니다.</NoticeState>
+          ) : isError ? (
+            <NoticeState>공지사항을 불러오지 못했습니다.</NoticeState>
+          ) : noticeItems.length === 0 ? (
+            <NoticeState>등록된 입학 공지사항이 없습니다.</NoticeState>
+          ) : (
+            noticeItems.map(notice => (
+              <NoticeCard key={notice.noticeId} to={`/notice/${notice.noticeId}`}>
+                <NoticeContent>
+                  <NoticeInfo>
+                    <NoticeTitle>{notice.title}</NoticeTitle>
+                    <NoticeDate>{notice.createdAt.split("T")[0]}</NoticeDate>
+                  </NoticeInfo>
+                </NoticeContent>
+                <ArrowIcon src={noticeMoveArrowIcon} alt="이동" />
+              </NoticeCard>
+            ))
+          )}
         </NoticeContainer>
       </ContentWrapper>
     </Container>
@@ -194,6 +195,12 @@ const NoticeContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
+`;
+
+const NoticeState = styled.div`
+  padding: 24px 0;
+  text-align: center;
+  color: ${colors.gray[400]};
 `;
 
 const MainNoticeCard = styled.div`

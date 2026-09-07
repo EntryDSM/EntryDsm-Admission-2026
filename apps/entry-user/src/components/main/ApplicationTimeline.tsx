@@ -15,10 +15,13 @@ const formatScheduleDate = (value: string) =>
   }).format(new Date(value));
 
 export const ApplicationTimeline = ({ schedules }: ApplicationTimelineProps) => {
-  const timelineData = schedules?.map(schedule => ({
-    title: schedule.title,
-    date: `${formatScheduleDate(schedule.startAt)} ~ ${formatScheduleDate(schedule.endAt)}`,
-  })) ?? [{ title: "입학 전형 일정", date: "일정을 확인하고 있습니다." }];
+  const timelineData =
+    schedules && schedules.length > 0
+      ? schedules.map(schedule => ({
+          title: schedule.title,
+          date: `${formatScheduleDate(schedule.startAt)} ~ ${formatScheduleDate(schedule.endAt)}`,
+        }))
+      : [{ title: "입학 전형 일정", date: "일정을 확인하고 있습니다." }];
 
   return (
     <TimelineWrapper>
