@@ -7,6 +7,7 @@ import { AuthInput } from "@entry/ui";
 import { toast } from "react-toastify";
 import { IdentityApiError, signup } from "../../apis";
 import type { PassInfo, SignupType } from "../../apis";
+import { PrivacyPolicyModal } from "../Modal";
 
 interface SignupFormProps {
   passInfo: PassInfo;
@@ -36,16 +37,22 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [agreementStep, setAgreementStep] = useState<"privacy" | "terms" | null>(null);
 
   const isBirthdateValid = /^\d{4}-\d{2}-\d{2}$/.test(birthdate);
   const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isPasswordConfirmValid = passwordConfirm === password;
   const isFormValid = isBirthdateValid && isPasswordValid && isPasswordConfirmValid;
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isFormValid || isSubmitting) return;
 
+    setAgreementStep("privacy");
+  };
+
+  const handleAgree = async () => {
+    if (!isFormValid || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -56,6 +63,7 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
         password,
         signupType,
       });
+      setAgreementStep(null);
       toast.success("회원가입이 완료되었습니다. 로그인해 주세요.");
       navigate("/", { replace: true, state: { signupCompleted: true } });
     } catch (error) {
@@ -103,6 +111,13 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
       <SubmitButton type="submit" disabled={!isFormValid || isSubmitting}>
         {isSubmitting ? "가입 중..." : "회원가입"}
       </SubmitButton>
+      <PrivacyPolicyModal
+        isOpen={agreementStep !== null}
+        step={agreementStep ?? "privacy"}
+        onReject={() => setAgreementStep(null)}
+        onAgree={agreementStep === "privacy" ? () => setAgreementStep("terms") : handleAgree}
+        isSubmitting={isSubmitting}
+      />
     </Form>
   );
 };
