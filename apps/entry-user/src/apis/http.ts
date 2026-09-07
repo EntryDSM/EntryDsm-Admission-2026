@@ -1,5 +1,4 @@
 import type { ApiResponse } from "./types";
-import { getAccessToken } from "../utils/token";
 
 export class HttpError extends Error {
   public readonly status: number;
@@ -36,11 +35,6 @@ const createPath = (path: string, params?: HttpRequestOptions["params"]) => {
 
 const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOptions) => {
   const headers = new Headers(options.headers);
-  const token = options.auth === false ? null : getAccessToken();
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
 
   if (body !== undefined && body !== null && !(body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -81,6 +75,8 @@ const request = async <T>(
     method,
     body,
     headers: createHeaders(body, options),
+    // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함합니다.
+    credentials: options.auth === false ? "omit" : "include",
   });
 
   const responseText = await response.text();
@@ -107,6 +103,7 @@ const requestBlob = async (path: string, method: string, body?: BodyInit | null,
     method,
     body,
     headers: createHeaders(body, options),
+    credentials: options.auth === false ? "omit" : "include",
   });
 
   if (!response.ok) {
@@ -122,6 +119,7 @@ export const Http = {
     request<T>(path, "POST", JSON.stringify(data), options),
   patch: <T>(path: string, data: unknown, options?: HttpRequestOptions) =>
     request<T>(path, "PATCH", JSON.stringify(data), options),
+  delete: <T>(path: string, options?: HttpRequestOptions) => request<T>(path, "DELETE", null, options),
   postFormData: <T>(path: string, data: FormData, options?: HttpRequestOptions) =>
     request<T>(path, "POST", data, options),
   patchFormData: <T>(path: string, data: FormData, options?: HttpRequestOptions) =>

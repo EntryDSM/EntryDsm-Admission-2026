@@ -5,6 +5,7 @@ import { colors, Text } from "@entry/design";
 import { ScorePageNav, TabSection, Btn } from "@entry/ui";
 import { ScoreResultModal } from "../components";
 import { useCalculationData } from "../contexts";
+import { calculateAdmissionScores } from "../utils/admissionScoreCalculator";
 import { canProceedToNextCalculationStep } from "../utils/calculationValidation";
 
 type CalculationType = "primary" | "graduated" | "qe";
@@ -58,7 +59,7 @@ const STEP_EXPLANATIONS: Record<CalculationType, Record<string, string>> = {
   },
   qe: {
     "/score": "검정고시 점수를 입력해 주세요.",
-    "/activity": "자격증 보유 여부를 기입해 주세요.",
+    "/activity": "결석, 지각, 조퇴 등이 없는 경우에는 0을 입력해 주세요.",
   },
 };
 
@@ -113,6 +114,7 @@ export const CalculateLayout = () => {
   const isLastStep = currentStep === totalSteps - 1;
   const validationResult = canProceedToNextCalculationStep(state, location.pathname);
   const isCurrentStepValid = validationResult.canProceed;
+  const scoreResults = calculateAdmissionScores(state, activeType);
 
   const handleTypeChange = (type: string) => {
     if (!isCalculationType(type)) return;
@@ -199,6 +201,7 @@ export const CalculateLayout = () => {
             onClose={() => {
               setShowResultModal(false);
             }}
+            results={scoreResults}
           />
         </ContentContainer>
       </ContentWrapper>

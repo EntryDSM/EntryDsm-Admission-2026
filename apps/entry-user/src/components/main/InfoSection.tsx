@@ -13,10 +13,12 @@ interface Notice {
 
 const noticeItems: Notice[] = [{ id: 1, title: "공지 1", createdAt: "2026-08-03", isPinned: false, type: "NOTICE" }];
 
-export const InfoSection = () => {
-  const navigate = useNavigate();
+interface InfoSectionProps {
+  subtitle: string;
+}
 
-  const currentPeriod = "원서 접수 기간입니다.";
+export const InfoSection = ({ subtitle }: InfoSectionProps) => {
+  const navigate = useNavigate();
 
   const mainNotice = {
     icon: noticeIcon,
@@ -38,7 +40,7 @@ export const InfoSection = () => {
         <Title>
           <HighlightText>지금은</HighlightText>
         </Title>
-        <SubTitle>{currentPeriod}</SubTitle>
+        <SubTitle>{subtitle}</SubTitle>
         <Divider />
 
         <SectionHeader>
