@@ -7,14 +7,13 @@ import { AuthInput } from "@entry/ui";
 import { toast } from "react-toastify";
 import { IdentityApiError, signup } from "../../apis";
 import type { PassInfo, SignupType } from "../../apis";
-import { PrivacyPolicyModal } from "../Modal";
-import { consentTitles } from "../Modal/consentTypes";
-import type { ConsentType } from "../Modal/consentTypes";
+import type { SignupConsents } from "./SignupConsent";
 import { getBirthdateStatus } from "./birthdate";
 
 interface SignupFormProps {
   passInfo: PassInfo;
   signupType: SignupType;
+  consents: SignupConsents;
 }
 
 const getSignupErrorMessage = (error: unknown) => {
@@ -33,15 +32,13 @@ const getSignupErrorMessage = (error: unknown) => {
   return "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 };
 
-export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
+export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) => {
   const navigate = useNavigate();
   const [birthdate, setBirthdate] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [document, setDocument] = useState<ConsentType | null>(null);
-  const [consents, setConsents] = useState({ terms: false, privacy: false, sensitive: false });
 
   const birthdateStatus = getBirthdateStatus(birthdate);
   const isBirthdateValid = birthdateStatus === "valid";
@@ -110,46 +107,10 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
         isError={passwordConfirm.length > 0 && !isPasswordConfirmValid}
         errorMsg="비밀번호가 일치하지 않습니다."
       />
-      <ConsentBox disabled={isSubmitting}>
-        <legend>약관 및 개인정보 동의</legend>
-        <label>
-          <input
-            type="checkbox"
-            checked={Object.values(consents).every(Boolean)}
-            onChange={event => {
-              const agreed = event.target.checked;
-              setConsents({ terms: agreed, privacy: agreed, sensitive: agreed });
-            }}
-          />{" "}
-          전체 동의합니다 (선택 포함)
-        </label>
-        {(Object.keys(consentTitles) as ConsentType[]).map(type => (
-          <ConsentRow key={type}>
-            <label>
-              <input
-                type="checkbox"
-                required={type !== "sensitive"}
-                checked={consents[type]}
-                onChange={event => setConsents(previous => ({ ...previous, [type]: event.target.checked }))}
-              />
-              <ConsentTag $required={type !== "sensitive"}>[{type === "sensitive" ? "선택" : "필수"}]</ConsentTag>
-              {consentTitles[type]}
-            </label>
-            <button type="button" aria-label={`${consentTitles[type]} 전문 보기`} onClick={() => setDocument(type)}>
-              보기
-            </button>
-          </ConsentRow>
-        ))}
-        <p>
-          민감정보 처리에 동의하지 않으셔도 회원가입과 일반전형 지원이 가능합니다. 사회통합전형 지원 및 전형 중 편의
-          제공에는 동의가 필요합니다.
-        </p>
-      </ConsentBox>
       {submitError && <SubmitError role="alert">{submitError}</SubmitError>}
       <SubmitButton type="submit" disabled={!isFormValid || isSubmitting}>
         {isSubmitting ? "가입 중..." : "회원가입"}
       </SubmitButton>
-      <PrivacyPolicyModal document={document} onClose={() => setDocument(null)} />
     </Form>
   );
 };
@@ -190,45 +151,4 @@ const SubmitButton = styled.button`
     cursor: not-allowed;
     opacity: 0.4;
   }
-`;
-
-const ConsentBox = styled.fieldset`
-  border: 1px solid ${colors.gray[300]};
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 14px;
-  line-height: 1.6;
-  label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-  }
-  input {
-    accent-color: ${colors.orange[800]};
-    flex-shrink: 0;
-  }
-  p {
-    font-size: 12px;
-    color: ${colors.gray[500]};
-    margin-top: 12px;
-  }
-`;
-const ConsentRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 12px;
-  button {
-    border: 0;
-    background: transparent;
-    text-decoration: underline;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-`;
-const ConsentTag = styled.span<{ $required: boolean }>`
-  color: ${({ $required }) => ($required ? colors.orange[800] : colors.gray[500])};
-  flex-shrink: 0;
 `;

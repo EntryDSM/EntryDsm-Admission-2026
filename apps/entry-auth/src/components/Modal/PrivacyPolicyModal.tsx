@@ -10,9 +10,11 @@ import type { ConsentType } from "./consentTypes";
 interface PrivacyPolicyModalProps {
   document: ConsentType | null;
   onClose: () => void;
+  checked: boolean;
+  onConsentChange: (type: ConsentType, checked: boolean) => void;
 }
 
-export const PrivacyPolicyModal = ({ document, onClose }: PrivacyPolicyModalProps) => {
+export const PrivacyPolicyModal = ({ document, onClose, checked, onConsentChange }: PrivacyPolicyModalProps) => {
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!document) return;
@@ -24,19 +26,28 @@ export const PrivacyPolicyModal = ({ document, onClose }: PrivacyPolicyModalProp
   }, [document]);
   return (
     <Modal isOpen={document !== null} onClose={onClose} size="large">
-      <Container role="dialog" aria-modal="true" aria-label={document ? consentTitles[document] : undefined}>
-        <Content tabIndex={0}>{document && consentDocuments[document]}</Content>
-        <CloseButton
-          ref={closeRef}
-          type="button"
-          onClick={onClose}
-          onKeyDown={event => {
-            if (event.key === "Tab") {
-              event.preventDefault();
-              (event.currentTarget.previousElementSibling as HTMLElement)?.focus();
-            }
-          }}
-        >
+      <Container
+        role="dialog"
+        aria-modal="true"
+        aria-label={document ? consentTitles[document] : undefined}
+        onKeyDown={event => {
+          if (event.key !== "Tab") return;
+          const focusable = event.currentTarget.querySelectorAll<HTMLElement>("[tabindex='0'], input, button");
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (event.shiftKey && window.document.activeElement === first) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && window.document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }}
+      >
+        <Content tabIndex={0}>
+          {document && consentDocuments[document]({ checked, onChange: value => onConsentChange(document, value) })}
+        </Content>
+        <CloseButton ref={closeRef} type="button" onClick={onClose}>
           닫기
         </CloseButton>
       </Container>
@@ -79,6 +90,20 @@ const Content = styled.div`
     border: 0;
     border-top: 1px solid ${colors.gray[300]};
     margin: 20px 0;
+  }
+  .document-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 16px 0;
+    cursor: pointer;
+    input {
+      width: 20px;
+      height: 20px;
+      margin-top: 3px;
+      flex-shrink: 0;
+      accent-color: ${colors.orange[800]};
+    }
   }
   .retention {
     font-size: 1.2em;
