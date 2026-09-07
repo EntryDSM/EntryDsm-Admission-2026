@@ -13,9 +13,9 @@ export const AuthLink = styled.button`
   padding: 0;
   font: inherit;
   color: ${colors.gray[300]};
+  transition: color 0.3s ease-out;
   &:hover {
     color: ${colors.gray[400]};
-    transition: all 0.3s ease-out;
   }
 `;
 
