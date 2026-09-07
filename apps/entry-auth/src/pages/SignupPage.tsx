@@ -1,5 +1,3 @@
-import styled from "@emotion/styled";
-import { colors } from "@entry/design";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { SignupConsent } from "../components/signup/SignupConsent";
@@ -49,8 +47,8 @@ export const SignUpPage = () => {
       title={currentStep === 1 ? "약관 및 개인정보 동의" : currentStep === 2 ? "EntryDSM 회원가입" : "회원정보 입력"}
       footer={
         <>
-          <SignupLinkText onClick={() => navigate("/")}>로그인</SignupLinkText>
-          <SignupLink onClick={() => navigate("/find-password")}>비밀번호 찾기</SignupLink>
+          <AuthLinkText onClick={() => navigate("/")}>로그인</AuthLinkText>
+          <AuthLink onClick={() => navigate("/find-password")}>비밀번호 찾기</AuthLink>
         </>
       }
     >
@@ -58,23 +56,3 @@ export const SignUpPage = () => {
     </AuthLayout>
   );
 };
-
-const SignupLinkText = styled(AuthLinkText)`
-  padding: 0;
-  font: inherit;
-  color: ${colors.gray[300]};
-  &:hover {
-    color: ${colors.gray[400]};
-    transition: all 0.3s ease-out;
-  }
-`;
-
-const SignupLink = styled(AuthLink)`
-  padding: 0;
-  font: inherit;
-  color: ${colors.gray[300]};
-  &:hover {
-    color: ${colors.gray[400]};
-    transition: all 0.3s ease-out;
-  }
-`;
