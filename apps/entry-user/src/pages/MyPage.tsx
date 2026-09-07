@@ -1,66 +1,44 @@
 import { useState, useCallback } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
-import {
-  AUTH_APP_URL,
-  Btn,
-  CancelModal,
-  ShowResultModal,
-  PasswordModal,
-  ChangePasswordModal,
-  USER_APP_URL,
-  useModal,
-} from "@entry/ui";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AUTH_APP_URL, Btn, CancelModal, ShowResultModal, USER_APP_URL, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
-import { ADMISSION_TYPE_LABEL } from "../constants/admissionType";
-import { ADMISSION_APP_URL } from "../utils/env";
+import {
+  type ApplicantStatus,
+  type ApplicationDownload,
+  cancelApplication,
+  deleteMyAccount,
+  getApplicationDownload,
+  getApplicationResult,
+  getApplicationStatus,
+  getMyAccount,
+  logout,
+} from "../apis/mypage";
 
-// API 연동 비활성화
-// import {
-//   getUserInfo,
-//   IUserInfoResponseType,
-//   deleteUser,
-//   changePassword,
-//   removeAccessToken,
-//   removeRefreshToken,
-// } from '@entry/util-config';
-// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// import { usePassVerification } from '../hooks/usePassVerification';
-// import { useRemainingTime } from '../hooks/useRemainingTime';
-// import {
-//   getFinalApplicationPdf,
-//   deleteApplication,
-//   getApplicationStatus,
-//   getFirstRoundPass,
-//   getSecondRoundPass,
-// } from '../apis';
-// import { useGetAllSchedule } from '../apis/schedule/schedule';
-
-type LocalApplicationStatus = {
-  applicationType: keyof typeof ADMISSION_TYPE_LABEL;
-  isSubmitted: boolean;
-  isPrintedArrived: boolean;
+const APPLICATION_STATUS_LABEL: Record<ApplicantStatus, string> = {
+  NONE: "미지원",
+  DRAFT: "작성 중",
+  SUBMITTED: "제출 완료",
+  REVIEWING: "검토 중",
+  COMPLETED: "전형 완료",
+  CANCELED: "제출 취소",
 };
 
-const LOCAL_USER_INFO = {
-  name: "user",
-  phoneNumber: "전화번호 없음",
-};
-
-const LOCAL_REMAINING_TIME = "일정 확인 필요";
-const LOCAL_APPLICATION_AVAILABLE = true;
-
-const getLocalApplicationStatus = (): LocalApplicationStatus | null => null;
+const SUBMITTED_STATUSES: ApplicantStatus[] = ["SUBMITTED", "REVIEWING", "COMPLETED"];
 
 export const MyPage = () => {
   const [openModal, setOpenModal] = useState({
     delete: false,
-    password: false,
-    changePassword: false,
     cancelApplication: false,
+    cancelCredentials: false,
+    download: false,
   });
   const [isPass, setIsPass] = useState(false);
-  const [announcementStep, setAnnouncementStep] = useState<1 | 2>(1);
+  const [receiptCode, setReceiptCode] = useState("");
+  const [cancellationEmail, setCancellationEmail] = useState("");
+  const [cancellationPassword, setCancellationPassword] = useState("");
+  const queryClient = useQueryClient();
 
   const openModalHandler = useCallback((modalName: keyof typeof openModal) => {
     setOpenModal(prev => ({ ...prev, [modalName]: true }));
@@ -72,88 +50,128 @@ export const MyPage = () => {
 
   const resultModal = useModal();
 
-  const userInfo = LOCAL_USER_INFO;
-  const applicationStatus = getLocalApplicationStatus();
-  const remainingTime = LOCAL_REMAINING_TIME;
-  const isApplicationAvailable = LOCAL_APPLICATION_AVAILABLE;
+  const { data: userInfo } = useQuery({
+    queryKey: ["my-account"],
+    queryFn: getMyAccount,
+  });
+  const { data: applicationStatus } = useQuery({
+    queryKey: ["application-status"],
+    queryFn: getApplicationStatus,
+  });
+  const resultQuery = useQuery({
+    queryKey: ["application-result"],
+    queryFn: getApplicationResult,
+    enabled: false,
+  });
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteMyAccount,
+    onSuccess: () => {
+      closeModalHandler("delete");
+      toast.success("회원 탈퇴가 완료되었습니다.");
+      window.location.href = AUTH_APP_URL;
+    },
+    onError: () => toast.error("회원 탈퇴에 실패했습니다."),
+  });
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      window.location.href = USER_APP_URL;
+    },
+    onError: () => toast.error("로그아웃에 실패했습니다."),
+  });
+  const cancelApplicationMutation = useMutation({
+    mutationFn: cancelApplication,
+    onSuccess: () => {
+      toast.success("원서 접수가 취소되었습니다.");
+      setCancellationPassword("");
+      closeModalHandler("cancelCredentials");
+      void queryClient.invalidateQueries({ queryKey: ["application-status"] });
+    },
+    onError: () => toast.error("원서 접수 취소에 실패했습니다."),
+  });
+  const downloadApplicationMutation = useMutation<ApplicationDownload, Error, string>({
+    mutationFn: receiptCode => getApplicationDownload(receiptCode),
+    onSuccess: download => {
+      window.open(download.downloadUrl, "_blank", "noopener,noreferrer");
+      closeModalHandler("download");
+    },
+    onError: () => toast.error("원서 다운로드 링크를 생성하지 못했습니다."),
+  });
 
-  const handlePasswordConfirm = () => {
-    toast.success("회원 탈퇴가 완료되었습니다.");
-    closeModalHandler("password");
-    closeModalHandler("delete");
-    window.location.href = AUTH_APP_URL;
-  };
-
-  const handleChangePasswordConfirm = () => {
-    toast.success("비밀번호가 성공적으로 변경되었습니다.");
-    closeModalHandler("changePassword");
-  };
-
-  const handleApplicationSubmit = () => {
-    if (!isApplicationAvailable) {
-      toast.error("접수 기간이 아닙니다.");
-      return;
-    }
-
-    window.open(ADMISSION_APP_URL, "_blank");
-  };
+  const applicantStatus = applicationStatus?.applicantStatus ?? userInfo?.applicantStatus ?? "NONE";
+  const hasApplication = applicantStatus !== "NONE";
+  const isSubmitted = SUBMITTED_STATUSES.includes(applicantStatus);
+  const canCancelApplication = applicantStatus === "SUBMITTED";
 
   const handleDownloadApplication = () => {
-    toast.info("API 연동 제거 상태라 원서 다운로드는 비활성화되어 있습니다.");
+    openModalHandler("download");
   };
 
   const handleCancelApplication = () => {
-    toast.info("API 연동 제거 상태라 접수 취소는 비활성화되어 있습니다.");
     closeModalHandler("cancelApplication");
+    openModalHandler("cancelCredentials");
+  };
+
+  const handleDownloadConfirm = () => {
+    if (!receiptCode.trim()) {
+      toast.error("수험번호를 입력해주세요.");
+      return;
+    }
+
+    downloadApplicationMutation.mutate(receiptCode.trim());
+  };
+
+  const handleCancelApplicationConfirm = () => {
+    if (!cancellationEmail.trim() || !cancellationPassword) {
+      toast.error("이메일과 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
+    cancelApplicationMutation.mutate({
+      email: cancellationEmail.trim(),
+      password: cancellationPassword,
+    });
   };
 
   const handleChangePassword = () => {
-    openModalHandler("changePassword");
+    window.location.href = `${AUTH_APP_URL.replace(/\/$/, "")}/find-password`;
   };
 
-  const handleCheckFirstRoundResult = () => {
-    setIsPass(false);
-    setAnnouncementStep(1);
-    resultModal.open();
-  };
+  const handleCheckResult = async () => {
+    const { data } = await resultQuery.refetch();
 
-  const handleCheckSecondRoundResult = () => {
-    setIsPass(false);
-    setAnnouncementStep(2);
+    if (!data) {
+      toast.error("합격 결과를 불러오지 못했습니다.");
+      return;
+    }
+
+    if (data.passStatus === "PENDING") {
+      toast.info("아직 합격 결과가 발표되지 않았습니다.");
+      return;
+    }
+
+    setIsPass(data.passStatus === "PASSED");
     resultModal.open();
   };
 
   const handleLogout = () => {
-    window.location.href = USER_APP_URL;
+    logoutMutation.mutate();
   };
 
   return (
     <PageContainer>
       <ContentWrapper>
-        <UserName>{userInfo.name}님</UserName>
-        <PhoneNumber>{userInfo.phoneNumber}</PhoneNumber>
+        <UserName>{userInfo?.name ?? "사용자"}님</UserName>
+        <PhoneNumber>{userInfo?.phone ?? "전화번호 없음"}</PhoneNumber>
 
         <ApplicationStatusSection>
           <StatusTitle>지원 상태</StatusTitle>
           <StatusBox>
-            <ApplicationType>
-              {applicationStatus ? ADMISSION_TYPE_LABEL[applicationStatus.applicationType] : "미지원"}
-            </ApplicationType>
+            <ApplicationType>{hasApplication ? "지원서" : "미지원"}</ApplicationType>
             <Divider />
             <StatusInfo>
               <StatusLabel>지원서 상태 :</StatusLabel>
-              <StatusValue isSubmitted={applicationStatus?.isSubmitted || false}>
-                {applicationStatus
-                  ? applicationStatus.isPrintedArrived
-                    ? "제출 완료 및 원서 도착"
-                    : applicationStatus.isSubmitted
-                      ? "제출 완료"
-                      : "미제출"
-                  : "미지원"}
-              </StatusValue>
-              {!applicationStatus && remainingTime && (
-                <RemainingTimeText>(접수 마감까지 {remainingTime})</RemainingTimeText>
-              )}
+              <StatusValue isSubmitted={isSubmitted}>{APPLICATION_STATUS_LABEL[applicantStatus]}</StatusValue>
             </StatusInfo>
           </StatusBox>
         </ApplicationStatusSection>
@@ -166,7 +184,7 @@ export const MyPage = () => {
               borderColor={colors.orange[800]}
               hoverBackgroundColor={colors.orange[800]}
               onClick={handleDownloadApplication}
-              isBlocked={!applicationStatus?.isSubmitted}
+              isBlocked={!isSubmitted}
             >
               원서 다운로드
             </Btn>
@@ -175,21 +193,12 @@ export const MyPage = () => {
               color={colors.orange[800]}
               borderColor={colors.orange[800]}
               hoverBackgroundColor="transparent"
-              onClick={handleCheckFirstRoundResult}
+              onClick={handleCheckResult}
             >
-              1차 결과 확인
-            </Btn>
-            <Btn
-              backgroundColor={colors.gray[50]}
-              color={colors.orange[800]}
-              borderColor={colors.orange[800]}
-              hoverBackgroundColor="transparent"
-              onClick={handleCheckSecondRoundResult}
-            >
-              2차 결과 확인
+              합격 결과 확인
             </Btn>
           </Flex>
-          {applicationStatus ? (
+          {canCancelApplication && (
             <Btn
               backgroundColor={colors.gray[50]}
               color={colors.extra.error}
@@ -198,16 +207,6 @@ export const MyPage = () => {
               onClick={() => openModalHandler("cancelApplication")}
             >
               원서 최종 제출 취소
-            </Btn>
-          ) : (
-            <Btn
-              backgroundColor={isApplicationAvailable ? colors.gray[50] : colors.gray[200]}
-              color={isApplicationAvailable ? colors.orange[800] : colors.gray[400]}
-              borderColor={isApplicationAvailable ? colors.orange[800] : colors.gray[400]}
-              hoverBackgroundColor="transparent"
-              onClick={isApplicationAvailable ? handleApplicationSubmit : undefined}
-            >
-              원서 접수하기
             </Btn>
           )}
         </ButtonGroup>
@@ -259,29 +258,7 @@ export const MyPage = () => {
         title="탈퇴하시겠습니까?"
         content="탈퇴 시 모든 정보가 삭제되며, 다시 복구할 수 없습니다."
         btnText="탈퇴하기"
-        onClick={() => {
-          closeModalHandler("delete");
-          openModalHandler("password");
-        }}
-      />
-
-      <PasswordModal
-        setIsOpen={() => closeModalHandler("password")}
-        isOpen={openModal.password}
-        title="비밀번호 확인"
-        content="회원 탈퇴를 위해 비밀번호를 입력해주세요."
-        btnText="탈퇴하기"
-        onConfirm={handlePasswordConfirm}
-        isLoading={false}
-      />
-
-      <ChangePasswordModal
-        setIsOpen={() => closeModalHandler("changePassword")}
-        isOpen={openModal.changePassword}
-        onConfirm={handleChangePasswordConfirm}
-        isLoading={false}
-        userPhoneNumber={userInfo.phoneNumber}
-        passVerifiedPhoneNumber={userInfo.phoneNumber}
+        onClick={() => deleteAccountMutation.mutate()}
       />
 
       <CancelModal
@@ -293,12 +270,90 @@ export const MyPage = () => {
         onClick={handleCancelApplication}
       />
 
-      <ShowResultModal
-        isOpen={resultModal.isOpen}
-        onClose={resultModal.close}
-        isPass={isPass}
-        step={announcementStep}
-      />
+      {openModal.download && (
+        <InputModalOverlay>
+          <InputModal>
+            <ModalTitle>원서 다운로드</ModalTitle>
+            <ModalDescription>원서에 기재된 수험번호를 입력해주세요.</ModalDescription>
+            <InputGroup>
+              <InputLabel htmlFor="receipt-code">수험번호</InputLabel>
+              <ModalInput
+                id="receipt-code"
+                value={receiptCode}
+                onChange={event => setReceiptCode(event.target.value)}
+                placeholder="수험번호를 입력하세요"
+                disabled={downloadApplicationMutation.isPending}
+              />
+            </InputGroup>
+            <ModalButtonGroup>
+              <Btn
+                backgroundColor={colors.gray[50]}
+                color={colors.gray[500]}
+                borderColor={colors.gray[300]}
+                hoverBackgroundColor="transparent"
+                onClick={() => closeModalHandler("download")}
+              >
+                취소
+              </Btn>
+              <Btn onClick={handleDownloadConfirm} isBlocked={downloadApplicationMutation.isPending}>
+                {downloadApplicationMutation.isPending ? "생성 중..." : "다운로드"}
+              </Btn>
+            </ModalButtonGroup>
+          </InputModal>
+        </InputModalOverlay>
+      )}
+
+      {openModal.cancelCredentials && (
+        <InputModalOverlay>
+          <InputModal>
+            <ModalTitle>원서 접수 취소</ModalTitle>
+            <ModalDescription>취소를 위해 가입 이메일과 비밀번호를 입력해주세요.</ModalDescription>
+            <InputGroup>
+              <InputLabel htmlFor="cancellation-email">이메일</InputLabel>
+              <ModalInput
+                id="cancellation-email"
+                type="email"
+                value={cancellationEmail}
+                onChange={event => setCancellationEmail(event.target.value)}
+                placeholder="이메일을 입력하세요"
+                disabled={cancelApplicationMutation.isPending}
+              />
+            </InputGroup>
+            <InputGroup>
+              <InputLabel htmlFor="cancellation-password">비밀번호</InputLabel>
+              <ModalInput
+                id="cancellation-password"
+                type="password"
+                value={cancellationPassword}
+                onChange={event => setCancellationPassword(event.target.value)}
+                placeholder="비밀번호를 입력하세요"
+                disabled={cancelApplicationMutation.isPending}
+              />
+            </InputGroup>
+            <ModalButtonGroup>
+              <Btn
+                backgroundColor={colors.gray[50]}
+                color={colors.gray[500]}
+                borderColor={colors.gray[300]}
+                hoverBackgroundColor="transparent"
+                onClick={() => closeModalHandler("cancelCredentials")}
+              >
+                취소
+              </Btn>
+              <Btn
+                backgroundColor={colors.extra.error}
+                hoverBackgroundColor={colors.extra.error}
+                onClick={handleCancelApplicationConfirm}
+                isBlocked={cancelApplicationMutation.isPending}
+              >
+                {cancelApplicationMutation.isPending ? "취소 중..." : "접수 취소"}
+              </Btn>
+            </ModalButtonGroup>
+          </InputModal>
+        </InputModalOverlay>
+      )}
+
+      <ShowResultModal isOpen={resultModal.isOpen} onClose={resultModal.close} isPass={isPass} />
     </PageContainer>
   );
 };
@@ -425,9 +480,66 @@ const StatusValue = styled.span<{ isSubmitted: boolean }>`
   color: ${({ isSubmitted }) => (isSubmitted ? colors.orange[800] : colors.gray[400])};
 `;
 
-const RemainingTimeText = styled.span`
-  font-size: 18px;
+const InputModalOverlay = styled.div`
+  z-index: 120;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background-color: rgb(0 0 0 / 20%);
+`;
+
+const InputModal = styled.div`
+  width: min(100%, 440px);
+  padding: 40px;
+  border-radius: 24px;
+  background-color: ${colors.extra.realWhite};
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0;
+  font-size: 28px;
+  color: ${colors.gray[500]};
+`;
+
+const ModalDescription = styled.p`
+  margin: -8px 0 4px;
+  font-size: 16px;
+  color: ${colors.gray[400]};
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const InputLabel = styled.label`
+  font-size: 16px;
   font-weight: 500;
-  color: ${colors.orange[800]};
-  margin-left: 8px;
+  color: ${colors.gray[500]};
+`;
+
+const ModalInput = styled.input`
+  padding: 12px 16px;
+  border: 1px solid ${colors.gray[300]};
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+
+  &:focus {
+    border-color: ${colors.orange[800]};
+  }
+`;
+
+const ModalButtonGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
 `;

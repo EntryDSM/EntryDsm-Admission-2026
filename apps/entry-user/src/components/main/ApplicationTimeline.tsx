@@ -1,22 +1,27 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+import type { Schedule } from "../../apis/schedule";
 
-export const ApplicationTimeline = () => {
-  // 더미 데이터
-  const datas = {
-    applicationStart: "10월 7일",
-    applicationEnd: "11월 7일",
-    firstAnnouncement: "12월 7일",
-    interview: "12월 10일",
-    finalAnnouncement: "13월 7일",
-  };
+interface ApplicationTimelineProps {
+  schedules?: Schedule[];
+}
 
-  const timelineData = [
-    { title: "원서 제출", date: datas.applicationStart + " ~ " + datas.applicationEnd },
-    { title: "1차 발표", date: datas.firstAnnouncement },
-    { title: "2차 전형", date: datas.interview },
-    { title: "최종 발표", date: datas.finalAnnouncement },
-  ];
+const formatScheduleDate = (value: string) =>
+  new Intl.DateTimeFormat("ko-KR", {
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+
+export const ApplicationTimeline = ({ schedules }: ApplicationTimelineProps) => {
+  const timelineData =
+    schedules && schedules.length > 0
+      ? schedules.map(schedule => ({
+          title: schedule.title,
+          date: `${formatScheduleDate(schedule.startAt)} ~ ${formatScheduleDate(schedule.endAt)}`,
+        }))
+      : [{ title: "입학 전형 일정", date: "일정을 확인하고 있습니다." }];
 
   return (
     <TimelineWrapper>
