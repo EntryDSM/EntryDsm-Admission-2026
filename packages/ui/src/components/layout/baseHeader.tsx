@@ -6,7 +6,7 @@ import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
 import { Logout } from "../../assets";
-import { AUTH_APP_URL, AWS_CONSOLE_URL, USER_APP_URL } from "../../utils/env";
+import { AUTH_APP_URL, USER_APP_URL } from "../../utils/env";
 
 export const NoPathHeader = () => {
   const navigate = useNavigate();
@@ -212,13 +212,6 @@ export const MonitoringHeader = () => {
           hoverBackgroundColor={"#6668F1"}
         >
           EntryDSM 지원자 페이지
-        </Btn>
-        <Btn
-          onClick={() => window.open(AWS_CONSOLE_URL, "_blank", "noopener,noreferrer")}
-          backgroundColor={"#6668F1"}
-          hoverBackgroundColor={"#6668F1"}
-        >
-          Aws 콘솔 페이지
         </Btn>
         <ButtonName>
           김이름 <img src={Logout} alt="로그아웃" />

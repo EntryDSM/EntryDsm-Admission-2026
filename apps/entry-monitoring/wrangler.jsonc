@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "entry-monitoring",
+  "compatibility_date": "2026-09-08",
+  // 정적 자산 전용 Worker (서버 스크립트 없음). SPA 라우트 새로고침은 index.html(200)로 응답된다.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  // 커스텀 도메인으로만 서빙한다 (workers.dev 중복 origin 방지 — CORS·SEO 혼선 예방)
+  "workers_dev": false,
+  "routes": [{ "pattern": "monitor.entrydsm.hs.kr", "custom_domain": true }],
+  // 스테이징(develop 브랜치): `wrangler deploy -e stag` — 이름·도메인만 다르고 나머지는 상속
+  "env": {
+    "stag": {
+      "name": "entry-monitoring-stag",
+      "workers_dev": false,
+      "routes": [{ "pattern": "stag-monitor.entrydsm.hs.kr", "custom_domain": true }]
+    }
+  }
+}
