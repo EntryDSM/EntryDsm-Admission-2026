@@ -15,7 +15,7 @@ export const LoginPage = () => {
   const { submitLogin, isPending } = useLogin();
 
   const normalizedPhoneNumber = phoneNumber.replace(/[^\d]/g, "");
-  const isPhoneValid = /^\d{10,11}$/.test(normalizedPhoneNumber);
+  const isPhoneValid = /^\d{11}$/.test(normalizedPhoneNumber);
   const isPasswordValid = password.length >= 8 && /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isFormValid = isPhoneValid && isPasswordValid;
 
