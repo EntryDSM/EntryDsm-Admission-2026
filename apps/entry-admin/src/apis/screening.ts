@@ -1,5 +1,5 @@
 import { http } from "./http";
-import type { ScreeningResult } from "./types";
+import type { FinalScreeningResult, ScreeningResult } from "./types";
 
 const SCREENINGS_ENDPOINT = "/api/v11/admin/screenings";
 
@@ -7,9 +7,6 @@ const SCREENINGS_ENDPOINT = "/api/v11/admin/screenings";
 export const runFirstScreening = (dryRun: boolean) =>
   http.post<ScreeningResult>(`${SCREENINGS_ENDPOINT}/first/results`, { dryRun });
 
-/**
- * 최종 합격자 일괄 산출.
- * 명세 본문이 잘못 채워져 있어(로그인 API 예시), 1차 산출과 동일한 요청/응답 형태로 가정한다.
- */
-export const runFinalScreening = (dryRun: boolean) =>
-  http.post<ScreeningResult>(`${SCREENINGS_ENDPOINT}/final/results`, { dryRun });
+/** 2차(최종) 합격자 개별 등록. 본문 없이 대상 지원자만 지정하며, 등록한 지원자는 최종 합격 처리된다. */
+export const registerFinalScreeningResult = (applicantId: number) =>
+  http.post<FinalScreeningResult>(`${SCREENINGS_ENDPOINT}/final/results/${applicantId}`);
