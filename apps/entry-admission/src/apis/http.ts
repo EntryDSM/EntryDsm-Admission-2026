@@ -1,11 +1,10 @@
+import { AUTH_APP_URL } from "@entry/ui";
 import type { ApiResponse } from "./types";
 import { getAccessToken, removeAccessToken } from "../utils/token";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 // access token이 만료됐을 때 HttpOnly refresh cookie로 재발급을 요청하는 인증 API입니다.
 const REFRESH_TOKEN_ENDPOINT = "/api/identity/v11/auth/token";
-// 재발급 실패 시 이동할 인증 앱 주소이며, 배포 환경에서 VITE_AUTH_APP_URL로 교체할 수 있습니다.
-const AUTH_APP_URL = import.meta.env.VITE_AUTH_APP_URL?.replace(/\/$/, "") ?? "https://entry-auth.dsmhs.kr/";
 
 // 동시에 여러 요청이 401을 받아도 refresh 요청은 하나만 실행하도록 공유합니다.
 let refreshPromise: Promise<boolean> | null = null;
