@@ -1,18 +1,69 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+import { useQuery } from "@tanstack/react-query";
 import { ApplicationTimeline, FaqSection, InfoSection } from "../components";
 import { school } from "../assets";
+import { getSchedules, getServerTime } from "../apis/schedule";
+import { getMyAccount } from "../apis/mypage";
 import { ADMISSION_APP_URL } from "../utils/env";
 
-// API 연동 비활성화
-// import { getAccessToken } from '@entry/utils';
-// import { useSchedule } from '../hooks/useSchedule';
-// import { toast } from 'react-toastify';
-// import { getApplicationStatus, IApplicationStatusResponse } from '../apis';
-// import { useEffect, useState } from 'react';
+const toServerDate = (currentTime: {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}) =>
+  new Date(
+    currentTime.year,
+    currentTime.month - 1,
+    currentTime.day,
+    currentTime.hour,
+    currentTime.minute,
+    currentTime.second
+  );
 
 export const Main = () => {
+  const { data: schedules, isError: isSchedulesError } = useQuery({
+    queryKey: ["schedules"],
+    queryFn: getSchedules,
+  });
+  const { data: serverTime, isError: isServerTimeError } = useQuery({
+    queryKey: ["server-time"],
+    queryFn: getServerTime,
+    refetchInterval: 30_000,
+  });
+  const { isSuccess: isLoggedIn } = useQuery({
+    queryKey: ["my-account"],
+    queryFn: getMyAccount,
+    retry: false,
+  });
+  const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
+  const currentServerTime = serverTime ? toServerDate(serverTime) : null;
+  const isApplicationPeriod = Boolean(
+    applicationSchedule &&
+    currentServerTime &&
+    currentServerTime >= new Date(applicationSchedule.startAt) &&
+    currentServerTime <= new Date(applicationSchedule.endAt)
+  );
+  const applicationPeriodSubtitle =
+    isSchedulesError || isServerTimeError
+      ? "원서 접수 일정을 불러오지 못했습니다."
+      : !schedules || !serverTime
+        ? "원서 접수 일정을 확인하고 있습니다."
+        : !applicationSchedule
+          ? "원서 접수 일정이 등록되지 않았습니다."
+          : isApplicationPeriod
+            ? "원서 접수 기간입니다."
+            : "원서 접수 기간이 아닙니다.";
+  const canApply = isLoggedIn && isApplicationPeriod;
+
   const handleApplyClick = () => {
+    if (!canApply) {
+      return;
+    }
+
     window.location.href = ADMISSION_APP_URL;
   };
 
@@ -21,21 +72,21 @@ export const Main = () => {
       <MainContainer>
         <BackgroundImage src={school} alt="대덕소프트웨어마이스터고등학교" />
         <Overlay />
-
         <ContentWrapper>
           <Title>
             <OrangeText>대덕소프트웨어마이스터고등학교</OrangeText>
             <br />
             IT 업계를 이끌 미래 인재를 모집하고 있어요
           </Title>
-
           <TimelineSection>
-            <ApplicationTimeline />
-            <ApplyButton onClick={handleApplyClick}>지원하기</ApplyButton>
+            <ApplicationTimeline schedules={schedules} />
+            <ApplyButton onClick={handleApplyClick} disabled={!canApply}>
+              지원하기
+            </ApplyButton>
           </TimelineSection>
         </ContentWrapper>
       </MainContainer>
-      <InfoSection />
+      <InfoSection subtitle={applicationPeriodSubtitle} />
       <FaqSection />
     </>
   );
@@ -153,6 +204,12 @@ const ApplyButton = styled.button`
 
   &:active {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    background-color: ${colors.gray[400]};
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 
   @media (max-width: 1200px) {

@@ -1,14 +1,48 @@
-﻿import { colors, Flex, Text } from "@entry/design";
+import { colors, Flex, Text } from "@entry/design";
 import { Btn, EntryLogo } from "@entry/ui";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
+import { getStartedApplicantId, useGetAllSchedule, useStartApplication } from "../apis";
+import { getAccessToken } from "../utils/token";
+
+const formatScheduleDate = (date: string | undefined) => {
+  if (!date) return "일정 미정";
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return "일정 미정";
+
+  return new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parsedDate);
+};
 
 export const Landing = () => {
   const navigate = useNavigate();
-  const scheduleDatas = {
-    startDate: "00월 00일",
-    endDate: "00월 00일",
-    resultDate: "00월 00일",
+  const { mutateAsync: startApplication, isPending } = useStartApplication();
+  const { data: scheduleData } = useGetAllSchedule();
+  const schedules = scheduleData?.schedules ?? [];
+  const startDate = formatScheduleDate(schedules.find(schedule => schedule.type === "START_DATE")?.date);
+  const endDate = formatScheduleDate(schedules.find(schedule => schedule.type === "END_DATE")?.date);
+  const resultDate = formatScheduleDate(schedules.find(schedule => schedule.type === "FIRST_ANNOUNCEMENT")?.date);
+
+  const handleStartApplication = async () => {
+    if (!getAccessToken()) {
+      toast.error("원서 접수는 로그인 후 이용할 수 있습니다.");
+      return;
+    }
+
+    const startedApplicantId = getStartedApplicantId();
+
+    if (startedApplicantId !== null) {
+      navigate("/application-classification");
+      return;
+    }
+
+    try {
+      await startApplication();
+      navigate("/application-classification");
+    } catch {
+      // useStartApplication의 onError에서 사용자에게 실패 안내를 표시합니다.
+    }
   };
 
   return (
@@ -31,8 +65,7 @@ export const Landing = () => {
           </ContentContainer>
           <ContentContainer>
             <Text fontSize={16} fontWeight={600}>
-              원서 접수는 {scheduleDatas.startDate}부터 {scheduleDatas.endDate}까지 진행되고, 결과 발표는{" "}
-              {scheduleDatas.resultDate}입니다.
+              원서 접수는 {startDate}부터 {endDate}까지 진행되고, 결과 발표는 {resultDate}입니다.
             </Text>
           </ContentContainer>
           <ContentContainer>
@@ -41,7 +74,7 @@ export const Landing = () => {
             </Text>
           </ContentContainer>
         </Flex>
-        <Btn width="100%" onClick={() => navigate("/application-classification")}>
+        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isPending}>
           접수하기
         </Btn>
       </Flex>

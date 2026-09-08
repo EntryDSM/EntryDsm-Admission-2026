@@ -188,6 +188,7 @@ const NoDataRow = styled.div`
 `;
 
 const PageContainer = styled.div`
+  overflow-anchor: none;
   width: 100%;
   min-height: 100vh;
   background-color: white;
@@ -250,9 +251,11 @@ const TableRow = styled.div<{ isExpanded: boolean }>`
   padding: 16px 0;
   border-bottom: 1px solid ${colors.gray[200]};
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   background-color: ${props => (props.isExpanded ? colors.orange[300] : "white")};
-  border-top: ${props => (props.isExpanded ? `1px solid ${colors.orange[800]}` : "none")};
+  border-top: 1px solid ${props => (props.isExpanded ? colors.orange[800] : "transparent")};
   border-bottom: ${props => (props.isExpanded ? `1px solid ${colors.orange[800]}` : `1px solid ${colors.gray[200]}`)};
 
   &:hover {

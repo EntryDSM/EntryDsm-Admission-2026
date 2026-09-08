@@ -10,12 +10,24 @@ export const AuthLink = styled.button`
   background: none;
   border-block: none;
   border-inline-end: none;
-  color: ${colors.gray[400]};
+  padding: 0;
+  font: inherit;
+  color: ${colors.gray[300]};
+  transition: color 0.3s ease-out;
+  &:hover {
+    color: ${colors.gray[400]};
+  }
 `;
 
 export const AuthLinkText = styled.button`
   cursor: pointer;
   background: none;
   border: none;
-  color: ${colors.gray[400]};
+  padding: 0;
+  font: inherit;
+  color: ${colors.gray[300]};
+  &:hover {
+    color: ${colors.gray[400]};
+    transition: all 0.3s ease-out;
+  }
 `;

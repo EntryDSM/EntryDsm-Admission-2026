@@ -9,10 +9,9 @@ import {
   useApplicants,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
-  useFinalScreening,
   useFirstScreening,
+  useRegisterFinalResult,
   useUpdateApplicantArrival,
-  useUpdateApplicantStatus,
 } from "../hooks";
 import type { ApplicantListItem } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
@@ -51,7 +50,7 @@ const APPLICANT_TABLE_HEADERS = [
   "수험번호",
   "원서 도착 여부",
   "상태",
-  "최종 합격 등록",
+  "2차 합격자 등록",
 ] as const;
 
 type RegionKey = (typeof REGION_OPTIONS)[number]["key"];
@@ -114,9 +113,8 @@ export const ApplicantsList = () => {
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
-  const { updateStatus, isUpdatingStatus } = useUpdateApplicantStatus();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
-  const { runFinalScreening, isRunningFinalScreening } = useFinalScreening();
+  const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
 
   const handleFirstScreeningClick = () => {
     if (isRunningFirstScreening) {
@@ -125,16 +123,6 @@ export const ApplicantsList = () => {
 
     if (confirm("1차(서류) 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
       runFirstScreening(false);
-    }
-  };
-
-  const handleFinalScreeningClick = () => {
-    if (isRunningFinalScreening) {
-      return;
-    }
-
-    if (confirm("최종 합격자를 일괄 산출하시겠습니까?\n지원자 상태가 일괄 변경됩니다.")) {
-      runFinalScreening(false);
     }
   };
 
@@ -172,25 +160,15 @@ export const ApplicantsList = () => {
     { label: "수험표 출력", onClick: handleAdmissionTicketsClick },
   ];
 
-  // "합격자 등록" 버튼 → 개별 상태 변경(정정) API 로 최종 합격 처리한다.
+  // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
   const handleRegisterClick = (applicant: ApplicantListItem) => {
-    if (isUpdatingStatus) {
+    if (isRegisteringFinalResult) {
       return;
     }
 
-    const reason = prompt(
-      `${applicant.applicantName} 지원자를 최종 합격(FINAL_PASS) 처리합니다.\n변경 사유를 입력하세요.`,
-      "관리자 개별 상태 변경"
-    );
-
-    if (reason === null) {
-      return;
+    if (confirm(`${applicant.applicantName} 지원자를 최종 합격자로 등록하시겠습니까?`)) {
+      registerFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
     }
-
-    updateStatus({
-      applicantId: applicant.applicantId,
-      payload: { status: "FINAL_PASS", force: false, reason: reason.trim() || "관리자 개별 상태 변경" },
-    });
   };
 
   const handleArrivalClick = (applicant: ApplicantListItem) => {
@@ -260,14 +238,6 @@ export const ApplicantsList = () => {
             onClick={handleFirstScreeningClick}
           >
             {isRunningFirstScreening ? "1차 합격자 산출 중..." : "1차 합격자 산출"}
-          </Btn>
-          <Btn
-            color={colors.gray[50]}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            onClick={handleFinalScreeningClick}
-          >
-            {isRunningFinalScreening ? "최종 합격자 산출 중..." : "최종 합격자 산출"}
           </Btn>
         </ButtonContainer>
 

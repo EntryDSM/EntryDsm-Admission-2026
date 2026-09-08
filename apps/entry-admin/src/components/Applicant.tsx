@@ -55,7 +55,7 @@ export const Applicant = ({
       <Cell role="cell">{statusLabel}</Cell>
       <RegisterCell role="cell">
         <RegisterButton type="button" onClick={handleRegisterClick}>
-          합격자 등록
+          2차 합격자 등록
         </RegisterButton>
       </RegisterCell>
     </Container>

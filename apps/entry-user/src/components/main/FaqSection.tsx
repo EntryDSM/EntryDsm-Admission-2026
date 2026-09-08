@@ -52,8 +52,8 @@ export const FaqSection = () => {
         {faqList.map((faq, index) => {
           const isOpen = openIndex === index;
           return (
-            <FaqItem key={index} isOpen={isOpen}>
-              <QuestionWrapper isOpen={isOpen} onClick={() => toggleIndex(index)}>
+            <FaqItem key={index} isOpen={isOpen} onClick={() => toggleIndex(index)}>
+              <QuestionWrapper isOpen={isOpen}>
                 <Question>
                   <Number isOpen={isOpen}>{`0${index + 1}`}</Number>
                   {faq.question}
@@ -131,11 +131,12 @@ const FaqList = styled.div`
   flex-direction: column;
 `;
 
-const FaqItem = styled.div<{ isOpen: boolean }>`
+const FaqItem = styled.button<{ isOpen: boolean }>`
   background-color: ${({ isOpen }) => (isOpen ? "#fff5f0" : colors.gray[100])};
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 10px;
+  text-align: start;
   cursor: pointer;
   transition: background-color 0.3s;
 
@@ -144,7 +145,7 @@ const FaqItem = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-const QuestionWrapper = styled.button<{ isOpen: boolean }>`
+const QuestionWrapper = styled.div<{ isOpen: boolean }>`
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -182,8 +183,11 @@ const Answer = styled.div<{ isOpen: boolean }>`
   font-weight: 500;
   color: ${colors.gray[500]};
   line-height: 1.6;
-  width: 93%;
+  width: 100%;
   min-height: 0;
+
+  word-break: keep-all;
+  overflow-wrap: break-word;
 
   @media (max-width: 480px) {
     font-size: 14px;

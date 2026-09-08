@@ -6,8 +6,8 @@ import { modalCancel } from "../../assets";
 interface IShowResultModalType {
   isOpen: boolean;
   onClose: () => void;
-  step: number; // 1차인지 2차인지
-  isPass: boolean; // 합격 여부
+  step?: number;
+  isPass: boolean;
 }
 
 export const ShowResultModal = ({ isOpen, onClose, step, isPass }: IShowResultModalType) => {
@@ -21,14 +21,14 @@ export const ShowResultModal = ({ isOpen, onClose, step, isPass }: IShowResultMo
         </CloseBtn>
 
         <Content>
-          <Title>{step}차 전형 결과 안내</Title>
+          <Title>{step ? `${step}차 전형 결과 안내` : "전형 결과 안내"}</Title>
           <ContentLine></ContentLine>
           <Msg>
             {isPass ? "축하드립니다." : "아쉽게도"}
             <br />
             대덕소프트웨어마이스터고등학교
             <br />
-            입학 {step}차 전형에
+            입학 {step ? `${step}차 ` : ""}전형에
             <Highlight isPass={isPass}>{isPass ? " 합격" : " 불합격"}</Highlight>
             하셨습니다
           </Msg>

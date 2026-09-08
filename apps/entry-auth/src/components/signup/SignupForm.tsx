@@ -7,10 +7,13 @@ import { AuthInput } from "@entry/ui";
 import { toast } from "react-toastify";
 import { IdentityApiError, signup } from "../../apis";
 import type { PassInfo, SignupType } from "../../apis";
+import type { SignupConsents } from "./SignupConsent";
+import { getBirthdateStatus } from "./birthdate";
 
 interface SignupFormProps {
   passInfo: PassInfo;
   signupType: SignupType;
+  consents: SignupConsents;
 }
 
 const getSignupErrorMessage = (error: unknown) => {
@@ -29,7 +32,7 @@ const getSignupErrorMessage = (error: unknown) => {
   return "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 };
 
-export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
+export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) => {
   const navigate = useNavigate();
   const [birthdate, setBirthdate] = useState("");
   const [password, setPassword] = useState("");
@@ -37,15 +40,16 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const isBirthdateValid = /^\d{4}-\d{2}-\d{2}$/.test(birthdate);
+  const birthdateStatus = getBirthdateStatus(birthdate);
+  const isBirthdateValid = birthdateStatus === "valid";
   const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isPasswordConfirmValid = passwordConfirm === password;
-  const isFormValid = isBirthdateValid && isPasswordValid && isPasswordConfirmValid;
+  const isFormValid =
+    isBirthdateValid && isPasswordValid && isPasswordConfirmValid && consents.terms && consents.privacy;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isFormValid || isSubmitting) return;
-
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -77,7 +81,11 @@ export const SignupForm = ({ passInfo, signupType }: SignupFormProps) => {
         maxLength={10}
         onChange={(event: ChangeEvent<HTMLInputElement>) => setBirthdate(event.target.value)}
         isError={birthdate.length > 0 && !isBirthdateValid}
-        errorMsg="YYYY-MM-DD 형식으로 입력해 주세요."
+        errorMsg={
+          birthdateStatus === "underage"
+            ? "본 서비스는 만 14세 이상만 가입하실 수 있습니다. 만 14세 미만 지원자의 원서 접수 방법은 입학홍보부(042-866-8822)로 문의해 주세요."
+            : "올바른 생년월일을 YYYY-MM-DD 형식으로 입력해 주세요."
+        }
       />
       <AuthInput
         label="비밀번호"

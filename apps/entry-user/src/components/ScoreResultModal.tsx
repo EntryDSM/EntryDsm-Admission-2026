@@ -3,29 +3,19 @@ import { useEffect } from "react";
 
 import { Text } from "@entry/design";
 import { Btn } from "@entry/ui";
+import { ADMISSION_TYPE_LABEL, type AdmissionType } from "../constants/admissionType";
+import type { AdmissionScoreResult } from "../utils/admissionScoreCalculator";
 
 interface ScoreResultModalProps {
   isOpen: boolean;
   onClose: () => void;
+  results: AdmissionScoreResult[] | null;
+  errorMessage?: string;
 }
 
-interface ScoreResult {
-  name: string;
-  score: string;
-  total: string;
-}
+const formatScore = (score: number) => score.toFixed(3).replace(/\.?0+$/, "");
 
-//TODO: api 연동할 때 계산된 값 가지고 오기!!
-const MOCK_RESULTS: ScoreResult[] = [
-  { name: "졸업 예정자", score: "100", total: "200" },
-  { name: "사회통합 전형", score: "100", total: "200" },
-  { name: "마이스터 인재", score: "100", total: "200" },
-];
-//TODO: focus trap 활성화 및 esc 버튼 눌렀을 때 모달창 나갈 수 있게 접근성 향상 시키기
-export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => {
-  const loading = false;
-  const error = null;
-
+export const ScoreResultModal = ({ isOpen, onClose, results, errorMessage }: ScoreResultModalProps) => {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -49,38 +39,30 @@ export const ScoreResultModal = ({ isOpen, onClose }: ScoreResultModalProps) => 
       <ModalContainer onClick={e => e.stopPropagation()}>
         <Title>성적 산출 결과</Title>
 
-        {loading && (
-          <ResultList>
-            <Text fontSize={20} fontWeight={400}>
-              성적을 계산하고 있습니다...
-            </Text>
-          </ResultList>
-        )}
-
-        {error && (
+        {errorMessage && (
           <ResultList>
             <Text fontSize={20} fontWeight={400} color="#FF0000">
-              {error}
+              {errorMessage}
             </Text>
           </ResultList>
         )}
 
-        {!loading && !error && (
+        {!errorMessage && results && (
           <ResultList>
-            {MOCK_RESULTS.map((result, index) => (
-              <ResultItem key={index}>
+            {results.map(result => (
+              <ResultItem key={result.admissionType}>
                 <Text fontSize={24} fontWeight={500}>
-                  {result.name}
+                  {ADMISSION_TYPE_LABEL[result.admissionType as AdmissionType]}
                 </Text>
                 <ScoreText>
                   <Text fontSize={24} fontWeight={600} color="#FF6B35">
-                    {result.score}
+                    {formatScore(result.totalScore)}
                   </Text>
                   <Text fontSize={24} fontWeight={400} color="#999999">
                     {" / "}
                   </Text>
                   <Text fontSize={24} fontWeight={400} color="#999999">
-                    {result.total}
+                    {result.maxScore}
                   </Text>
                 </ScoreText>
               </ResultItem>
@@ -115,7 +97,7 @@ const ModalContainer = styled.div`
   border-radius: 24px;
   padding: 32px 36px;
   width: 970px;
-  height: 429px;
+  min-height: 429px;
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;

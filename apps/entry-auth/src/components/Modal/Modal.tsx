@@ -7,10 +7,11 @@ interface IModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  size?: "default" | "large";
   children: React.ReactNode;
 }
 
-export const Modal = ({ isOpen, onClose, children }: IModalProps) => {
+export const Modal = ({ isOpen, onClose, size = "default", children }: IModalProps) => {
   // esc로 닫기 + 열려있는 동안 배경 스크롤 잠금
   useEffect(() => {
     if (!isOpen) return;
@@ -32,7 +33,7 @@ export const Modal = ({ isOpen, onClose, children }: IModalProps) => {
 
   return createPortal(
     <Backdrop onClick={onClose}>
-      <ModalContainer onClick={e => e.stopPropagation()}>
+      <ModalContainer $size={size} onClick={e => e.stopPropagation()}>
         <ModalBody>{children}</ModalBody>
       </ModalContainer>
     </Backdrop>,
@@ -50,10 +51,10 @@ const Backdrop = styled.div`
   z-index: 1000;
 `;
 
-const ModalContainer = styled.div`
+const ModalContainer = styled.div<{ $size: "default" | "large" }>`
   background: ${colors.extra.realWhite};
-  border-radius: 12px;
-  width: 420px;
+  border-radius: ${({ $size }) => ($size === "large" ? "24px" : "12px")};
+  width: ${({ $size }) => ($size === "large" ? "900px" : "420px")};
   max-width: 90vw;
   max-height: 85vh;
   display: flex;

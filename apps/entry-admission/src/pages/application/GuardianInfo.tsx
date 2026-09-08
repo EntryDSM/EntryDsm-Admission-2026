@@ -11,6 +11,8 @@ export const GuardianInfo = () => {
     },
   ];
 
+  const genderOptions = ["남성", "여성"];
+
   const selectedRelationship = datas.relationship?.[0];
   const isOtherRelationship = selectedRelationship === "기타";
 
@@ -29,6 +31,10 @@ export const GuardianInfo = () => {
       relationship: values,
       otherRelationship: isOther ? datas.otherRelationship : "",
     });
+  };
+
+  const handleGenderChange = (value: string) => {
+    setDatas({ guardianGender: value });
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +60,14 @@ export const GuardianInfo = () => {
         onInputChange={handleInputChange("guardianName")}
         value={datas.guardianName}
         readonly={false}
+      />
+      <FormElement
+        label="보호자 성별"
+        type="radio"
+        groupName="보호자 성별"
+        radioDatas={genderOptions}
+        selectedRadio={datas.guardianGender}
+        setSelectedRadio={handleGenderChange}
       />
       <FormElement
         width="300px"

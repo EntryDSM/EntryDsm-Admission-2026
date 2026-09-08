@@ -1,11 +1,6 @@
 import { buildQueryString } from "../utils/queryString";
 import { http } from "./http";
-import type {
-  AdminApplicantDetail,
-  GetApplicantsParams,
-  GetApplicantsResponse,
-  UpdateApplicantStatusPayload,
-} from "./types";
+import type { AdminApplicantDetail, GetApplicantsParams, GetApplicantsResponse } from "./types";
 
 const APPLICANTS_ENDPOINT = "/api/v11/admin/applicants";
 
@@ -26,7 +21,3 @@ export const getApplicantDetail = (applicantId: number) =>
  */
 export const updateApplicantArrival = (applicantId: number) =>
   http.patch<void>(`${APPLICANTS_ENDPOINT}/${applicantId}/arrival`);
-
-/** 개별 상태 변경(정정) (204) */
-export const updateApplicantStatus = (applicantId: number, payload: UpdateApplicantStatusPayload) =>
-  http.patch<void>(`${APPLICANTS_ENDPOINT}/${applicantId}/status`, payload);

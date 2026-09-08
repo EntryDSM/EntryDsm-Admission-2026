@@ -2,6 +2,9 @@ import type { GetApplicantsParams, GetNoticesParams, GetQnasParams, StatisticsMe
 
 /** react-query 캐시 키 레지스트리. 키 구성을 한 곳에서 관리한다. */
 export const adminQueryKeys = {
+  account: {
+    me: ["admin", "account", "me"] as const,
+  },
   applicants: {
     all: ["admin", "applicants"] as const,
     list: (params: GetApplicantsParams) => ["admin", "applicants", "list", params] as const,

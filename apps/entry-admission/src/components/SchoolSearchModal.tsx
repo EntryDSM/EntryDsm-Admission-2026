@@ -1,7 +1,10 @@
+//TODO: 나중에 검색 api 연동할 시 다시 사용 예정
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import React, { useRef, useState } from "react";
 import { Check, Search, PreviousBtn } from "@entry/ui";
+import { toast } from "react-toastify";
+import { useGetSchoolSearch, type SchoolSearchItem } from "../apis";
 
 interface ISchoolSearchModalType {
   setIsShow: React.Dispatch<React.SetStateAction<boolean>>;
@@ -12,23 +15,6 @@ interface ISchoolSearchModalType {
   selectedCode?: string | null;
 }
 
-type SchoolItem = {
-  code: string;
-  name: string;
-  information: string;
-  address: string;
-};
-
-// TODO: 연동 후 삭제 또는 주석처리 필요
-const MOCK_SCHOOLS: SchoolItem[] = [
-  {
-    code: "UI-0001",
-    name: "예시중학교",
-    information: "UI 전용 더미 데이터",
-    address: "대전광역시 예시구 예시로 1",
-  },
-];
-
 export const SchoolSearchModal = ({
   setSelectedName,
   selectedName,
@@ -37,10 +23,11 @@ export const SchoolSearchModal = ({
   setIsShow,
   isShow,
 }: ISchoolSearchModalType) => {
-  const [datas, setDatas] = useState<SchoolItem[]>([]);
+  const [datas, setDatas] = useState<SchoolSearchItem[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [tempSelectedName, setTempSelectedName] = useState<string | null>(selectedName ?? null);
   const [tempSelectedCode, setTempSelectedCode] = useState<string | null>(selectedCode ?? null);
+  const { refetch: searchSchools, isFetching } = useGetSchoolSearch(searchValue.trim());
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
@@ -74,14 +61,21 @@ export const SchoolSearchModal = ({
 
   const handleSearchClick = async () => {
     if (searchValue.trim() === "") return;
-    setDatas(MOCK_SCHOOLS.filter(item => item.name.toLowerCase().includes(searchValue.toLowerCase())));
+
+    const result = await searchSchools();
+    if (result.isError) {
+      toast.error("학교 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    setDatas(result.data ?? []);
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter") {
       e.preventDefault();
-      handleSearchClick();
+      void handleSearchClick();
     }
   };
 
@@ -109,7 +103,9 @@ export const SchoolSearchModal = ({
                 onKeyDown={handleSearchKeyDown}
               />
             </FakeInput>
-            <SearchButton onClick={handleSearchClick}>찾기</SearchButton>
+            <SearchButton onClick={() => void handleSearchClick()} disabled={isFetching}>
+              {isFetching ? "검색 중" : "찾기"}
+            </SearchButton>
           </Wrapper>
           <ContentContainer>
             {datas.length > 0 ? (
