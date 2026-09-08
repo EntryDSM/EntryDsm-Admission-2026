@@ -1,9 +1,7 @@
 import { colors, Flex, Text } from "@entry/design";
 import styled from "@emotion/styled";
-import { Btn } from "@entry/ui";
+import { Btn, USER_APP_URL } from "@entry/ui";
 import { useGetAllSchedule } from "../apis";
-
-const USER_APP_URL = import.meta.env.VITE_USER_APP_URL?.replace(/\/$/, "") ?? "https://entrydsm.kr";
 
 const formatResultDate = (date: string | undefined) => {
   if (!date) return "일정 미정";
