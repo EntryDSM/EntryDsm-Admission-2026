@@ -1,4 +1,5 @@
 export * from "./useApplicants";
+export * from "./useMyAccount";
 export * from "./useApplicantDetail";
 export * from "./useStatistics";
 export * from "./useSchedules";
@@ -9,7 +10,6 @@ export * from "./useCreateNotice";
 export * from "./useQnas";
 export * from "./useQnaDetail";
 export * from "./useUpdateApplicantArrival";
-export * from "./useUpdateApplicantStatus";
 export * from "./useFirstScreening";
-export * from "./useFinalScreening";
+export * from "./useRegisterFinalResult";
 export * from "./useDocumentDownloads";

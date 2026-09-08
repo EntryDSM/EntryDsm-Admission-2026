@@ -27,6 +27,37 @@ export type ApplicantStatus =
   | "FINAL_FAIL"
   | (string & {});
 
+/* ───────────── 내 계정 조회 (GET /api/identity/v11/accounts/me) ───────────── */
+
+/** 계정 권한. ADMIN 만 어드민 페이지에 접근할 수 있다. */
+export type AccountRole = "ADMIN" | "MONITOR" | "STUDENT";
+
+/** 계정 상태 */
+export type AccountStatus = "ACTIVE" | "DELETED" | "SUSPENDED";
+
+/** 가입 유형 (본인/부모님 명의) */
+export type SignupType = "SELF" | "PARENT";
+
+/** identity 도메인의 지원 상태 — admin 도메인 `ApplicantStatus` 와 값 체계가 다르다. */
+export type AccountApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
+
+/** 내 계정 정보 */
+export interface MyAccount {
+  userId: string;
+  role: AccountRole;
+  status: AccountStatus;
+  name: string;
+  phone: string;
+  /** ISO date (예: `2009-03-15`) */
+  birthdate: string;
+  signupType: SignupType;
+  applicantStatus: AccountApplicantStatus;
+  /** ISO datetime */
+  createdAt: string;
+  /** ISO datetime */
+  updatedAt: string;
+}
+
 /* ─────────────────────── 목록 조회 (GET /applicants) ─────────────────────── */
 
 export type GetApplicantsParams = {
@@ -101,18 +132,7 @@ export interface AdminApplicantDetail {
   updatedAt: string;
 }
 
-/* ───────────── 상태 변경 (PATCH /applicants/{id}/status → 204) ───────────── */
-
-/** 개별 상태 변경(정정) 요청 */
-export interface UpdateApplicantStatusPayload {
-  status: ApplicantStatus;
-  /** 검증(예: 전형 단계 순서)을 무시하고 강제 변경할지 여부 */
-  force: boolean;
-  /** 변경 사유 (감사 기록용) */
-  reason: string;
-}
-
-/* ───────────── 합격자 일괄 산출 (POST /screenings/{stage}/results) ───────────── */
+/* ───────────── 1차 합격자 일괄 산출 (POST /screenings/first/results) ───────────── */
 
 /** 일괄 산출 결과 집계 */
 export interface ScreeningResult {
@@ -121,6 +141,16 @@ export interface ScreeningResult {
   passCount: number;
   failCount: number;
   excludedCount: number;
+  /** ISO datetime */
+  processedAt: string;
+}
+
+/* ───── 2차(최종) 합격자 개별 등록 (POST /screenings/final/results/{applicantId}) ───── */
+
+/** 개별 등록 결과. 등록한 지원자는 FINAL_PASS, 등록하지 않은 지원자는 FINAL_FAIL 로 처리된다. */
+export interface FinalScreeningResult {
+  applicantId: number;
+  status: "FINAL_PASS" | "FINAL_FAIL";
   /** ISO datetime */
   processedAt: string;
 }
