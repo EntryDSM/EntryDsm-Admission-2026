@@ -27,6 +27,37 @@ export type ApplicantStatus =
   | "FINAL_FAIL"
   | (string & {});
 
+/* ───────────── 내 계정 조회 (GET /api/identity/v11/accounts/me) ───────────── */
+
+/** 계정 권한. ADMIN 만 어드민 페이지에 접근할 수 있다. */
+export type AccountRole = "ADMIN" | "MONITOR" | "STUDENT";
+
+/** 계정 상태 */
+export type AccountStatus = "ACTIVE" | "DELETED" | "SUSPENDED";
+
+/** 가입 유형 (본인/부모님 명의) */
+export type SignupType = "SELF" | "PARENT";
+
+/** identity 도메인의 지원 상태 — admin 도메인 `ApplicantStatus` 와 값 체계가 다르다. */
+export type AccountApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
+
+/** 내 계정 정보 */
+export interface MyAccount {
+  userId: string;
+  role: AccountRole;
+  status: AccountStatus;
+  name: string;
+  phone: string;
+  /** ISO date (예: `2009-03-15`) */
+  birthdate: string;
+  signupType: SignupType;
+  applicantStatus: AccountApplicantStatus;
+  /** ISO datetime */
+  createdAt: string;
+  /** ISO datetime */
+  updatedAt: string;
+}
+
 /* ─────────────────────── 목록 조회 (GET /applicants) ─────────────────────── */
 
 export type GetApplicantsParams = {
