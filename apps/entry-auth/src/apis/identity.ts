@@ -137,13 +137,6 @@ export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
   return { name, phone };
 };
 
-export const signup = (payload: SignupRequest) =>
-  request<SignupResponse>("/api/identity/v11/auth/signup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
 export const getCsrfToken = async (): Promise<CsrfResponse> => {
   const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf");
   const token = typeof data?.token === "string" ? data.token.trim() : "";
@@ -157,6 +150,16 @@ export const getCsrfToken = async (): Promise<CsrfResponse> => {
   }
 
   return { token };
+};
+
+export const signup = async (payload: SignupRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<SignupResponse>("/api/identity/v11/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+    body: JSON.stringify(payload),
+  });
 };
 
 export const login = async (payload: LoginRequest) => {
