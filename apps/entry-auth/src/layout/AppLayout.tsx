@@ -1,11 +1,11 @@
 import styled from "@emotion/styled";
 import { Outlet } from "react-router";
-import { AuthHeader } from "@entry/ui";
+import { NoPathHeader } from "@entry/ui";
 
 export const AppLayout = () => {
   return (
     <>
-      <AuthHeader />
+      <NoPathHeader />
       <Main>
         <Outlet />
       </Main>
