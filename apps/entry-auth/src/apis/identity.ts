@@ -144,7 +144,20 @@ export const signup = (payload: SignupRequest) =>
     body: JSON.stringify(payload),
   });
 
-export const getCsrfToken = () => request<CsrfResponse>("/api/identity/v11/auth/csrf");
+export const getCsrfToken = async (): Promise<CsrfResponse> => {
+  const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf");
+  const token = typeof data?.token === "string" ? data.token.trim() : "";
+
+  if (!token) {
+    throw new IdentityApiError(
+      422,
+      "보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      "INVALID_CSRF_TOKEN"
+    );
+  }
+
+  return { token };
+};
 
 export const login = async (payload: LoginRequest) => {
   const { token } = await getCsrfToken();
