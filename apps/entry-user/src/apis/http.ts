@@ -1,3 +1,4 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import type { ApiResponse } from "./types";
 
 export class HttpError extends Error {
@@ -33,11 +34,15 @@ const createPath = (path: string, params?: HttpRequestOptions["params"]) => {
   return query ? `${path}?${query}` : path;
 };
 
-const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOptions) => {
+const createHeaders = async (method: string, body: BodyInit | null | undefined, options: HttpRequestOptions) => {
   const headers = new Headers(options.headers);
 
   if (body !== undefined && body !== null && !(body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+
+  if (options.auth !== false && !["GET", "HEAD", "OPTIONS"].includes(method) && !headers.has("X-XSRF-TOKEN")) {
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(import.meta.env.VITE_API_BASE_URL, options.signal));
   }
 
   return headers;
@@ -70,11 +75,12 @@ const request = async <T>(
   body?: BodyInit | null,
   options: HttpRequestOptions = {}
 ): Promise<T> => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
     ...createRequestOptions(options),
     method,
     body,
-    headers: createHeaders(body, options),
+    headers: await createHeaders(method, body, options),
     // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함합니다.
     credentials: options.auth === false ? "omit" : "include",
   });
@@ -98,11 +104,12 @@ const request = async <T>(
 };
 
 const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
     ...createRequestOptions(options),
     method,
     body,
-    headers: createHeaders(body, options),
+    headers: await createHeaders(method, body, options),
     credentials: options.auth === false ? "omit" : "include",
   });
 

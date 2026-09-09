@@ -1,3 +1,4 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
 import { getAccessToken } from "../utils/token";
 
@@ -19,15 +20,20 @@ interface ErrorBody {
 }
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const token = getAccessToken();
+  const headers = new Headers(options.headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+
+  if (!["GET", "HEAD", "OPTIONS"].includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, options.signal));
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    credentials: "include",
+    headers,
   });
 
   const isJson = response.headers.get("content-type")?.includes("application/json") ?? false;
@@ -41,6 +47,10 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   // API 공통 규약의 `{ success, data }` 봉투를 쓰면 data 만 벗겨내고,
   // 봉투 없이 내려오면 본문을 그대로 반환한다.
   if (body && typeof body === "object" && "success" in body && "data" in body) {
+    if (!body.success) {
+      const errorInfo = (body as ErrorBody).error;
+      throw new HttpError(response.status, errorInfo?.message ?? "API 요청이 실패했습니다.", errorInfo?.code);
+    }
     return (body as { data: T }).data;
   }
 

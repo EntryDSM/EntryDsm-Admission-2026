@@ -1,8 +1,8 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { AUTH_APP_URL } from "@entry/ui";
 import type { ApiResponse } from "./types";
 import { getAccessToken, removeAccessToken } from "../utils/token";
 
-const DEFAULT_TIMEOUT_MS = 30_000;
 // access token이 만료됐을 때 HttpOnly refresh cookie로 재발급을 요청하는 인증 API입니다.
 const REFRESH_TOKEN_ENDPOINT = "/api/identity/v11/auth/token";
 
@@ -48,7 +48,7 @@ const createPath = (path: string, params?: HttpRequestOptions["params"]) => {
 };
 
 // 쿠키의 access token을 Bearer 헤더에 넣고, FormData에는 브라우저가 boundary를 설정하도록 둡니다.
-const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOptions) => {
+const createHeaders = async (method: string, body: BodyInit | null | undefined, options: HttpRequestOptions) => {
   const headers = new Headers(options.headers);
   const token = options.auth === false ? null : getAccessToken();
 
@@ -58,6 +58,10 @@ const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOp
 
   if (body !== undefined && body !== null && !(body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+
+  if (options.auth !== false && !["GET", "HEAD", "OPTIONS"].includes(method) && !headers.has("X-XSRF-TOKEN")) {
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(import.meta.env.VITE_API_BASE_URL, options.signal));
   }
 
   return headers;
@@ -72,9 +76,6 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
   return requestOptions;
 };
 
-// 호출자가 취소 신호를 주지 않은 요청만 공통 타임아웃으로 중단합니다.
-const createSignal = (options: HttpRequestOptions) => options.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
-
 const createRequestUrl = (path: string, options: HttpRequestOptions) =>
   `${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`;
 
@@ -87,15 +88,18 @@ const redirectToLogin = () => {
 // HttpOnly refresh cookie를 서버에 전송해 새 access token 쿠키를 발급받습니다.
 const refreshAccessToken = () => {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-      credentials: "include",
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-    })
+    const signal = createRequestSignal();
+    refreshPromise = createHeaders("POST", JSON.stringify({}), { signal })
+      .then(headers =>
+        fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({}),
+          credentials: "include",
+          signal,
+        })
+      )
       .then(response => response.ok)
-      .catch(() => false)
       .finally(() => {
         refreshPromise = null;
       });
@@ -111,13 +115,15 @@ const fetchWithAuthentication = async (
   body: BodyInit | null | undefined,
   options: HttpRequestOptions
 ) => {
-  const fetchRequest = () =>
+  options = { ...options, signal: createRequestSignal(options.signal) };
+  const fetchRequest = async () =>
     fetch(createRequestUrl(path, options), {
       ...createRequestOptions(options),
       method,
       body,
-      headers: createHeaders(body, options),
-      signal: createSignal(options),
+      headers: await createHeaders(method, body, options),
+      credentials: options.auth === false ? "omit" : "include",
+      signal: options.signal,
     });
 
   let response = await fetchRequest();
