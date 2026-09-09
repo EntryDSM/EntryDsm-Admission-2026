@@ -6,6 +6,7 @@ import { CalculationDataProvider } from "../contexts";
 
 export const AppLayout = () => {
   const { pathname } = useLocation();
+  const isHome = pathname === "/";
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -13,8 +14,8 @@ export const AppLayout = () => {
 
   return (
     <CalculationDataProvider>
-      <CommonHeader />
-      <Main>
+      <CommonHeader transparent={isHome} />
+      <Main isHome={isHome}>
         <Outlet />
       </Main>
       <Footer />
@@ -22,7 +23,7 @@ export const AppLayout = () => {
   );
 };
 
-const Main = styled.main`
+const Main = styled.main<{ isHome?: boolean }>`
   width: 100%;
-  margin-top: 70px;
+  margin-top: ${({ isHome }) => (isHome ? "0" : "70px")};
 `;
