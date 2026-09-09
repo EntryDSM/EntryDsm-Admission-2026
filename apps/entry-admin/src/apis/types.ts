@@ -48,7 +48,7 @@ export interface MyAccount {
   status: AccountStatus;
   name: string;
   phone: string;
-  /** ISO date (예: `2009-03-15`) */
+  /** ISO date (예: `2009-03-27`) */
   birthdate: string;
   signupType: SignupType;
   applicantStatus: AccountApplicantStatus;
