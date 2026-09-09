@@ -28,6 +28,10 @@ export interface LoginResponse {
   status: string;
 }
 
+export interface CsrfResponse {
+  token: string;
+}
+
 export interface PasswordResetRequest {
   loginId: string;
   name: string;
@@ -140,12 +144,17 @@ export const signup = (payload: SignupRequest) =>
     body: JSON.stringify(payload),
   });
 
-export const login = (payload: LoginRequest) =>
-  request<LoginResponse>("/api/identity/v11/auth/login", {
+export const getCsrfToken = () => request<CsrfResponse>("/api/identity/v11/auth/csrf");
+
+export const login = async (payload: LoginRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<LoginResponse>("/api/identity/v11/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify(payload),
   });
+};
 
 export const refreshToken = () =>
   request<null>("/api/identity/v11/auth/token", {
