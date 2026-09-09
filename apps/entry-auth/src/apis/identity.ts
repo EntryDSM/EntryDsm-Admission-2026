@@ -179,9 +179,12 @@ export const refreshToken = () =>
     body: JSON.stringify({}),
   });
 
-export const resetPassword = (payload: PasswordResetRequest) =>
-  request<null>("/api/identity/v11/auth/password-reset", {
+export const resetPassword = async (payload: PasswordResetRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<null>("/api/identity/v11/auth/password-reset", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify(payload),
   });
+};
