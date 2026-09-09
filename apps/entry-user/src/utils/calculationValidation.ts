@@ -93,11 +93,6 @@ const pageValidations = {
     "english",
   ]),
   "/calculate/qe/activity": createRequiredFieldsValidator<CalculationState["qeActivity"]>([
-    "absences",
-    "earlyLeaves",
-    "lateArrivals",
-    "resultMissing",
-    "volunteerHours",
     "dsmAlgorithm",
     "infoProcessing",
   ]),

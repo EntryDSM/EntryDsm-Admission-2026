@@ -26,117 +26,123 @@ import {
 } from "./pages";
 import { ApplicationPreview } from "./pages/applicationCheck";
 import { AttendanceVolunteer, GedScore } from "./pages/ged";
+import { RequireAuth } from "./components/RequireAuth";
 
 export const Router = createBrowserRouter([
   {
-    path: "/",
-    element: <RootLayout />,
+    element: <RequireAuth />,
     children: [
       {
-        path: "",
-        element: <Landing />,
-      },
-      {
-        path: "",
-        element: <AppLayout />,
+        path: "/",
+        element: <RootLayout />,
         children: [
           {
             path: "",
-            element: <ApplicationLayout />,
+            element: <Landing />,
+          },
+          {
+            path: "",
+            element: <AppLayout />,
             children: [
               {
-                path: "ged",
-                element: <GedScoreLayout />,
-                children: [
-                  {
-                    path: "score",
-                    element: <GedScore />,
-                  },
-                  {
-                    path: "attendance-volunteer",
-                    element: <AttendanceVolunteer />,
-                  },
-                ],
-              },
-              {
                 path: "",
-                element: <GraduateScoreLayout />,
+                element: <ApplicationLayout />,
                 children: [
                   {
-                    path: "first-graduate",
-                    element: <ScoreFirst pageKey={"firstGraduate"} />,
+                    path: "ged",
+                    element: <GedScoreLayout />,
+                    children: [
+                      {
+                        path: "score",
+                        element: <GedScore />,
+                      },
+                      {
+                        path: "attendance-volunteer",
+                        element: <AttendanceVolunteer />,
+                      },
+                    ],
                   },
                   {
-                    path: "second-graduate",
-                    element: <ScoreSecond pageKey={"secondGraduate"} />,
+                    path: "",
+                    element: <GraduateScoreLayout />,
+                    children: [
+                      {
+                        path: "first-graduate",
+                        element: <ScoreFirst pageKey={"firstGraduate"} />,
+                      },
+                      {
+                        path: "second-graduate",
+                        element: <ScoreSecond pageKey={"secondGraduate"} />,
+                      },
+                      {
+                        path: "third-graduate",
+                        element: <ScoreThird pageKey={"thirdGraduate"} />,
+                      },
+                      {
+                        path: "fourth-graduate",
+                        element: <ScoreFourth />,
+                      },
+                      {
+                        path: "activity-graduate",
+                        element: <ActivityGraduate pageKey={"activityGraduate"} />,
+                      },
+                    ],
                   },
                   {
-                    path: "third-graduate",
-                    element: <ScoreThird pageKey={"thirdGraduate"} />,
+                    path: "",
+                    element: <ProspectiveGraduateScoreLayout />,
+                    children: [
+                      {
+                        path: "first-prospective-graduate",
+                        element: <ScoreFirst pageKey={"firstGraduateProspective"} />,
+                      },
+                      {
+                        path: "second-prospective-graduate",
+                        element: <ScoreSecond pageKey={"secondGraduateProspective"} />,
+                      },
+                      {
+                        path: "third-prospective-graduate",
+                        element: <ScoreThird pageKey={"thirdGraduateProspective"} />,
+                      },
+                      {
+                        path: "activity-prospective-graduate",
+                        element: <ActivityGraduate pageKey={"activityGraduateProspective"} />,
+                      },
+                    ],
                   },
                   {
-                    path: "fourth-graduate",
-                    element: <ScoreFourth />,
+                    path: "application-classification",
+                    element: <ApplicationClassification />,
                   },
                   {
-                    path: "activity-graduate",
-                    element: <ActivityGraduate pageKey={"activityGraduate"} />,
+                    path: "applicant-info",
+                    element: <ApplicantInfo />,
+                  },
+                  {
+                    path: "guardian-info",
+                    element: <GuardianInfo />,
+                  },
+                  {
+                    path: "middle-school-info",
+                    element: <MiddleSchoolInfo />,
+                  },
+                  {
+                    path: "personal-statements",
+                    element: <PersonalStatements />,
+                  },
+                  {
+                    path: "statement-of-purpose",
+                    element: <StatementOfPurpose />,
+                  },
+                  {
+                    path: "submit-check",
+                    element: <SubmitCheck />,
+                  },
+                  {
+                    path: "application-preview",
+                    element: <ApplicationPreview />,
                   },
                 ],
-              },
-              {
-                path: "",
-                element: <ProspectiveGraduateScoreLayout />,
-                children: [
-                  {
-                    path: "first-prospective-graduate",
-                    element: <ScoreFirst pageKey={"firstGraduateProspective"} />,
-                  },
-                  {
-                    path: "second-prospective-graduate",
-                    element: <ScoreSecond pageKey={"secondGraduateProspective"} />,
-                  },
-                  {
-                    path: "third-prospective-graduate",
-                    element: <ScoreThird pageKey={"thirdGraduateProspective"} />,
-                  },
-                  {
-                    path: "activity-prospective-graduate",
-                    element: <ActivityGraduate pageKey={"activityGraduateProspective"} />,
-                  },
-                ],
-              },
-              {
-                path: "application-classification",
-                element: <ApplicationClassification />,
-              },
-              {
-                path: "applicant-info",
-                element: <ApplicantInfo />,
-              },
-              {
-                path: "guardian-info",
-                element: <GuardianInfo />,
-              },
-              {
-                path: "middle-school-info",
-                element: <MiddleSchoolInfo />,
-              },
-              {
-                path: "personal-statements",
-                element: <PersonalStatements />,
-              },
-              {
-                path: "statement-of-purpose",
-                element: <StatementOfPurpose />,
-              },
-              {
-                path: "submit-check",
-                element: <SubmitCheck />,
-              },
-              {
-                path: "application-preview",
-                element: <ApplicationPreview />,
               },
             ],
           },

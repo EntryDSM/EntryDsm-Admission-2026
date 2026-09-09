@@ -1,4 +1,4 @@
-import styled from "@emotion/styled";
+﻿import styled from "@emotion/styled";
 import { useNavigate, useLocation, Link } from "react-router";
 import { useEffect, useState } from "react";
 
@@ -6,14 +6,20 @@ import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
 import { Logout } from "../../assets";
-import { AUTH_APP_URL, USER_APP_URL } from "../../utils/env";
+import { AUTH_APP_URL, USER_APP_URL, AWS_CONSOLE_URL } from "../../utils/env";
 
 export const NoPathHeader = () => {
-  const navigate = useNavigate();
-
   return (
     <NoPathHeaderContainer>
-      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+      <Flex
+        gap={12}
+        alignItems="center"
+        height="fit-content"
+        width="fit-content"
+        onClick={() => {
+          window.location.href = USER_APP_URL;
+        }}
+      >
         <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
@@ -99,9 +105,11 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderPr
 type CommonHeaderProps = {
   /** 스크롤 최상단에서 배경을 투명하게 표시한다 (예: 홈 히어로 위) */
   transparent?: boolean;
+  isLoggedIn?: boolean;
+  isLoading?: boolean;
 };
 
-export const CommonHeader = ({ transparent = false }: CommonHeaderProps) => {
+export const CommonHeader = ({ transparent = false, isLoggedIn = false, isLoading = false }: CommonHeaderProps) => {
   const [isSideClick, setIsSideClick] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
@@ -134,10 +142,6 @@ export const CommonHeader = ({ transparent = false }: CommonHeaderProps) => {
   const handleLoginClick = () => {
     window.location.href = AUTH_APP_URL;
   };
-
-  //TODO: api 연동하기 전
-  const isLoggedIn = false;
-  const isLoading = false;
 
   return (
     <HeaderContainer isTransparent={isTransparent}>
@@ -238,6 +242,14 @@ export const MonitoringHeader = () => {
           hoverBackgroundColor={"#6668F1"}
         >
           EntryDSM 지원자 페이지
+        </Btn>
+        <Btn
+          onClick={() => window.open(AWS_CONSOLE_URL, "_blank", "noopener,noreferrer")}
+          aria-label="EntryDSM 홈으로 이동"
+          backgroundColor={"#6668F1"}
+          hoverBackgroundColor={"#6668F1"}
+        >
+          Aws 콘솔 페이지
         </Btn>
         <ButtonName>
           김이름 <img src={Logout} alt="로그아웃" />

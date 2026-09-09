@@ -92,7 +92,7 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
       <AuthInput
         label="생년월일"
         value={birthdate}
-        placeholder="2009-03-15"
+        placeholder="2009-03-27"
         maxLength={10}
         onChange={(event: ChangeEvent<HTMLInputElement>) => {
           const digits = event.target.value.replace(/\D/g, "").slice(0, 8);
