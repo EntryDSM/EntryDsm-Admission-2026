@@ -118,8 +118,8 @@ export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
   const data = await request<{ name?: unknown; phoneNumber?: unknown; phone?: unknown } | null>(
     `/api/identity/v11/auth/pass/info?mdl_tkn=${encodeURIComponent(modelToken)}`
   );
-  const rawPhone = typeof data?.phoneNumber === "string" ? data.phoneNumber : data?.phone;
-  const phone = typeof rawPhone === "string" ? rawPhone.replace(/\D/g, "") : "";
+  const phoneNumber = typeof data?.phoneNumber === "string" ? data.phoneNumber.replace(/\D/g, "") : "";
+  const phone = phoneNumber || (typeof data?.phone === "string" ? data.phone.replace(/\D/g, "") : "");
   const name = typeof data?.name === "string" ? data.name.trim() : "";
 
   if (!name || !/^01\d{8,9}$/.test(phone)) {
