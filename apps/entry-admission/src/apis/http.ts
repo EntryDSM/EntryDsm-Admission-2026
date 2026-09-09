@@ -1,8 +1,8 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { AUTH_APP_URL } from "@entry/ui";
 import type { ApiResponse } from "./types";
 import { getAccessToken, removeAccessToken } from "../utils/token";
 
-const DEFAULT_TIMEOUT_MS = 30_000;
 // access token이 만료됐을 때 HttpOnly refresh cookie로 재발급을 요청하는 인증 API입니다.
 const REFRESH_TOKEN_ENDPOINT = "/api/identity/v11/auth/token";
 
@@ -61,22 +61,7 @@ const createHeaders = async (method: string, body: BodyInit | null | undefined, 
   }
 
   if (options.auth !== false && !["GET", "HEAD", "OPTIONS"].includes(method) && !headers.has("X-XSRF-TOKEN")) {
-    // 인증 재시도 경로를 거치지 않아 CSRF 발급 실패 시 토큰 갱신과 순환하지 않습니다.
-    const response = await fetch(createRequestUrl("/api/identity/v11/auth/csrf", {}), {
-      credentials: "include",
-      signal: createSignal(options),
-    });
-    const body = parseResponseBody<{ token?: unknown }>(await response.text());
-    if (!response.ok || (body && typeof body === "object" && "success" in body && !body.success)) {
-      throw new HttpError("보안 토큰 발급에 실패했습니다.", response.status, body);
-    }
-    const data = body && typeof body === "object" && "data" in body ? body.data : body;
-    const csrfToken =
-      data && typeof data === "object" && "token" in data && typeof data.token === "string" ? data.token.trim() : "";
-    if (!csrfToken) {
-      throw new HttpError("보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.", 422, body);
-    }
-    headers.set("X-XSRF-TOKEN", csrfToken);
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(import.meta.env.VITE_API_BASE_URL, options.signal));
   }
 
   return headers;
@@ -91,9 +76,6 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
   return requestOptions;
 };
 
-// 호출자가 취소 신호를 주지 않은 요청만 공통 타임아웃으로 중단합니다.
-const createSignal = (options: HttpRequestOptions) => options.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
-
 const createRequestUrl = (path: string, options: HttpRequestOptions) =>
   `${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`;
 
@@ -106,18 +88,18 @@ const redirectToLogin = () => {
 // HttpOnly refresh cookie를 서버에 전송해 새 access token 쿠키를 발급받습니다.
 const refreshAccessToken = () => {
   if (!refreshPromise) {
-    refreshPromise = createHeaders("POST", JSON.stringify({}), {})
+    const signal = createRequestSignal();
+    refreshPromise = createHeaders("POST", JSON.stringify({}), { signal })
       .then(headers =>
         fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
           method: "POST",
           headers,
           body: JSON.stringify({}),
           credentials: "include",
-          signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+          signal,
         })
       )
       .then(response => response.ok)
-      .catch(() => false)
       .finally(() => {
         refreshPromise = null;
       });
@@ -133,6 +115,7 @@ const fetchWithAuthentication = async (
   body: BodyInit | null | undefined,
   options: HttpRequestOptions
 ) => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const fetchRequest = async () =>
     fetch(createRequestUrl(path, options), {
       ...createRequestOptions(options),
@@ -140,7 +123,7 @@ const fetchWithAuthentication = async (
       body,
       headers: await createHeaders(method, body, options),
       credentials: options.auth === false ? "omit" : "include",
-      signal: createSignal(options),
+      signal: options.signal,
     });
 
   let response = await fetchRequest();

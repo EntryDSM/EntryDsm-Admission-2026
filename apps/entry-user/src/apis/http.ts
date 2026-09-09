@@ -1,3 +1,4 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import type { ApiResponse } from "./types";
 
 export class HttpError extends Error {
@@ -41,14 +42,7 @@ const createHeaders = async (method: string, body: BodyInit | null | undefined, 
   }
 
   if (options.auth !== false && !["GET", "HEAD", "OPTIONS"].includes(method) && !headers.has("X-XSRF-TOKEN")) {
-    const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf", "GET");
-    const token = typeof data?.token === "string" ? data.token.trim() : "";
-
-    if (!token) {
-      throw new HttpError("보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.", 422, data);
-    }
-
-    headers.set("X-XSRF-TOKEN", token);
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(import.meta.env.VITE_API_BASE_URL, options.signal));
   }
 
   return headers;
@@ -81,6 +75,7 @@ const request = async <T>(
   body?: BodyInit | null,
   options: HttpRequestOptions = {}
 ): Promise<T> => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
     ...createRequestOptions(options),
     method,
@@ -109,6 +104,7 @@ const request = async <T>(
 };
 
 const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
     ...createRequestOptions(options),
     method,

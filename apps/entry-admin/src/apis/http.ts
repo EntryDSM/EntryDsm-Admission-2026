@@ -1,3 +1,4 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
 import { getAccessToken } from "../utils/token";
 
@@ -19,18 +20,14 @@ interface ErrorBody {
 }
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+  options = { ...options, signal: createRequestSignal(options.signal) };
   const token = getAccessToken();
   const headers = new Headers(options.headers);
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
 
   if (!["GET", "HEAD", "OPTIONS"].includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
-    const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf");
-    const csrfToken = typeof data?.token === "string" ? data.token.trim() : "";
-    if (!csrfToken) {
-      throw new HttpError(422, "보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.");
-    }
-    headers.set("X-XSRF-TOKEN", csrfToken);
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, options.signal));
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
