@@ -33,11 +33,22 @@ const createPath = (path: string, params?: HttpRequestOptions["params"]) => {
   return query ? `${path}?${query}` : path;
 };
 
-const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOptions) => {
+const createHeaders = async (method: string, body: BodyInit | null | undefined, options: HttpRequestOptions) => {
   const headers = new Headers(options.headers);
 
   if (body !== undefined && body !== null && !(body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+
+  if (options.auth !== false && !["GET", "HEAD", "OPTIONS"].includes(method) && !headers.has("X-XSRF-TOKEN")) {
+    const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf", "GET");
+    const token = typeof data?.token === "string" ? data.token.trim() : "";
+
+    if (!token) {
+      throw new HttpError("보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.", 422, data);
+    }
+
+    headers.set("X-XSRF-TOKEN", token);
   }
 
   return headers;
@@ -74,7 +85,7 @@ const request = async <T>(
     ...createRequestOptions(options),
     method,
     body,
-    headers: createHeaders(body, options),
+    headers: await createHeaders(method, body, options),
     // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함합니다.
     credentials: options.auth === false ? "omit" : "include",
   });
@@ -102,7 +113,7 @@ const requestBlob = async (path: string, method: string, body?: BodyInit | null,
     ...createRequestOptions(options),
     method,
     body,
-    headers: createHeaders(body, options),
+    headers: await createHeaders(method, body, options),
     credentials: options.auth === false ? "omit" : "include",
   });
 

@@ -48,7 +48,7 @@ const createPath = (path: string, params?: HttpRequestOptions["params"]) => {
 };
 
 // 쿠키의 access token을 Bearer 헤더에 넣고, FormData에는 브라우저가 boundary를 설정하도록 둡니다.
-const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOptions) => {
+const createHeaders = async (method: string, body: BodyInit | null | undefined, options: HttpRequestOptions) => {
   const headers = new Headers(options.headers);
   const token = options.auth === false ? null : getAccessToken();
 
@@ -58,6 +58,25 @@ const createHeaders = (body: BodyInit | null | undefined, options: HttpRequestOp
 
   if (body !== undefined && body !== null && !(body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+
+  if (options.auth !== false && !["GET", "HEAD", "OPTIONS"].includes(method) && !headers.has("X-XSRF-TOKEN")) {
+    // 인증 재시도 경로를 거치지 않아 CSRF 발급 실패 시 토큰 갱신과 순환하지 않습니다.
+    const response = await fetch(createRequestUrl("/api/identity/v11/auth/csrf", {}), {
+      credentials: "include",
+      signal: createSignal(options),
+    });
+    const body = parseResponseBody<{ token?: unknown }>(await response.text());
+    if (!response.ok || (body && typeof body === "object" && "success" in body && !body.success)) {
+      throw new HttpError("보안 토큰 발급에 실패했습니다.", response.status, body);
+    }
+    const data = body && typeof body === "object" && "data" in body ? body.data : body;
+    const csrfToken =
+      data && typeof data === "object" && "token" in data && typeof data.token === "string" ? data.token.trim() : "";
+    if (!csrfToken) {
+      throw new HttpError("보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.", 422, body);
+    }
+    headers.set("X-XSRF-TOKEN", csrfToken);
   }
 
   return headers;
@@ -87,13 +106,16 @@ const redirectToLogin = () => {
 // HttpOnly refresh cookie를 서버에 전송해 새 access token 쿠키를 발급받습니다.
 const refreshAccessToken = () => {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-      credentials: "include",
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-    })
+    refreshPromise = createHeaders("POST", JSON.stringify({}), {})
+      .then(headers =>
+        fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({}),
+          credentials: "include",
+          signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+        })
+      )
       .then(response => response.ok)
       .catch(() => false)
       .finally(() => {
@@ -111,12 +133,13 @@ const fetchWithAuthentication = async (
   body: BodyInit | null | undefined,
   options: HttpRequestOptions
 ) => {
-  const fetchRequest = () =>
+  const fetchRequest = async () =>
     fetch(createRequestUrl(path, options), {
       ...createRequestOptions(options),
       method,
       body,
-      headers: createHeaders(body, options),
+      headers: await createHeaders(method, body, options),
+      credentials: options.auth === false ? "omit" : "include",
       signal: createSignal(options),
     });
 
