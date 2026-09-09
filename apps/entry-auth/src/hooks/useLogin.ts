@@ -24,7 +24,7 @@ const getLoginRedirectUrl = (role: string) => {
     case "MONITOR":
       return `${MONITORING_APP_URL}/`;
     case "STUDENT":
-      return `${USER_APP_URL}/mypage`;
+      return `${USER_APP_URL}/`;
     default:
       return null;
   }
