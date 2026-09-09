@@ -13,7 +13,13 @@ export const NoPathHeader = () => {
 
   return (
     <NoPathHeaderContainer>
-      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+      <Flex
+        gap={12}
+        alignItems="center"
+        height="fit-content"
+        width="fit-content"
+        onClick={() => navigate(AUTH_APP_URL)}
+      >
         <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
@@ -96,7 +102,12 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderPr
   );
 };
 
-export const CommonHeader = () => {
+type CommonHeaderProps = {
+  isLoggedIn?: boolean;
+  isLoading?: boolean;
+};
+
+export const CommonHeader = ({ isLoggedIn = false, isLoading = false }: CommonHeaderProps) => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -117,10 +128,6 @@ export const CommonHeader = () => {
   const handleLoginClick = () => {
     window.location.href = AUTH_APP_URL;
   };
-
-  //TODO: api 연동하기 전
-  const isLoggedIn = false;
-  const isLoading = false;
 
   return (
     <HeaderContainer>
@@ -215,6 +222,7 @@ export const MonitoringHeader = () => {
         </Btn>
         <Btn
           onClick={() => window.open(AWS_CONSOLE_URL, "_blank", "noopener,noreferrer")}
+          aria-label="EntryDSM 홈으로 이동"
           backgroundColor={"#6668F1"}
           hoverBackgroundColor={"#6668F1"}
         >

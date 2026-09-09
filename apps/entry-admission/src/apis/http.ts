@@ -77,7 +77,7 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
 const createSignal = (options: HttpRequestOptions) => options.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
 
 const createRequestUrl = (path: string, options: HttpRequestOptions) =>
-  `${import.meta.env.VITE_BASE_URL}${createPath(path, options.params)}`;
+  `${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`;
 
 const redirectToLogin = () => {
   if (typeof window !== "undefined") {
@@ -88,7 +88,7 @@ const redirectToLogin = () => {
 // HttpOnly refresh cookie를 서버에 전송해 새 access token 쿠키를 발급받습니다.
 const refreshAccessToken = () => {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${import.meta.env.VITE_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
+    refreshPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),

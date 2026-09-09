@@ -67,6 +67,7 @@ interface ActivityProps {
 
 export const Activity = ({ pageKey }: ActivityProps) => {
   const dataKey = pageKey;
+
   const [activityData, setActivityData] = useCalculationPageData(dataKey);
 
   const safeActivityData: ActivityFormData = {
@@ -111,57 +112,61 @@ export const Activity = ({ pageKey }: ActivityProps) => {
 
   return (
     <Container>
-      <Section>
-        <Text fontSize={24} fontWeight={600}>
-          출결
-        </Text>
-        <GridContainer>
-          <AttendanceForm
-            width="100%"
-            title="결석"
-            value={safeActivityData.absences}
-            onChange={handleAbsencesChange}
-            defaultCount={10}
-            prefix="미인정"
-          />
-          <AttendanceForm
-            width="100%"
-            title="조퇴"
-            value={safeActivityData.earlyLeaves}
-            onChange={handleEarlyLeavesChange}
-            defaultCount={10}
-            prefix="미인정"
-          />
-          <AttendanceForm
-            width="100%"
-            title="지각"
-            value={safeActivityData.lateArrivals}
-            onChange={handleLateArrivalsChange}
-            defaultCount={10}
-            prefix="미인정"
-          />
-          <AttendanceForm
-            width="100%"
-            title="결과"
-            value={safeActivityData.resultMissing}
-            onChange={handleResultMissingChange}
-            defaultCount={10}
-            prefix="미인정"
-          />
-        </GridContainer>
-      </Section>
-      <Section>
-        <Text fontSize={24} fontWeight={600}>
-          봉사
-        </Text>
-        <AttendanceForm
-          width="748px"
-          title="봉사시간"
-          value={safeActivityData.volunteerHours}
-          onChange={handleVolunteerHoursChange}
-          defaultCount={10}
-        />
-      </Section>
+      {dataKey !== "qeActivity" && (
+        <>
+          <Section>
+            <Text fontSize={24} fontWeight={600}>
+              출결
+            </Text>
+            <GridContainer>
+              <AttendanceForm
+                width="100%"
+                title="결석"
+                value={safeActivityData.absences}
+                onChange={handleAbsencesChange}
+                defaultCount={10}
+                prefix="미인정"
+              />
+              <AttendanceForm
+                width="100%"
+                title="조퇴"
+                value={safeActivityData.earlyLeaves}
+                onChange={handleEarlyLeavesChange}
+                defaultCount={10}
+                prefix="미인정"
+              />
+              <AttendanceForm
+                width="100%"
+                title="지각"
+                value={safeActivityData.lateArrivals}
+                onChange={handleLateArrivalsChange}
+                defaultCount={10}
+                prefix="미인정"
+              />
+              <AttendanceForm
+                width="100%"
+                title="결과"
+                value={safeActivityData.resultMissing}
+                onChange={handleResultMissingChange}
+                defaultCount={10}
+                prefix="미인정"
+              />
+            </GridContainer>
+          </Section>
+          <Section>
+            <Text fontSize={24} fontWeight={600}>
+              봉사
+            </Text>
+            <AttendanceForm
+              width="748px"
+              title="봉사시간"
+              value={safeActivityData.volunteerHours}
+              onChange={handleVolunteerHoursChange}
+              defaultCount={10}
+            />
+          </Section>
+        </>
+      )}
       <Section>
         <Text fontSize={24} fontWeight={600}>
           자격증

@@ -30,6 +30,11 @@ export const Landing = () => {
   const isScrolling = useRef(false);
   const lastWheelTime = useRef(0);
   const maxStep = ments.length;
+  const contentStartY = window.innerHeight * maxStep;
+
+  const headleMove = () => {
+    window.scrollTo(0, contentStartY);
+  };
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
@@ -89,9 +94,7 @@ export const Landing = () => {
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      console.log(y);
       const contentStartY = window.innerHeight * maxStep;
-      console.log(contentStartY);
       if (y >= contentStartY) {
         if (step !== maxStep) {
           setStep(maxStep);
@@ -153,7 +156,7 @@ export const Landing = () => {
             </AnimatedText>
           ))}
         </TextWrapper>
-        <ArrowContainer>
+        <ArrowContainer onClick={headleMove}>
           <ArrowBottom />
         </ArrowContainer>
       </FixedBackground>
@@ -229,7 +232,7 @@ const ArrowContainer = styled.div`
   width: 35px;
   height: 35px;
   animation: ${bounce} 2s infinite;
-
+  cursor: pointer;
   svg {
     width: 100%;
     height: 100%;
@@ -376,7 +379,6 @@ const FixedBackground = styled.div<{
     opacity 1.2s ease,
     background-image 1.2s ease;
   opacity: ${props => (props.isLastStep ? 0 : 1)};
-  pointer-events: none;
   z-index: ${props => (props.isLastStep ? -1 : 1)};
 `;
 
