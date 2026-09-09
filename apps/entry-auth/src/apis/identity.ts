@@ -28,6 +28,10 @@ export interface LoginResponse {
   status: string;
 }
 
+export interface CsrfResponse {
+  token: string;
+}
+
 export interface PasswordResetRequest {
   loginId: string;
   name: string;
@@ -140,12 +144,30 @@ export const signup = (payload: SignupRequest) =>
     body: JSON.stringify(payload),
   });
 
-export const login = (payload: LoginRequest) =>
-  request<LoginResponse>("/api/identity/v11/auth/login", {
+export const getCsrfToken = async (): Promise<CsrfResponse> => {
+  const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf");
+  const token = typeof data?.token === "string" ? data.token.trim() : "";
+
+  if (!token) {
+    throw new IdentityApiError(
+      422,
+      "보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      "INVALID_CSRF_TOKEN"
+    );
+  }
+
+  return { token };
+};
+
+export const login = async (payload: LoginRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<LoginResponse>("/api/identity/v11/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify(payload),
   });
+};
 
 export const refreshToken = () =>
   request<null>("/api/identity/v11/auth/token", {
