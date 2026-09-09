@@ -114,8 +114,24 @@ export const createPassPopup = async (redirectUrl: string) =>
     body: JSON.stringify({ redirectUrl }),
   });
 
-export const getPassInfo = (modelToken: string) =>
-  request<PassInfo>(`/api/identity/v11/auth/pass/info?mdl_tkn=${encodeURIComponent(modelToken)}`);
+export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
+  const data = await request<{ name?: unknown; phoneNumber?: unknown; phone?: unknown } | null>(
+    `/api/identity/v11/auth/pass/info?mdl_tkn=${encodeURIComponent(modelToken)}`
+  );
+  const phoneNumber = typeof data?.phoneNumber === "string" ? data.phoneNumber.replace(/\D/g, "") : "";
+  const phone = phoneNumber || (typeof data?.phone === "string" ? data.phone.replace(/\D/g, "") : "");
+  const name = typeof data?.name === "string" ? data.name.trim() : "";
+
+  if (!name || !/^01\d{8,9}$/.test(phone)) {
+    throw new IdentityApiError(
+      422,
+      "PASS 인증 결과에 이름 또는 전화번호가 없습니다. 인증을 다시 진행해 주세요.",
+      "INVALID_PASS_INFO"
+    );
+  }
+
+  return { name, phone };
+};
 
 export const signup = (payload: SignupRequest) =>
   request<SignupResponse>("/api/identity/v11/auth/signup", {
