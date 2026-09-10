@@ -22,6 +22,8 @@ export const useSchedules = () => {
     schedules: query.data ?? EMPTY_SCHEDULES,
     isLoading: query.isLoading,
     isError: query.isError,
+    /** 조회가 성공했는지. 로딩 중의 빈 배열과 "성공했지만 등록된 일정이 없음"([]) 을 구분할 때 쓴다. */
+    isSuccess: query.isSuccess,
     refetch: query.refetch,
   };
 };
