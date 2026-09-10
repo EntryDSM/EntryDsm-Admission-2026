@@ -23,7 +23,11 @@ const getErrorMessage = (error: unknown) => {
 /** 앱 전역 QueryClient. 쿼리 에러는 이곳에서 일괄 토스트 처리한다. */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: error => toast.error(getErrorMessage(error)),
+    onError: (error, query) => {
+      if (!query.meta?.suppressGlobalErrorToast) {
+        toast.error(getErrorMessage(error));
+      }
+    },
   }),
   defaultOptions: {
     queries: {
