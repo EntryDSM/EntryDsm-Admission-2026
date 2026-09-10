@@ -70,6 +70,7 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
         birthdate,
         password,
         signupType,
+        is_sensitive_agree: consents.sensitive,
       });
       toast.success("회원가입이 완료되었습니다. 로그인해 주세요.");
       navigate("/", { replace: true, state: { signupCompleted: true } });
