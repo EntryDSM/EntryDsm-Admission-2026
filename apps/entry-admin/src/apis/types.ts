@@ -267,13 +267,10 @@ export interface AdminSchedule {
 }
 
 /**
- * 일정 수정 요청 항목.
- * 엔드포인트가 `/schedules/bulk` 라 배열로 보내며, 기존 일정은 `scheduleId` 로 식별하도록 함께 전송한다.
- * 명세의 수정 요청 예시에는 scheduleId 가 없고 별도의 등록 API 도 없으므로,
- * 빈 목록에서 새로 등록하는 항목은 scheduleId 없이 보낸다(서버가 title 기준으로 생성한다고 가정).
+ * 일정 일괄 수정(등록) 요청 항목 (PATCH /schedules/bulk).
+ * 명세상 scheduleId 없이 title·시각만 배열로 보낸다(서버가 title 기준으로 생성/수정).
  */
 export interface UpdateScheduleItem {
-  scheduleId?: number;
   title: string;
   startAt: ScheduleDateTime;
   endAt: ScheduleDateTime;

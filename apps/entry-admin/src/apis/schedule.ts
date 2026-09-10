@@ -21,11 +21,12 @@ export const getSchedules = async () => {
   return unwrap(body);
 };
 
-/** 전형 일정 일괄 수정 */
-export const updateSchedules = async (schedules: UpdateScheduleItem[]) => {
+/** 전형 일정 일괄 수정. 명세상 요청자 식별용 X-User-Id / X-User-Role(ADMIN) 헤더를 요구한다. */
+export const updateSchedules = async (schedules: UpdateScheduleItem[], userId: string) => {
   const body = await http.patch<ScheduleEnvelope<AdminSchedule[]> | AdminSchedule[]>(
     `${SCHEDULES_ENDPOINT}/bulk`,
-    schedules
+    schedules,
+    { headers: { "X-User-Id": userId, "X-User-Role": "ADMIN" } }
   );
   return unwrap(body);
 };
