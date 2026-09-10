@@ -1,6 +1,5 @@
 import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
-import { getAccessToken } from "../utils/token";
 
 /** HTTP 에러. status/code 를 담아 상위(토스트 등)에서 분기할 수 있게 한다. */
 export class HttpError extends Error {
@@ -21,11 +20,13 @@ interface ErrorBody {
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
   options = { ...options, signal: createRequestSignal(options.signal) };
-  const token = getAccessToken();
   const headers = new Headers(options.headers);
-  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+  // body 없는 GET 이 preflight 없이 나가도록, 본문이 있을 때만 Content-Type 을 붙인다(entry-user 와 동일).
+  if (options.body !== undefined && options.body !== null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
+  // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함한다.
   if (!["GET", "HEAD", "OPTIONS"].includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
     headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, options.signal));
   }
