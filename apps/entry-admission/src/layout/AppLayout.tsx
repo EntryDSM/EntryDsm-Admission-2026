@@ -19,7 +19,7 @@ import {
   submitGrades,
 } from "../apis";
 import { ApplicationNav } from "../components";
-import { getAccessToken } from "../utils/token";
+import { useMyAccount } from "../hooks/useMyAccount";
 
 const admissionTypes = {
   일반: "REGULAR",
@@ -116,7 +116,9 @@ export const AppLayout = () => {
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
-  const isAuthenticated = Boolean(getAccessToken());
+  // HttpOnly 쿠키는 JS로 읽을 수 없으므로 RequireAuth 가 조회한 내 계정 캐시로 로그인 여부를 판단한다.
+  const { account } = useMyAccount();
+  const isAuthenticated = Boolean(account);
   const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
 
   useEffect(() => {

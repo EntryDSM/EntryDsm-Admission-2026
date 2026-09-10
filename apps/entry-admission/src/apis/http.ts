@@ -1,7 +1,6 @@
 import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { AUTH_APP_URL } from "@entry/ui";
 import type { ApiResponse } from "./types";
-import { getAccessToken, removeAccessToken } from "../utils/token";
 
 // access token이 만료됐을 때 HttpOnly refresh cookie로 재발급을 요청하는 인증 API입니다.
 const REFRESH_TOKEN_ENDPOINT = "/api/identity/v11/auth/token";
@@ -22,7 +21,7 @@ export class HttpError extends Error {
 }
 
 interface HttpRequestOptions extends Omit<RequestInit, "body" | "headers" | "method"> {
-  // false이면 공개 API 요청으로 처리해 Authorization 헤더를 넣지 않습니다.
+  // false이면 공개 API 요청으로 처리해 인증 쿠키와 X-XSRF-TOKEN 헤더를 보내지 않습니다.
   auth?: boolean;
   // 호출 화면이 추가 헤더나 AbortSignal을 전달할 때 사용합니다.
   headers?: HeadersInit;
@@ -47,14 +46,9 @@ const createPath = (path: string, params?: HttpRequestOptions["params"]) => {
   return query ? `${path}?${query}` : path;
 };
 
-// 쿠키의 access token을 Bearer 헤더에 넣고, FormData에는 브라우저가 boundary를 설정하도록 둡니다.
+// HttpOnly 인증 쿠키는 브라우저가 싣고, FormData에는 브라우저가 boundary를 설정하도록 둡니다.
 const createHeaders = async (method: string, body: BodyInit | null | undefined, options: HttpRequestOptions) => {
   const headers = new Headers(options.headers);
-  const token = options.auth === false ? null : getAccessToken();
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
 
   if (body !== undefined && body !== null && !(body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -138,7 +132,6 @@ const fetchWithAuthentication = async (
     }
   }
 
-  removeAccessToken();
   redirectToLogin();
   return response;
 };
