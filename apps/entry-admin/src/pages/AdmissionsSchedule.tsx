@@ -47,7 +47,12 @@ export const AdmissionsSchedule = () => {
   const isRegisterMode = isSuccess && schedules.length === 0;
 
   // 조회 결과를 로컬 편집 상태로 복사해 저장 전까지 서버 캐시와 분리한다.
-  const [fields, setFields] = useState<ScheduleFieldView[]>(schedules);
+  // 다른 화면(홈 통계)이 같은 키로 먼저 조회해 빈 목록이 캐시된 채 마운트하면, 첫 렌더부터
+  // schedules === syncedSchedules 라 아래 동기화가 한 번도 걸리지 않는다(빈 결과는 structural sharing
+  // 으로 참조도 안 바뀜). 그래서 초기값 계산 시점에 등록 모드면 기본 일정을 바로 시드한다.
+  const [fields, setFields] = useState<ScheduleFieldView[]>(() =>
+    isRegisterMode ? createDefaultScheduleFields() : schedules
+  );
   // 편집 중(dirty)에는 백그라운드 refetch 가 로컬 편집을 덮어쓰지 않게 동기화를 건너뛴다.
   const [isDirty, setIsDirty] = useState(false);
   // 마지막으로 동기화한 조회 결과 참조. 새 조회로 참조가 바뀌면 다시 동기화한다.

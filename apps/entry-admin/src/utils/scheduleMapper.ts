@@ -39,10 +39,9 @@ export const toScheduleFields = (schedules: AdminSchedule[]): ScheduleFieldView[
     end: toDateTimeInput(schedule.endAt),
   }));
 
-/** 화면 뷰 모델 → 일괄 수정 요청 본문. 신규(등록) 항목은 scheduleId 를 아예 보내지 않는다. */
+/** 화면 뷰 모델 → 일괄 수정 요청 본문. 명세상 scheduleId 없이 title·시각만 보낸다. */
 export const toUpdateSchedulePayload = (fields: ScheduleFieldView[]): UpdateScheduleItem[] =>
   fields.map(field => ({
-    ...(field.scheduleId === null ? {} : { scheduleId: field.scheduleId }),
     title: field.title,
     startAt: toScheduleDateTime(field.start),
     endAt: toScheduleDateTime(field.end),
