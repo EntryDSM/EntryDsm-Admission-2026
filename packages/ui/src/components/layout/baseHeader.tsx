@@ -34,9 +34,11 @@ type AdminHeaderProps = {
   disabledPaths?: string[];
   /** 막힌 메뉴 클릭 시 호출된다 (토스트 안내 등은 앱에서 처리) */
   onDisabledNavClick?: (name: string, path: string) => void;
+  /** 로그아웃 버튼 클릭 시 호출된다 (세션 만료 API 호출·이동은 앱에서 처리) */
+  onLogout?: () => void;
 };
 
-export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderProps = {}) => {
+export const AdminHeader = ({ disabledPaths, onDisabledNavClick, onLogout }: AdminHeaderProps = {}) => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -62,7 +64,12 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderPr
   };
 
   const handleLogout = () => {
-    // 로그아웃 로직 (예: 토큰 삭제)
+    // HttpOnly 세션 쿠키는 서버만 만료시킬 수 있으므로 로그아웃 API 호출은 앱이 담당한다.
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+
     window.location.href = USER_APP_URL;
   };
 

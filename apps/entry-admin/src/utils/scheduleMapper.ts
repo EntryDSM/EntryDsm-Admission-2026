@@ -1,8 +1,11 @@
 import type { AdminSchedule, DayOfWeek, ScheduleDateTime, UpdateScheduleItem } from "../apis/types";
 
-/** 전형 일정 수정 화면(DropDownSection)이 사용하는 뷰 모델. 시각은 `YYYY-MM-DDTHH:mm` 문자열로 다룬다. */
+/**
+ * 전형 일정 수정 화면(DropDownSection)이 사용하는 뷰 모델. 시각은 `YYYY-MM-DDTHH:mm` 문자열로 다룬다.
+ * `scheduleId` 가 null 이면 아직 서버에 없는 신규(등록 대기) 일정이다.
+ */
 export interface ScheduleFieldView {
-  scheduleId: number;
+  scheduleId: number | null;
   title: string;
   start: string;
   end: string;
@@ -36,13 +39,26 @@ export const toScheduleFields = (schedules: AdminSchedule[]): ScheduleFieldView[
     end: toDateTimeInput(schedule.endAt),
   }));
 
-/** 화면 뷰 모델 → 일괄 수정 요청 본문 */
+/** 화면 뷰 모델 → 일괄 수정 요청 본문. 신규(등록) 항목은 scheduleId 를 아예 보내지 않는다. */
 export const toUpdateSchedulePayload = (fields: ScheduleFieldView[]): UpdateScheduleItem[] =>
   fields.map(field => ({
-    scheduleId: field.scheduleId,
+    ...(field.scheduleId === null ? {} : { scheduleId: field.scheduleId }),
     title: field.title,
     startAt: toScheduleDateTime(field.start),
     endAt: toScheduleDateTime(field.end),
+  }));
+
+/**
+ * 조회 결과가 비어 있을 때(등록된 일정 없음) 등록 화면에 띄울 기본 일정 목록.
+ * title 은 홈 화면 매핑 규칙(APPLICATION_KEYWORDS·ANNOUNCEMENT_RULES)과 맞물리는 표준 명칭이라,
+ * 이대로 등록하면 홈(통계) 화면 일정 슬롯에도 그대로 매핑된다.
+ */
+export const createDefaultScheduleFields = (): ScheduleFieldView[] =>
+  ["원서 접수", "1차 합격 발표", "면접", "최종 합격 발표"].map(title => ({
+    scheduleId: null,
+    title,
+    start: "",
+    end: "",
   }));
 
 /* ─────────────── 홈(통계) 화면용 일정 매핑 ─────────────── */
