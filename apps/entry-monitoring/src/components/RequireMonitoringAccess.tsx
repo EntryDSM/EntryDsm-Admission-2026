@@ -68,7 +68,7 @@ export const RequireMonitoringAccess = () => {
     );
   }
 
-  return <Outlet />;
+  return <Outlet context={account} />;
 };
 
 const GuardScreen = styled.div`

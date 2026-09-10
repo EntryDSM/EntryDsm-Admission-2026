@@ -1,3 +1,5 @@
+import { getCsrfToken } from "@entry/utils";
+
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 export class HttpError extends Error {
@@ -21,14 +23,17 @@ interface ApiEnvelope<T> extends ErrorBody {
   data: T | null;
 }
 
-const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+const request = async <T>(path: string, options: RequestInit = {}, allowEmptyResponse = false): Promise<T> => {
+  const headers = new Headers(options.headers);
+  headers.set("Accept", "application/json");
+  if (options.method === "POST") {
+    headers.set("Content-Type", "application/json");
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, options.signal));
+  }
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
-    headers: {
-      Accept: "application/json",
-      ...options.headers,
-    },
+    headers,
   });
 
   const isJson = response.headers.get("content-type")?.includes("application/json") ?? false;
@@ -47,6 +52,10 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
     throw new HttpError(response.status, errorInfo?.message ?? response.statusText, errorInfo?.code);
   }
 
+  if (allowEmptyResponse && response.status === 204) {
+    return null as T;
+  }
+
   if (!isJson || body === null) {
     throw new HttpError(response.status, "응답 데이터가 없습니다.");
   }
@@ -54,11 +63,11 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   if (body && typeof body === "object" && "success" in body && "data" in body) {
     const envelope = body as ApiEnvelope<T>;
 
-    if (!envelope.success || envelope.data === null) {
+    if (!envelope.success || (envelope.data === null && !allowEmptyResponse)) {
       throw new HttpError(response.status, errorInfo?.message ?? "응답 데이터가 없습니다.", errorInfo?.code);
     }
 
-    return envelope.data;
+    return envelope.data as T;
   }
 
   return body as T;
@@ -66,4 +75,6 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 
 export const http = {
   get: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: "GET" }),
+  post: (path: string, payload: unknown) =>
+    request<null>(path, { method: "POST", body: JSON.stringify(payload) }, true),
 };
