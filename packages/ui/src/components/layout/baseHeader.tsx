@@ -230,7 +230,13 @@ export const AuthHeader = () => {
   );
 };
 
-export const MonitoringHeader = () => {
+interface MonitoringHeaderProps {
+  name: string;
+  onLogout: () => void;
+  isLoggingOut?: boolean;
+}
+
+export const MonitoringHeader = ({ name, onLogout, isLoggingOut = false }: MonitoringHeaderProps) => {
   const navigate = useNavigate();
 
   return (
@@ -258,8 +264,8 @@ export const MonitoringHeader = () => {
         >
           Aws 콘솔 페이지
         </Btn>
-        <ButtonName>
-          김이름 <img src={Logout} alt="로그아웃" />
+        <ButtonName type="button" onClick={onLogout} disabled={isLoggingOut} aria-label={`${name} 로그아웃`}>
+          {name} <img src={Logout} alt="" />
         </ButtonName>
       </Flex>
     </MonitoringActionSection>

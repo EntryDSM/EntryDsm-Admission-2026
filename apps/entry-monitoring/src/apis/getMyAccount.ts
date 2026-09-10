@@ -1,6 +1,7 @@
 import { http } from "./http";
 
-interface MyAccount {
+export interface MyAccount {
+  name: string;
   role: string;
 }
 

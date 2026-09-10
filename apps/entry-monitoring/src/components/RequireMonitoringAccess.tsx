@@ -10,13 +10,13 @@ import { useMyAccount } from "../hooks";
 
 /**
  * 모니터링 접근 가드 라우트. 내 계정 조회(GET /api/identity/v11/accounts/me)로 권한을 확인해
- * `role === "ADMIN"` 일 때만 하위 페이지를 렌더링한다.
+ * `MONITOR` 또는 `ADMIN` 권한일 때만 하위 페이지를 렌더링한다.
  * - 미인증(401): 로그인(auth 앱)으로 보낸다.
- * - ADMIN 이 아닌 권한: 접근 거부 화면을 띄운다.
+ * - 모니터링 접근 권한이 없는 계정: 접근 거부 화면을 띄운다.
  * - 네트워크 등 그 외 실패: 페이지를 막고(fail-closed) 재시도 화면을 띄운다.
  * 라우트 이동마다 캐시를 무효화하고, 확인이 끝날 때까지 페이지를 렌더링하지 않는다.
  */
-export const RequireAdmin = () => {
+export const RequireMonitoringAccess = () => {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
   const previousPathname = useRef(pathname);
@@ -45,7 +45,7 @@ export const RequireAdmin = () => {
   }
 
   if (isCheckingAccount) {
-    return <GuardScreen>관리자 권한 확인 중...</GuardScreen>;
+    return <GuardScreen>모니터링 접근 권한 확인 중...</GuardScreen>;
   }
 
   if (accountError) {
@@ -59,16 +59,16 @@ export const RequireAdmin = () => {
     );
   }
 
-  if (account?.role !== "ADMIN") {
+  if (account?.role !== "MONITOR" && account?.role !== "ADMIN") {
     return (
       <GuardScreen>
-        관리자 권한이 없습니다.
+        모니터링 접근 권한이 없습니다.
         <LoginLink href={AUTH_APP_URL}>로그인 페이지로 이동</LoginLink>
       </GuardScreen>
     );
   }
 
-  return <Outlet />;
+  return <Outlet context={account} />;
 };
 
 const GuardScreen = styled.div`
