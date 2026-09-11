@@ -1,0 +1,4 @@
+# /mypage 는 robots.txt Disallow 와 병행해 색인 자체도 막는다 (docs/SEO.md 5절).
+# 다른 경로에는 어떤 헤더도 추가하지 않는다 — 검색 허용 앱이다.
+/mypage*
+  X-Robots-Tag: noindex, nofollow

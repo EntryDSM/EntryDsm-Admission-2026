@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 색인을 원하는 공개 경로만 나열한다. 새 공개 라우트를 추가하면 여기도 갱신할 것 (docs/SEO.md 7절). -->
+<!-- 성적 계산기는 플로우별 첫 단계만 넣는다. /calculate 는 첫 단계로 리디렉션되고, 2단계 이후는 같은 폼의 연속이라 제외. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://entrydsm.hs.kr/</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/landing</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/notice</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/faq</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/admission-overview</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/calculate/primary/first-graduate</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/calculate/graduated/third2</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/calculate/qe/score</loc>
+  </url>
+</urlset>

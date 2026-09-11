@@ -1,0 +1,4 @@
+# entry-auth (auth.entrydsm.hs.kr) — 내부용 앱. 검색엔진 크롤링 전체 차단.
+# 색인 차단은 index.html 의 noindex 메타 + public/_headers 의 X-Robots-Tag 가 담당한다 (docs/SEO.md).
+User-agent: *
+Disallow: /
