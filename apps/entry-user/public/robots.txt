@@ -1,0 +1,7 @@
+# entry-user (entrydsm.hs.kr) — 검색 허용. 정책·검증 절차는 docs/SEO.md 참고.
+# /mypage 는 로그인 사용자 개인 페이지라 크롤링 제외 (public/_headers 의 noindex 와 병행).
+# /assets/* (JS·CSS) 는 검색엔진이 SPA 를 렌더링하는 데 필요하므로 절대 막지 말 것.
+User-agent: *
+Disallow: /mypage
+
+Sitemap: https://entrydsm.hs.kr/sitemap.xml

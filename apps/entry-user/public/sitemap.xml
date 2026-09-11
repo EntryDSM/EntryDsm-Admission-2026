@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 공개 경로만 나열한다. 새 공개 라우트를 추가하면 여기도 갱신할 것 (docs/SEO.md 7절). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://entrydsm.hs.kr/</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/landing</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/notice</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/faq</loc>
+  </url>
+  <url>
+    <loc>https://entrydsm.hs.kr/admission-overview</loc>
+  </url>
+</urlset>
