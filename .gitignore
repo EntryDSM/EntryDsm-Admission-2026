@@ -18,6 +18,9 @@ coverage
 # Turbo
 .turbo
 
+# Cloudflare — wrangler dev 가 만드는 로컬 상태·임시 번들 (루트와 apps/* 양쪽)
+.wrangler
+
 # Vercel
 .vercel
 

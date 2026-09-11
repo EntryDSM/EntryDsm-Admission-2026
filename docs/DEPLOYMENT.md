@@ -34,7 +34,7 @@ push (develop) ─ Workers Builds ─ turbo 빌드 → wrangler deploy -e stag  
 - `routes[].custom_domain: true` — 배포 시 해당 도메인의 DNS 레코드와 TLS 인증서가 자동 생성·연결된다.
   ⚠️ 이전 AWS 배포 시절의 **CloudFront(`dxxxx.cloudfront.net`) 대상 CNAME 레코드가 남아 있으면 충돌로 배포가 실패**하므로 먼저 삭제한다.
 - `workers_dev: false` — `*.workers.dev`로는 서빙하지 않는다 (중복 origin으로 인한 CORS·SEO 혼선 방지).
-- 각 앱 `public/`의 `robots.txt`·`_headers`·`sitemap.xml`은 빌드 시 `dist/` 루트로 복사되어 그대로 배포된다. 검색 노출 정책(user 앱만 허용, 나머지 Disallow + noindex)은 [SEO.md](./SEO.md) 참고.
+- 각 앱 `public/`의 `robots.txt`·`_headers`(entry-user는 `sitemap.xml`과 검색엔진 소유확인 파일도)는 빌드 시 `dist/` 루트로 복사되어 그대로 배포된다. 검색 노출 정책(user 앱만 허용, 나머지 Disallow + noindex)은 [SEO.md](./SEO.md) 참고.
 - wrangler는 루트 `package.json`의 devDependency로 **버전이 고정**되어 있어, 배포 시점에 임의 최신 버전을 받지 않는다.
 - 배포 대상 환경은 항상 명시한다: prod는 `--env=""`(최상위), stag는 `-e stag`. 플래그 없이 실행하면 wrangler가 경고를 내며 최상위(prod)로 가므로 **로컬에서 함부로 `wrangler deploy`를 치지 말 것.**
 

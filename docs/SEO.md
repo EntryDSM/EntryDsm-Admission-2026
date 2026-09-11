@@ -11,7 +11,7 @@
 | `public/robots.txt`  | 전체 허용, `/mypage`만 `Disallow`, `Sitemap:` 선언                                 | `User-agent: *` / `Disallow: /` (크롤링 전체 차단)                   |
 | `index.html` 메타    | `lang="ko"`, `<title>`, `description`, `og:*` (기본 SEO 메타)                      | `<meta name="robots" content="noindex, nofollow">`                   |
 | `public/_headers`    | `/mypage*` → `X-Robots-Tag: noindex, nofollow`                                     | `/*` → `X-Robots-Tag: noindex, nofollow` (SPA fallback 포함 전 응답) |
-| `public/sitemap.xml` | 공개 경로 5개                                                                      | 없음                                                                 |
+| `public/sitemap.xml` | 공개 경로 8개 (안내 5 + 성적 계산기 진입 3)                                        | 없음                                                                 |
 | stag 도메인          | prod와 같은 파일, 별도 처리 없음 (8절)                                             | 동일 — 어차피 전체 차단                                              |
 | AI 크롤러            | Cloudflare zone 설정 **Block AI bots**(WAF) 사용, 관리형 robots.txt는 **끔** (9절) | 동일 (zone 전체 적용)                                                |
 
@@ -55,7 +55,7 @@ Vite는 `apps/<앱>/public/`의 파일을 이름·경로 그대로 `dist/` 루�
 
 `apps/entry-user/public/robots.txt`
 
-```
+```text
 User-agent: *
 Disallow: /mypage
 
@@ -64,7 +64,7 @@ Sitemap: https://entrydsm.hs.kr/sitemap.xml
 
 `apps/entry-user/public/_headers`
 
-```
+```text
 /mypage*
   X-Robots-Tag: noindex, nofollow
 ```
@@ -79,19 +79,22 @@ Sitemap: https://entrydsm.hs.kr/sitemap.xml
   <url><loc>https://entrydsm.hs.kr/notice</loc></url>
   <url><loc>https://entrydsm.hs.kr/faq</loc></url>
   <url><loc>https://entrydsm.hs.kr/admission-overview</loc></url>
+  <url><loc>https://entrydsm.hs.kr/calculate/primary/first-graduate</loc></url>
+  <url><loc>https://entrydsm.hs.kr/calculate/graduated/third2</loc></url>
+  <url><loc>https://entrydsm.hs.kr/calculate/qe/score</loc></url>
 </urlset>
 ```
 
 `apps/entry-{auth,admin,admission,monitoring}/public/robots.txt` (4개 동일)
 
-```
+```text
 User-agent: *
 Disallow: /
 ```
 
 `apps/entry-{auth,admin,admission,monitoring}/public/_headers` (4개 동일)
 
-```
+```text
 /*
   X-Robots-Tag: noindex, nofollow
 ```
@@ -149,7 +152,7 @@ curl -sI http://localhost:8787/robots.txt        # 200, text/plain, x-robots-tag
 curl -sI http://localhost:8787/any/deep/route    # 200, text/html(SPA fallback), x-robots-tag
 ```
 
-- wrangler dev는 `apps/<앱>/.wrangler/` 상태 폴더를 만든다. 커밋하지 말 것(`.gitignore`에 아직 없음).
+- wrangler dev는 `apps/<앱>/.wrangler/`(루트에서 실행하면 `.wrangler/`) 임시 폴더를 만든다. `.gitignore`의 `.wrangler` 규칙으로 제외되며, 지워도 다음 실행 때 다시 생긴다.
 - 도입 시점(2026-09-11) 로컬 검증에서 확인된 동작: 4개 앱은 `/`, 임의 경로, `/robots.txt`, SVG 자산 응답 전부에 `x-robots-tag`가 붙고
   `/_headers` 요청은 `text/html`(SPA fallback)로 응답했다. entry-user는 `/mypage`·`/mypage/edit`에만 헤더가 붙고
   `/faq`·`/notice/12`·`/robots.txt`·`/sitemap.xml`에는 붙지 않았다.
@@ -179,7 +182,10 @@ curl -sI http://localhost:8787/any/deep/route    # 200, text/html(SPA fallback),
 ## 7. sitemap.xml
 
 - 포함: `/`, `/landing`, `/notice`, `/faq`, `/admission-overview` — 로그인 없이 볼 수 있는 안내 페이지.
-- 제외: `/mypage`(Disallow), `/calculate/*`(입력 화면이라 색인 가치 없음, 크롤링은 허용), `/notice/:id`(백엔드 데이터라 정적 파일에 담을 수 없음.
+- 포함: 성적 계산기 플로우별 **첫 단계** 3개 — `/calculate/primary/first-graduate`(졸업예정자), `/calculate/graduated/third2`(졸업자),
+  `/calculate/qe/score`(검정고시). 계산기는 로그인 없이 쓰는 공개 기능이라 "성적 계산기" 검색 진입점으로 가치가 있다.
+- 제외: `/calculate`(첫 단계로 클라이언트 리디렉션되는 빈 경로), 계산기 2단계 이후 경로(같은 폼의 연속이고 제목·설명이 첫 단계와 동일해
+  중복 취급됨. 크롤링은 허용), `/mypage`(Disallow), `/notice/:id`(백엔드 데이터라 정적 파일에 담을 수 없음.
   Google은 `/notice` 목록의 링크를 따라 발견한다), `/error_fixing`·`/return_soon`(임시).
 - `lastmod`·`changefreq`·`priority`는 넣지 않는다 — Google은 `changefreq`·`priority`를 무시하고, `lastmod`는 정확할 때만 참고하는데 정적 파일에서
   정확히 유지할 수 없다.
@@ -197,7 +203,7 @@ prod와 stag는 같은 빌드 산출물을 쓰므로 파일이 동일하다.
 - 발견 시 대응(빌드 변경 없음): entry-user `public/_headers`에 호스트 규칙 한 줄을 추가하면 stag 응답에만 noindex가 붙는다.
   Cloudflare 자산 워커는 `https://`로 시작하는 규칙을 `https://<요청 호스트><경로>`와 비교한다.
 
-  ```
+  ```text
   https://stag.entrydsm.hs.kr/*
     X-Robots-Tag: noindex, nofollow
   ```
@@ -215,7 +221,7 @@ prod와 stag는 같은 빌드 산출물을 쓰므로 파일이 동일하다.
 
 ⚠️ **관리형 robots.txt를 켜면 안 되는 이유**: 이 기능은 우리 robots.txt **앞에** 다음 블록을 붙여 하나의 응답으로 합친다.
 
-```
+```text
 User-Agent: *
 Content-signal: search=yes, ai-train=no, use=reference
 Allow: /
