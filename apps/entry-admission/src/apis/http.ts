@@ -1,12 +1,5 @@
 import { createRequestSignal, getCsrfToken } from "@entry/utils";
-import { AUTH_APP_URL } from "@entry/ui";
 import type { ApiResponse } from "./types";
-
-// access token이 만료됐을 때 HttpOnly refresh cookie로 재발급을 요청하는 인증 API입니다.
-const REFRESH_TOKEN_ENDPOINT = "/api/identity/v11/auth/token";
-
-// 동시에 여러 요청이 401을 받아도 refresh 요청은 하나만 실행하도록 공유합니다.
-let refreshPromise: Promise<boolean> | null = null;
 
 // HTTP 실패 상태와 서버 응답 본문을 호출 화면까지 전달하는 공통 오류 객체.
 export class HttpError extends Error {
@@ -73,67 +66,24 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
 const createRequestUrl = (path: string, options: HttpRequestOptions) =>
   `${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`;
 
-const redirectToLogin = () => {
-  if (typeof window !== "undefined") {
-    window.location.assign(AUTH_APP_URL);
-  }
-};
-
-// HttpOnly refresh cookie를 서버에 전송해 새 access token 쿠키를 발급받습니다.
-const refreshAccessToken = () => {
-  if (!refreshPromise) {
-    const signal = createRequestSignal();
-    refreshPromise = createHeaders("POST", JSON.stringify({}), { signal })
-      .then(headers =>
-        fetch(`${import.meta.env.VITE_API_BASE_URL}${REFRESH_TOKEN_ENDPOINT}`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({}),
-          credentials: "include",
-          signal,
-        })
-      )
-      .then(response => response.ok)
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
-};
-
-// 인증 API는 401에서 refresh 후 원 요청을 한 번만 재시도해 무한 재시도를 방지합니다.
-const fetchWithAuthentication = async (
+// HttpOnly 인증 쿠키는 브라우저가 싣습니다. 401 은 토큰 재발급 없이 그대로 HttpError 로 올려 보내고,
+// 로그인 페이지 이동은 RequireAuth 가드가 담당합니다 (entry-user·entry-admin 클라이언트와 같은 흐름).
+const fetchApi = async (
   path: string,
   method: string,
   body: BodyInit | null | undefined,
   options: HttpRequestOptions
 ) => {
   options = { ...options, signal: createRequestSignal(options.signal) };
-  const fetchRequest = async () =>
-    fetch(createRequestUrl(path, options), {
-      ...createRequestOptions(options),
-      method,
-      body,
-      headers: await createHeaders(method, body, options),
-      credentials: options.auth === false ? "omit" : "include",
-      signal: options.signal,
-    });
 
-  let response = await fetchRequest();
-  if (response.status !== 401 || options.auth === false) {
-    return response;
-  }
-
-  if (await refreshAccessToken()) {
-    response = await fetchRequest();
-    if (response.status !== 401) {
-      return response;
-    }
-  }
-
-  redirectToLogin();
-  return response;
+  return fetch(createRequestUrl(path, options), {
+    ...createRequestOptions(options),
+    method,
+    body,
+    headers: await createHeaders(method, body, options),
+    credentials: options.auth === false ? "omit" : "include",
+    signal: options.signal,
+  });
 };
 
 // 프록시나 서버 장애로 JSON이 아닌 오류 본문이 와도 HTTP 상태와 본문을 함께 보존합니다.
@@ -156,7 +106,7 @@ const request = async <T>(
   body?: BodyInit | null,
   options: HttpRequestOptions = {}
 ): Promise<T> => {
-  const response = await fetchWithAuthentication(path, method, body, options);
+  const response = await fetchApi(path, method, body, options);
 
   const responseText = await response.text();
   const responseBody = parseResponseBody<T>(responseText);
@@ -178,7 +128,7 @@ const request = async <T>(
 
 // PDF처럼 JSON이 아닌 바이너리 응답을 Blob으로 반환합니다.
 const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
-  const response = await fetchWithAuthentication(path, method, body, options);
+  const response = await fetchApi(path, method, body, options);
 
   if (!response.ok) {
     throw new HttpError("API 요청이 실패했습니다.", response.status, await response.text());
