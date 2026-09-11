@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
-import { adminQueryKeys, getMyAccount, HttpError, updateSchedules, type MyAccount } from "../apis";
+import { adminQueryKeys, HttpError, updateSchedules } from "../apis";
 import { toUpdateSchedulePayload, type ScheduleFieldView } from "../utils";
 
 /**
@@ -13,11 +13,7 @@ export const useUpdateSchedules = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    // X-User-Id 헤더에 넣을 계정 정보는 어드민 가드(RequireAdmin)가 채워 둔 캐시를 쓰고, 없으면 직접 조회한다.
-    mutationFn: async (fields: ScheduleFieldView[]) => {
-      const account = queryClient.getQueryData<MyAccount>(adminQueryKeys.account.me) ?? (await getMyAccount());
-      return updateSchedules(toUpdateSchedulePayload(fields), account.userId);
-    },
+    mutationFn: (fields: ScheduleFieldView[]) => updateSchedules(toUpdateSchedulePayload(fields)),
     onSuccess: () => {
       toast.success("전형 일정을 저장했습니다.");
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.schedules });
