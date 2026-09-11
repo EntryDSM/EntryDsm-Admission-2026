@@ -155,6 +155,18 @@ export interface FinalScreeningResult {
   processedAt: string;
 }
 
+/* ───────────── 수험번호 일괄 발급 (POST /examinee-numbers/issue) ───────────── */
+
+/** 일괄 발급 결과 집계. 명세 예시 기준 `issuedCount + skippedCount === totalTargets`. */
+export interface ExamineeNumberIssueResult {
+  /** 이번 요청으로 새로 발급된 지원자 수 */
+  issuedCount: number;
+  /** 발급하지 않고 건너뛴 지원자 수 (이미 발급된 경우 등 — 건너뛴 사유는 명세 미기재) */
+  skippedCount: number;
+  /** 발급 대상 지원자 전체 수 */
+  totalTargets: number;
+}
+
 /* ───── 문서 생성 잡 (GET /application-checklist, /admission-ticket-jobs) ───── */
 
 /** 문서 생성 잡 상태 — `COMPLETED` 외 값은 명세 미기재라 임의 문자열을 허용한다. */
