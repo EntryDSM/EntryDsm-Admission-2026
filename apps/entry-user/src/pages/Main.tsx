@@ -6,23 +6,7 @@ import { school } from "../assets";
 import { getSchedules, getServerTime } from "../apis/schedule";
 import { getMyAccount } from "../apis/mypage";
 import { ADMISSION_APP_URL } from "../utils/env";
-
-const toServerDate = (currentTime: {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-  second: number;
-}) =>
-  new Date(
-    currentTime.year,
-    currentTime.month - 1,
-    currentTime.day,
-    currentTime.hour,
-    currentTime.minute,
-    currentTime.second
-  );
+import { toDate } from "../utils/schedule";
 
 export const Main = () => {
   const { data: schedules, isError: isSchedulesError } = useQuery({
@@ -40,12 +24,12 @@ export const Main = () => {
     retry: false,
   });
   const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
-  const currentServerTime = serverTime ? toServerDate(serverTime) : null;
+  const currentServerTime = serverTime ? toDate(serverTime) : null;
   const isApplicationPeriod = Boolean(
     applicationSchedule &&
     currentServerTime &&
-    currentServerTime >= new Date(applicationSchedule.startAt) &&
-    currentServerTime <= new Date(applicationSchedule.endAt)
+    currentServerTime >= toDate(applicationSchedule.startAt) &&
+    currentServerTime <= toDate(applicationSchedule.endAt)
   );
   const applicationPeriodSubtitle =
     isSchedulesError || isServerTimeError

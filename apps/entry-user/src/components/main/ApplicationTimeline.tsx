@@ -1,18 +1,20 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import type { Schedule } from "../../apis/schedule";
+import type { Schedule, ScheduleDateTime } from "../../apis/schedule";
+import { toDate } from "../../utils/schedule";
 
 interface ApplicationTimelineProps {
   schedules?: Schedule[];
 }
 
-const formatScheduleDate = (value: string) =>
-  new Intl.DateTimeFormat("ko-KR", {
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
+const scheduleDateFormatter = new Intl.DateTimeFormat("ko-KR", {
+  month: "long",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+const formatScheduleDate = (value: ScheduleDateTime) => scheduleDateFormatter.format(toDate(value));
 
 export const ApplicationTimeline = ({ schedules }: ApplicationTimelineProps) => {
   const timelineData =
