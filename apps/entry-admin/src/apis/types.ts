@@ -174,18 +174,16 @@ export interface AdminDocumentJob {
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
 /**
- * 조회 가능한 메트릭.
- * `GENDER_RATIO`/`REGION_STATUS` 는 명세의 파라미터 표에는 아직 없지만 응답 예시에 추가된 값이라,
- * 응답 키와 동일한 이름으로 요청할 수 있다고 가정한다.
+ * 요청 가능한 메트릭 — 백엔드 enum 과 동일해야 한다(2026-09-11 백엔드 확인).
+ * 이 외 값을 넘기면 바인딩 실패로 400 이 난다. 응답 예시에만 있는 `GENDER_RATIO`/`REGION_STATUS` 는
+ * 요청 파라미터로 쓸 수 없다({@link StatisticsMetrics} 참고).
  */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
-  | "DAILY_TREND"
-  | "GENDER_RATIO"
-  | "REGION_STATUS";
+  | "DAILY_TREND";
 
 /** 성별 (백엔드 표기) */
 export type Gender = "MALE" | "FEMALE";
@@ -208,7 +206,7 @@ export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
 /** 일자별 추이 — 명세에 응답 예시가 없어 `[{ 날짜, 수 }]` 형태로 가정 */
 export type DailyTrendMetric = { date: string; count: number }[];
 
-/** 지원 성비 (명세 확정) */
+/** 지원 성비 (명세 응답 예시 기준) */
 export interface GenderRatioMetric {
   total: number;
   byGender: Partial<Record<Gender, number>>;
@@ -217,7 +215,7 @@ export interface GenderRatioMetric {
   byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
 }
 
-/** 지역별 접수 현황 (명세 확정) */
+/** 지역별 접수 현황 (명세 응답 예시 기준) */
 export interface RegionStatusMetric {
   total: number;
   /** 관내(LOCAL)/전국(NATIONWIDE) 구분 */
@@ -226,6 +224,11 @@ export interface RegionStatusMetric {
   byRegion: Record<string, number>;
 }
 
+/**
+ * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
+ * `GENDER_RATIO`/`REGION_STATUS` 는 요청 파라미터로 지정할 수 없어(백엔드 enum 미포함)
+ * 서버가 임의로 실어 줄 때만 존재한다 — 매퍼는 둘 다 없어도 안전하게 동작해야 한다.
+ */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
   COMPETITION_RATE?: CompetitionRateMetric;
