@@ -13,4 +13,5 @@ export * from "./useQnaDetail";
 export * from "./useUpdateApplicantArrival";
 export * from "./useFirstScreening";
 export * from "./useRegisterFinalResult";
+export * from "./useIssueExamineeNumbers";
 export * from "./useDocumentDownloads";

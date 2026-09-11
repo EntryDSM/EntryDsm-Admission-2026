@@ -10,6 +10,7 @@ import {
   useDownloadAdmissionTickets,
   useDownloadChecklist,
   useFirstScreening,
+  useIssueExamineeNumbers,
   useRegisterFinalResult,
   useUpdateApplicantArrival,
 } from "../hooks";
@@ -133,6 +134,19 @@ export const ApplicantsList = () => {
     toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
   };
 
+  const { issueExamineeNumbers, isIssuingExamineeNumbers } = useIssueExamineeNumbers();
+
+  // "수험번호 발급" → 발급 대상 전체에 수험번호를 일괄 발급한다. 이미 발급된 지원자는 서버가 건너뛴다.
+  const handleIssueExamineeNumbersClick = () => {
+    if (isIssuingExamineeNumbers) {
+      return;
+    }
+
+    if (confirm("발급 대상 지원자에게 수험번호를 일괄 발급하시겠습니까?")) {
+      issueExamineeNumbers();
+    }
+  };
+
   // "지원자 점검표 출력" → 점검표 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
@@ -152,8 +166,9 @@ export const ApplicantsList = () => {
   };
 
   // 출력/다운로드 액션 모음. 아직 API 미연동 항목은 안내 토스트만 띄운다.
+  // `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
   const printActions = [
-    { label: "수험번호 발급", onClick: handlePublishOnlyClick },
+    { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
     { label: "지원자 점검표 출력", onClick: handleChecklistClick },
     { label: "전형 자료 출력", onClick: handlePublishOnlyClick },
     { label: "1차 합격자 명단 출력", onClick: handlePublishOnlyClick },
@@ -228,7 +243,7 @@ export const ApplicantsList = () => {
               hoverBackgroundColor={colors.green[500]}
               onClick={action.onClick}
             >
-              {action.label}
+              {action.isPending ? `${action.label} 중...` : action.label}
             </Btn>
           ))}
           <Btn
