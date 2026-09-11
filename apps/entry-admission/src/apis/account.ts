@@ -15,4 +15,4 @@ export interface MyAccount {
   updatedAt: string;
 }
 
-export const getMyAccount = () => Http.get<MyAccount>("/api/identity/v1/accounts/me");
+export const getMyAccount = () => Http.get<MyAccount>("/api/identity/v11/accounts/me");

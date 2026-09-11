@@ -30,14 +30,28 @@ export const toScheduleDateTime = (value: string): ScheduleDateTime => {
   return { year, month, day, dayOfWeek, hour, minute, second: 0 };
 };
 
-/** 조회 응답 → 화면 뷰 모델 배열 */
+/**
+ * 전형 일정의 표준 명칭과 표시 순서. 등록 모드 기본 일정 생성과 조회 결과 정렬에 함께 쓴다.
+ * title 은 홈 화면 매핑 규칙(APPLICATION_KEYWORDS·ANNOUNCEMENT_RULES)과 맞물리는 표준 명칭이라,
+ * 이대로 등록하면 홈(통계) 화면 일정 슬롯에도 그대로 매핑된다. 목록에 없는 title 은 이 뒤에 응답 순서대로 붙는다.
+ */
+const SCHEDULE_TITLE_ORDER = ["원서 접수", "1차 합격 발표", "면접", "최종 합격 발표"];
+
+const scheduleOrderOf = (title: string) => {
+  const index = SCHEDULE_TITLE_ORDER.indexOf(title);
+  return index === -1 ? SCHEDULE_TITLE_ORDER.length : index;
+};
+
+/** 조회 응답 → 화면 뷰 모델 배열. 응답 순서와 무관하게 SCHEDULE_TITLE_ORDER 순으로 정렬한다. */
 export const toScheduleFields = (schedules: AdminSchedule[]): ScheduleFieldView[] =>
-  schedules.map(schedule => ({
-    scheduleId: schedule.scheduleId,
-    title: schedule.title,
-    start: toDateTimeInput(schedule.startAt),
-    end: toDateTimeInput(schedule.endAt),
-  }));
+  [...schedules]
+    .sort((a, b) => scheduleOrderOf(a.title) - scheduleOrderOf(b.title))
+    .map(schedule => ({
+      scheduleId: schedule.scheduleId,
+      title: schedule.title,
+      start: toDateTimeInput(schedule.startAt),
+      end: toDateTimeInput(schedule.endAt),
+    }));
 
 /** 화면 뷰 모델 → 일괄 수정 요청 본문. 명세상 scheduleId 없이 title·시각만 보낸다. */
 export const toUpdateSchedulePayload = (fields: ScheduleFieldView[]): UpdateScheduleItem[] =>
@@ -47,13 +61,9 @@ export const toUpdateSchedulePayload = (fields: ScheduleFieldView[]): UpdateSche
     endAt: toScheduleDateTime(field.end),
   }));
 
-/**
- * 조회 결과가 비어 있을 때(등록된 일정 없음) 등록 화면에 띄울 기본 일정 목록.
- * title 은 홈 화면 매핑 규칙(APPLICATION_KEYWORDS·ANNOUNCEMENT_RULES)과 맞물리는 표준 명칭이라,
- * 이대로 등록하면 홈(통계) 화면 일정 슬롯에도 그대로 매핑된다.
- */
+/** 조회 결과가 비어 있을 때(등록된 일정 없음) 등록 화면에 띄울 기본 일정 목록. */
 export const createDefaultScheduleFields = (): ScheduleFieldView[] =>
-  ["원서 접수", "1차 합격 발표", "면접", "최종 합격 발표"].map(title => ({
+  SCHEDULE_TITLE_ORDER.map(title => ({
     scheduleId: null,
     title,
     start: "",

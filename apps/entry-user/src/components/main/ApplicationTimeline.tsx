@@ -1,27 +1,18 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import type { Schedule, ScheduleDateTime } from "../../apis/schedule";
-import { toDate } from "../../utils/schedule";
+import type { Schedule } from "../../apis/schedule";
+import { formatScheduleDateTime, sortSchedulesForTimeline } from "../../utils/schedule";
 
 interface ApplicationTimelineProps {
   schedules?: Schedule[];
 }
 
-const scheduleDateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  month: "long",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-const formatScheduleDate = (value: ScheduleDateTime) => scheduleDateFormatter.format(toDate(value));
-
 export const ApplicationTimeline = ({ schedules }: ApplicationTimelineProps) => {
   const timelineData =
     schedules && schedules.length > 0
-      ? schedules.map(schedule => ({
+      ? sortSchedulesForTimeline(schedules).map(schedule => ({
           title: schedule.title,
-          date: `${formatScheduleDate(schedule.startAt)} ~ ${formatScheduleDate(schedule.endAt)}`,
+          date: `${formatScheduleDateTime(schedule.startAt)} ~ ${formatScheduleDateTime(schedule.endAt)}`,
         }))
       : [{ title: "입학 전형 일정", date: "일정을 확인하고 있습니다." }];
 
