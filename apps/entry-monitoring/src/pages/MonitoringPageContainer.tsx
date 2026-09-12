@@ -173,8 +173,8 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
         availability={{
           dashboard: !!dashboardData,
           resources: !!resourcesQuery.data || !!dashboardData,
-          clientLogs: !!clientLogsQuery.data,
-          serverLogs: !!serverLogsQuery.data,
+          clientLogs: !!clientLogsQuery.data || liveClientLogs.length > 0,
+          serverLogs: !!serverLogsQuery.data || liveServerLogs.length > 0,
         }}
         onReload={onReload}
         onDownload={onDownload ? handleDownload : undefined}
