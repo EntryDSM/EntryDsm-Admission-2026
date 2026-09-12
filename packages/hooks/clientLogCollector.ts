@@ -1,3 +1,5 @@
+import { redactClientLog as redact } from "./redactClientLog";
+
 interface ClientLog {
   level: "ERROR" | "WARN";
   source: "DOM" | "PROMISE" | "CONSOLE";
@@ -6,20 +8,6 @@ interface ClientLog {
   pageUrl: string;
   occurredAt: string;
 }
-
-// Never serialize arbitrary objects (request headers, response bodies, form values).
-const redact = (text: string) =>
-  text
-    .replace(/(https?:\/\/[^\s?#]+)[?#][^\s]*/gi, "$1[REDACTED]")
-    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [REDACTED]")
-    .replace(/\beyJ[\w-]+\.[\w-]+\.[\w-]+/g, "[REDACTED]")
-    .replace(
-      /((?:password|passwd|token|authorization|cookie|secret|email|phone|userId|applicantId)\s*[=:]\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
-      "$1[REDACTED]"
-    )
-    .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, "[REDACTED]")
-    .replace(/\b\d{2,3}[- .]?\d{3,4}[- .]?\d{4}\b/g, "[REDACTED]")
-    .replace(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi, "[REDACTED]");
 
 const describe = (value: unknown): string => {
   try {
