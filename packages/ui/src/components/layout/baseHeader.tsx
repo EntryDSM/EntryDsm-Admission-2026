@@ -1,19 +1,25 @@
 ﻿import styled from "@emotion/styled";
 import { useNavigate, useLocation, Link } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { colors, Flex, Text } from "@entry/design";
 import { EntryLogo, SideBarBtnIcon } from "../../assets";
 import { Btn } from "../primitives/btn";
 import { Logout } from "../../assets";
-import { AUTH_APP_URL, USER_APP_URL } from "../../utils/env";
+import { AUTH_APP_URL, USER_APP_URL, AWS_CONSOLE_URL } from "../../utils/env";
 
 export const NoPathHeader = () => {
-  const navigate = useNavigate();
-
   return (
     <NoPathHeaderContainer>
-      <Flex gap={12} alignItems="center" height="fit-content" width="fit-content" onClick={() => navigate("/")}>
+      <Flex
+        gap={12}
+        alignItems="center"
+        height="fit-content"
+        width="fit-content"
+        onClick={() => {
+          window.location.href = USER_APP_URL;
+        }}
+      >
         <EntryLogo />
         <Text fontSize={24} fontWeight={600} color={colors.gray[500]}>
           EntryDSM
@@ -28,9 +34,11 @@ type AdminHeaderProps = {
   disabledPaths?: string[];
   /** 막힌 메뉴 클릭 시 호출된다 (토스트 안내 등은 앱에서 처리) */
   onDisabledNavClick?: (name: string, path: string) => void;
+  /** 로그아웃 버튼 클릭 시 호출된다 (세션 만료 API 호출·이동은 앱에서 처리) */
+  onLogout?: () => void;
 };
 
-export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderProps = {}) => {
+export const AdminHeader = ({ disabledPaths, onDisabledNavClick, onLogout }: AdminHeaderProps = {}) => {
   const [isSideClick, setIsSideClick] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -56,7 +64,12 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderPr
   };
 
   const handleLogout = () => {
-    // 로그아웃 로직 (예: 토큰 삭제)
+    // HttpOnly 세션 쿠키는 서버만 만료시킬 수 있으므로 로그아웃 API 호출은 앱이 담당한다.
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+
     window.location.href = USER_APP_URL;
   };
 
@@ -96,15 +109,34 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick }: AdminHeaderPr
   );
 };
 
-export const CommonHeader = () => {
+type CommonHeaderProps = {
+  /** 스크롤 최상단에서 배경을 투명하게 표시한다 (예: 홈 히어로 위) */
+  transparent?: boolean;
+  isLoggedIn?: boolean;
+  isLoading?: boolean;
+};
+
+export const CommonHeader = ({ transparent = false, isLoggedIn = false, isLoading = false }: CommonHeaderProps) => {
   const [isSideClick, setIsSideClick] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (!transparent) return;
+
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [transparent]);
+
+  const isTransparent = transparent && !isScrolled;
 
   const navData = [
     { name: "공지사항", path: "/notice" },
     { name: "자주 묻는 질문", path: "/faq" },
-    { name: "성적 산출", path: "/calculate" },
+    { name: "모의 성적", path: "/calculate" },
     { name: "전형 요강", path: "/admission-overview" },
     { name: "학교 소개", path: "/landing" },
   ];
@@ -118,20 +150,21 @@ export const CommonHeader = () => {
     window.location.href = AUTH_APP_URL;
   };
 
-  //TODO: api 연동하기 전
-  const isLoggedIn = false;
-  const isLoading = false;
-
   return (
-    <HeaderContainer>
+    <HeaderContainer isTransparent={isTransparent}>
       <CommonHeaderLogoSection onClick={() => navigate("/")}>
         <EntryLogo />
-        <CommonHeaderLogoText>EntryDSM</CommonHeaderLogoText>
+        <CommonHeaderLogoText isTransparent={isTransparent}>EntryDSM</CommonHeaderLogoText>
       </CommonHeaderLogoSection>
       <CommonHeaderActionSection>
         <Flex width="fit-content" height="fit-content" gap={28} alignItems="center">
           {navData.map(data => (
-            <NavContent key={data.name} isPath={pathname.includes(data.path)} onClick={() => navClick(data.path)}>
+            <NavContent
+              key={data.name}
+              isPath={pathname.includes(data.path)}
+              isTransparent={isTransparent}
+              onClick={() => navClick(data.path)}
+            >
               {data.name}
             </NavContent>
           ))}
@@ -143,7 +176,11 @@ export const CommonHeader = () => {
           </Flex>
         ) : isLoggedIn ? (
           <Flex gap={20} alignItems="center" width="fit-content" height="fit-content">
-            <NavContent onClick={() => navClick("/mypage")} isPath={pathname === "/mypage"}>
+            <NavContent
+              onClick={() => navClick("/mypage")}
+              isPath={pathname === "/mypage"}
+              isTransparent={isTransparent}
+            >
               마이페이지
             </NavContent>
             {/* TODO: userInfo 연동 후 사용자 이름 표시 복구 */}
@@ -193,7 +230,13 @@ export const AuthHeader = () => {
   );
 };
 
-export const MonitoringHeader = () => {
+interface MonitoringHeaderProps {
+  name: string;
+  onLogout: () => void;
+  isLoggingOut?: boolean;
+}
+
+export const MonitoringHeader = ({ name, onLogout, isLoggingOut = false }: MonitoringHeaderProps) => {
   const navigate = useNavigate();
 
   return (
@@ -213,8 +256,16 @@ export const MonitoringHeader = () => {
         >
           EntryDSM 지원자 페이지
         </Btn>
-        <ButtonName>
-          김이름 <img src={Logout} alt="로그아웃" />
+        <Btn
+          onClick={() => window.open(AWS_CONSOLE_URL, "_blank", "noopener,noreferrer")}
+          aria-label="EntryDSM 홈으로 이동"
+          backgroundColor={"#6668F1"}
+          hoverBackgroundColor={"#6668F1"}
+        >
+          Aws 콘솔 페이지
+        </Btn>
+        <ButtonName type="button" onClick={onLogout} disabled={isLoggingOut} aria-label={`${name} 로그아웃`}>
+          {name} <img src={Logout} alt="" />
         </ButtonName>
       </Flex>
     </MonitoringActionSection>
@@ -255,11 +306,12 @@ const CommonHeaderLogoSection = styled.div`
   }
 `;
 
-const CommonHeaderLogoText = styled.div`
+const CommonHeaderLogoText = styled.div<{ isTransparent?: boolean }>`
   width: fit-content;
   font-size: 24px;
   font-weight: 600;
-  color: ${colors.gray[500]};
+  color: ${({ isTransparent }) => (isTransparent ? colors.extra.realWhite : colors.gray[500])};
+  transition: color 0.3s ease-in-out;
 
   @media (max-width: 480px) {
     display: none;
@@ -319,7 +371,7 @@ const SideNavContent = styled.nav`
   }
 `;
 
-const HeaderContainer = styled.header`
+const HeaderContainer = styled.header<{ isTransparent?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -329,8 +381,11 @@ const HeaderContainer = styled.header`
   justify-content: space-between;
   padding: 0 120px;
   align-items: center;
-  background-color: ${colors.extra.realWhite};
-  border-bottom: 1px solid ${colors.gray[200]};
+  background-color: ${({ isTransparent }) => (isTransparent ? "transparent" : colors.extra.realWhite)};
+  border-bottom: 1px solid ${({ isTransparent }) => (isTransparent ? "transparent" : colors.gray[200])};
+  transition:
+    background-color 0.3s ease-in-out,
+    border-bottom-color 0.3s ease-in-out;
   z-index: 100;
 
   @media (max-width: 1200px) {
@@ -346,7 +401,7 @@ const NoPathHeaderContainer = styled(HeaderContainer)`
   justify-content: flex-start;
 `;
 
-const NavContent = styled.button<{ isPath?: boolean }>`
+const NavContent = styled.button<{ isPath?: boolean; isTransparent?: boolean }>`
   padding: 8px 12px;
   border-radius: 12px;
   display: flex;
@@ -355,10 +410,11 @@ const NavContent = styled.button<{ isPath?: boolean }>`
   background-color: ${({ isPath }) => (isPath ? colors.gray[100] : "transparent")};
   font-size: 18px;
   font-weight: 400;
-  color: ${colors.gray[500]};
+  color: ${({ isTransparent }) => (isTransparent ? colors.extra.realWhite : colors.gray[500])};
+  transition: color 0.3s ease-in-out;
   cursor: pointer;
   &:hover {
-    background-color: ${colors.gray[100]};
+    background-color: ${({ isTransparent }) => (isTransparent ? "rgba(255, 255, 255, 0.2)" : colors.gray[100])};
     transition: 0.4s ease-in-out;
   }
 

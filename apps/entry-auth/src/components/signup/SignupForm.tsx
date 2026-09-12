@@ -8,13 +8,25 @@ import { toast } from "react-toastify";
 import { IdentityApiError, signup } from "../../apis";
 import type { PassInfo, SignupType } from "../../apis";
 import type { SignupConsents } from "./SignupConsent";
-import { getBirthdateStatus } from "./birthdate";
 
 interface SignupFormProps {
   passInfo: PassInfo;
   signupType: SignupType;
   consents: SignupConsents;
 }
+
+const isValidBirthdate = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    year >= 1900 &&
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day &&
+    date <= new Date()
+  );
+};
 
 const getSignupErrorMessage = (error: unknown) => {
   if (error instanceof IdentityApiError) {
@@ -40,10 +52,9 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const birthdateStatus = getBirthdateStatus(birthdate);
-  const isBirthdateValid = birthdateStatus === "valid";
   const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isPasswordConfirmValid = passwordConfirm === password;
+  const isBirthdateValid = isValidBirthdate(birthdate);
   const isFormValid =
     isBirthdateValid && isPasswordValid && isPasswordConfirmValid && consents.terms && consents.privacy;
 
@@ -59,6 +70,7 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
         birthdate,
         password,
         signupType,
+        is_sensitive_agree: consents.sensitive,
       });
       toast.success("회원가입이 완료되었습니다. 로그인해 주세요.");
       navigate("/", { replace: true, state: { signupCompleted: true } });
@@ -71,21 +83,24 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
 
   return (
     <Form onSubmit={handleSubmit}>
-      <VerifiedNotice>PASS 본인인증이 완료되었습니다.</VerifiedNotice>
       <AuthInput label="이름" value={passInfo.name} placeholder="" isDisabled />
-      <AuthInput label="전화번호" value={passInfo.phone} placeholder="" isDisabled />
+      <AuthInput
+        label="전화번호"
+        value={passInfo.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, "$1-$2-$3")}
+        placeholder=""
+        isDisabled
+      />
       <AuthInput
         label="생년월일"
         value={birthdate}
-        placeholder="2009-03-15"
+        placeholder="2009-03-27"
         maxLength={10}
-        onChange={(event: ChangeEvent<HTMLInputElement>) => setBirthdate(event.target.value)}
+        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+          const digits = event.target.value.replace(/\D/g, "").slice(0, 8);
+          setBirthdate([digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join("-"));
+        }}
         isError={birthdate.length > 0 && !isBirthdateValid}
-        errorMsg={
-          birthdateStatus === "underage"
-            ? "본 서비스는 만 14세 이상만 가입하실 수 있습니다. 만 14세 미만 지원자의 원서 접수 방법은 입학홍보부(042-866-8822)로 문의해 주세요."
-            : "올바른 생년월일을 YYYY-MM-DD 형식으로 입력해 주세요."
-        }
+        errorMsg="올바른 생년월일을 YYYY-MM-DD 형식으로 입력해 주세요."
       />
       <AuthInput
         label="비밀번호"
@@ -116,19 +131,11 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
 };
 
 const Form = styled.form`
-  width: 360px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 18px;
   margin-top: 32px;
-`;
-
-const VerifiedNotice = styled.p`
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: ${colors.green[50]};
-  color: ${colors.green[700]};
-  font-size: 14px;
 `;
 
 const SubmitError = styled.p`

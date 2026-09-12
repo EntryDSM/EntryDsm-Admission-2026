@@ -28,15 +28,15 @@ const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-x: hidden;
+  overflow: visible;
+  padding: 6px;
   margin-bottom: 30px;
 `;
 
 const BackGroundWrapper = styled.div`
   display: flex;
   justify-content: center;
-  overflow-x: hidden;
-  height: calc(100vh - 70px);
+  min-height: calc(100vh - 70px);
 `;
 
 const TitleWrapper = styled.div`

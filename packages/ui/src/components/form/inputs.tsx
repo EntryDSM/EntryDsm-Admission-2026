@@ -96,7 +96,7 @@ export const AuthInput = ({
           id={inputId}
           $isError={isError}
           $isDisabled={isDisabled}
-          value={isDisabled ? value : inputValue}
+          value={value ?? inputValue}
           type={changeInputType()}
           placeholder={placeholder}
           maxLength={maxLength}
@@ -118,6 +118,7 @@ export const AuthInput = ({
 const ErrorMsg = styled.div`
   margin-top: 4px;
   font-size: 11px;
+  line-height: 1.5;
   color: ${colors.extra.error};
 `;
 
@@ -164,7 +165,8 @@ const Label = styled.label`
 
 const AuthInputContainer = styled.div<Pick<IAuthInputType, "height" | "label">>`
   width: 100%;
-  height: ${({ height }) => height};
+  min-height: ${({ height }) => height};
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: ${({ label }) => (label ? 6 : 0)}px;

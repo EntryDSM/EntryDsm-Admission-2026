@@ -1,0 +1,3 @@
+# 모든 응답(SPA fallback 포함)에 색인 금지 헤더를 붙인다. robots.txt Disallow 와 병행 (docs/SEO.md 5절).
+/*
+  X-Robots-Tag: noindex, nofollow

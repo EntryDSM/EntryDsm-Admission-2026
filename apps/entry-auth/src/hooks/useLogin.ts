@@ -1,8 +1,34 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { USER_APP_URL } from "@entry/ui";
+import { resolveRequiredUrl } from "@entry/utils";
 import { IdentityApiError, login } from "../apis";
 import type { LoginRequest } from "../apis";
+
+const ADMIN_APP_URL = resolveRequiredUrl(
+  "VITE_ADMIN_APP_URL",
+  import.meta.env.VITE_ADMIN_APP_URL as string | undefined,
+  import.meta.env.PROD
+);
+
+const MONITORING_APP_URL = resolveRequiredUrl(
+  "VITE_MONITORING_APP_URL",
+  import.meta.env.VITE_MONITORING_APP_URL as string | undefined,
+  import.meta.env.PROD
+);
+
+const getLoginRedirectUrl = (role: string) => {
+  switch (role) {
+    case "ADMIN":
+      return `${ADMIN_APP_URL}/`;
+    case "MONITOR":
+      return `${MONITORING_APP_URL}/`;
+    case "STUDENT":
+      return `${USER_APP_URL}/`;
+    default:
+      return null;
+  }
+};
 
 const getLoginErrorMessage = (error: unknown) => {
   if (!(error instanceof IdentityApiError)) {
@@ -31,9 +57,14 @@ export const useLogin = () => {
 
     setIsPending(true);
     try {
-      await login(payload);
+      const { role } = await login(payload);
+      const redirectUrl = getLoginRedirectUrl(role);
+      if (!redirectUrl) {
+        toast.error("지원하지 않는 사용자 권한입니다. 관리자에게 문의해 주세요.");
+        return;
+      }
       toast.success("로그인되었습니다.");
-      window.location.assign(`${USER_APP_URL}/mypage`);
+      window.location.assign(redirectUrl);
     } catch (error) {
       toast.error(getLoginErrorMessage(error));
     } finally {

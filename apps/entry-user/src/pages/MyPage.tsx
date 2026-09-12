@@ -62,6 +62,7 @@ export const MyPage = () => {
     queryKey: ["application-result"],
     queryFn: getApplicationResult,
     enabled: false,
+    retry: false,
   });
   const deleteAccountMutation = useMutation({
     mutationFn: deleteMyAccount,
@@ -138,9 +139,11 @@ export const MyPage = () => {
   };
 
   const handleCheckResult = async () => {
-    const { data } = await resultQuery.refetch();
+    if (resultQuery.isFetching) return;
 
-    if (!data) {
+    const { data, isError } = await resultQuery.refetch();
+
+    if (isError || !data) {
       toast.error("합격 결과를 불러오지 못했습니다.");
       return;
     }
@@ -162,7 +165,7 @@ export const MyPage = () => {
     <PageContainer>
       <ContentWrapper>
         <UserName>{userInfo?.name ?? "사용자"}님</UserName>
-        <PhoneNumber>{userInfo?.phone ?? "전화번호 없음"}</PhoneNumber>
+        <PhoneNumber>{userInfo?.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, "$1-$2-$3") ?? "전화번호 없음"}</PhoneNumber>
 
         <ApplicationStatusSection>
           <StatusTitle>지원 상태</StatusTitle>
@@ -194,6 +197,7 @@ export const MyPage = () => {
               borderColor={colors.orange[800]}
               hoverBackgroundColor="transparent"
               onClick={handleCheckResult}
+              isBlocked={resultQuery.isFetching}
             >
               합격 결과 확인
             </Btn>

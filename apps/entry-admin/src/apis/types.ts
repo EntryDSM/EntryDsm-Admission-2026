@@ -48,7 +48,7 @@ export interface MyAccount {
   status: AccountStatus;
   name: string;
   phone: string;
-  /** ISO date (예: `2009-03-15`) */
+  /** ISO date (예: `2009-03-27`) */
   birthdate: string;
   signupType: SignupType;
   applicantStatus: AccountApplicantStatus;
@@ -155,6 +155,18 @@ export interface FinalScreeningResult {
   processedAt: string;
 }
 
+/* ───────────── 수험번호 일괄 발급 (POST /examinee-numbers/issue) ───────────── */
+
+/** 일괄 발급 결과 집계. 명세 예시 기준 `issuedCount + skippedCount === totalTargets`. */
+export interface ExamineeNumberIssueResult {
+  /** 이번 요청으로 새로 발급된 지원자 수 */
+  issuedCount: number;
+  /** 발급하지 않고 건너뛴 지원자 수 (이미 발급된 경우 등 — 건너뛴 사유는 명세 미기재) */
+  skippedCount: number;
+  /** 발급 대상 지원자 전체 수 */
+  totalTargets: number;
+}
+
 /* ───── 문서 생성 잡 (GET /application-checklist, /admission-ticket-jobs) ───── */
 
 /** 문서 생성 잡 상태 — `COMPLETED` 외 값은 명세 미기재라 임의 문자열을 허용한다. */
@@ -174,18 +186,16 @@ export interface AdminDocumentJob {
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
 /**
- * 조회 가능한 메트릭.
- * `GENDER_RATIO`/`REGION_STATUS` 는 명세의 파라미터 표에는 아직 없지만 응답 예시에 추가된 값이라,
- * 응답 키와 동일한 이름으로 요청할 수 있다고 가정한다.
+ * 요청 가능한 메트릭 — 백엔드 enum 과 동일해야 한다(2026-09-11 백엔드 확인).
+ * 이 외 값을 넘기면 바인딩 실패로 400 이 난다. 응답 예시에만 있는 `GENDER_RATIO`/`REGION_STATUS` 는
+ * 요청 파라미터로 쓸 수 없다({@link StatisticsMetrics} 참고).
  */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
-  | "DAILY_TREND"
-  | "GENDER_RATIO"
-  | "REGION_STATUS";
+  | "DAILY_TREND";
 
 /** 성별 (백엔드 표기) */
 export type Gender = "MALE" | "FEMALE";
@@ -208,7 +218,7 @@ export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
 /** 일자별 추이 — 명세에 응답 예시가 없어 `[{ 날짜, 수 }]` 형태로 가정 */
 export type DailyTrendMetric = { date: string; count: number }[];
 
-/** 지원 성비 (명세 확정) */
+/** 지원 성비 (명세 응답 예시 기준) */
 export interface GenderRatioMetric {
   total: number;
   byGender: Partial<Record<Gender, number>>;
@@ -217,7 +227,7 @@ export interface GenderRatioMetric {
   byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
 }
 
-/** 지역별 접수 현황 (명세 확정) */
+/** 지역별 접수 현황 (명세 응답 예시 기준) */
 export interface RegionStatusMetric {
   total: number;
   /** 관내(LOCAL)/전국(NATIONWIDE) 구분 */
@@ -226,6 +236,11 @@ export interface RegionStatusMetric {
   byRegion: Record<string, number>;
 }
 
+/**
+ * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
+ * `GENDER_RATIO`/`REGION_STATUS` 는 요청 파라미터로 지정할 수 없어(백엔드 enum 미포함)
+ * 서버가 임의로 실어 줄 때만 존재한다 — 매퍼는 둘 다 없어도 안전하게 동작해야 한다.
+ */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
   COMPETITION_RATE?: CompetitionRateMetric;
@@ -267,11 +282,10 @@ export interface AdminSchedule {
 }
 
 /**
- * 일정 수정 요청 항목.
- * 엔드포인트가 `/schedules/bulk` 라 배열로 보내며, 각 항목을 `scheduleId` 로 식별하도록 함께 전송한다.
+ * 일정 일괄 수정(등록) 요청 항목 (PATCH /schedules/bulk).
+ * 명세상 scheduleId 없이 title·시각만 배열로 보낸다(서버가 title 기준으로 생성/수정).
  */
 export interface UpdateScheduleItem {
-  scheduleId: number;
   title: string;
   startAt: ScheduleDateTime;
   endAt: ScheduleDateTime;

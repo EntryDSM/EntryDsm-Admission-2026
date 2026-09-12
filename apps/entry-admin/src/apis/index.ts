@@ -8,4 +8,5 @@ export * from "./statistics";
 export * from "./schedule";
 export * from "./notice";
 export * from "./screening";
+export * from "./examineeNumber";
 export * from "./adminDocument";

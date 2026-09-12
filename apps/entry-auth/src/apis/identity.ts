@@ -28,6 +28,10 @@ export interface LoginResponse {
   status: string;
 }
 
+export interface CsrfResponse {
+  token: string;
+}
+
 export interface PasswordResetRequest {
   loginId: string;
   name: string;
@@ -41,6 +45,7 @@ export interface SignupRequest extends PassInfo {
   password: string;
   birthdate: string;
   signupType: SignupType;
+  is_sensitive_agree: boolean;
 }
 
 export interface SignupResponse {
@@ -114,22 +119,59 @@ export const createPassPopup = async (redirectUrl: string) =>
     body: JSON.stringify({ redirectUrl }),
   });
 
-export const getPassInfo = (modelToken: string) =>
-  request<PassInfo>(`/api/identity/v11/auth/pass/info?mdl_tkn=${encodeURIComponent(modelToken)}`);
+export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
+  const data = await request<{ name?: unknown; phoneNumber?: unknown; phone?: unknown } | null>(
+    `/api/identity/v11/auth/pass/info?mdl_tkn=${encodeURIComponent(modelToken)}`
+  );
+  const phoneNumber = typeof data?.phoneNumber === "string" ? data.phoneNumber.replace(/\D/g, "") : "";
+  const phone = phoneNumber || (typeof data?.phone === "string" ? data.phone.replace(/\D/g, "") : "");
+  const name = typeof data?.name === "string" ? data.name.trim() : "";
 
-export const signup = (payload: SignupRequest) =>
-  request<SignupResponse>("/api/identity/v11/auth/signup", {
+  if (!name || !/^01\d{8,9}$/.test(phone)) {
+    throw new IdentityApiError(
+      422,
+      "PASS 인증 결과에 이름 또는 전화번호가 없습니다. 인증을 다시 진행해 주세요.",
+      "INVALID_PASS_INFO"
+    );
+  }
+
+  return { name, phone };
+};
+
+export const getCsrfToken = async (): Promise<CsrfResponse> => {
+  const data = await request<{ token?: unknown } | null>("/api/identity/v11/auth/csrf");
+  const token = typeof data?.token === "string" ? data.token.trim() : "";
+
+  if (!token) {
+    throw new IdentityApiError(
+      422,
+      "보안 토큰을 발급받지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      "INVALID_CSRF_TOKEN"
+    );
+  }
+
+  return { token };
+};
+
+export const signup = async (payload: SignupRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<SignupResponse>("/api/identity/v11/auth/signup", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify(payload),
   });
+};
 
-export const login = (payload: LoginRequest) =>
-  request<LoginResponse>("/api/identity/v11/auth/login", {
+export const login = async (payload: LoginRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<LoginResponse>("/api/identity/v11/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify(payload),
   });
+};
 
 export const refreshToken = () =>
   request<null>("/api/identity/v11/auth/token", {
@@ -138,9 +180,12 @@ export const refreshToken = () =>
     body: JSON.stringify({}),
   });
 
-export const resetPassword = (payload: PasswordResetRequest) =>
-  request<null>("/api/identity/v11/auth/password-reset", {
+export const resetPassword = async (payload: PasswordResetRequest) => {
+  const { token } = await getCsrfToken();
+
+  return request<null>("/api/identity/v11/auth/password-reset", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify(payload),
   });
+};

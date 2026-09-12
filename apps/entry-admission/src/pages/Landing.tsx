@@ -2,9 +2,7 @@ import { colors, Flex, Text } from "@entry/design";
 import { Btn, EntryLogo } from "@entry/ui";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router";
-import { toast } from "react-toastify";
 import { getStartedApplicantId, useGetAllSchedule, useStartApplication } from "../apis";
-import { getAccessToken } from "../utils/token";
 
 const formatScheduleDate = (date: string | undefined) => {
   if (!date) return "일정 미정";
@@ -24,12 +22,8 @@ export const Landing = () => {
   const endDate = formatScheduleDate(schedules.find(schedule => schedule.type === "END_DATE")?.date);
   const resultDate = formatScheduleDate(schedules.find(schedule => schedule.type === "FIRST_ANNOUNCEMENT")?.date);
 
+  // 로그인 여부는 RequireAuth 가드와 서버 401 처리(http.ts)가 담당한다.
   const handleStartApplication = async () => {
-    if (!getAccessToken()) {
-      toast.error("원서 접수는 로그인 후 이용할 수 있습니다.");
-      return;
-    }
-
     const startedApplicantId = getStartedApplicantId();
 
     if (startedApplicantId !== null) {

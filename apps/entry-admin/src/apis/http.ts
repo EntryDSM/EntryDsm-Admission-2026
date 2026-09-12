@@ -1,5 +1,5 @@
+import { createRequestSignal, getCsrfToken } from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
-import { getAccessToken } from "../utils/token";
 
 /** HTTP 에러. status/code 를 담아 상위(토스트 등)에서 분기할 수 있게 한다. */
 export class HttpError extends Error {
@@ -19,15 +19,22 @@ interface ErrorBody {
 }
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
-  const token = getAccessToken();
+  options = { ...options, signal: createRequestSignal(options.signal) };
+  const headers = new Headers(options.headers);
+  // body 없는 GET 이 preflight 없이 나가도록, 본문이 있을 때만 Content-Type 을 붙인다(entry-user 와 동일).
+  if (options.body !== undefined && options.body !== null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함한다.
+  if (!["GET", "HEAD", "OPTIONS"].includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
+    headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, options.signal));
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    credentials: "include",
+    headers,
   });
 
   const isJson = response.headers.get("content-type")?.includes("application/json") ?? false;
@@ -41,6 +48,10 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   // API 공통 규약의 `{ success, data }` 봉투를 쓰면 data 만 벗겨내고,
   // 봉투 없이 내려오면 본문을 그대로 반환한다.
   if (body && typeof body === "object" && "success" in body && "data" in body) {
+    if (!body.success) {
+      const errorInfo = (body as ErrorBody).error;
+      throw new HttpError(response.status, errorInfo?.message ?? "API 요청이 실패했습니다.", errorInfo?.code);
+    }
     return (body as { data: T }).data;
   }
 

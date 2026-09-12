@@ -13,3 +13,9 @@ export const AUTH_APP_URL = resolveRequiredUrl(
   import.meta.env.VITE_AUTH_APP_URL as string | undefined,
   import.meta.env.PROD
 );
+
+export const AWS_CONSOLE_URL = resolveRequiredUrl(
+  "VITE_AWS_CONSOLE_URL",
+  import.meta.env.VITE_AWS_CONSOLE_URL as string | undefined,
+  import.meta.env.PROD
+);

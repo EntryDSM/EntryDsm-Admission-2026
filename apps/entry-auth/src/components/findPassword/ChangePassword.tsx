@@ -77,9 +77,12 @@ export const ChangePassword = ({ passInfo }: ChangePasswordProps) => {
       <AuthInput
         label="생년월일"
         value={birthdate}
-        placeholder="2009-03-15"
+        placeholder="2009-03-27"
         maxLength={10}
-        onChange={event => setBirthdate(event.target.value)}
+        onChange={event => {
+          const digits = event.target.value.replace(/\D/g, "").slice(0, 8);
+          setBirthdate([digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join("-"));
+        }}
         isError={birthdate.length > 0 && !isBirthdateValid}
         errorMsg="YYYY-MM-DD 형식으로 입력해 주세요."
       />

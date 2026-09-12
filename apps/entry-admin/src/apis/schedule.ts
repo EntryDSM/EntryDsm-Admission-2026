@@ -21,7 +21,7 @@ export const getSchedules = async () => {
   return unwrap(body);
 };
 
-/** 전형 일정 일괄 수정 */
+/** 전형 일정 일괄 수정. 요청자 식별/권한은 다른 API 와 동일하게 인증 쿠키로만 처리한다. */
 export const updateSchedules = async (schedules: UpdateScheduleItem[]) => {
   const body = await http.patch<ScheduleEnvelope<AdminSchedule[]> | AdminSchedule[]>(
     `${SCHEDULES_ENDPOINT}/bulk`,
