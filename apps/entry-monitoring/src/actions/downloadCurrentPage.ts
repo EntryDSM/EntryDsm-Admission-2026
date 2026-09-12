@@ -1,34 +1,38 @@
-export const downloadCurrentPage = () => {
-  const documentSnapshot = document.documentElement.cloneNode(true) as HTMLElement;
-  const canvases = document.querySelectorAll("canvas");
-  const snapshotCanvases = documentSnapshot.querySelectorAll("canvas");
+import { getMonitoringReport } from "../apis/getMonitoringReport";
 
-  canvases.forEach((canvas, index) => {
-    const snapshotCanvas = snapshotCanvases[index];
-
-    if (!snapshotCanvas) return;
-
-    const chartImage = document.createElement("img");
-    chartImage.src = canvas.toDataURL("image/png");
-    chartImage.alt = canvas.getAttribute("aria-label") ?? "Chart";
-    chartImage.width = canvas.width;
-    chartImage.height = canvas.height;
-    chartImage.className = canvas.className;
-    chartImage.setAttribute("style", canvas.getAttribute("style") ?? "");
-    snapshotCanvas.replaceWith(chartImage);
-  });
-
-  documentSnapshot.querySelectorAll("script").forEach(script => script.remove());
-
-  const html = `<!DOCTYPE html>\n${documentSnapshot.outerHTML}`;
-  const file = new Blob([html], { type: "text/html;charset=utf-8" });
-  const downloadUrl = URL.createObjectURL(file);
-  const downloadLink = document.createElement("a");
-
-  downloadLink.href = downloadUrl;
-  downloadLink.download = "entry-monitoring.html";
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  downloadLink.remove();
-  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+export const downloadCurrentPage = async (signal?: AbortSignal) => {
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (!signal?.aborted) {
+    const report = await getMonitoringReport(signal);
+    if (report.status === "READY") {
+      const url = new URL(report.downloadUrl);
+      if (url.protocol !== "https:" || !report.fileName || Date.parse(report.expiresAt) <= Date.now()) {
+        throw new Error("리포트 다운로드 링크가 유효하지 않습니다. 다시 시도해 주세요.");
+      }
+      const link = document.createElement("a");
+      link.href = url.href;
+      link.download = report.fileName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+    if (report.status !== "GENERATING") throw new Error("리포트 상태를 확인할 수 없습니다.");
+    const delay = Math.max(1, Number.isFinite(report.pollAfterSeconds) ? report.pollAfterSeconds : 3) * 1000;
+    if (Date.now() + delay >= deadline) throw new Error("리포트 생성이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.");
+    await new Promise<void>((resolve, reject) => {
+      const onAbort = () => {
+        clearTimeout(timer);
+        reject(new DOMException("Aborted", "AbortError"));
+      };
+      const timer = setTimeout(() => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve();
+      }, delay);
+      signal?.addEventListener("abort", onAbort, { once: true });
+      if (signal?.aborted) onAbort();
+    });
+  }
 };
