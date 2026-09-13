@@ -8,7 +8,7 @@ import type { ScheduleDateTime } from "../apis";
 const formatScheduleDate = (date: ScheduleDateTime | undefined) => {
   if (!date) return "일정 미정";
 
-  const parsedDate = new Date(date.month - 1, date.day);
+  const parsedDate = new Date(date.year, date.month - 1, date.day);
   if (Number.isNaN(parsedDate.getTime())) return "일정 미정";
 
   return new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parsedDate);
@@ -19,7 +19,7 @@ export const Landing = () => {
   const { mutateAsync: startApplication, isPending } = useStartApplication();
   const { data: schedules } = useGetAllSchedule();
   const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
-  const resultSchedule = schedules?.find(schedule => schedule.title === "합격 발표");
+  const resultSchedule = schedules?.find(schedule => schedule.title === "1차 합격 발표");
   const startDate = formatScheduleDate(applicationSchedule?.startAt);
   const endDate = formatScheduleDate(applicationSchedule?.endAt);
   const resultDate = formatScheduleDate(resultSchedule?.startAt);
