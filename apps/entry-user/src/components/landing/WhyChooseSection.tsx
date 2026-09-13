@@ -1,32 +1,43 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { SeniorImg } from "../../assets/landing";
+import { vid1, vid2, vid3, vid4, vid5 } from "../../assets/landing/schoolVideo/index";
 
 export const WhyChooseSection = () => {
   const cards = [
     {
       id: 1,
-      title: "대마고가 좋은 이유 대마고가 좋은 이유 대마고가 좋은",
-      students: "7기 000 학생",
-      image: SeniorImg,
+      title: "[대덕소프트웨어마이스터고등학교] 학교 홍보 영상(2024)",
+      date: "2024. 8. 8",
+      image: vid1,
+      link: "https://www.youtube.com/watch?v=mboY1J44Q1o&t=13s",
     },
     {
       id: 2,
-      title: "대마고가 좋은 이유 대마고가 좋은 이유 대마고가 좋은",
-      students: "7기기 000 학생",
-      image: SeniorImg,
+      title: "2025학년 '대크톡' 개최: 재학생 및 졸업생 개발자 컨퍼런스",
+      date: "2025. 6. 19",
+      image: vid2,
+      link: "https://www.youtube.com/watch?v=rjOtijlxKuY",
     },
     {
       id: 3,
-      title: "대마고가 좋은 이유 대마고가 좋은 이유 대마고가 좋은",
-      students: "7기기 000 학생",
-      image: SeniorImg,
+      title: "[대덕소프트웨어마이스터고] 2025학년도 1,3학년 사제동행체험학습 대전오월드",
+      date: "2025. 6. 12",
+      image: vid3,
+      link: "https://www.youtube.com/watch?v=WUwhl5vQf_g",
     },
     {
       id: 4,
-      title: "대마고가 좋은 이유 대마고가 좋은 이유 대마고가 좋은",
-      students: "7기기 000 학생",
-      image: SeniorImg,
+      title: "[대덕소프트웨어마이스터고] 2025년 희망인재 캠프",
+      date: " 2025. 7. 30",
+      image: vid4,
+      link: "https://www.youtube.com/watch?v=sTPfkxt2G6c&t=17s",
+    },
+    {
+      id: 4,
+      title: "(테마스페셜) 열아홉살에 프로입니다 - 대덕소프트웨어마이스터고등학교",
+      date: "2025. 9. 11",
+      image: vid5,
+      link: "https://www.youtube.com/watch?v=ms5I_xAbpCY&t=80s",
     },
   ];
 
@@ -38,13 +49,13 @@ export const WhyChooseSection = () => {
       <ScrollContainer>
         <CardList>
           {cards.map(card => (
-            <Card key={card.id}>
+            <Card key={card.id} onClick={() => window.open(card.link, "_blank", "noopener,noreferrer")}>
               <ImageWrapper>
-                <CardImage src={card.image} alt={`${card.students} 인터뷰 사진`} />
+                <CardImage src={card.image} alt={`${card.date} 동영상 썸네일`} />
               </ImageWrapper>
 
               <CardTitle>{card.title}</CardTitle>
-              <CardSubtitle>{card.students}</CardSubtitle>
+              <CardSubtitle>{card.date}</CardSubtitle>
             </Card>
           ))}
         </CardList>
@@ -123,6 +134,7 @@ const Card = styled.div`
   padding: 24px;
   transition: all 0.3s ease;
   transform: translateY(0);
+  cursor: pointer;
 
   &:hover {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);

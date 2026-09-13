@@ -24,7 +24,6 @@ interface IActivityType {
 interface IQEScoreType {
   korean: string;
   social: string;
-  history: string;
   science: string;
   technology: string;
   math: string;
@@ -144,7 +143,6 @@ export const initialState: CalculationState = {
   qeScore: {
     korean: "",
     social: "",
-    history: "",
     science: "",
     technology: "",
     math: "",
