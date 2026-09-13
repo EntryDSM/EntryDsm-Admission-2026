@@ -5,9 +5,10 @@ export const redactClientLog = (text: string) =>
     .replace(/(https?:\/\/)[^\s/?#@]*@/gi, "$1[REDACTED]@")
     .replace(/(https?:\/\/[^\s?#]+)[?#][^\s]*/gi, "$1[REDACTED]")
     .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [REDACTED]")
+    .replace(/(\bauthorization["']?\s*[=:]\s*)Basic\s+[^\s,;}]+/gi, "$1[REDACTED]")
     .replace(/\beyJ[\w-]+\.[\w-]+\.[\w-]+/g, "[REDACTED]")
     .replace(
-      /((?:password|passwd|token|authorization|cookie|secret|email|phone|userId|applicantId)["']?\s*[=:]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;}]+)/gi,
+      /((?:password|passwd|token|authorization|cookie|secret|api_?key|email|phone|userId|applicantId)["']?\s*[=:]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;}]+)/gi,
       "$1[REDACTED]"
     )
     .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, "[REDACTED]")

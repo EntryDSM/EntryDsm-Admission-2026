@@ -33,7 +33,7 @@ export const WhyChooseSection = () => {
       link: "https://www.youtube.com/watch?v=sTPfkxt2G6c&t=17s",
     },
     {
-      id: 4,
+      id: 5,
       title: "(테마스페셜) 열아홉살에 프로입니다 - 대덕소프트웨어마이스터고등학교",
       date: "2025. 9. 11",
       image: vid5,
