@@ -2,9 +2,12 @@ import styled from "@emotion/styled";
 import { StatCard, ErrorLogCard, BarChartCard, DeviceChartCard } from "../components";
 import type { MonitoringData } from "../types";
 import { DownloadIcon } from "@entry/ui";
+import type { ServiceHealthData } from "../apis";
+import { getServiceHealthSummary } from "../utils/getServiceHealthSummary";
 
 interface MonitoringPageProps {
   data: MonitoringData;
+  serviceHealth?: ServiceHealthData;
   availability?: { dashboard: boolean; resources: boolean; clientLogs: boolean; serverLogs: boolean };
   onReload?: () => void;
   onDownload?: () => void;
@@ -14,6 +17,7 @@ interface MonitoringPageProps {
 
 export const MonitoringPage = ({
   data,
+  serviceHealth,
   onReload,
   onDownload,
   onStatus,
@@ -21,6 +25,7 @@ export const MonitoringPage = ({
   availability,
 }: MonitoringPageProps) => {
   const display = (value: string, available = availability?.dashboard ?? true) => (available ? value : "—");
+  const healthSummary = getServiceHealthSummary(serviceHealth);
   return (
     <Grid>
       <DeviceArea>
@@ -81,10 +86,23 @@ export const MonitoringPage = ({
       <VisChartArea>
         <BarChartCard title="접속자 수" labels={data.visitorChartLabels} values={data.visitorChart} unit="명" />
         <SummaryGrid>
-          <StatCard label="종합" value={display(`${data.summary.total}명`)} variant="primary" />
-          <StatCard label="유저" value={display(`${data.summary.user}명`)} variant="gray" />
-          <StatCard label="인증" value={display(`${data.summary.auth}명`)} variant="gray" />
-          <StatCard label="접수" value={display(`${data.summary.application}명`)} variant="gray" />
+          {(
+            [
+              ["total", "종합"],
+              ["user", "유저"],
+              ["auth", "인증"],
+              ["application", "접수"],
+            ] as const
+          ).map(([key, label]) => (
+            <StatCard
+              key={key}
+              label={label}
+              value={display(`${data.summary[key]}명`)}
+              valueFontSize="20px"
+              variant={key === "total" ? "primary" : "gray"}
+              healthStatus={healthSummary[key] ?? "UNKNOWN"}
+            />
+          ))}
         </SummaryGrid>
         <SummaryArea>
           <StatCard label="Client 오류" value={display(`${data.clientErrorCount}회`)} variant="gray" />
