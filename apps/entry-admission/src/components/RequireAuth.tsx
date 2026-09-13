@@ -9,10 +9,8 @@ import { HttpError } from "../apis/http";
 import { useMyAccount } from "../hooks/useMyAccount";
 
 /**
- * 어드민 접근 가드 라우트. 내 계정 조회(GET /api/identity/v11/accounts/me)로 권한을 확인해
- * `role === "ADMIN"` 일 때만 하위 페이지를 렌더링한다.
+ * 어드미션 접근 가드 라우트. 내 계정 조회(GET /api/identity/v11/accounts/me)로 로그인을 확인한다
  * - 미인증(401): 로그인(auth 앱)으로 보낸다.
- * - ADMIN 이 아닌 권한: 접근 거부 화면을 띄운다.
  * - 네트워크 등 그 외 실패: 페이지를 막고(fail-closed) 재시도 화면을 띄운다.
  * 라우트 이동마다 캐시를 무효화하고, 확인이 끝날 때까지 페이지를 렌더링하지 않는다.
  */
@@ -41,7 +39,7 @@ export const RequireAuth = () => {
   }, [isUnauthorized]);
 
   if (isUnauthorized) {
-    return <GuardScreen>로그인이 필요합니다. 로그인 페이지로 이동합니다.</GuardScreen>;
+    return <GuardScreen>로그인이 필요합니다. 유저 페이지로 이동합니다.</GuardScreen>;
   }
 
   if (isCheckingAccount) {
@@ -61,7 +59,7 @@ export const RequireAuth = () => {
 
   <GuardScreen>
     로그인이 안되어있습니다.
-    <LoginLink href={USER_APP_URL}>로그인 페이지로 이동</LoginLink>
+    <LoginLink href={USER_APP_URL}>유저 페이지로 이동</LoginLink>
   </GuardScreen>;
 
   return <Outlet />;
@@ -83,7 +81,7 @@ const GuardScreen = styled.div`
 const guardActionStyle = `
   padding: 10px 20px;
   border-radius: 8px;
-  background-color: ${colors.green[400]};
+  background-color: ${colors.orange[400]};
   color: ${colors.gray[50]};
   font-size: 16px;
   font-weight: 500;
@@ -91,7 +89,7 @@ const guardActionStyle = `
   cursor: pointer;
 
   &:hover {
-    background-color: ${colors.green[500]};
+    background-color: ${colors.orange[500]};
   }
 `;
 

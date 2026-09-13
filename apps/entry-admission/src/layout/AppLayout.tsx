@@ -19,7 +19,6 @@ import {
   submitGrades,
 } from "../apis";
 import { ApplicationNav } from "../components";
-import { useMyAccount } from "../hooks/useMyAccount";
 
 const admissionTypes = {
   일반: "REGULAR",
@@ -116,13 +115,10 @@ export const AppLayout = () => {
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
-  // HttpOnly 쿠키는 JS로 읽을 수 없으므로 RequireAuth 가 조회한 내 계정 캐시로 로그인 여부를 판단한다.
-  const { account } = useMyAccount();
-  const isAuthenticated = Boolean(account);
   const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
 
   useEffect(() => {
-    if (isAuthenticated && storageKey && loadedStorageKey !== storageKey) {
+    if (storageKey && loadedStorageKey !== storageKey) {
       setHasStorageLoadError(false);
       void loadFromStorage(storageKey).catch(error => {
         console.error("원서 임시저장 데이터를 불러오지 못했습니다.", error);
@@ -130,10 +126,10 @@ export const AppLayout = () => {
         setHasStorageLoadError(true);
       });
     }
-  }, [isAuthenticated, loadFromStorage, loadedStorageKey, storageKey]);
+  }, [loadFromStorage, loadedStorageKey, storageKey]);
 
   useEffect(() => {
-    if (!isAuthenticated || !isStorageLoaded || !storageKey || loadedStorageKey !== storageKey) {
+    if (!isStorageLoaded || !storageKey || loadedStorageKey !== storageKey) {
       return;
     }
 
@@ -144,7 +140,7 @@ export const AppLayout = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [isAuthenticated, isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
+  }, [isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
   const pageGraduateRoutes = [
     { path: "/application-classification", step: 0 },
     { path: "/applicant-info", step: 1 },
@@ -201,11 +197,6 @@ export const AppLayout = () => {
   const currentStep = routesConfig[currentPage - 1]?.step ?? 0;
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/", { replace: true });
-      return;
-    }
-
     if (!isStorageLoaded) {
       return;
     }
@@ -227,7 +218,7 @@ export const AppLayout = () => {
     if (firstIncompleteRoute) {
       navigate(firstIncompleteRoute, { replace: true });
     }
-  }, [applicantId, currentIndex, isAuthenticated, isStorageLoaded, navigate, routes, state]);
+  }, [applicantId, currentIndex, isStorageLoaded, navigate, routes, state]);
 
   const setCurrentPage = (page: number) => {
     const path = routes[page - 1];
@@ -394,10 +385,6 @@ export const AppLayout = () => {
   };
 
   const shouldRemoveTopPadding = currentPath.includes("/application-preview") || currentPath.includes("/submit-check");
-
-  if (!isAuthenticated) {
-    return <StorageLoadingMessage>로그인 후 원서 작성 서비스를 이용할 수 있습니다.</StorageLoadingMessage>;
-  }
 
   if (hasStorageLoadError) {
     return (
