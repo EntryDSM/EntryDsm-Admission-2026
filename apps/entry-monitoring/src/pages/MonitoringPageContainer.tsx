@@ -90,7 +90,7 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
   const serverLogsQuery = useServerLogs();
   const metricSeriesQuery = useMetricSeries();
   const resourcesQuery = useResources();
-  const serviceHealthQuery = useServiceHealth(isStatusOpen);
+  const serviceHealthQuery = useServiceHealth(true);
   const monitoringStream = useMonitoringStream();
   const liveDashboardData = monitoringStream.dashboard ? toMonitoringData(monitoringStream.dashboard) : undefined;
   const dashboardData = liveDashboardData ?? dashboardQuery.data;
@@ -119,6 +119,7 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
     ["서버 로그", serverLogsQuery.error],
     ["시간대별 그래프", metricSeriesQuery.error],
     ["저장소 사용량", resourcesQuery.error],
+    ["서비스 상태", serviceHealthQuery.error],
   ] as const;
   const failedQueries = errors.filter(([, error]) => error);
   const retry = () => {
@@ -127,6 +128,7 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
     void serverLogsQuery.refetch();
     void metricSeriesQuery.refetch();
     void resourcesQuery.refetch();
+    void serviceHealthQuery.refetch();
   };
   const data: MonitoringData = {
     ...(dashboardData ?? emptyDashboard),
@@ -170,6 +172,7 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
       {isLoading && <PageState role="status">모니터링 데이터를 불러오는 중입니다.</PageState>}
       <MonitoringPage
         data={data}
+        serviceHealth={serviceHealthQuery.data}
         availability={{
           dashboard: !!dashboardData,
           resources: !!resourcesQuery.data || !!dashboardData,

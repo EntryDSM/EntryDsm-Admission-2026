@@ -4,15 +4,15 @@ export type ServiceHealthStatus = "UP" | "DEGRADED" | "DOWN";
 
 export interface ServiceHealthDependency {
   name: string;
-  status: string;
+  status: ServiceHealthStatus;
 }
 
 export interface ServiceHealthItem {
   service: string;
   label: string;
-  status: string;
-  responseTimeMs: number;
-  version: string;
+  status: ServiceHealthStatus;
+  responseTimeMs: number | null;
+  version: string | null;
   dependencies: ServiceHealthDependency[];
 }
 
@@ -23,4 +23,4 @@ export interface ServiceHealthData {
 }
 
 export const getServiceHealth = (signal?: AbortSignal) =>
-  http.get<ServiceHealthData>("/api/monitor/v11/health", { signal });
+  http.get<ServiceHealthData>("/api/monitor/v1/health", { signal });

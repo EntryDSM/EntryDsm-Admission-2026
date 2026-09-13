@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import styled from "@emotion/styled";
 
 import type { ServiceHealthData, ServiceHealthStatus } from "../apis";
+import { HttpError } from "../apis/http";
 
 interface ServiceHealthModalProps {
   isOpen: boolean;
@@ -34,6 +35,15 @@ const formatCheckedAt = (checkedAt: string) => {
     dateStyle: "medium",
     timeStyle: "medium",
   }).format(date);
+};
+
+const getHealthErrorMessage = (error: Error) => {
+  if (error instanceof HttpError) {
+    if (error.status === 401) return "인증 토큰이 없거나 만료되었습니다. 다시 로그인해 주세요.";
+    if (error.status === 403) return "서비스 상태를 조회할 관리자 권한이 없습니다.";
+  }
+
+  return error.message || "서비스 상태를 불러오지 못했습니다.";
 };
 
 export const ServiceHealthModal = ({
@@ -85,8 +95,8 @@ export const ServiceHealthModal = ({
           <StateMessage role="status">서비스 상태를 확인하고 있습니다.</StateMessage>
         ) : error && !data ? (
           <StateMessage role="alert">
-            <span>{error.message || "서비스 상태를 불러오지 못했습니다."}</span>
-            <RetryButton type="button" onClick={onRetry}>
+            <span>{getHealthErrorMessage(error)}</span>
+            <RetryButton type="button" onClick={onRetry} disabled={isFetching}>
               다시 조회
             </RetryButton>
           </StateMessage>
@@ -100,13 +110,17 @@ export const ServiceHealthModal = ({
                   <OverallValue>{normalizeStatus(data.overall)}</OverallValue>
                 </div>
               </OverallInfo>
-              <CheckedAt>
+              <CheckedAt dateTime={data.checkedAt}>
                 {formatCheckedAt(data.checkedAt)}
                 {isFetching && <RefreshingText> · 갱신 중</RefreshingText>}
               </CheckedAt>
             </OverallCard>
 
-            {error && <InlineError role="alert">최신 상태를 불러오지 못해 이전 조회 결과를 표시합니다.</InlineError>}
+            {error && (
+              <InlineError role="alert">
+                {getHealthErrorMessage(error)} 최신 상태를 불러오지 못해 이전 조회 결과를 표시합니다.
+              </InlineError>
+            )}
 
             <ServiceList>
               {data.services.map(service => {
@@ -126,8 +140,10 @@ export const ServiceHealthModal = ({
                     </ServiceHeader>
 
                     <ServiceMeta>
-                      <span>응답 {service.responseTimeMs.toLocaleString()}ms</span>
-                      <span>v{service.version}</span>
+                      <span>
+                        응답 {service.responseTimeMs === null ? "—" : `${service.responseTimeMs.toLocaleString()}ms`}
+                      </span>
+                      <span>{service.version === null ? "버전 —" : `v${service.version}`}</span>
                     </ServiceMeta>
 
                     {service.dependencies.length > 0 && (
@@ -147,6 +163,12 @@ export const ServiceHealthModal = ({
                 );
               })}
             </ServiceList>
+            {data.services.length === 0 && <StateMessage>조회된 서비스가 없습니다.</StateMessage>}
+            <ModalFooter>
+              <RetryButton type="button" onClick={onRetry} disabled={isFetching}>
+                {isFetching ? "조회 중…" : "다시 조회"}
+              </RetryButton>
+            </ModalFooter>
           </>
         ) : null}
       </ModalContent>
@@ -352,6 +374,17 @@ const RetryButton = styled.button`
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+`;
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 `;
 
 const InlineError = styled.p`
