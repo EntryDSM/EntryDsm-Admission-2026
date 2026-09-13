@@ -2,11 +2,12 @@ import { colors, Flex, Text } from "@entry/design";
 import styled from "@emotion/styled";
 import { Btn, USER_APP_URL } from "@entry/ui";
 import { useGetAllSchedule } from "../apis";
+import type { ScheduleDateTime } from "../apis";
 
-const formatResultDate = (date: string | undefined) => {
+const formatResultDate = (date: ScheduleDateTime | undefined) => {
   if (!date) return "일정 미정";
 
-  const parsedDate = new Date(date);
+  const parsedDate = new Date(date.year, date.month - 1, date.day, date.hour, date.minute, date.second);
   if (Number.isNaN(parsedDate.getTime())) return "일정 미정";
 
   return new Intl.DateTimeFormat("ko-KR", {
@@ -19,10 +20,8 @@ const formatResultDate = (date: string | undefined) => {
 };
 
 export const Submitted = () => {
-  const { data: scheduleData } = useGetAllSchedule();
-  const resultDate = formatResultDate(
-    scheduleData?.schedules.find(schedule => schedule.type === "FIRST_ANNOUNCEMENT")?.date
-  );
+  const { data: schedules } = useGetAllSchedule();
+  const resultDate = formatResultDate(schedules?.find(schedule => schedule.title === "합격 발표")?.startAt);
 
   return (
     <Flex width="100%" height="calc(100vh - 100px)" justifyContent="center" alignItems="center">

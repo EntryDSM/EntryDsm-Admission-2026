@@ -3,11 +3,12 @@ import { Btn, EntryLogo } from "@entry/ui";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router";
 import { getStartedApplicantId, useGetAllSchedule, useStartApplication } from "../apis";
+import type { ScheduleDateTime } from "../apis";
 
-const formatScheduleDate = (date: string | undefined) => {
+const formatScheduleDate = (date: ScheduleDateTime | undefined) => {
   if (!date) return "일정 미정";
 
-  const parsedDate = new Date(date);
+  const parsedDate = new Date(date.month - 1, date.day);
   if (Number.isNaN(parsedDate.getTime())) return "일정 미정";
 
   return new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(parsedDate);
@@ -16,11 +17,12 @@ const formatScheduleDate = (date: string | undefined) => {
 export const Landing = () => {
   const navigate = useNavigate();
   const { mutateAsync: startApplication, isPending } = useStartApplication();
-  const { data: scheduleData } = useGetAllSchedule();
-  const schedules = scheduleData?.schedules ?? [];
-  const startDate = formatScheduleDate(schedules.find(schedule => schedule.type === "START_DATE")?.date);
-  const endDate = formatScheduleDate(schedules.find(schedule => schedule.type === "END_DATE")?.date);
-  const resultDate = formatScheduleDate(schedules.find(schedule => schedule.type === "FIRST_ANNOUNCEMENT")?.date);
+  const { data: schedules } = useGetAllSchedule();
+  const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
+  const resultSchedule = schedules?.find(schedule => schedule.title === "합격 발표");
+  const startDate = formatScheduleDate(applicationSchedule?.startAt);
+  const endDate = formatScheduleDate(applicationSchedule?.endAt);
+  const resultDate = formatScheduleDate(resultSchedule?.startAt);
 
   // 로그인 여부는 RequireAuth 가드와 서버 401 처리(http.ts)가 담당한다.
   const handleStartApplication = async () => {
