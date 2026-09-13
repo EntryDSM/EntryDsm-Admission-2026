@@ -1,5 +1,5 @@
 import type { CalculationState } from "../contexts";
-import type { AdmissionType } from "../constants/admissionType";
+import { ADMISSION_TYPE_MAX_SCORE_GED, type AdmissionType } from "../constants/admissionType";
 
 type SchoolRecordType = "primary" | "graduated" | "qe";
 type Grade = "A" | "B" | "C" | "D" | "E" | "X";
@@ -29,6 +29,16 @@ const roundToThirdDecimal = (value: number) => Math.round((value + Number.EPSILO
 
 const toNonNegativeNumber = (value: string) => Math.max(0, Number(value) || 0);
 
+const calculateQeConvertedPoint = (score: number) => {
+  const normalizedScore = Math.min(100, Math.max(0, score));
+
+  if (normalizedScore >= 98) return 5;
+  if (normalizedScore >= 94) return 4;
+  if (normalizedScore >= 90) return 3;
+  if (normalizedScore >= 86) return 2;
+  return 1;
+};
+
 const calculateSemesterScore = (grades: SemesterGrades, maximumScore: number) => {
   const applicableGrades = Object.values(grades).filter(
     (grade): grade is Exclude<Grade, "X"> => grade !== null && grade !== "X" && grade in GRADE_POINTS
@@ -52,8 +62,8 @@ const calculateCourseScore = (state: CalculationState, recordType: SchoolRecordT
       return 0;
     }
 
-    const averageScore = scores.reduce((sum, score) => sum + Math.min(100, Math.max(0, score)), 0) / scores.length;
-    return averageScore * 0.8;
+    const convertedPointSum = scores.reduce((sum, score) => sum + calculateQeConvertedPoint(score), 0);
+    return convertedPointSum / scores.length;
   }
 
   const rawCourseScore =
@@ -83,9 +93,10 @@ const calculateAttendanceScore = (activity: Activity) => {
 
 const calculateVolunteerScore = (activity: Activity) => Math.min(15, toNonNegativeNumber(activity.volunteerHours));
 
-const calculateAdditionalScore = (activity: Activity, admissionType: AdmissionType) => {
+const calculateAdditionalScore = (activity: Activity, admissionType: AdmissionType, recordType: SchoolRecordType) => {
   const algorithmScore = activity.dsmAlgorithm === "O" ? 3 : 0;
-  const certificateScore = admissionType === "COMMON" || activity.infoProcessing !== "O" ? 0 : 6;
+  const certificateScore =
+    activity.infoProcessing === "O" && (recordType === "qe" || admissionType !== "COMMON") ? 6 : 0;
 
   return algorithmScore + certificateScore;
 };
@@ -99,19 +110,31 @@ const getActivity = (state: CalculationState, recordType: SchoolRecordType) =>
 
 const getCourseMultiplier = (admissionType: AdmissionType) => (admissionType === "COMMON" ? 1.75 : 1);
 
+const getQeCourseMultiplier = (admissionType: AdmissionType) => (admissionType === "COMMON" ? 34 : 22);
+
+const getMaximumScore = (recordType: SchoolRecordType, admissionType: AdmissionType) => {
+  if (recordType === "qe") {
+    // 검정고시는 전형별 교과 만점에 알고리즘 대회(3점)와 자격증(6점)을 더한 값입니다.
+    return ADMISSION_TYPE_MAX_SCORE_GED[admissionType] + 9;
+  }
+
+  return admissionType === "COMMON" ? 173 : 119;
+};
+
 export const calculateAdmissionScores = (
   state: CalculationState,
   recordType: SchoolRecordType
 ): AdmissionScoreResult[] => {
   const activity = getActivity(state, recordType);
   const rawCourseScore = calculateCourseScore(state, recordType);
-  const attendanceScore = calculateAttendanceScore(activity);
-  const volunteerScore = calculateVolunteerScore(activity);
+  const attendanceScore = recordType === "qe" ? 0 : calculateAttendanceScore(activity);
+  const volunteerScore = recordType === "qe" ? 0 : calculateVolunteerScore(activity);
 
   return (["COMMON", "MEISTER", "SOCIAL"] as const).map(admissionType => {
-    const courseScore = roundToThirdDecimal(rawCourseScore * getCourseMultiplier(admissionType));
-    const additionalScore = calculateAdditionalScore(activity, admissionType);
-    const maxScore = admissionType === "COMMON" ? 173 : 119;
+    const multiplier = recordType === "qe" ? getQeCourseMultiplier(admissionType) : getCourseMultiplier(admissionType);
+    const courseScore = roundToThirdDecimal(rawCourseScore * multiplier);
+    const additionalScore = calculateAdditionalScore(activity, admissionType, recordType);
+    const maxScore = getMaximumScore(recordType, admissionType);
 
     return {
       admissionType,

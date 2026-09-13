@@ -5,12 +5,22 @@ import { DownloadIcon } from "@entry/ui";
 
 interface MonitoringPageProps {
   data: MonitoringData;
+  availability?: { dashboard: boolean; resources: boolean; clientLogs: boolean; serverLogs: boolean };
   onReload?: () => void;
   onDownload?: () => void;
+  isDownloading?: boolean;
   onStatus?: () => void;
 }
 
-export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: MonitoringPageProps) => {
+export const MonitoringPage = ({
+  data,
+  onReload,
+  onDownload,
+  onStatus,
+  isDownloading,
+  availability,
+}: MonitoringPageProps) => {
+  const display = (value: string, available = availability?.dashboard ?? true) => (available ? value : "—");
   return (
     <Grid>
       <DeviceArea>
@@ -18,8 +28,12 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       </DeviceArea>
 
       <ApiReqArea>
-        <StatCard label="총 API 요청" value={`${data.totalApiRequests.toLocaleString()}회`} variant="primary" />
-        <StatCard label="API 응답 성공" value={`${data.apiSuccessCount}회`} variant="gray" />
+        <StatCard
+          label="총 API 요청"
+          value={display(`${data.totalApiRequests.toLocaleString()}회`)}
+          variant="primary"
+        />
+        <StatCard label="API 응답 성공" value={display(`${data.apiSuccessCount}회`)} variant="gray" />
       </ApiReqArea>
 
       <ApiChartArea>
@@ -33,55 +47,55 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       </ApiChartArea>
 
       <TotalUsrArea>
-        <StatCard label="총 접속자 수" value={`${data.totalUsers}명`} variant="primary" />
+        <StatCard label="총 접속자 수" value={display(`${data.totalUsers}명`)} variant="primary" />
       </TotalUsrArea>
 
       <ConcurrentArea>
         <StatCard
           label="동시접속 기록"
-          value={`Max ${data.concurrentMax} Avg ${data.concurrentAvg}`}
+          value={display(`Max ${data.concurrentMax} Avg ${data.concurrentAvg}`)}
           variant="primary"
         />
       </ConcurrentArea>
 
       <AvgTimeArea>
-        <StatCard label="사용자 평균 체류시간" value={data.avgStayTime} variant="gray" />
+        <StatCard label="사용자 평균 체류시간" value={display(data.avgStayTime)} variant="gray" />
       </AvgTimeArea>
 
       <ApiFailArea>
-        <StatCard label="API 응답 실패" value={`${data.apiFailCount}회`} variant="gray" />
+        <StatCard label="API 응답 실패" value={display(`${data.apiFailCount}회`)} variant="gray" />
       </ApiFailArea>
 
       <ApiFailRateArea>
-        <StatCard label="API 응답 실패율" value={`${data.apiFailRate}%`} variant="primary" />
+        <StatCard label="API 응답 실패율" value={display(`${data.apiFailRate}%`)} variant="primary" />
       </ApiFailRateArea>
 
       <AppSuccessArea>
-        <StatCard label="원서 접수 성공" value={`${data.applicationSuccess}명`} variant="gray" />
+        <StatCard label="원서 접수 성공" value={display(`${data.applicationSuccess}명`)} variant="gray" />
       </AppSuccessArea>
 
       <AppFailArea>
-        <StatCard label="원서 접수 실패" value={`${data.applicationFail}명`} variant="gray" />
+        <StatCard label="원서 접수 실패" value={display(`${data.applicationFail}명`)} variant="gray" />
       </AppFailArea>
 
       <VisChartArea>
         <BarChartCard title="접속자 수" labels={data.visitorChartLabels} values={data.visitorChart} unit="명" />
         <SummaryGrid>
-          <StatCard label="종합" value={`${data.summary.total}명`} variant="primary" />
-          <StatCard label="유저" value={`${data.summary.user}명`} variant="gray" />
-          <StatCard label="인증" value={`${data.summary.auth}명`} variant="gray" />
-          <StatCard label="접수" value={`${data.summary.application}명`} variant="gray" />
+          <StatCard label="종합" value={display(`${data.summary.total}명`)} variant="primary" />
+          <StatCard label="유저" value={display(`${data.summary.user}명`)} variant="gray" />
+          <StatCard label="인증" value={display(`${data.summary.auth}명`)} variant="gray" />
+          <StatCard label="접수" value={display(`${data.summary.application}명`)} variant="gray" />
         </SummaryGrid>
         <SummaryArea>
-          <StatCard label="Client 오류" value={`${data.clientErrorCount}회`} variant="gray" />
-          <StatCard label="Client 경고" value={`${data.clientWarnCount}회`} variant="primary" />
+          <StatCard label="Client 오류" value={display(`${data.clientErrorCount}회`)} variant="gray" />
+          <StatCard label="Client 경고" value={display(`${data.clientWarnCount}회`)} variant="primary" />
         </SummaryArea>
       </VisChartArea>
 
       <ClientLogArea>
         <ErrorLogCard
           label="최근 1시간 클라이언트 오류/경고"
-          value={`${data.clientLogTotalCount}건`}
+          value={display(`${data.clientLogTotalCount}건`, availability?.clientLogs)}
           items={data.clientErrorLogs}
         />
       </ClientLogArea>
@@ -89,14 +103,14 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       <ServerLogArea>
         <ErrorLogCard
           label="최근 1시간 서버 API 오류"
-          value={`${data.serverLogTotalCount}건`}
+          value={display(`${data.serverLogTotalCount}건`, availability?.serverLogs)}
           items={data.serverErrorLogs}
         />
       </ServerLogArea>
 
       <PdfSuccessArea>
-        <StatCard label="PDF 다운로드 성공" value={`${data.pdfSuccess}명`} variant="gray" />
-        <StatCard label="DB 총 용량" value={`${data.dbUsageMb}MB`} variant="gray" />
+        <StatCard label="PDF 다운로드 성공" value={display(`${data.pdfSuccess}명`)} variant="gray" />
+        <StatCard label="DB 총 용량" value={display(`${data.dbUsageMb}MB`, availability?.resources)} variant="gray" />
         <Info>
           <div className="hot-menu">Hot Menu</div>
           <ActionButton variant="primary" onClick={onReload} disabled={!onReload}>
@@ -106,11 +120,21 @@ export const MonitoringPage = ({ data, onReload, onDownload, onStatus }: Monitor
       </PdfSuccessArea>
 
       <PdfFailArea>
-        <StatCard label="PDF 다운로드 실패" value={`${data.pdfFail}명`} variant="primary" />
-        <StatCard label="버킷 총 용량" value={`${data.bucketUsageMb}MB`} variant="gray" />
+        <StatCard label="PDF 다운로드 실패" value={display(`${data.pdfFail}명`)} variant="primary" />
+        <StatCard
+          label="버킷 총 용량"
+          value={display(`${data.bucketUsageMb}MB`, availability?.resources)}
+          variant="gray"
+        />
         <Info>
-          <ActionButton variant="primary" onClick={onDownload} disabled={!onDownload}>
-            <DownloadIcon />
+          <ActionButton
+            variant="primary"
+            onClick={onDownload}
+            disabled={!onDownload || isDownloading}
+            aria-label="리포트 다운로드"
+            aria-busy={isDownloading}
+          >
+            {isDownloading ? "리포트 생성 중…" : <DownloadIcon />}
           </ActionButton>
           <ActionButton variant="light" onClick={onStatus} disabled={!onStatus}>
             Status

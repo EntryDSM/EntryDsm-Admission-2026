@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import { toMonitoringData, type ClientLogItem, type ServerLogItem } from "../apis";
 import { ServiceHealthModal } from "../components";
 import {
@@ -13,12 +14,42 @@ import {
   type MonitoringStreamLog,
 } from "../hooks";
 import { isWithinLastHour } from "../utils";
+import type { MonitoringData } from "../types";
 import { MonitoringPage } from "./MonitoringPage";
 
 interface MonitoringPageContainerProps {
   onReload?: () => void;
-  onDownload?: () => void;
+  onDownload?: (signal?: AbortSignal) => Promise<void>;
 }
+
+const emptyDashboard: MonitoringData = {
+  deviceStats: [],
+  totalApiRequests: 0,
+  apiSuccessCount: 0,
+  apiFailCount: 0,
+  apiFailRate: 0,
+  apiRequestChartLabels: [],
+  apiRequestChart: [],
+  totalUsers: 0,
+  concurrentMax: 0,
+  concurrentAvg: 0,
+  avgStayTime: "—",
+  applicationSuccess: 0,
+  applicationFail: 0,
+  pdfSuccess: 0,
+  pdfFail: 0,
+  visitorChartLabels: [],
+  visitorChart: [],
+  clientErrorLogs: [],
+  clientLogTotalCount: 0,
+  serverErrorLogs: [],
+  serverLogTotalCount: 0,
+  summary: { total: 0, user: 0, auth: 0, application: 0 },
+  dbUsageMb: 0,
+  bucketUsageMb: 0,
+  clientErrorCount: 0,
+  clientWarnCount: 0,
+};
 
 const formatClientLog = ({ level, message, source, pageUrl, browser, os, count }: ClientLogItem) =>
   `[${level}] ${message} · ${source} · ${pageUrl} · ${browser}/${os} · ${count}회`;
@@ -35,6 +66,24 @@ const formatStreamLog = (log: MonitoringStreamLog) => {
 };
 
 export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPageContainerProps) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const downloadController = useRef<AbortController | null>(null);
+  useEffect(() => () => downloadController.current?.abort(), []);
+  const handleDownload = async () => {
+    if (!onDownload || downloadController.current) return;
+    const controller = new AbortController();
+    downloadController.current = controller;
+    setIsDownloading(true);
+    try {
+      await onDownload(controller.signal);
+    } catch (error) {
+      if (!controller.signal.aborted)
+        toast.error(error instanceof Error ? error.message : "리포트 다운로드에 실패했습니다.");
+    } finally {
+      downloadController.current = null;
+      if (!controller.signal.aborted) setIsDownloading(false);
+    }
+  };
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const dashboardQuery = useMonitoringDashboard();
   const clientLogsQuery = useClientLogs();
@@ -64,54 +113,74 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
     serverLogsQuery.isLoading ||
     metricSeriesQuery.isLoading ||
     resourcesQuery.isLoading;
-  const error =
-    dashboardQuery.error ??
-    clientLogsQuery.error ??
-    serverLogsQuery.error ??
-    metricSeriesQuery.error ??
-    resourcesQuery.error;
-
-  const data =
-    dashboardData && clientLogsQuery.data && serverLogsQuery.data && metricSeriesQuery.data && resourcesQuery.data
-      ? {
-          ...dashboardData,
-          dbUsageMb: monitoringStream.hasResourceUpdate ? dashboardData.dbUsageMb : resourcesQuery.data.dbUsageMb,
-          bucketUsageMb: monitoringStream.hasResourceUpdate
-            ? dashboardData.bucketUsageMb
-            : resourcesQuery.data.bucketUsageMb,
-          apiRequestChartLabels: metricSeriesQuery.data.apiRequest.labels,
-          apiRequestChart: metricSeriesQuery.data.apiRequest.values,
-          visitorChartLabels: metricSeriesQuery.data.visitor.labels,
-          visitorChart: metricSeriesQuery.data.visitor.values,
-          clientErrorLogs: [
-            ...liveClientLogs.map(formatStreamLog),
-            ...clientLogsQuery.data.items.map(formatClientLog),
-          ].slice(0, 100),
-          clientLogTotalCount: clientLogsQuery.data.totalCount + liveClientLogs.length,
-          serverErrorLogs: [
-            ...liveServerLogs.map(formatStreamLog),
-            ...serverLogsQuery.data.items.map(formatServerLog),
-          ].slice(0, 100),
-          serverLogTotalCount: serverLogsQuery.data.totalCount + liveServerLogs.length,
-        }
-      : undefined;
-
-  if (isLoading) {
-    return <PageState role="status">모니터링 데이터를 불러오는 중입니다.</PageState>;
-  }
-
-  if (error || !data) {
-    return (
-      <PageState role="alert">
-        <span>{error?.message ?? "모니터링 데이터가 없습니다."}</span>
-        {onReload && <RetryButton onClick={onReload}>다시 시도</RetryButton>}
-      </PageState>
-    );
-  }
+  const errors = [
+    ["전체 현황", dashboardQuery.error],
+    ["클라이언트 로그", clientLogsQuery.error],
+    ["서버 로그", serverLogsQuery.error],
+    ["시간대별 그래프", metricSeriesQuery.error],
+    ["저장소 사용량", resourcesQuery.error],
+  ] as const;
+  const failedQueries = errors.filter(([, error]) => error);
+  const retry = () => {
+    void dashboardQuery.refetch();
+    void clientLogsQuery.refetch();
+    void serverLogsQuery.refetch();
+    void metricSeriesQuery.refetch();
+    void resourcesQuery.refetch();
+  };
+  const data: MonitoringData = {
+    ...(dashboardData ?? emptyDashboard),
+    dbUsageMb: monitoringStream.hasResourceUpdate
+      ? (dashboardData?.dbUsageMb ?? 0)
+      : (resourcesQuery.data?.dbUsageMb ?? dashboardData?.dbUsageMb ?? 0),
+    bucketUsageMb: monitoringStream.hasResourceUpdate
+      ? (dashboardData?.bucketUsageMb ?? 0)
+      : (resourcesQuery.data?.bucketUsageMb ?? dashboardData?.bucketUsageMb ?? 0),
+    apiRequestChartLabels: metricSeriesQuery.data?.apiRequest.labels ?? [],
+    apiRequestChart: metricSeriesQuery.data?.apiRequest.values ?? [],
+    visitorChartLabels: metricSeriesQuery.data?.visitor.labels ?? [],
+    visitorChart: metricSeriesQuery.data?.visitor.values ?? [],
+    clientErrorLogs: [
+      ...liveClientLogs.map(formatStreamLog),
+      ...(clientLogsQuery.data?.items.map(formatClientLog) ?? []),
+    ].slice(0, 100),
+    clientLogTotalCount: (clientLogsQuery.data?.totalCount ?? 0) + liveClientLogs.length,
+    serverErrorLogs: [
+      ...liveServerLogs.map(formatStreamLog),
+      ...(serverLogsQuery.data?.items.map(formatServerLog) ?? []),
+    ].slice(0, 100),
+    serverLogTotalCount: (serverLogsQuery.data?.totalCount ?? 0) + liveServerLogs.length,
+  };
 
   return (
     <>
-      <MonitoringPage data={data} onReload={onReload} onDownload={onDownload} onStatus={() => setIsStatusOpen(true)} />
+      {failedQueries.length > 0 && (
+        <PageState role="alert">
+          <span>
+            일부 데이터를 불러오지 못했습니다. 조회된 값은 유지하며, 미수신 항목은 — 또는 빈 그래프로 표시합니다.
+          </span>
+          {failedQueries.map(([label, error]) => (
+            <span key={label}>
+              {label}: {error?.message}
+            </span>
+          ))}
+          <RetryButton onClick={retry}>다시 시도</RetryButton>
+        </PageState>
+      )}
+      {isLoading && <PageState role="status">모니터링 데이터를 불러오는 중입니다.</PageState>}
+      <MonitoringPage
+        data={data}
+        availability={{
+          dashboard: !!dashboardData,
+          resources: !!resourcesQuery.data || !!dashboardData,
+          clientLogs: !!clientLogsQuery.data || liveClientLogs.length > 0,
+          serverLogs: !!serverLogsQuery.data || liveServerLogs.length > 0,
+        }}
+        onReload={onReload}
+        onDownload={onDownload ? handleDownload : undefined}
+        isDownloading={isDownloading}
+        onStatus={() => setIsStatusOpen(true)}
+      />
       <ServiceHealthModal
         isOpen={isStatusOpen}
         data={serviceHealthQuery.data}
@@ -131,7 +200,10 @@ const PageState = styled.div`
   align-items: center;
   justify-content: center;
   gap: 16px;
-  min-height: 400px;
+  margin: 16px 24px 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f7f7fb;
   color: #555555;
 `;
 

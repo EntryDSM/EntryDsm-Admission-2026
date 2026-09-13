@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { startClientLogCollector } from "./clientLogCollector";
 
 export type MonitoringService = "IDENTITY" | "AUTH" | "APPLICATION";
 
@@ -49,6 +50,7 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
   useEffect(() => {
     const endpoint = getEndpoint(apiBaseUrl);
     let sessionId: string | null = null;
+    const clientLogs = startClientLogCollector(apiBaseUrl, () => sessionId);
     let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
     let startTimer: ReturnType<typeof setTimeout> | undefined;
     let isDisposed = false;
@@ -78,6 +80,7 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
       stopHeartbeat();
       if (!sessionId) return;
 
+      clientLogs.flush();
       const leavingSessionId = sessionId;
       sessionId = null;
       sendLeave(leavingSessionId);
@@ -152,6 +155,7 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("pageshow", handlePageShow);
       leave();
+      clientLogs.dispose();
     };
   }, [apiBaseUrl, service]);
 };
