@@ -7,21 +7,18 @@ import type { ScheduleDateTime } from "../apis";
 const formatResultDate = (date: ScheduleDateTime | undefined) => {
   if (!date) return "일정 미정";
 
-  const parsedDate = new Date(date.year, date.month - 1, date.day, date.hour, date.minute, date.second);
+  const parsedDate = new Date(date.year, date.month - 1, date.day);
   if (Number.isNaN(parsedDate.getTime())) return "일정 미정";
 
   return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
     month: "long",
     day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
   }).format(parsedDate);
 };
 
 export const Submitted = () => {
   const { data: schedules } = useGetAllSchedule();
-  const resultDate = formatResultDate(schedules?.find(schedule => schedule.title === "합격 발표")?.startAt);
+  const resultDate = formatResultDate(schedules?.find(schedule => schedule.title === "1차 합격 발표")?.startAt);
 
   return (
     <Flex width="100%" height="calc(100vh - 100px)" justifyContent="center" alignItems="center">

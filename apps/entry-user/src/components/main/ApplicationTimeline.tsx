@@ -12,7 +12,10 @@ export const ApplicationTimeline = ({ schedules }: ApplicationTimelineProps) => 
     schedules && schedules.length > 0
       ? sortSchedulesForTimeline(schedules).map(schedule => ({
           title: schedule.title,
-          date: `${formatScheduleDateTime(schedule.startAt)} ~ ${formatScheduleDateTime(schedule.endAt)}`,
+          date:
+            schedule.title == "원서 접수"
+              ? `${formatScheduleDateTime(schedule.startAt)} ~ ${formatScheduleDateTime(schedule.endAt)}`
+              : `${formatScheduleDateTime(schedule.startAt)}`,
         }))
       : [{ title: "입학 전형 일정", date: "일정을 확인하고 있습니다." }];
 

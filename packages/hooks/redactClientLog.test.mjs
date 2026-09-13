@@ -12,6 +12,8 @@ const cases = [
   ],
   ["single quotes", "{'password': 'private-password'}", ["private-password"]],
   ["plain assignment", 'token=private-token password="private password"', ["private-token", "private password"]],
+  ["Basic Authorization", "Authorization: Basic dXNlcjpwYXNzd29yZA==", ["Basic", "dXNlcjpwYXNzd29yZA=="]],
+  ["API key variants", 'apiKey=private-api-key api_key: "private_api_key"', ["private-api-key", "private_api_key"]],
   ["URL credentials", "https://private-user:private-password@example.com/path", ["private-user", "private-password"]],
   [
     "encoded URL credentials",

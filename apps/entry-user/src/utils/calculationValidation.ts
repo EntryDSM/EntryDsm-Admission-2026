@@ -86,7 +86,6 @@ const pageValidations = {
   "/calculate/qe/score": createRequiredFieldsValidator<CalculationState["qeScore"]>([
     "korean",
     "social",
-    "history",
     "science",
     "technology",
     "math",
