@@ -112,12 +112,15 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   return body as T;
 };
 
-export const createPassPopup = async (redirectUrl: string) =>
-  request<string>("/api/identity/v11/auth/pass/popup", {
+export const createPassPopup = async (redirectUrl: string) => {
+  const { token } = await getCsrfToken();
+
+  return request<string>("/api/identity/v11/auth/pass/popup", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify({ redirectUrl }),
   });
+};
 
 export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
   const data = await request<{ name?: unknown; phoneNumber?: unknown; phone?: unknown } | null>(
@@ -173,12 +176,15 @@ export const login = async (payload: LoginRequest) => {
   });
 };
 
-export const refreshToken = () =>
-  request<null>("/api/identity/v11/auth/token", {
+export const refreshToken = async () => {
+  const { token } = await getCsrfToken();
+
+  return request<null>("/api/identity/v11/auth/token", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
     body: JSON.stringify({}),
   });
+};
 
 export const resetPassword = async (payload: PasswordResetRequest) => {
   const { token } = await getCsrfToken();

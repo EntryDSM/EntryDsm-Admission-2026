@@ -5,5 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./index.ts"
+  },
+  "dependencies": {
+    "@entry/utils": "^0.0.0"
   }
 }
