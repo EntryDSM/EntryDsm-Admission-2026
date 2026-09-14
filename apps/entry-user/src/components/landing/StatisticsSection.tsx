@@ -8,7 +8,7 @@ const statistics = [
     kind: "text",
     icon: "97%",
     title: "취업률",
-    description: "작년 취업률은 97%이며,\n모든 취업을 향해 달리고 있어요!",
+    description: "작년 취업률은 97%이며,\n모든 학생의 취업을 향해 달리고 있어요!",
   },
   {
     kind: "img",
@@ -20,7 +20,7 @@ const statistics = [
     kind: "img",
     icon: PrizeImg,
     title: "MOU",
-    description: "다양한 기업과 MOU를 체결하여,\n매년 학생들의 취업으로\n이어지고 있어요!",
+    description: "다양한 기업과 MOU를 체결하여,\n매년 학생들의 취업으로 이어지고 있어요!",
   },
 ];
 
