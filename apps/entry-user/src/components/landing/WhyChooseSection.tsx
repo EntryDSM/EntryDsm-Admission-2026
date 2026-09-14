@@ -44,7 +44,7 @@ export const WhyChooseSection = () => {
   return (
     <Container>
       <Title>대덕 SW 마이스터고와 함께 하는 이유</Title>
-      <Subtitle>대덕소프트웨어 마이스터고 학생들의 성장이야기예요!</Subtitle>
+      <Subtitle>대덕소프트웨어마이스터고 학생들의 성장이야기예요!</Subtitle>
 
       <ScrollContainer>
         <CardList>
