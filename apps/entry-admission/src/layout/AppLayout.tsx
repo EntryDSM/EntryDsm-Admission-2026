@@ -7,6 +7,7 @@ import {
   getApplicationStorageKey,
   getStartedApplicantId,
   updateApplicantPersonalInformation,
+  updateApplicantPersonalProfile,
   updateApplicationClassification,
   updateGuardianPersonalInformation,
   updateMiddleSchoolInformation,
@@ -258,9 +259,13 @@ export const AppLayout = () => {
         case "/applicant-info": {
           const { idPhoto, applicantName, applicantNumber, gender, dateOfBirth } = state.applicantInfo;
 
+          const profileImage = getRequiredValue(idPhoto, "증명사진");
+
+          const { fileId } = await updateApplicantPersonalProfile({ profileImage });
+
           await updateApplicantPersonalInformation({
             applicantId,
-            profileImage: getRequiredValue(idPhoto, "증명사진"),
+            profileId: fileId,
             name: applicantName,
             phoneNumber: applicantNumber,
             gender: getMappedValue(genders, gender, "성별"),
