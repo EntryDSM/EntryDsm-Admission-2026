@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { canProceedToNext, GRADUATION_TYPES, type GraduationType, useApplicationData, usePageData } from "@entry/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import {
@@ -125,6 +125,7 @@ export const AppLayout = () => {
   const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData } = useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
+  const autoSaveTimerRef = useRef<number | null>(null);
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
   const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
@@ -148,9 +149,13 @@ export const AppLayout = () => {
     const timer = window.setTimeout(() => {
       void saveToStorage(storageKey);
     }, 500);
+    autoSaveTimerRef.current = timer;
 
     return () => {
       window.clearTimeout(timer);
+      if (autoSaveTimerRef.current === timer) {
+        autoSaveTimerRef.current = null;
+      }
     };
   }, [isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
   const pageGraduateRoutes = [
@@ -394,6 +399,10 @@ export const AppLayout = () => {
       return true;
     } catch (error) {
       if (isApplicantAccessDeniedError(error)) {
+        if (autoSaveTimerRef.current !== null) {
+          window.clearTimeout(autoSaveTimerRef.current);
+          autoSaveTimerRef.current = null;
+        }
         clearStartedApplicantId();
         await clearAllData(getApplicationStorageKey(applicantId));
         toast.error("원서 작성 권한이 없어 임시저장 데이터를 초기화했습니다. 다시 접수해 주세요.");
