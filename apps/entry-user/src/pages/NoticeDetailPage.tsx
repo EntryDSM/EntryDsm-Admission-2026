@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { DownloadIcon } from "@entry/ui";
+import { DownloadIcon, usePageTitle } from "@entry/ui";
 import { useGetDetailNotice } from "../apis";
 
 interface NoticeDetail {
@@ -27,6 +27,9 @@ export const NoticeDetailPage = () => {
         createdAt: data.createdAt.split("T")[0],
       }
     : undefined;
+
+  // 로드 후 탭 제목을 실제 공지 제목으로 바꾼다. 로드 전에는 라우트 기본 제목("공지사항 | EntryDSM")이 유지된다.
+  usePageTitle(noticeDetail && `${noticeDetail.title} | EntryDSM`);
 
   const handleBackToList = () => {
     navigate("/notice");
