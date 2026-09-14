@@ -77,7 +77,7 @@ export const updateApplicationClassification = async ({
 
 export const updateApplicantPersonalProfile = async ({ file }: UpdateApplicantPersonalProfileRequest) => {
   const formData = new FormData();
-  formData.append("profileImage", file);
+  formData.append("file", file);
 
   return Http.postFormData<UpdateApplicantPersonalProfileResponse>(`/api/document/v11/photo`, formData);
 };
