@@ -44,7 +44,7 @@ export const WhyChooseSection = () => {
   return (
     <Container>
       <Title>대덕 SW 마이스터고와 함께 하는 이유</Title>
-      <Subtitle>대덕소프트웨어 마이스터고를 졸업한 선배들의 이야기예요!</Subtitle>
+      <Subtitle>대덕소프트웨어 마이스터고 학생들의 성장이야기예요!</Subtitle>
 
       <ScrollContainer>
         <CardList>
@@ -66,7 +66,7 @@ export const WhyChooseSection = () => {
 
 const Container = styled.div`
   width: 100%;
-  max-width: 1400px;
+  max-width: 1500px;
   padding: 24px;
   margin: 0 auto;
 `;

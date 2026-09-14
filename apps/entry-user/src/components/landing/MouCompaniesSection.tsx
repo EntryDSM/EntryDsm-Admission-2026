@@ -11,7 +11,7 @@ export const MouCompaniesSection = () => {
           든든한<Best> MOU</Best> 기업들,
         </Middle>
         <Description>
-          <Line>350여개에 달하는 기업이 본교에 취업을 의뢰했으며,</Line>
+          <Line>500여개에 달하는 기업이 본교에 취업을 의뢰했으며,</Line>
           <Line>매년 학생들의 취업으로 이어지고 있습니다.</Line>
         </Description>
       </MentContainer>
