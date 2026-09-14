@@ -20,131 +20,47 @@ const ments = [
   "대덕 소프트웨어 마이스터고등학교",
 ];
 
-type LegacyScrollbarStyle = CSSStyleDeclaration & {
-  msOverflowStyle?: string;
-};
-
 export const Landing = () => {
   const [step, setStep] = useState(0);
   const [fixed, setFixed] = useState(true);
-  const isScrolling = useRef(false);
-  const lastWheelTime = useRef(0);
+  const snapMode = useRef("");
   const maxStep = ments.length;
-  const contentStartY = window.innerHeight * maxStep;
 
   const headleMove = () => {
-    window.scrollTo(0, contentStartY);
+    window.scrollTo({ top: window.innerHeight * maxStep, behavior: "smooth" });
   };
 
+  // 스크롤을 가로채지 않고, 현재 스크롤 위치로부터 인트로 단계를 계산한다.
+  // (wheel 하이재킹은 트랙패드/모바일에서 스크롤이 잠기는 문제가 있어 제거)
   useEffect(() => {
-    const onWheel = (e: WheelEvent) => {
-      const contentStartY = window.innerHeight * maxStep;
-      const currentY = window.scrollY;
+    const update = () => {
+      const vh = window.innerHeight;
+      const next = Math.min(maxStep, Math.max(0, Math.round(window.scrollY / vh)));
+      setStep(next);
+      setFixed(window.scrollY <= vh * (maxStep + 0.3));
 
-      if (currentY < contentStartY) {
-        e.preventDefault();
-      }
-
-      if (isScrolling.current) return;
-
-      const now = Date.now();
-      const timeSinceLastWheel = now - lastWheelTime.current;
-
-      if (timeSinceLastWheel < 300) return;
-
-      lastWheelTime.current = now;
-
-      const isScrollDown = e.deltaY > 0;
-
-      if (currentY >= contentStartY) {
-        if (!isScrollDown && currentY <= contentStartY + 50) {
-          isScrolling.current = true;
-          setStep(maxStep - 1);
-        }
-        return;
-      }
-
-      if (isScrollDown && step < maxStep) {
-        isScrolling.current = true;
-        setStep(prev => prev + 1);
-      } else if (!isScrollDown && step > 0) {
-        isScrolling.current = true;
-        setStep(prev => prev - 1);
+      // 인트로 문장 구간은 mandatory 스냅으로 한 화면씩 걸리게 하고,
+      // 본문에 들어서면 proximity로 낮춰 자유 스크롤을 방해하지 않는다.
+      const mode = window.scrollY < vh * maxStep ? "y mandatory" : "y proximity";
+      if (snapMode.current !== mode) {
+        snapMode.current = mode;
+        document.documentElement.style.scrollSnapType = mode;
       }
     };
 
-    window.addEventListener("wheel", onWheel, { passive: false });
-    return () => window.removeEventListener("wheel", onWheel);
-  }, [step, maxStep]);
-
-  useEffect(() => {
-    const scrollTop = window.innerHeight * step;
-
-    window.scrollTo({
-      top: scrollTop,
-      behavior: "smooth",
-    });
-
-    const timeout = setTimeout(() => {
-      isScrolling.current = false;
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [step]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      const contentStartY = window.innerHeight * maxStep;
-      if (y >= contentStartY) {
-        if (step !== maxStep) {
-          setStep(maxStep);
-        }
-      }
-      setFixed(y <= window.innerHeight * (maxStep + 0.3));
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      snapMode.current = "";
+      document.documentElement.style.scrollSnapType = "";
     };
-
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [maxStep, step]);
+  }, [maxStep]);
 
   const isLastStep = step >= maxStep;
   const showText = step < maxStep;
-
-  // 스크롤바 표시/숨김 제어
-  useEffect(() => {
-    const documentStyle = document.documentElement.style as LegacyScrollbarStyle;
-
-    if (isLastStep) {
-      // 스크롤 가능, 스크롤바 보이기
-      document.documentElement.style.overflow = "auto";
-      document.body.style.overflow = "auto";
-      document.documentElement.style.scrollbarWidth = "auto";
-      documentStyle.msOverflowStyle = "auto";
-    } else {
-      // 스크롤 가능하지만 스크롤바 숨기기
-      document.documentElement.style.overflow = "hidden";
-      document.documentElement.style.scrollbarWidth = "none";
-      documentStyle.msOverflowStyle = "none";
-
-      // Webkit 브라우저용 스크롤바 숨기기
-      const style = document.createElement("style");
-      style.id = "hide-scrollbar";
-      style.textContent = `
-        html::-webkit-scrollbar {
-          display: none;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    return () => {
-      document.documentElement.style.overflow = "auto";
-      document.documentElement.style.scrollbarWidth = "auto";
-      documentStyle.msOverflowStyle = "auto";
-      const style = document.getElementById("hide-scrollbar");
-      if (style) style.remove();
-    };
-  }, [isLastStep]);
 
   return (
     <Wrapper>
@@ -161,7 +77,9 @@ export const Landing = () => {
         </ArrowContainer>
       </FixedBackground>
 
-      <ScrollSpacer />
+      {ments.map((_, index) => (
+        <SnapSection key={index} />
+      ))}
 
       <Content fadeIn={isLastStep}>
         <MentContainer>
@@ -485,9 +403,11 @@ const AnimatedText = styled.div<{ show: boolean; fadeOut?: boolean }>`
   }
 `;
 
-const ScrollSpacer = styled.div`
-  height: ${ments.length * 110}vh;
+const SnapSection = styled.div`
+  height: 100vh;
   width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 `;
 
 const fadeInContent = keyframes`
@@ -507,6 +427,8 @@ const Content = styled.section<{ fadeIn: boolean }>`
   width: 100%;
   position: relative;
   z-index: 10;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 
   opacity: ${props => (props.fadeIn ? 1 : 0)};
   animation: ${props =>
