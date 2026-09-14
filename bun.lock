@@ -190,6 +190,9 @@
     "packages/hooks": {
       "name": "@entry/hooks",
       "version": "0.0.0",
+      "dependencies": {
+        "@entry/utils": "^0.0.0",
+      },
     },
     "packages/typescript-config": {
       "name": "@repo/typescript-config",
