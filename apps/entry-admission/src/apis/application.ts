@@ -5,6 +5,8 @@ import type {
   StartApplicationResponse,
   UpdateApplicationClassificationRequest,
   UpdateApplicationClassificationResponse,
+  UpdateApplicantPersonalProfileRequest,
+  UpdateApplicantPersonalProfileResponse,
   UpdateApplicantPersonalInformationRequest,
   UpdateApplicantPersonalInformationResponse,
   UpdateGuardianPersonalInformationRequest,
@@ -73,27 +75,21 @@ export const updateApplicationClassification = async ({
   return Http.patch<UpdateApplicationClassificationResponse>(`${APPLICATIONS_ENDPOINT}/${applicantId}/type`, data);
 };
 
-// 증명사진을 포함하므로 JSON이 아닌 multipart/form-data로 지원자 정보를 저장합니다.
-export const updateApplicantPersonalInformation = async ({
-  applicantId,
-  profileImage,
-  name,
-  phoneNumber,
-  gender,
-  birthdate,
-  specialAdmissionType,
-}: UpdateApplicantPersonalInformationRequest) => {
+export const updateApplicantPersonalProfile = async ({ profileImage }: UpdateApplicantPersonalProfileRequest) => {
   const formData = new FormData();
   formData.append("profileImage", profileImage);
-  formData.append("name", name);
-  formData.append("phoneNumber", phoneNumber);
-  formData.append("gender", gender);
-  formData.append("birthdate", birthdate);
-  formData.append("specialAdmissionType", specialAdmissionType);
 
-  return Http.patchFormData<UpdateApplicantPersonalInformationResponse>(
+  return Http.postFormData<UpdateApplicantPersonalProfileResponse>(`/api/document/v11/photo`, formData);
+};
+
+// 지원자 정보를 저장합니다.
+export const updateApplicantPersonalInformation = async ({
+  applicantId,
+  ...data
+}: UpdateApplicantPersonalInformationRequest) => {
+  return Http.patch<UpdateApplicantPersonalInformationResponse>(
     `${APPLICATIONS_ENDPOINT}/${applicantId}/personal`,
-    formData
+    data
   );
 };
 
