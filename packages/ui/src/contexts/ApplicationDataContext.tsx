@@ -432,6 +432,10 @@ export const ApplicationDataProvider: React.FC<{
   }, []);
 
   const clearAllData = useCallback(async (storageKey?: string) => {
+    // Prevent pending auto-save effects from treating the cleared state as loaded data.
+    setLoadedStorageKey(null);
+    dispatch({ type: "CLEAR_ALL_DATA" });
+
     if (storageKey) {
       try {
         await deleteFromIndexedDB(storageKey);
@@ -439,10 +443,6 @@ export const ApplicationDataProvider: React.FC<{
         console.error("원서 임시저장 데이터 삭제 실패:", error);
       }
     }
-
-    // 삭제 중에는 기존 키를 유지해 AppLayout이 데이터를 다시 복원하지 않도록 합니다.
-    dispatch({ type: "CLEAR_ALL_DATA" });
-    setLoadedStorageKey(null);
   }, []);
 
   const value: ApplicationContextType = {

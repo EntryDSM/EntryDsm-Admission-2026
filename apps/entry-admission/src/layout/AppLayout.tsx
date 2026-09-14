@@ -1,11 +1,12 @@
 import styled from "@emotion/styled";
 import { canProceedToNext, GRADUATION_TYPES, type GraduationType, useApplicationData, usePageData } from "@entry/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import {
   getApplicationStorageKey,
   getStartedApplicantId,
+  clearStartedApplicantId,
   updateApplicantPersonalInformation,
   updateApplicantPersonalProfile,
   updateApplicationClassification,
@@ -19,6 +20,7 @@ import {
   submitGedScores,
   submitGrades,
 } from "../apis";
+import { HttpError } from "../apis/http";
 import { ApplicationNav } from "../components";
 
 const admissionTypes = {
@@ -107,13 +109,23 @@ const getRequiredBoolean = (value: "O" | "X" | null, fieldName: string) => {
   return value === "O";
 };
 
+const isApplicantAccessDeniedError = (error: unknown) => {
+  if (!(error instanceof HttpError) || error.status !== 403 || !error.body || typeof error.body !== "object") {
+    return false;
+  }
+
+  const body = error.body as { error?: { code?: string } };
+  return body.error?.code === "APPLICANT_ACCESS_DENIED";
+};
+
 export const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [classificationData] = usePageData("applicationClassification");
-  const { state, loadedStorageKey, loadFromStorage, saveToStorage } = useApplicationData();
+  const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData } = useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
+  const autoSaveTimerRef = useRef<number | null>(null);
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
   const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
@@ -137,9 +149,13 @@ export const AppLayout = () => {
     const timer = window.setTimeout(() => {
       void saveToStorage(storageKey);
     }, 500);
+    autoSaveTimerRef.current = timer;
 
     return () => {
       window.clearTimeout(timer);
+      if (autoSaveTimerRef.current === timer) {
+        autoSaveTimerRef.current = null;
+      }
     };
   }, [isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
   const pageGraduateRoutes = [
@@ -259,9 +275,9 @@ export const AppLayout = () => {
         case "/applicant-info": {
           const { idPhoto, applicantName, applicantNumber, gender, dateOfBirth } = state.applicantInfo;
 
-          const profileImage = getRequiredValue(idPhoto, "증명사진");
+          const file = getRequiredValue(idPhoto, "증명사진");
 
-          const { fileId } = await updateApplicantPersonalProfile({ profileImage });
+          const { fileId } = await updateApplicantPersonalProfile({ file });
 
           await updateApplicantPersonalInformation({
             applicantId,
@@ -382,6 +398,18 @@ export const AppLayout = () => {
 
       return true;
     } catch (error) {
+      if (isApplicantAccessDeniedError(error)) {
+        if (autoSaveTimerRef.current !== null) {
+          window.clearTimeout(autoSaveTimerRef.current);
+          autoSaveTimerRef.current = null;
+        }
+        clearStartedApplicantId();
+        await clearAllData(getApplicationStorageKey(applicantId));
+        toast.error("원서 작성 권한이 없어 임시저장 데이터를 초기화했습니다. 다시 접수해 주세요.");
+        navigate("/", { replace: true });
+        return false;
+      }
+
       toast.error(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
       return false;
     } finally {
