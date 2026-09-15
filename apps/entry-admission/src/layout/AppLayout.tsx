@@ -48,6 +48,7 @@ const genders = {
 const specialAdmissionTypes = {
   국가유공자: "NATIONAL_MERIT",
   "특례 입학 대상": "SPECIAL_ADMISSION",
+  "특례입학 대상자": "SPECIAL_ADMISSION",
   "해당 없음": "NONE",
 } as const;
 
