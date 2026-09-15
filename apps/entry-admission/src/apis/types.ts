@@ -301,7 +301,7 @@ export type UpdateApplicationClassificationResponse = null;
 
 export type ApplicantGender = "MALE" | "FEMALE";
 
-export type SpecialAdmissionType = "NATIONAL_MERIT" | "PRIVILEGED_ADMISSION" | "NOTHING";
+export type SpecialAdmissionType = "NONE" | "NATIONAL_MERIT" | "SPECIAL_ADMISSION";
 
 export interface UpdateApplicantPersonalProfileRequest {
   file: File;

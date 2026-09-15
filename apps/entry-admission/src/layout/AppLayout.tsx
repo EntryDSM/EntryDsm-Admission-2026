@@ -47,9 +47,9 @@ const genders = {
 
 const specialAdmissionTypes = {
   국가유공자: "NATIONAL_MERIT",
-  "특례입학 대상자": "PRIVILEGED_ADMISSION",
-  "특례 입학 대상": "PRIVILEGED_ADMISSION",
-  "해당 없음": "NOTHING",
+  "특례 입학 대상": "SPECIAL_ADMISSION",
+  "특례입학 대상자": "SPECIAL_ADMISSION",
+  "해당 없음": "NONE",
 } as const;
 
 const guardianRelations = {
@@ -125,14 +125,18 @@ export const AppLayout = () => {
   const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData } = useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
+  // 입력 중인 원서의 500ms 지연 저장 타이머입니다. 접근 권한이 사라지면 즉시 취소합니다.
   const autoSaveTimerRef = useRef<number | null>(null);
+  // 새 원서를 시작할 때 받은 ID로 브라우저별 임시저장 공간을 구분합니다.
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
+  // 저장 데이터를 불러온 뒤에만 자동 저장을 시작해 빈 초기 상태가 기존 데이터를 덮어쓰지 않게 합니다.
   const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
 
   useEffect(() => {
     if (storageKey && loadedStorageKey !== storageKey) {
       setHasStorageLoadError(false);
+      // 원서 페이지 진입 시 현재 applicantId의 IndexedDB 임시저장 데이터를 한 번 복원합니다.
       void loadFromStorage(storageKey).catch(error => {
         console.error("원서 임시저장 데이터를 불러오지 못했습니다.", error);
         toast.error("원서 임시저장 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.");
@@ -142,16 +146,20 @@ export const AppLayout = () => {
   }, [loadFromStorage, loadedStorageKey, storageKey]);
 
   useEffect(() => {
+    // 복원이 끝나지 않았거나 다른 원서의 데이터가 로드된 상태에서는 저장하지 않습니다.
     if (!isStorageLoaded || !storageKey || loadedStorageKey !== storageKey) {
       return;
     }
 
+    // state가 바뀔 때마다 500ms를 기다립니다. 계속 입력하면 cleanup이 이전 타이머를 취소합니다.
     const timer = window.setTimeout(() => {
+      // 사용자가 입력을 멈춘 최종 상태 전체를 현재 원서의 IndexedDB 키에 저장합니다.
       void saveToStorage(storageKey);
     }, 500);
     autoSaveTimerRef.current = timer;
 
     return () => {
+      // 다음 입력, 페이지 이동, 언마운트 시에는 이전 예약 저장을 취소합니다.
       window.clearTimeout(timer);
       if (autoSaveTimerRef.current === timer) {
         autoSaveTimerRef.current = null;

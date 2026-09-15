@@ -1,4 +1,5 @@
-import { getCsrfToken } from "@entry/utils";
+// 앱의 TypeScript 빌드는 hooks 소스를 직접 검사하므로 워크스페이스 별칭 대신 소스 경로를 사용합니다.
+import { getCsrfToken } from "../utils/csrf";
 
 // 게이트웨이는 로그인 쿠키(access_token)가 실린 변경 요청에 XSRF-TOKEN 쿠키와 X-XSRF-TOKEN 헤더의
 // 일치(더블서브밋)만 검사하고, 같은 쿠키에는 같은 토큰을 돌려주며 회전하지 않습니다.
@@ -9,7 +10,10 @@ let pendingToken: Promise<string | null> | null = null;
 
 export const ensureCsrfToken = (apiBaseUrl: string): Promise<string | null> => {
   if (cachedToken) return Promise.resolve(cachedToken);
-  pendingToken ??= getCsrfToken(apiBaseUrl)
+
+  if (pendingToken) return pendingToken;
+
+  const tokenPromise = getCsrfToken(apiBaseUrl)
     .then(token => {
       cachedToken = token;
       return token;
@@ -19,7 +23,8 @@ export const ensureCsrfToken = (apiBaseUrl: string): Promise<string | null> => {
     .finally(() => {
       pendingToken = null;
     });
-  return pendingToken;
+  pendingToken = tokenPromise;
+  return tokenPromise;
 };
 
 export const getCachedCsrfToken = (): string | null => cachedToken;
