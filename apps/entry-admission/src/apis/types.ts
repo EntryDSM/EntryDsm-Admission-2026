@@ -316,7 +316,7 @@ export interface UpdateApplicantPersonalProfileResponse {
 
 export interface UpdateApplicantPersonalInformationRequest {
   applicantId: number;
-  profileId: number;
+  photoFileId: number;
   name: string;
   phoneNumber: string;
   gender: ApplicantGender;
