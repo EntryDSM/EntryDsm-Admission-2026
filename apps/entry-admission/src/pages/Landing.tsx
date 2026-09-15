@@ -1,8 +1,16 @@
 import { colors, Flex, Text } from "@entry/design";
 import { Btn, EntryLogo } from "@entry/ui";
 import styled from "@emotion/styled";
+import { useState } from "react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
-import { getStartedApplicantId, useGetAllSchedule, useStartApplication } from "../apis";
+import {
+  clearStartedApplicantId,
+  getApplicationStatus,
+  getStartedApplicantId,
+  useGetAllSchedule,
+  useStartApplication,
+} from "../apis";
 import type { ScheduleDateTime } from "../apis";
 
 const formatScheduleDate = (date: ScheduleDateTime | undefined) => {
@@ -18,6 +26,7 @@ export const Landing = () => {
   const navigate = useNavigate();
   const { mutateAsync: startApplication, isPending } = useStartApplication();
   const { data: schedules } = useGetAllSchedule();
+  const [isCheckingApplicationStatus, setIsCheckingApplicationStatus] = useState(false);
   const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
   const resultSchedule = schedules?.find(schedule => schedule.title === "1차 합격 발표");
   const startDate = formatScheduleDate(applicationSchedule?.startAt);
@@ -28,9 +37,34 @@ export const Landing = () => {
   const handleStartApplication = async () => {
     const startedApplicantId = getStartedApplicantId();
 
-    if (startedApplicantId !== null) {
-      navigate("/application-classification");
+    setIsCheckingApplicationStatus(true);
+    try {
+      const { applicantStatus } = await getApplicationStatus();
+
+      if (applicantStatus === "DRAFT") {
+        if (startedApplicantId === null) {
+          toast.error("작성 중인 원서를 찾았지만 원서 정보를 복원할 수 없습니다. 관리자에게 문의해 주세요.");
+          return;
+        }
+
+        navigate("/application-classification");
+        return;
+      }
+
+      if (applicantStatus !== "NONE") {
+        toast.error("이미 원서를 작성했거나 제출한 계정입니다.");
+        return;
+      }
+
+      // 서버에는 원서가 없는데 브라우저에만 이전 ID가 남은 경우 새 원서를 시작합니다.
+      if (startedApplicantId !== null) {
+        clearStartedApplicantId();
+      }
+    } catch {
+      toast.error("원서 작성 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.");
       return;
+    } finally {
+      setIsCheckingApplicationStatus(false);
     }
 
     try {
@@ -70,7 +104,11 @@ export const Landing = () => {
             </Text>
           </ContentContainer>
         </Flex>
-        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isPending}>
+        <Btn
+          width="100%"
+          onClick={() => void handleStartApplication()}
+          isBlocked={isPending || isCheckingApplicationStatus}
+        >
           접수하기
         </Btn>
       </Flex>

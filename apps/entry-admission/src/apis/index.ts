@@ -2,6 +2,7 @@ export * from "./school";
 export * from "./validate";
 export * from "./schedule";
 export * from "./application";
+export * from "./account";
 export * from "./applicationDocument";
 export * from "./pdfPreview";
 export * from "./evaluation";
