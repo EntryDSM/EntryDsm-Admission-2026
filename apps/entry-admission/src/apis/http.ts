@@ -142,9 +142,6 @@ export const Http = {
   get: <T>(path: string, options?: HttpRequestOptions) => request<T>(path, "GET", null, options),
   post: <T>(path: string, data: unknown, options?: HttpRequestOptions) =>
     request<T>(path, "POST", JSON.stringify(data), options),
-  // 객체로 만들 수 없는 서버 전용 JSON 계약은 호출부가 직렬화한 body를 그대로 전송합니다.
-  postSerializedJson: <T>(path: string, serializedData: string, options?: HttpRequestOptions) =>
-    request<T>(path, "POST", serializedData, options),
   patch: <T>(path: string, data: unknown, options?: HttpRequestOptions) =>
     request<T>(path, "PATCH", JSON.stringify(data), options),
   postFormData: <T>(path: string, data: FormData, options?: HttpRequestOptions) =>
