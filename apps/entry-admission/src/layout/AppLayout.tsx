@@ -289,7 +289,7 @@ export const AppLayout = () => {
 
           await updateApplicantPersonalInformation({
             applicantId,
-            photoFileId: fileId,
+            protoFileId: fileId,
             name: applicantName,
             phoneNumber: applicantNumber,
             gender: getMappedValue(genders, gender, "성별"),
