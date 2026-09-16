@@ -93,7 +93,8 @@ export const submitExpectedGrades = async (grades: SubmitExpectedGradesVariables
 
 export const useSubmitExpectedGrades = () =>
   useMutation({
-    mutationFn: (grades: SubmitExpectedGradesVariables[]) => submitExpectedGrades(grades),
+    mutationFn: ({ formValues, schoolSemester }: SubmitExpectedGradesVariables) =>
+      submitExpectedGrades(formValues, schoolSemester),
     onSuccess: () => {
       toast.success("성적이 저장되었습니다.");
     },
@@ -134,7 +135,7 @@ export const submitGrades = async (grades: SubmitGradesVariables[]) =>
 
 export const useSubmitGrades = () =>
   useMutation({
-    mutationFn: (grades: SubmitGradesVariables[]) => submitGrades(grades),
+    mutationFn: ({ formValues, schoolSemester }: SubmitGradesVariables) => submitGrades(formValues, schoolSemester),
     onSuccess: () => {
       toast.success("성적이 저장되었습니다.");
     },
