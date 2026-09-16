@@ -34,7 +34,7 @@ interface IGuardianInfoType {
 interface IMiddleSchoolInfoType {
   schoolName: string;
   schoolCode: string;
-  studentId: number | null;
+  studentId: string;
   schoolPhone: string;
   teacherName: string;
 }
@@ -140,7 +140,7 @@ const initialState: ApplicationState = {
   middleSchoolInfo: {
     schoolName: "",
     schoolCode: "",
-    studentId: null,
+    studentId: "",
     schoolPhone: "",
     teacherName: "",
   },
