@@ -289,7 +289,7 @@ export const AppLayout = () => {
 
           await updateApplicantPersonalInformation({
             applicantId,
-            protoFileId: fileId,
+            photoFileId: fileId,
             name: applicantName,
             phoneNumber: applicantNumber,
             gender: getMappedValue(genders, gender, "성별"),
@@ -333,25 +333,30 @@ export const AppLayout = () => {
           await updateStudyPlan({ applicantId, studyPlan: state.statementOfPurpose.studyPlan });
           break;
         case "/first-graduate":
-          await submitGrades(state.firstGraduate, "3-2");
-          break;
         case "/second-graduate":
-          await submitGrades(state.secondGraduate, "3-1");
-          break;
         case "/third-graduate":
-          await submitGrades(state.thirdGraduate, "2-2");
+          // 학기별 입력값은 자동 저장만 하고, 마지막 성적 페이지에서 한 번에 서버로 전송합니다.
           break;
         case "/fourth-graduate":
-          await submitGrades(state.fourthGraduate, "2-1");
+          // 마지막 성적 페이지에서 네 학기 성적을 배열 body로 묶어 한 번에 전송합니다.
+          await submitGrades([
+            { formValues: state.firstGraduate, schoolSemester: "3-2" },
+            { formValues: state.secondGraduate, schoolSemester: "3-1" },
+            { formValues: state.thirdGraduate, schoolSemester: "2-2" },
+            { formValues: state.fourthGraduate, schoolSemester: "2-1" },
+          ]);
           break;
         case "/first-prospective-graduate":
-          await submitExpectedGrades(state.firstGraduateProspective, "3-1");
-          break;
         case "/second-prospective-graduate":
-          await submitExpectedGrades(state.secondGraduateProspective, "2-2");
+          // 학기별 입력값은 자동 저장만 하고, 마지막 성적 페이지에서 한 번에 서버로 전송합니다.
           break;
         case "/third-prospective-graduate":
-          await submitExpectedGrades(state.thirdGraduateProspective, "2-1");
+          // 마지막 성적 페이지에서 세 학기 성적을 배열 body로 묶어 한 번에 전송합니다.
+          await submitExpectedGrades([
+            { formValues: state.firstGraduateProspective, schoolSemester: "3-1" },
+            { formValues: state.secondGraduateProspective, schoolSemester: "2-2" },
+            { formValues: state.thirdGraduateProspective, schoolSemester: "2-1" },
+          ]);
           break;
         case "/ged/score":
           await submitGedScores({

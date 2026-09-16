@@ -69,15 +69,16 @@ const expectedGradesRequest = (
   };
 };
 
-export const submitExpectedGrades = async (
-  formValues: ExpectedGradeFormValues,
-  schoolSemester: SubmitExpectedGradesRequest["schoolSemester"]
-) => Http.post<void>(expectedGradesPath, expectedGradesRequest(formValues, schoolSemester));
+// 여러 학기의 성적 객체를 배열 body로 묶어 성적 입력 API를 한 번만 호출합니다.
+export const submitExpectedGrades = async (grades: SubmitExpectedGradesVariables[]) =>
+  Http.post<void>(
+    expectedGradesPath,
+    grades.map(({ formValues, schoolSemester }) => expectedGradesRequest(formValues, schoolSemester))
+  );
 
 export const useSubmitExpectedGrades = () =>
   useMutation({
-    mutationFn: ({ formValues, schoolSemester }: SubmitExpectedGradesVariables) =>
-      submitExpectedGrades(formValues, schoolSemester),
+    mutationFn: (grades: SubmitExpectedGradesVariables[]) => submitExpectedGrades(grades),
     onSuccess: () => {
       toast.success("성적이 저장되었습니다.");
     },
@@ -109,14 +110,16 @@ const gradesRequest = (
   };
 };
 
-export const submitGrades = async (
-  formValues: ExpectedGradeFormValues,
-  schoolSemester: SubmitGradesRequest["schoolSemester"]
-) => Http.post<void>(gradesPath, gradesRequest(formValues, schoolSemester));
+// 여러 학기의 성적 객체를 배열 body로 묶어 성적 입력 API를 한 번만 호출합니다.
+export const submitGrades = async (grades: SubmitGradesVariables[]) =>
+  Http.post<void>(
+    gradesPath,
+    grades.map(({ formValues, schoolSemester }) => gradesRequest(formValues, schoolSemester))
+  );
 
 export const useSubmitGrades = () =>
   useMutation({
-    mutationFn: ({ formValues, schoolSemester }: SubmitGradesVariables) => submitGrades(formValues, schoolSemester),
+    mutationFn: (grades: SubmitGradesVariables[]) => submitGrades(grades),
     onSuccess: () => {
       toast.success("성적이 저장되었습니다.");
     },
