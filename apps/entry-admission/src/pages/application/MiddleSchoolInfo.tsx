@@ -19,7 +19,7 @@ export const MiddleSchoolInfo = () => {
   };
 
   const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.replace(/\D/g, "").slice(0, 5);
     setDatas({ ...datas, studentId: value });
   };
 
