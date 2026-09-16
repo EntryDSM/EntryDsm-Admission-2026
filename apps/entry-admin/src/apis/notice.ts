@@ -2,6 +2,7 @@ import { buildQueryString } from "../utils/queryString";
 import { http } from "./http";
 import type {
   CreateNoticePayload,
+  UpdateNoticePayload,
   GetNoticesParams,
   GetNoticesResponse,
   GetQnasParams,
@@ -43,6 +44,13 @@ export const getNoticeDetail = async (noticeId: number) => {
 
 /** 공지 등록 (201 Created, 본문 없음) */
 export const createNotice = (payload: CreateNoticePayload) => http.post<void>(ADMIN_NOTICES_ENDPOINT, payload);
+
+/** 공지 수정 */
+export const updateNotice = (payload: UpdateNoticePayload, noticeId: number) =>
+  http.patch<void>(`${ADMIN_NOTICES_ENDPOINT}/${noticeId}`, payload);
+
+/** 공지 삭제 */
+export const deleteNotice = (noticeId: number) => http.delete<void>(`${ADMIN_NOTICES_ENDPOINT}/${noticeId}`);
 
 /** QnA(자주 묻는 질문) 전체 조회 (페이지네이션) */
 export const getQnas = async (params: GetQnasParams = {}) => {

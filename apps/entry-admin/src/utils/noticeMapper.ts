@@ -1,4 +1,10 @@
-import type { CreateNoticePayload, NoticeDetail, NoticeDivision, NoticeSummary } from "../apis/types";
+import type {
+  CreateNoticePayload,
+  UpdateNoticePayload,
+  NoticeDetail,
+  NoticeDivision,
+  NoticeSummary,
+} from "../apis/types";
 
 /* ────────────── 공지 폼 모델 (단일 출처. `components/noticeFormModel` 은 재노출 시임) ────────────── */
 
@@ -39,10 +45,18 @@ const DIVISION_BY_TYPE: Record<NoticeType, NoticeDivision> = {
 const TYPE_BY_DIVISION: Record<string, NoticeType> = {
   "Admissions Notice": "NOTICE",
   "Prospective Students Notice": "GUIDE",
+  ADMISSION_NOTICE: "NOTICE",
+  PROSPECTIVE_STUDENT: "GUIDE",
+};
+
+const UPDATE_DIVISION_BY_TYPE: Record<NoticeType, UpdateNoticePayload["division"]> = {
+  NOTICE: "ADMISSION_NOTICE",
+  GUIDE: "PROSPECTIVE_STUDENT",
 };
 
 /** division 이 없거나 알 수 없는 값이면 기본 카테고리(NOTICE)로 안전하게 분류한다. */
-const toNoticeType = (division?: NoticeDivision): NoticeType => (division && TYPE_BY_DIVISION[division]) || "NOTICE";
+const toNoticeType = (division?: NoticeDetail["division"]): NoticeType =>
+  (division && TYPE_BY_DIVISION[division]) || "NOTICE";
 
 /** FE 카테고리 → 백엔드 division. 목록 필터 파라미터·등록 페이로드에 쓴다. */
 export const getNoticeDivision = (category: NoticeType): NoticeDivision => DIVISION_BY_TYPE[category];
@@ -78,6 +92,14 @@ export const toNoticeFormValue = (dto: NoticeDetail): NoticeFormValue => ({
 export const toCreateNoticePayload = (form: NoticeFormValue): CreateNoticePayload => ({
   title: form.title.trim(),
   division: DIVISION_BY_TYPE[form.category],
+  content: form.content,
+  isPinned: form.isPinned,
+});
+
+/** 수정 폼 → 수정 요청 페이로드. 기존 첨부파일은 서버에서 유지하도록 attachmentIds 를 생략한다. */
+export const toUpdateNoticePayload = (form: NoticeFormValue): UpdateNoticePayload => ({
+  title: form.title.trim(),
+  division: UPDATE_DIVISION_BY_TYPE[form.category],
   content: form.content,
   isPinned: form.isPinned,
 });

@@ -370,7 +370,7 @@ export interface NoticeDetail {
   createdAt: string;
   /** ISO datetime */
   updatedAt: string;
-  division?: NoticeDivision;
+  division?: NoticeDivision | UpdateNoticePayload["division"];
   isPinned?: boolean;
 }
 
@@ -381,5 +381,14 @@ export interface CreateNoticePayload {
   content: string;
   isPinned: boolean;
   /** 파일관리(document) 업로드 API 미연동이라 현재는 보내지 않는다. */
+  attachmentIds?: string[];
+}
+
+/** 공지 수정 요청 (PATCH /api/v11/admin/notices/{noticeId}) */
+export interface UpdateNoticePayload {
+  title: string;
+  content: string;
+  division: "ADMISSION_NOTICE" | "PROSPECTIVE_STUDENT";
+  isPinned: boolean;
   attachmentIds?: string[];
 }
