@@ -69,11 +69,18 @@ const expectedGradesRequest = (
   };
 };
 
-// 마지막 성적 페이지에서 모든 학기를 순서대로 저장합니다. 각 요청은 명세의 단일 학기 body를 사용합니다.
+// 서버가 요구한 중복 schoolSemester/subjects 키를 보존해 모든 학기를 하나의 요청 body로 만듭니다.
+const serializeSemesterGrades = <TSemester extends string>(
+  grades: { formValues: ExpectedGradeFormValues; schoolSemester: TSemester }[],
+  createRequest: (formValues: ExpectedGradeFormValues, schoolSemester: TSemester) => object
+) =>
+  `{${grades
+    .map(({ formValues, schoolSemester }) => JSON.stringify(createRequest(formValues, schoolSemester)).slice(1, -1))
+    .join(",")}}`;
+
+// 마지막 성적 페이지에서 모든 학기를 한 번의 API 요청으로 저장합니다.
 export const submitExpectedGrades = async (grades: SubmitExpectedGradesVariables[]) => {
-  for (const { formValues, schoolSemester } of grades) {
-    await Http.post<void>(expectedGradesPath, expectedGradesRequest(formValues, schoolSemester));
-  }
+  await Http.postSerializedJson<void>(expectedGradesPath, serializeSemesterGrades(grades, expectedGradesRequest));
 };
 
 export const useSubmitExpectedGrades = () =>
@@ -110,11 +117,9 @@ const gradesRequest = (
   };
 };
 
-// 마지막 성적 페이지에서 모든 학기를 순서대로 저장합니다. 각 요청은 명세의 단일 학기 body를 사용합니다.
+// 마지막 성적 페이지에서 모든 학기를 한 번의 API 요청으로 저장합니다.
 export const submitGrades = async (grades: SubmitGradesVariables[]) => {
-  for (const { formValues, schoolSemester } of grades) {
-    await Http.post<void>(gradesPath, gradesRequest(formValues, schoolSemester));
-  }
+  await Http.postSerializedJson<void>(gradesPath, serializeSemesterGrades(grades, gradesRequest));
 };
 
 export const useSubmitGrades = () =>
