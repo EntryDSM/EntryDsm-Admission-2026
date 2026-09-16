@@ -142,6 +142,9 @@ export const Http = {
   get: <T>(path: string, options?: HttpRequestOptions) => request<T>(path, "GET", null, options),
   post: <T>(path: string, data: unknown, options?: HttpRequestOptions) =>
     request<T>(path, "POST", JSON.stringify(data), options),
+  // 중복 키를 포함하는 서버 계약은 객체로 다시 변환하지 않고 직렬화된 JSON을 그대로 전송합니다.
+  postSerializedJson: <T>(path: string, serializedJson: string, options?: HttpRequestOptions) =>
+    request<T>(path, "POST", serializedJson, options),
   patch: <T>(path: string, data: unknown, options?: HttpRequestOptions) =>
     request<T>(path, "PATCH", JSON.stringify(data), options),
   postFormData: <T>(path: string, data: FormData, options?: HttpRequestOptions) =>
