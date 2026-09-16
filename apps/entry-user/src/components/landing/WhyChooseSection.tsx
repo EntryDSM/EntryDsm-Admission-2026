@@ -9,7 +9,7 @@ export const WhyChooseSection = () => {
       title: "[대덕소프트웨어마이스터고등학교] 학교 홍보 영상(2024)",
       date: "2024. 8. 8",
       image: vid1,
-      link: "https://www.youtube.com/watch?v=mboY1J44Q1o&t=13s",
+      link: "https://www.youtube.com/watch?v=mboY1J44Q1o&t",
     },
     {
       id: 2,
@@ -30,14 +30,14 @@ export const WhyChooseSection = () => {
       title: "[대덕소프트웨어마이스터고] 2025년 희망인재 캠프",
       date: " 2025. 7. 30",
       image: vid4,
-      link: "https://www.youtube.com/watch?v=sTPfkxt2G6c&t=17s",
+      link: "https://www.youtube.com/watch?v=sTPfkxt2G6c&t",
     },
     {
       id: 5,
       title: "(테마스페셜) 열아홉살에 프로입니다 - 대덕소프트웨어마이스터고등학교",
       date: "2025. 9. 11",
       image: vid5,
-      link: "https://www.youtube.com/watch?v=ms5I_xAbpCY&t=80s",
+      link: "https://www.youtube.com/watch?v=ms5I_xAbpCY&t",
     },
   ];
 
