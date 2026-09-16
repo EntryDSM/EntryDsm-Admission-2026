@@ -49,6 +49,9 @@ export const createNotice = (payload: CreateNoticePayload) => http.post<void>(AD
 export const updateNotice = (payload: UpdateNoticePayload, noticeId: number) =>
   http.patch<void>(`${ADMIN_NOTICES_ENDPOINT}/${noticeId}`, payload);
 
+/** 공지 삭제 */
+export const deleteNotice = (noticeId: number) => http.delete<void>(`${ADMIN_NOTICES_ENDPOINT}/${noticeId}`);
+
 /** QnA(자주 묻는 질문) 전체 조회 (페이지네이션) */
 export const getQnas = async (params: GetQnasParams = {}) => {
   const queryString = buildQueryString({ ...params });

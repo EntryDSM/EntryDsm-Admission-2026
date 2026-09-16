@@ -9,6 +9,7 @@ export * from "./useNotices";
 export * from "./useNoticeDetail";
 export * from "./useCreateNotice";
 export * from "./useUpdateNotice";
+export * from "./useDeleteNotice";
 export * from "./useQnas";
 export * from "./useQnaDetail";
 export * from "./useUpdateApplicantArrival";
