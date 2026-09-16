@@ -338,12 +338,12 @@ export const AppLayout = () => {
           // 학기별 입력값은 자동 저장만 하고, 마지막 성적 페이지에서 한 번에 서버로 전송합니다.
           break;
         case "/fourth-graduate":
-          // 명세의 body는 학기 하나이므로, 마지막 페이지에서 각 학기 객체를 같은 API로 전송합니다.
-          await Promise.all([
-            submitGrades(state.firstGraduate, "3-2"),
-            submitGrades(state.secondGraduate, "3-1"),
-            submitGrades(state.thirdGraduate, "2-2"),
-            submitGrades(state.fourthGraduate, "2-1"),
+          // 마지막 성적 페이지에서 네 학기 성적을 백엔드가 지정한 객체 형식으로 한 번에 전송합니다.
+          await submitGrades([
+            { formValues: state.firstGraduate, schoolSemester: "3-2" },
+            { formValues: state.secondGraduate, schoolSemester: "3-1" },
+            { formValues: state.thirdGraduate, schoolSemester: "2-2" },
+            { formValues: state.fourthGraduate, schoolSemester: "2-1" },
           ]);
           break;
         case "/first-prospective-graduate":
@@ -351,11 +351,11 @@ export const AppLayout = () => {
           // 학기별 입력값은 자동 저장만 하고, 마지막 성적 페이지에서 한 번에 서버로 전송합니다.
           break;
         case "/third-prospective-graduate":
-          // 명세의 body는 학기 하나이므로, 마지막 페이지에서 각 학기 객체를 같은 API로 전송합니다.
-          await Promise.all([
-            submitExpectedGrades(state.firstGraduateProspective, "3-1"),
-            submitExpectedGrades(state.secondGraduateProspective, "2-2"),
-            submitExpectedGrades(state.thirdGraduateProspective, "2-1"),
+          // 마지막 성적 페이지에서 세 학기 성적을 백엔드가 지정한 객체 형식으로 한 번에 전송합니다.
+          await submitExpectedGrades([
+            { formValues: state.firstGraduateProspective, schoolSemester: "3-1" },
+            { formValues: state.secondGraduateProspective, schoolSemester: "2-2" },
+            { formValues: state.thirdGraduateProspective, schoolSemester: "2-1" },
           ]);
           break;
         case "/ged/score":
