@@ -48,19 +48,6 @@ const requireGrade = (value: string | null): Grade => {
   return value;
 };
 
-type GradeRequest = SubmitExpectedGradesRequest | SubmitGradesRequest;
-
-// 백엔드 계약상 한 객체 안에 학기별 schoolSemester/subjects 키 쌍을 반복해 보냅니다.
-// JavaScript 객체는 중복 키를 보존하지 못하므로 request body를 직접 직렬화합니다.
-const serializeGradeRequests = (grades: GradeRequest[]) => {
-  const fields = grades.flatMap(({ schoolSemester, subjects }) => [
-    `"schoolSemester":${JSON.stringify(schoolSemester)}`,
-    `"subjects":${JSON.stringify(subjects)}`,
-  ]);
-
-  return `{${fields.join(",")}}`;
-};
-
 // 화면의 짧은 과목 키를 서버 요청의 영문 필드명으로 변환합니다.
 const expectedGradesRequest = (
   formValues: ExpectedGradeFormValues,
@@ -82,14 +69,12 @@ const expectedGradesRequest = (
   };
 };
 
-// 마지막 성적 페이지에서 모든 학기 성적을 하나의 객체 body로 전송합니다.
-export const submitExpectedGrades = async (grades: SubmitExpectedGradesVariables[]) =>
-  Http.postSerializedJson<void>(
-    expectedGradesPath,
-    serializeGradeRequests(
-      grades.map(({ formValues, schoolSemester }) => expectedGradesRequest(formValues, schoolSemester))
-    )
-  );
+// 마지막 성적 페이지에서 모든 학기를 순서대로 저장합니다. 각 요청은 명세의 단일 학기 body를 사용합니다.
+export const submitExpectedGrades = async (grades: SubmitExpectedGradesVariables[]) => {
+  for (const { formValues, schoolSemester } of grades) {
+    await Http.post<void>(expectedGradesPath, expectedGradesRequest(formValues, schoolSemester));
+  }
+};
 
 export const useSubmitExpectedGrades = () =>
   useMutation({
@@ -125,12 +110,12 @@ const gradesRequest = (
   };
 };
 
-// 마지막 성적 페이지에서 모든 학기 성적을 하나의 객체 body로 전송합니다.
-export const submitGrades = async (grades: SubmitGradesVariables[]) =>
-  Http.postSerializedJson<void>(
-    gradesPath,
-    serializeGradeRequests(grades.map(({ formValues, schoolSemester }) => gradesRequest(formValues, schoolSemester)))
-  );
+// 마지막 성적 페이지에서 모든 학기를 순서대로 저장합니다. 각 요청은 명세의 단일 학기 body를 사용합니다.
+export const submitGrades = async (grades: SubmitGradesVariables[]) => {
+  for (const { formValues, schoolSemester } of grades) {
+    await Http.post<void>(gradesPath, gradesRequest(formValues, schoolSemester));
+  }
+};
 
 export const useSubmitGrades = () =>
   useMutation({
