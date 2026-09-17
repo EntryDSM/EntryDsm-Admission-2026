@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import type { Schedule } from "../../apis/schedule";
@@ -68,7 +69,7 @@ const TimelineWrapper = styled.div`
 const DesktopTimeline = styled.div`
   display: block;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     display: none;
   }
 `;
@@ -77,7 +78,7 @@ const TimelineContainer = styled.div`
   width: 100%;
   height: 60px;
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     height: 50px;
   }
 `;
@@ -92,7 +93,7 @@ const TimelineInset = styled.div`
     padding: 0 60px;
   }
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     padding: 0 40px;
   }
 `;
@@ -112,7 +113,7 @@ const TimelineLine = styled.div`
   background: ${colors.orange[700]};
   transform: translateY(-50%);
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     height: 2px;
   }
 `;
@@ -144,7 +145,7 @@ const TimelineDot = styled.div`
   position: relative;
   z-index: 2;
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     width: 10px;
     height: 10px;
   }
@@ -159,7 +160,7 @@ const TimelineLabel = styled.div`
   text-align: center;
   white-space: nowrap;
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     top: -50px;
   }
 `;
@@ -176,7 +177,7 @@ const LabelTitle = styled.div`
     font-size: 20px;
   }
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     font-size: 18px;
     transform: translateY(-8px);
   }
@@ -192,7 +193,7 @@ const LabelDate = styled.div`
     font-size: 16px;
   }
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     font-size: 14px;
   }
 `;
@@ -201,7 +202,7 @@ const LabelDate = styled.div`
 const MobileTimeline = styled.div`
   display: none;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -217,7 +218,7 @@ const MobileItem = styled.div`
   gap: 15px;
   padding: 10px 0;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     gap: 12px;
     padding: 8px 0;
   }
@@ -236,7 +237,7 @@ const MobileNumber = styled.div`
   font-weight: 700;
   flex-shrink: 0;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     width: 28px;
     height: 28px;
     font-size: 14px;
@@ -255,7 +256,7 @@ const MobileTitle = styled.div`
   font-weight: 700;
   color: white;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;
@@ -265,7 +266,7 @@ const MobileDate = styled.div`
   font-weight: 500;
   color: ${colors.orange[400]};
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 12px;
   }
 `;

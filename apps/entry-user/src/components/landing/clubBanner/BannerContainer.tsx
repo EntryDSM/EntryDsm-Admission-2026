@@ -1,3 +1,4 @@
+import { media } from "../../../styles/breakpoints";
 import { useState } from "react";
 import styled from "@emotion/styled";
 import { BannerSelector } from "./BannerSelector";
@@ -45,11 +46,11 @@ const SelectorSection = styled.div`
     padding: 20px 60px 16px 60px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 10px 40px 12px 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 15px 20px 8px 20px;
   }
 `;
@@ -62,11 +63,11 @@ const BannerSection = styled.div`
     padding: 16px 60px 50px 60px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 0 30px 0 30px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 8px 20px 10px 20px;
   }
 `;

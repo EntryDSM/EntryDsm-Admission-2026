@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { VideoBanner } from "@entry/ui";
@@ -32,12 +33,12 @@ const MentContainer = styled.div`
     padding: 60px 0;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     margin: 50px 40px 40px 40px;
     padding: 40px 0;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     margin: 30px 20px 20px 20px;
     padding: 30px 0;
   }
@@ -52,12 +53,12 @@ const Middle = styled.div`
   font-weight: 700;
   margin-bottom: 32px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 40px;
     margin-bottom: 24px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 32px;
     margin-bottom: 20px;
   }
@@ -68,12 +69,12 @@ const Top = styled.h2`
   font-weight: 700;
   margin-bottom: 15px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 32px;
     margin-bottom: 12px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 24px;
     margin-bottom: 10px;
   }
@@ -90,11 +91,11 @@ const Line = styled.div`
   color: #666;
   line-height: 1.1;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 15px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;

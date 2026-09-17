@@ -1,3 +1,4 @@
+import { media } from "../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { RecruitmentSchedule } from "@entry/ui";
@@ -104,7 +105,7 @@ const Container = styled.div`
     padding-right: 20px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding-top: 32px;
   }
 
@@ -139,7 +140,7 @@ const PageTitle = styled.h2`
   font-weight: 700;
   color: ${colors.gray[500]};
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 26px;
   }
 `;
@@ -156,7 +157,7 @@ const ScheduleTitle = styled.h3`
   color: ${colors.orange[800]};
   margin-bottom: 12px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 20px;
   }
 `;

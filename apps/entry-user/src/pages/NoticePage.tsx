@@ -1,7 +1,9 @@
+import { media } from "../styles/breakpoints";
 import { useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
-import { NoticePinIcon, TabSection } from "@entry/ui";
+import { NoticePinIcon } from "@entry/ui";
+import { ResponsiveTabSection } from "../components/ResponsiveTabSection";
 import { useNavigate } from "react-router";
 import { useGetAllNotice, type NoticeCategory } from "../apis";
 
@@ -52,7 +54,7 @@ export const NoticePage = () => {
         </TitleSection>
 
         <Flex gap={40} isColumn={true} width="100%" height="auto">
-          <TabSection options={TAB_OPTIONS} activeType={activeTab} onTypeChange={handleTabChange} />
+          <ResponsiveTabSection options={TAB_OPTIONS} activeType={activeTab} onTypeChange={handleTabChange} />
 
           <TableContainer>
             <TableHeader>
@@ -99,13 +101,20 @@ const PageContainer = styled.div`
   display: flex;
   justify-content: center;
   padding: 40px 0;
+
+  ${media.tablet} {
+    padding: 28px 0;
+  }
 `;
 
 const ContentWrapper = styled.div`
-  width: 1200px;
-  max-width: 90%;
+  width: min(1200px, calc(100% - 48px));
   display: flex;
   flex-direction: column;
+
+  ${media.medium} {
+    width: calc(100% - 32px);
+  }
 `;
 
 const TitleSection = styled.div`
@@ -117,12 +126,26 @@ const Title = styled.h1`
   font-weight: 700;
   margin: 0;
   color: inherit;
+
+  ${media.tablet} {
+    font-size: 26px;
+  }
+
+  ${media.medium} {
+    font-size: 24px;
+  }
 `;
 
 const SubTitle = styled.p`
   font-size: 16px;
   color: ${colors.gray[400]};
   margin: 12px 0 40px 0;
+
+  ${media.medium} {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
 `;
 
 const TableContainer = styled.div`
@@ -137,6 +160,10 @@ const TableHeader = styled.div`
   font-weight: 600;
   font-size: 15px;
   background-color: white;
+
+  ${media.medium} {
+    font-size: 13px;
+  }
 `;
 
 const TableBody = styled.div`
@@ -154,6 +181,8 @@ const TableRow = styled.button`
   border-bottom: 1px solid ${colors.gray[200]};
   cursor: pointer;
   transition: background-color 0.2s ease;
+
+  min-width: 0;
 
   &:hover {
     background-color: ${colors.gray[50]};
@@ -179,21 +208,40 @@ const NoDataRow = styled.div`
 
 const ColumnNum = styled.div`
   width: 100px;
+  flex-shrink: 0;
   text-align: center;
   color: ${colors.gray[500]};
+
+  ${media.tablet} {
+    width: 52px;
+  }
 `;
 
 const ColumnTitle = styled.div`
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   color: ${colors.gray[500]};
+
+  overflow-wrap: anywhere;
+
+  ${media.medium} {
+    font-size: 14px;
+    line-height: 1.4;
+  }
 `;
 
 const ColumnDate = styled.div`
   width: 150px;
+  flex-shrink: 0;
   text-align: center;
   color: ${colors.gray[400]};
+
+  ${media.tablet} {
+    width: 86px;
+    font-size: 12px;
+  }
 `;
 
 const NewIconWrapper = styled.span`

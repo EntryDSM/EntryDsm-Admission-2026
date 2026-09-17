@@ -1,3 +1,4 @@
+import { media } from "../styles/breakpoints";
 import { useState, useCallback } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
@@ -369,13 +370,20 @@ const PageContainer = styled.div`
   display: flex;
   justify-content: center;
   padding: 40px 0 200px 0;
+
+  ${media.tablet} {
+    padding: 28px 0 80px;
+  }
 `;
 
 const ContentWrapper = styled.div`
-  width: 1540px;
-  max-width: 90%;
+  width: min(1540px, calc(100% - 48px));
   display: flex;
   flex-direction: column;
+
+  ${media.medium} {
+    width: calc(100% - 32px);
+  }
 `;
 
 const UserName = styled.h1`
@@ -383,6 +391,14 @@ const UserName = styled.h1`
   font-weight: 700;
   margin: 0;
   color: inherit;
+
+  ${media.tablet} {
+    font-size: 26px;
+  }
+
+  ${media.medium} {
+    font-size: 24px;
+  }
 `;
 
 const PhoneNumber = styled.div`
@@ -405,6 +421,11 @@ const SettingsTitle = styled.h2`
   font-weight: 600;
   color: inherit;
   margin: 80px 0 0 0;
+
+  ${media.tablet} {
+    margin-top: 48px;
+    font-size: 18px;
+  }
 `;
 
 const SettingsSection = styled.div`
@@ -418,16 +439,28 @@ const SettingsRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  gap: 16px;
+
+  ${media.tablet} {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 `;
 
 const SettingsLabel = styled.span`
   font-size: 20px;
   color: inherit;
+
+  ${media.tablet} {
+    font-size: 16px;
+  }
 `;
 
 const SettingsButtonGroup = styled.div`
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 `;
 
 const ApplicationStatusSection = styled.div`
@@ -442,6 +475,10 @@ const StatusTitle = styled.h3`
   font-weight: 600;
   color: ${colors.gray[500]};
   margin: 0;
+
+  ${media.tablet} {
+    font-size: 20px;
+  }
 `;
 
 const StatusBox = styled.div`
@@ -451,12 +488,20 @@ const StatusBox = styled.div`
   padding: 20px 40px;
   background-color: ${colors.gray[100]};
   border-radius: 12px;
+
+  ${media.tablet} {
+    padding: 20px;
+  }
 `;
 
 const ApplicationType = styled.span`
   font-size: 20px;
   font-weight: 500;
   color: ${colors.gray[500]};
+
+  ${media.tablet} {
+    font-size: 16px;
+  }
 `;
 
 const Divider = styled.div`
@@ -476,12 +521,20 @@ const StatusLabel = styled.span`
   font-size: 24px;
   font-weight: 600;
   color: ${colors.gray[500]};
+
+  ${media.tablet} {
+    font-size: 18px;
+  }
 `;
 
 const StatusValue = styled.span<{ isSubmitted: boolean }>`
   font-size: 24px;
   font-weight: 600;
   color: ${({ isSubmitted }) => (isSubmitted ? colors.orange[800] : colors.gray[400])};
+
+  ${media.tablet} {
+    font-size: 18px;
+  }
 `;
 
 const InputModalOverlay = styled.div`
@@ -503,18 +556,34 @@ const InputModal = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+
+  ${media.medium} {
+    padding: 24px;
+  }
 `;
 
 const ModalTitle = styled.h2`
   margin: 0;
   font-size: 28px;
   color: ${colors.gray[500]};
+
+  ${media.medium} {
+    font-size: 22px;
+  }
 `;
 
 const ModalDescription = styled.p`
   margin: -8px 0 4px;
   font-size: 16px;
   color: ${colors.gray[400]};
+
+  ${media.medium} {
+    font-size: 14px;
+    line-height: 1.5;
+  }
 `;
 
 const InputGroup = styled.div`

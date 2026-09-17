@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import React from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
@@ -54,14 +55,14 @@ const Container = styled.div`
     padding: 50px 80px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     flex-direction: column;
     gap: 40px;
     padding: 40px 40px;
     align-items: center;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     gap: 30px;
     padding: 30px 20px;
   }
@@ -74,7 +75,7 @@ const StatCard = styled.div`
   text-align: left;
   flex: 1;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     align-items: center;
     text-align: center;
     max-width: 300px;
@@ -84,11 +85,11 @@ const StatCard = styled.div`
 const IconWrapper = styled.div`
   margin-bottom: 20px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     margin-bottom: 16px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     margin-bottom: 12px;
   }
 `;
@@ -106,7 +107,7 @@ const Icon = styled.div<{ isText?: boolean }>`
     object-fit: contain;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 40px;
     transform: ${props => (props.isText ? "translateY(-6px)" : "none")};
 
@@ -116,7 +117,7 @@ const Icon = styled.div<{ isText?: boolean }>`
     }
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 32px;
     transform: ${props => (props.isText ? "translateY(-4px)" : "none")};
 
@@ -132,12 +133,12 @@ const Title = styled.h3`
   font-weight: 600;
   margin: 0 0 15px 0;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 18px;
     margin-bottom: 12px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
     margin-bottom: 10px;
   }
@@ -150,11 +151,11 @@ const Description = styled.p`
   margin: 0;
   white-space: pre-wrap;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 13px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 12px;
   }
 `;

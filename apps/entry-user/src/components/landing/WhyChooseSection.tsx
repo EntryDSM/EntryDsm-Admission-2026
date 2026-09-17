@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { vid1, vid2, vid3, vid4, vid5 } from "../../assets/landing/schoolVideo/index";
@@ -86,11 +87,11 @@ const Subtitle = styled.p`
   text-align: left;
   margin-bottom: 50px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 15px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;

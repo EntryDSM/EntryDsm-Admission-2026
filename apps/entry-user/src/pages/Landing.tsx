@@ -1,3 +1,4 @@
+import { media } from "../styles/breakpoints";
 import { useState, useEffect, useRef } from "react";
 import styled from "@emotion/styled";
 import { keyframes, css } from "@emotion/react";
@@ -157,13 +158,13 @@ const ArrowContainer = styled.div`
     height: 100%;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     width: 30px;
     height: 30px;
     bottom: 30px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     width: 25px;
     height: 25px;
     bottom: 25px;
@@ -179,12 +180,12 @@ const Middle = styled.div`
   font-weight: 700;
   margin-bottom: 32px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 40px;
     margin-bottom: 24px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 32px;
     margin-bottom: 20px;
   }
@@ -195,12 +196,12 @@ const Top = styled.div`
   font-weight: 700;
   margin-bottom: 15px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 32px;
     margin-bottom: 12px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 24px;
     margin-bottom: 10px;
   }
@@ -217,11 +218,11 @@ const Line = styled.div`
   color: #666;
   line-height: 1.1;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 15px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;
@@ -246,12 +247,12 @@ const MentContainer = styled.div`
     padding: 60px 0;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     margin: 0 40px 5px 40px;
     padding: 40px 0;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     margin: 0 20px 5px 20px;
     padding: 30px 0;
   }
@@ -312,12 +313,12 @@ const TextWrapper = styled.div`
   justify-content: center;
   align-items: center;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     height: 80px;
     padding: 0 15px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     height: 60px;
     padding: 0 10px;
   }
@@ -378,18 +379,18 @@ const AnimatedText = styled.div<{ show: boolean; fadeOut?: boolean }>`
   z-index: ${props => (props.show ? 2 : 0)};
   pointer-events: ${props => (props.show ? "auto" : "none")};
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     font-size: 56px;
     max-width: 95%;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 42px;
     line-height: 1.3;
     max-width: 95%;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 28px;
     line-height: 1.2;
     max-width: 98%;
@@ -397,7 +398,7 @@ const AnimatedText = styled.div<{ show: boolean; fadeOut?: boolean }>`
     white-space: normal;
   }
 
-  @media (max-width: 360px) {
+  ${media.small} {
     font-size: 24px;
     line-height: 1.1;
   }
@@ -450,13 +451,13 @@ const RightMentContainer = styled.div`
     padding: 60px 0;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     margin: 50px 40px 5px 40px;
     padding: 40px 0;
     text-align: left;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     margin: 20px 20px 5px 20px;
     padding: 30px 0;
     text-align: left;
