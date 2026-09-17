@@ -288,7 +288,6 @@ export const AppLayout = () => {
           const { fileId } = await updateApplicantPersonalProfile({ file });
 
           await updateApplicantPersonalInformation({
-            applicantId,
             photoFileId: fileId,
             name: applicantName,
             phoneNumber: applicantNumber,

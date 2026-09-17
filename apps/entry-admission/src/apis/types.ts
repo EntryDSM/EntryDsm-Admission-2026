@@ -315,7 +315,6 @@ export interface UpdateApplicantPersonalProfileResponse {
 }
 
 export interface UpdateApplicantPersonalInformationRequest {
-  applicantId: number;
   photoFileId: number;
   name: string;
   phoneNumber: string;
