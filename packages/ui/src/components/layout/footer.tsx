@@ -51,15 +51,25 @@ const FooterContainer = styled.footer`
   width: 100%;
   background-color: ${colors.gray[100]};
   padding: 24px 0;
+
+  @media (max-width: 768px) {
+    padding: 20px 0;
+  }
 `;
 
 const FooterContent = styled.div`
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: 480px) {
+    padding: 0 16px;
+    gap: 12px;
+  }
 `;
 
 const EntryDSMText = styled.h2`
@@ -73,23 +83,41 @@ const LogoContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
 `;
 
 const LogoText = styled.span`
   font-size: 24px;
   font-weight: 600;
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
 `;
 
 const FooterInfoSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  min-width: 0;
 `;
 
 const AddressText = styled.p`
   font-size: 14px;
   color: ${colors.gray[500]};
   margin: 0;
+
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 const ContactInfoRow = styled.div`
@@ -101,6 +129,14 @@ const ContactText = styled.p`
   font-size: 14px;
   color: ${colors.gray[500]};
   margin: 0;
+
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 const CopyrightText = styled.p`
@@ -108,4 +144,11 @@ const CopyrightText = styled.p`
   color: ${colors.gray[500]};
   margin-top: 8px;
   margin-bottom: 0;
+
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
