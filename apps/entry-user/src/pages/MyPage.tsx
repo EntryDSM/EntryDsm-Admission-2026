@@ -2,15 +2,13 @@ import { media } from "../styles/breakpoints";
 import { useState, useCallback } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AUTH_APP_URL, Btn, CancelModal, ShowResultModal, USER_APP_URL, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
 import {
   type ApplicantStatus,
-  type ApplicationDownload,
-  cancelApplication,
   deleteMyAccount,
-  getApplicationDownload,
+  getApplicationDocument,
   getApplicationResult,
   getApplicationStatus,
   getMyAccount,
@@ -36,10 +34,6 @@ export const MyPage = () => {
     download: false,
   });
   const [isPass, setIsPass] = useState(false);
-  const [receiptCode, setReceiptCode] = useState("");
-  const [cancellationEmail, setCancellationEmail] = useState("");
-  const [cancellationPassword, setCancellationPassword] = useState("");
-  const queryClient = useQueryClient();
 
   const openModalHandler = useCallback((modalName: keyof typeof openModal) => {
     setOpenModal(prev => ({ ...prev, [modalName]: true }));
@@ -81,62 +75,25 @@ export const MyPage = () => {
     },
     onError: () => toast.error("로그아웃에 실패했습니다."),
   });
-  const cancelApplicationMutation = useMutation({
-    mutationFn: cancelApplication,
-    onSuccess: () => {
-      toast.success("원서 접수가 취소되었습니다.");
-      setCancellationPassword("");
-      closeModalHandler("cancelCredentials");
-      void queryClient.invalidateQueries({ queryKey: ["application-status"] });
-    },
-    onError: () => toast.error("원서 접수 취소에 실패했습니다."),
-  });
-  const downloadApplicationMutation = useMutation<ApplicationDownload, Error, string>({
-    mutationFn: receiptCode => getApplicationDownload(receiptCode),
-    onSuccess: download => {
-      window.open(download.downloadUrl, "_blank", "noopener,noreferrer");
-      closeModalHandler("download");
-    },
-    onError: () => toast.error("원서 다운로드 링크를 생성하지 못했습니다."),
-  });
 
   const applicantStatus = applicationStatus?.applicantStatus ?? userInfo?.applicantStatus ?? "NONE";
   const hasApplication = applicantStatus !== "NONE";
   const isSubmitted = SUBMITTED_STATUSES.includes(applicantStatus);
-  const canCancelApplication = applicantStatus === "SUBMITTED";
-
-  const handleDownloadApplication = () => {
-    openModalHandler("download");
-  };
-
-  const handleCancelApplication = () => {
-    closeModalHandler("cancelApplication");
-    openModalHandler("cancelCredentials");
-  };
-
-  const handleDownloadConfirm = () => {
-    if (!receiptCode.trim()) {
-      toast.error("수험번호를 입력해주세요.");
-      return;
-    }
-
-    downloadApplicationMutation.mutate(receiptCode.trim());
-  };
-
-  const handleCancelApplicationConfirm = () => {
-    if (!cancellationEmail.trim() || !cancellationPassword) {
-      toast.error("이메일과 비밀번호를 모두 입력해주세요.");
-      return;
-    }
-
-    cancelApplicationMutation.mutate({
-      email: cancellationEmail.trim(),
-      password: cancellationPassword,
-    });
-  };
 
   const handleChangePassword = () => {
     window.location.href = `${AUTH_APP_URL.replace(/\/$/, "")}/find-password`;
+  };
+
+  // applicantId 조회 api 나올 때까지 11로 고정
+  const handleDownloadApplication = async () => {
+    const document = await getApplicationDocument("11");
+
+    if (!document.exists) {
+      toast.error("원서 파일이 없습니다.");
+      return;
+    }
+
+    window.location.href = document.downloadUrl;
   };
 
   const handleCheckResult = async () => {
@@ -179,45 +136,29 @@ export const MyPage = () => {
             </StatusInfo>
           </StatusBox>
         </ApplicationStatusSection>
-
-        <ButtonGroup>
-          <Flex width="fit-content" height="fit-content" gap={12}>
-            <Btn
-              backgroundColor={colors.orange[800]}
-              color="#FFFFFF"
-              borderColor={colors.orange[800]}
-              hoverBackgroundColor={colors.orange[800]}
-              onClick={handleDownloadApplication}
-              isBlocked={!isSubmitted}
-            >
-              원서 다운로드
-            </Btn>
-            <Btn
-              backgroundColor={colors.gray[50]}
-              color={colors.orange[800]}
-              borderColor={colors.orange[800]}
-              hoverBackgroundColor="transparent"
-              onClick={handleCheckResult}
-              isBlocked={resultQuery.isFetching}
-            >
-              합격 결과 확인
-            </Btn>
-          </Flex>
-          {canCancelApplication && (
-            <Btn
-              backgroundColor={colors.gray[50]}
-              color={colors.extra.error}
-              borderColor={colors.extra.error}
-              hoverBackgroundColor="transparent"
-              onClick={() => openModalHandler("cancelApplication")}
-            >
-              원서 최종 제출 취소
-            </Btn>
-          )}
-        </ButtonGroup>
-
+        <Flex width="fit-content" height="fit-content" gap={12}>
+          <Btn
+            backgroundColor={colors.orange[800]}
+            color="#FFFFFF"
+            borderColor={colors.orange[800]}
+            hoverBackgroundColor={colors.orange[800]}
+            onClick={() => handleDownloadApplication()}
+            isBlocked={!isSubmitted}
+          >
+            원서 다운로드
+          </Btn>
+          <Btn
+            backgroundColor={colors.gray[50]}
+            color={colors.orange[800]}
+            borderColor={colors.orange[800]}
+            hoverBackgroundColor="transparent"
+            onClick={handleCheckResult}
+            isBlocked={resultQuery.isFetching}
+          >
+            합격 결과 확인
+          </Btn>
+        </Flex>
         <SettingsTitle>설정</SettingsTitle>
-
         <SettingsSection>
           <SettingsRow>
             <SettingsLabel>비밀번호</SettingsLabel>
@@ -266,98 +207,6 @@ export const MyPage = () => {
         onClick={() => deleteAccountMutation.mutate()}
       />
 
-      <CancelModal
-        setIsOpen={() => closeModalHandler("cancelApplication")}
-        isOpen={openModal.cancelApplication}
-        title="원서 접수를 취소하시겠습니까?"
-        content="취소 시 제출한 원서가 삭제되며, 다시 복구할 수 없습니다."
-        btnText="접수 취소"
-        onClick={handleCancelApplication}
-      />
-
-      {openModal.download && (
-        <InputModalOverlay>
-          <InputModal>
-            <ModalTitle>원서 다운로드</ModalTitle>
-            <ModalDescription>원서에 기재된 수험번호를 입력해주세요.</ModalDescription>
-            <InputGroup>
-              <InputLabel htmlFor="receipt-code">수험번호</InputLabel>
-              <ModalInput
-                id="receipt-code"
-                value={receiptCode}
-                onChange={event => setReceiptCode(event.target.value)}
-                placeholder="수험번호를 입력하세요"
-                disabled={downloadApplicationMutation.isPending}
-              />
-            </InputGroup>
-            <ModalButtonGroup>
-              <Btn
-                backgroundColor={colors.gray[50]}
-                color={colors.gray[500]}
-                borderColor={colors.gray[300]}
-                hoverBackgroundColor="transparent"
-                onClick={() => closeModalHandler("download")}
-              >
-                취소
-              </Btn>
-              <Btn onClick={handleDownloadConfirm} isBlocked={downloadApplicationMutation.isPending}>
-                {downloadApplicationMutation.isPending ? "생성 중..." : "다운로드"}
-              </Btn>
-            </ModalButtonGroup>
-          </InputModal>
-        </InputModalOverlay>
-      )}
-
-      {openModal.cancelCredentials && (
-        <InputModalOverlay>
-          <InputModal>
-            <ModalTitle>원서 접수 취소</ModalTitle>
-            <ModalDescription>취소를 위해 가입 이메일과 비밀번호를 입력해주세요.</ModalDescription>
-            <InputGroup>
-              <InputLabel htmlFor="cancellation-email">이메일</InputLabel>
-              <ModalInput
-                id="cancellation-email"
-                type="email"
-                value={cancellationEmail}
-                onChange={event => setCancellationEmail(event.target.value)}
-                placeholder="이메일을 입력하세요"
-                disabled={cancelApplicationMutation.isPending}
-              />
-            </InputGroup>
-            <InputGroup>
-              <InputLabel htmlFor="cancellation-password">비밀번호</InputLabel>
-              <ModalInput
-                id="cancellation-password"
-                type="password"
-                value={cancellationPassword}
-                onChange={event => setCancellationPassword(event.target.value)}
-                placeholder="비밀번호를 입력하세요"
-                disabled={cancelApplicationMutation.isPending}
-              />
-            </InputGroup>
-            <ModalButtonGroup>
-              <Btn
-                backgroundColor={colors.gray[50]}
-                color={colors.gray[500]}
-                borderColor={colors.gray[300]}
-                hoverBackgroundColor="transparent"
-                onClick={() => closeModalHandler("cancelCredentials")}
-              >
-                취소
-              </Btn>
-              <Btn
-                backgroundColor={colors.extra.error}
-                hoverBackgroundColor={colors.extra.error}
-                onClick={handleCancelApplicationConfirm}
-                isBlocked={cancelApplicationMutation.isPending}
-              >
-                {cancelApplicationMutation.isPending ? "취소 중..." : "접수 취소"}
-              </Btn>
-            </ModalButtonGroup>
-          </InputModal>
-        </InputModalOverlay>
-      )}
-
       <ShowResultModal isOpen={resultModal.isOpen} onClose={resultModal.close} isPass={isPass} />
     </PageContainer>
   );
@@ -405,15 +254,6 @@ const PhoneNumber = styled.div`
   font-size: 16px;
   color: ${colors.gray[400]};
   margin-top: 12px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
 `;
 
 const SettingsTitle = styled.h2`
@@ -535,84 +375,4 @@ const StatusValue = styled.span<{ isSubmitted: boolean }>`
   ${media.tablet} {
     font-size: 18px;
   }
-`;
-
-const InputModalOverlay = styled.div`
-  z-index: 120;
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  background-color: rgb(0 0 0 / 20%);
-`;
-
-const InputModal = styled.div`
-  width: min(100%, 440px);
-  padding: 40px;
-  border-radius: 24px;
-  background-color: ${colors.extra.realWhite};
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  max-height: calc(100dvh - 48px);
-  overflow-y: auto;
-
-  ${media.medium} {
-    padding: 24px;
-  }
-`;
-
-const ModalTitle = styled.h2`
-  margin: 0;
-  font-size: 28px;
-  color: ${colors.gray[500]};
-
-  ${media.medium} {
-    font-size: 22px;
-  }
-`;
-
-const ModalDescription = styled.p`
-  margin: -8px 0 4px;
-  font-size: 16px;
-  color: ${colors.gray[400]};
-
-  ${media.medium} {
-    font-size: 14px;
-    line-height: 1.5;
-  }
-`;
-
-const InputGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const InputLabel = styled.label`
-  font-size: 16px;
-  font-weight: 500;
-  color: ${colors.gray[500]};
-`;
-
-const ModalInput = styled.input`
-  padding: 12px 16px;
-  border: 1px solid ${colors.gray[300]};
-  border-radius: 8px;
-  font-size: 16px;
-  outline: none;
-
-  &:focus {
-    border-color: ${colors.orange[800]};
-  }
-`;
-
-const ModalButtonGroup = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
 `;

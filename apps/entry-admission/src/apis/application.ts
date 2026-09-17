@@ -75,11 +75,12 @@ export const updateApplicationClassification = async ({
   return Http.patch<UpdateApplicationClassificationResponse>(`${APPLICATIONS_ENDPOINT}/${applicantId}/type`, data);
 };
 
+// 증명사진 업로드 api
 export const updateApplicantPersonalProfile = async ({ file }: UpdateApplicantPersonalProfileRequest) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  return Http.postFormData<UpdateApplicantPersonalProfileResponse>(`/api/document/v11/photo`, formData);
+  return Http.postFormData<UpdateApplicantPersonalProfileResponse>(`/api/document/v11/photos`, formData);
 };
 
 // 지원자 정보를 저장합니다.
