@@ -52,12 +52,6 @@ const specialAdmissionTypes = {
   "해당 없음": "NONE",
 } as const;
 
-const guardianRelations = {
-  부: "FATHER",
-  모: "MOTHER",
-  기타: "OTHER",
-} as const;
-
 const getRequiredValue = <T,>(value: T | null | undefined, fieldName: string): T => {
   if (value === null || value === undefined) {
     throw new Error(`${fieldName} 값을 확인해 주세요.`);
@@ -303,14 +297,26 @@ export const AppLayout = () => {
           break;
         }
         case "/guardian-info": {
-          const { guardianName, guardianNumber, guardianGender, relationship, postalCode, address, addressDetail } =
-            state.guardianInfo;
+          const {
+            guardianName,
+            guardianNumber,
+            guardianGender,
+            relationship,
+            otherRelationship,
+            postalCode,
+            address,
+            addressDetail,
+          } = state.guardianInfo;
+          const selectedRelationship = getRequiredValue(relationship[0], "보호자 관계");
           await updateGuardianPersonalInformation({
             applicantId,
             guardianName,
             guardianPhoneNumber: guardianNumber,
             guardianGender: getMappedValue(genders, guardianGender, "보호자 성별"),
-            guardianRelation: getMappedValue(guardianRelations, String(relationship[0]), "보호자 관계"),
+            guardianRelation:
+              selectedRelationship === "기타"
+                ? getRequiredValue(otherRelationship, "지원자와의 관계(기타)")
+                : selectedRelationship,
             address: { zipCode: postalCode, addressBase: address, addressDetail },
           });
           break;
