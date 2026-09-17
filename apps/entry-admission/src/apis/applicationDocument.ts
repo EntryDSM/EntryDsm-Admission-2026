@@ -18,7 +18,7 @@ export interface GetApplicationDocumentResponse {
 export const getApplicationDocument = async (applicantId: string) =>
   Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}/${applicantId}`);
 
-// receiptCode별 조회 결과를 React Query 캐시에 분리하기 위한 키입니다.
+// applicantId별 조회 결과를 React Query 캐시에 분리하기 위한 키입니다.
 export const applicationDocumentQueryKey = (applicantId: string) => ["application-document", applicantId] as const;
 
 // key가 URL이면 그대로 사용하고, 저장소 상대 경로면 API 서버 기준 URL로 만듭니다.

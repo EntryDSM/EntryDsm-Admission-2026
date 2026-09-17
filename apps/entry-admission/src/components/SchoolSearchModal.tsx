@@ -1,4 +1,3 @@
-//TODO: 나중에 검색 api 연동할 시 다시 사용 예정
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import React, { useRef, useState } from "react";
@@ -67,8 +66,9 @@ export const SchoolSearchModal = ({
       toast.error("학교 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
       return;
     }
+    const schools = result.data?.schools ?? [];
 
-    setDatas(result.data ?? []);
+    setDatas(schools.filter(school => school.name.includes(searchValue.trim())));
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -113,12 +113,6 @@ export const SchoolSearchModal = ({
                 <Content type="button" onClick={() => contentClick(data.name, data.code)} key={data.code}>
                   <Text>{data.name}</Text>
                   <Text color={colors.orange[800]}>{data.code}</Text>
-                  <Text color={colors.gray[400]} fontWeight={400}>
-                    {data.address}
-                  </Text>
-                  <Text color={colors.gray[400]} fontWeight={400}>
-                    {data.information}
-                  </Text>
                   {tempSelectedCode === data.code || selectedCode === data.code ? (
                     <Check />
                   ) : (
