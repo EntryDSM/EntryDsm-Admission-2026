@@ -3,15 +3,14 @@ import styled from "@emotion/styled";
 import { getApplicationDocumentUrl, getStartedApplicantId, useApplicationDocument } from "../../apis";
 
 export const ApplicationPreview = () => {
-  // receiptCode API가 확정되기 전까지 현재 작성 원서의 applicantId를 조회 식별자로 사용합니다.
-  const receiptCode = getStartedApplicantId()?.toString();
-  const { data: applicationDocument, isError, isPending } = useApplicationDocument(receiptCode);
-  const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.key) : null;
+  const applicantId = getStartedApplicantId()?.toString();
+  const { data: applicationDocument, isError, isPending } = useApplicationDocument(applicantId);
+  const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.downloadUrl) : null;
   const isPdf = applicationDocument?.fileName.toLowerCase().endsWith(".pdf");
 
   return (
     <Container>
-      {!receiptCode ? (
+      {!applicantId ? (
         <ApplicationLoadingContainer>
           <Text fontSize={20} color={colors.gray[400]}>
             작성 중인 원서 정보를 찾을 수 없습니다.
