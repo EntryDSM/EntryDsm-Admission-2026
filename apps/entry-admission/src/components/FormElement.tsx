@@ -144,7 +144,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
   const hasValue = (() => {
     switch (type) {
       case "input":
-        return !isEmptyValue(props.value);
+        return props.isComplete ?? !isEmptyValue(props.value);
       case "textArea":
         return !isEmptyValue(props.textAreaValue);
       case "imgSelector":
