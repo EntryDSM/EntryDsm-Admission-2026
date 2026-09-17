@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import styled from "@emotion/styled";
 import { useState } from "react";
 import { colors } from "@entry/design";
@@ -164,7 +165,7 @@ const Question = styled.div`
   gap: 12px;
   align-items: center;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
   }
 `;
@@ -189,7 +190,7 @@ const Answer = styled.div<{ isOpen: boolean }>`
   word-break: keep-all;
   overflow-wrap: break-word;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;

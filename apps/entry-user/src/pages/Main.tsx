@@ -1,3 +1,4 @@
+import { media } from "../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { useQuery } from "@tanstack/react-query";
@@ -117,7 +118,7 @@ const ContentWrapper = styled.div`
   text-align: center;
   padding: 0 20px;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 0 15px;
   }
 `;
@@ -134,7 +135,7 @@ const Title = styled.h1`
     margin-bottom: 100px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 36px;
     margin-bottom: 80px;
 
@@ -143,13 +144,13 @@ const Title = styled.h1`
     }
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 28px;
     margin-bottom: 60px;
     line-height: 1.3;
   }
 
-  @media (max-width: 360px) {
+  ${media.small} {
     font-size: 24px;
     margin-bottom: 50px;
   }
@@ -164,7 +165,7 @@ const TimelineSection = styled.div`
   width: 100%;
   margin-top: 50px;
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     margin-top: 40px;
   }
 `;
@@ -202,21 +203,21 @@ const ApplyButton = styled.button`
     padding: 15px 35px;
   }
 
-  @media (max-width: 1024px) {
+  ${media.desktop} {
     width: 170px;
     font-size: 17px;
     padding: 14px 30px;
     margin-top: 50px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     width: 200px;
     margin-top: 60px;
     padding: 16px 40px;
     font-size: 18px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     width: 180px;
     margin-top: 50px;
     padding: 14px 32px;
@@ -224,7 +225,7 @@ const ApplyButton = styled.button`
     border-radius: 12px;
   }
 
-  @media (max-width: 360px) {
+  ${media.small} {
     width: 160px;
     padding: 12px 28px;
     font-size: 14px;

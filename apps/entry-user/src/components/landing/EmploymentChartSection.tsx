@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
@@ -23,11 +24,11 @@ const Container = styled.div`
   padding: 80px 0;
   background: transparent;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 50px 0;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 40px 0;
   }
 `;
@@ -40,11 +41,11 @@ const ContentWrapper = styled.div`
     padding: 0 80px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 0 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 0 20px;
   }
 `;
@@ -56,11 +57,11 @@ const Title = styled.h2`
   color: ${colors.gray[500]};
   text-align: left;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 32px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 26px;
   }
 `;
@@ -76,7 +77,7 @@ const Subtitle = styled.p`
   margin-bottom: 60px;
   text-align: left;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 14px;
     margin-bottom: 40px;
     br {
@@ -84,7 +85,7 @@ const Subtitle = styled.p`
     }
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 13px;
     margin-bottom: 30px;
   }

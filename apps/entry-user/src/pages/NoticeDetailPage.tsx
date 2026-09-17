@@ -1,3 +1,4 @@
+import { media } from "../styles/breakpoints";
 import { useParams, useNavigate } from "react-router";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
@@ -113,13 +114,20 @@ const PageContainer = styled.div`
   display: flex;
   justify-content: center;
   padding: 40px 0;
+
+  ${media.tablet} {
+    padding: 28px 0;
+  }
 `;
 
 const ContentWrapper = styled.div`
-  width: 1200px;
-  max-width: 90%;
+  width: min(1200px, calc(100% - 48px));
   display: flex;
   flex-direction: column;
+
+  ${media.medium} {
+    width: calc(100% - 32px);
+  }
 `;
 
 const CategoryText = styled.p`
@@ -139,12 +147,27 @@ const Title = styled.h1`
   font-weight: 700;
   margin: 0 0 12px 0;
   color: inherit;
+
+  overflow-wrap: anywhere;
+
+  ${media.tablet} {
+    font-size: 24px;
+  }
+
+  ${media.medium} {
+    font-size: 22px;
+    line-height: 1.4;
+  }
 `;
 
 const DateText = styled.p`
   font-size: 16px;
   color: ${colors.gray[400]};
   margin: 0;
+
+  ${media.medium} {
+    font-size: 14px;
+  }
 `;
 
 const ContentSection = styled.div`
@@ -157,6 +180,11 @@ const ContentText = styled.div`
   color: ${colors.gray[500]};
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+
+  ${media.medium} {
+    font-size: 15px;
+    line-height: 1.7;
+  }
 `;
 
 const AttachmentsSection = styled.div`
@@ -191,6 +219,8 @@ const AttachmentItem = styled.div`
 const AttachmentName = styled.span`
   font-size: 14px;
   color: ${colors.gray[500]};
+  min-width: 0;
+  overflow-wrap: anywhere;
 `;
 
 const DownloadButton = styled.a`
@@ -198,6 +228,7 @@ const DownloadButton = styled.a`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     opacity: 0.8;

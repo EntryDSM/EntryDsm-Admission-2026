@@ -1,3 +1,4 @@
+import { media } from "../../styles/breakpoints";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
@@ -35,11 +36,11 @@ const Container = styled.div<{ backgroundImage: string }>`
   position: relative;
   margin-top: 130px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     height: 400px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     height: 350px;
   }
 `;
@@ -53,11 +54,11 @@ const ContentWrapper = styled.div`
     padding: 0 80px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 0 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 0 20px;
   }
 `;
@@ -69,11 +70,11 @@ const Title = styled.h2`
   color: ${colors.gray[100]};
   text-align: left;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 26px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 22px;
   }
 `;
@@ -85,12 +86,12 @@ const Subtitle = styled.h3`
   text-align: left;
   color: ${colors.gray[100]};
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 42px;
     margin-bottom: 30px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 32px;
     margin-bottom: 25px;
   }
@@ -107,12 +108,12 @@ const Description = styled.p`
   max-width: 800px;
   font-weight: 300;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 16px;
     line-height: 1.6;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
 
     br {
