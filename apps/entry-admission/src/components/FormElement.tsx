@@ -25,6 +25,7 @@ interface BaseFormElementProps {
 interface InputProps {
   type: "input";
   value?: string | number | null;
+  isComplete?: boolean;
   onInputChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   inputType?: "phone" | "number" | "text";
