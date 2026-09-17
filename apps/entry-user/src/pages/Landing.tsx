@@ -186,7 +186,7 @@ const Middle = styled.div`
   }
 
   ${media.medium} {
-    font-size: 32px;
+    font-size: clamp(25px, 7vw, 32px);
     margin-bottom: 20px;
   }
 `;
@@ -202,7 +202,7 @@ const Top = styled.div`
   }
 
   ${media.medium} {
-    font-size: 24px;
+    font-size: clamp(20px, 6vw, 24px);
     margin-bottom: 10px;
   }
 `;
@@ -217,6 +217,8 @@ const Line = styled.div`
   font-size: 18px;
   color: #666;
   line-height: 1.1;
+
+  overflow-wrap: anywhere;
 
   ${media.tablet} {
     font-size: 15px;

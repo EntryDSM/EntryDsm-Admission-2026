@@ -42,6 +42,7 @@ const Container = styled.div<{ backgroundImage: string }>`
 
   ${media.medium} {
     height: 350px;
+    margin-top: 64px;
   }
 `;
 

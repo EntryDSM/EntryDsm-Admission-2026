@@ -70,6 +70,10 @@ const Container = styled.div`
   max-width: 1500px;
   padding: 24px;
   margin: 0 auto;
+
+  ${media.medium} {
+    padding: 20px;
+  }
 `;
 
 const Title = styled.h2`
@@ -79,6 +83,19 @@ const Title = styled.h2`
   margin-bottom: 32px;
   text-align: left;
   margin-top: 180px;
+
+  ${media.tablet} {
+    font-size: 32px;
+    margin-top: 80px;
+    margin-bottom: 20px;
+  }
+
+  ${media.medium} {
+    font-size: 26px;
+    line-height: 1.35;
+    margin-top: 48px;
+    margin-bottom: 12px;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -93,6 +110,7 @@ const Subtitle = styled.p`
 
   ${media.medium} {
     font-size: 14px;
+    margin-bottom: 28px;
   }
 `;
 
@@ -107,6 +125,11 @@ const CardList = styled.div`
   padding-top: 10px;
   padding-bottom: 16px;
   scroll-behavior: smooth;
+
+  ${media.medium} {
+    gap: 12px;
+    scroll-snap-type: x proximity;
+  }
 
   &::-webkit-scrollbar {
     height: 9px;
@@ -129,13 +152,18 @@ const CardList = styled.div`
 
 const Card = styled.div`
   flex-shrink: 0;
-  width: 400px;
+  width: min(400px, calc(100vw - 40px));
   background: ${colors.orange[200]};
   border-radius: 16px;
   padding: 24px;
   transition: all 0.3s ease;
   transform: translateY(0);
   cursor: pointer;
+
+  ${media.medium} {
+    padding: 16px;
+    scroll-snap-align: start;
+  }
 
   &:hover {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
@@ -153,6 +181,10 @@ const CardImage = styled.img`
   height: 200px;
   object-fit: cover;
   border-radius: 12px;
+
+  ${media.medium} {
+    height: 160px;
+  }
 `;
 
 const CardTitle = styled.h3`
@@ -166,10 +198,19 @@ const CardTitle = styled.h3`
   overflow: hidden;
   text-align: left;
   line-height: 1.6;
+
+  ${media.medium} {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
 `;
 
 const CardSubtitle = styled.p`
   color: #6b7280;
   font-size: 16px;
   text-align: left;
+
+  ${media.medium} {
+    font-size: 14px;
+  }
 `;
