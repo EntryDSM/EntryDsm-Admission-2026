@@ -285,10 +285,11 @@ export const AppLayout = () => {
 
           const file = getRequiredValue(idPhoto, "증명사진");
 
-          const { fileId } = await updateApplicantPersonalProfile({ file });
+          const { id } = await updateApplicantPersonalProfile({ file });
 
           await updateApplicantPersonalInformation({
-            photoFileId: fileId,
+            applicantId,
+            photoFileId: id,
             name: applicantName,
             phoneNumber: applicantNumber,
             gender: getMappedValue(genders, gender, "성별"),

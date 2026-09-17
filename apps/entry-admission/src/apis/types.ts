@@ -308,13 +308,14 @@ export interface UpdateApplicantPersonalProfileRequest {
 }
 
 export interface UpdateApplicantPersonalProfileResponse {
-  fileId: number;
+  id: number;
   key: string;
   fileName: string;
   url: string;
 }
 
 export interface UpdateApplicantPersonalInformationRequest {
+  applicantId: number;
   photoFileId: number;
   name: string;
   phoneNumber: string;
