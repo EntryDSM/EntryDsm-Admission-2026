@@ -10,10 +10,11 @@ import { QueryKeys } from "../../apis/query";
 // 계정 전화번호를 직접 입력했을 때와 같은 하이픈 형식으로 맞춥니다. (InputContent phone 타입과 동일한 규칙)
 const formatAccountPhone = (phone: string) => {
   const onlyNums = phone.replace(/[^0-9]/g, "");
-  if (!onlyNums.startsWith("02")) {
-    if (onlyNums.length === 11) return onlyNums.replace(/^(\d{3})(\d{4})(\d{4})$/, "$1-$2-$3");
-    if (onlyNums.length === 10) return onlyNums.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
+  if (onlyNums.startsWith("02") && onlyNums.length === 10) {
+    return onlyNums.replace(/^(\d{2})(\d{4})(\d{4})$/, "$1-$2-$3");
   }
+  if (onlyNums.length === 11) return onlyNums.replace(/^(\d{3})(\d{4})(\d{4})$/, "$1-$2-$3");
+  if (onlyNums.length === 10) return onlyNums.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
   return onlyNums;
 };
 
