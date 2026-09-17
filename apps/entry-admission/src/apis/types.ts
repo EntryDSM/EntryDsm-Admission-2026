@@ -308,7 +308,7 @@ export interface UpdateApplicantPersonalProfileRequest {
 }
 
 export interface UpdateApplicantPersonalProfileResponse {
-  fileId: number;
+  id: number;
   key: string;
   fileName: string;
   url: string;
@@ -326,14 +326,12 @@ export interface UpdateApplicantPersonalInformationRequest {
 
 export type UpdateApplicantPersonalInformationResponse = null;
 
-export type GuardianRelation = "FATHER" | "MOTHER" | "OTHER";
-
 export interface UpdateGuardianPersonalInformationRequest {
   applicantId: number;
   guardianName: string;
   guardianPhoneNumber: string;
   guardianGender: ApplicantGender;
-  guardianRelation: GuardianRelation;
+  guardianRelation: string;
   address: {
     zipCode: string;
     addressBase: string;
