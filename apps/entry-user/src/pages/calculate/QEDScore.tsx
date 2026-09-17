@@ -30,7 +30,7 @@ export const QEDScore = () => {
             width="100%"
             fontSize={20}
             fontWeight={500}
-            inputWidth="473px"
+            inputWidth="min(100%, 473px)"
             value={safeData[key] ?? null}
             title={title}
             text={text}

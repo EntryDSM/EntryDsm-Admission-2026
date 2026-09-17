@@ -1,6 +1,6 @@
 ﻿import styled from "@emotion/styled";
 
-import { colors } from "@entry/design";
+import { colors, media } from "@entry/design";
 import { GradeSelector } from "./gradeSelector";
 
 interface IAllSubjectSelectorType {
@@ -18,7 +18,7 @@ export const AllSubjectSelector = ({ selected, onSelect }: IAllSubjectSelectorTy
 };
 
 const Container = styled.div`
-  width: 400px;
+  width: min(100%, 400px);
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -26,9 +26,21 @@ const Container = styled.div`
   margin-bottom: 10px;
   margin-left: auto;
   height: 30px;
+
+  ${media.tablet} {
+    width: 100%;
+  }
+
+  ${media.medium} {
+    height: auto;
+    justify-content: space-between;
+    gap: 8px;
+  }
 `;
 
 const Title = styled.div`
   font-size: 14px;
   color: ${colors.gray[400]};
+  flex-shrink: 0;
+  white-space: nowrap;
 `;

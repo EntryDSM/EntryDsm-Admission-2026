@@ -1,4 +1,4 @@
-import { media } from "../styles/breakpoints";
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -161,7 +161,7 @@ export const CalculateLayout = () => {
               <StepExplanation>{currentExplanation}</StepExplanation>
             </TitleSection>
             <NavigationSection>
-              <ScorePageNav datas={scoreNavData} />
+              <ScorePageNav datas={scoreNavData} compactOnMobile />
             </NavigationSection>
           </HeaderSection>
 
@@ -241,12 +241,19 @@ const HeaderSection = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 36px 20px;
+
+  ${media.tablet} {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
 `;
 
 const TitleSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 `;
 
 const StepTitle = styled.h1`
@@ -278,15 +285,15 @@ const StepExplanation = styled.p`
 const NavigationSection = styled.div`
   display: flex;
   flex: 1;
+  width: 100%;
   min-width: min(100%, 620px);
-  overflow-x: auto;
-
-  > div {
-    min-width: 620px;
-  }
 
   ${media.desktop} {
     min-width: 100%;
+  }
+
+  ${media.tablet} {
+    min-width: 0;
   }
 `;
 

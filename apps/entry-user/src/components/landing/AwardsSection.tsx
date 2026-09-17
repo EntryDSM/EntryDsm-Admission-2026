@@ -1,4 +1,4 @@
-import { media } from "../../styles/breakpoints";
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { Activity1, Activity2, Activity3, Activity4 } from "../../assets/landing/award";
 import { colors } from "@entry/design";

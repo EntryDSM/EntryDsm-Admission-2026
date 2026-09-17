@@ -1,4 +1,4 @@
-import { media } from "../styles/breakpoints";
+import { media } from "@entry/design";
 import { useState, useEffect, useRef } from "react";
 import styled from "@emotion/styled";
 import { keyframes, css } from "@emotion/react";

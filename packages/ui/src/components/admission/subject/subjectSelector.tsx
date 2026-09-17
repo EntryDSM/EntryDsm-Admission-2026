@@ -1,6 +1,6 @@
 ﻿import styled from "@emotion/styled";
 
-import { colors } from "@entry/design";
+import { colors, media } from "@entry/design";
 import { GradeSelector } from "./gradeSelector";
 
 interface ISubjectSelector {
@@ -32,11 +32,14 @@ const Container = styled.div`
   align-items: center;
   justify-content: space-between;
 
-  @media (max-width: 576px) {
-    flex-direction: column;
+  ${media.tablet} {
     height: auto;
-    align-items: flex-start;
-    padding: 15px;
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  ${media.medium} {
+    gap: 8px;
   }
 `;
 
@@ -44,13 +47,19 @@ const Label = styled.div`
   display: flex;
   align-items: center;
   gap: 22px;
+  flex-shrink: 0;
 `;
 
 const Subject = styled.div`
   font-size: 22px;
   font-weight: 450;
 
-  @media (max-width: 570px) {
+  ${media.tablet} {
     font-size: 18px;
+  }
+
+  ${media.medium} {
+    font-size: 15px;
+    white-space: nowrap;
   }
 `;

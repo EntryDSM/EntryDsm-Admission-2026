@@ -1,4 +1,4 @@
-import { media } from "../../styles/breakpoints";
+import { media } from "@entry/design";
 import React from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";

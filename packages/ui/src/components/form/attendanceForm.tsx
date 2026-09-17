@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 
-import { colors, Text } from "@entry/design";
+import { colors, media, Text } from "@entry/design";
 import { Check } from "../../assets";
 
 interface IAttendanceFormType {
@@ -91,22 +91,38 @@ export const AttendanceForm: React.FC<IAttendanceFormType> = ({
 
 const Container = styled.div<{ width: string; layout: "column" | "row" }>`
   width: ${({ width }) => width};
+  max-width: 100%;
   margin-bottom: 16px;
   display: flex;
   flex-direction: ${({ layout }) => (layout === "row" ? "row" : "column")};
   justify-content: ${({ layout }) => (layout === "row" ? "space-between" : "flex-start")};
   gap: 10px;
+
+  ${media.tablet} {
+    flex-direction: column;
+  }
 `;
 
 const HeaderRow = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+
+  min-width: 0;
+
+  ${media.medium} {
+    gap: 12px;
+
+    > *:last-child {
+      font-size: 16px;
+    }
+  }
 `;
 
 const InputWrapper = styled.div<{ layout: "column" | "row"; inputWidth: string }>`
   position: relative;
   width: ${({ layout, inputWidth }) => (layout === "row" ? inputWidth : "100%")};
+  max-width: 100%;
 `;
 
 const StyledInput = styled.input<{

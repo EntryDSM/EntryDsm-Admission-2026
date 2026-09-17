@@ -1,4 +1,4 @@
-import { media } from "../../styles/breakpoints";
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { vid1, vid2, vid3, vid4, vid5 } from "../../assets/landing/schoolVideo/index";
