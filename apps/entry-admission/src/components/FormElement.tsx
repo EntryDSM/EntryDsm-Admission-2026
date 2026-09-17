@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { colors, Flex, Text } from "@entry/design";
+import { isEmptyValue } from "@entry/utils";
 import styled from "@emotion/styled";
 import {
   AddressContent,
@@ -52,6 +53,7 @@ interface DropDownProps {
   dropDownDatas: { label: string; content: (string | number)[] }[];
   dropDownValues?: (string | number)[];
   onDropDownChange?: (values: (string | number)[]) => void;
+  disabled?: boolean;
 }
 
 interface ImageProps {
@@ -96,7 +98,8 @@ const DropDownSection = React.memo<{
   dropDownDatas: { label: string; content: (string | number)[] }[];
   dropDownValues?: (string | number)[];
   onDropDownChange?: (values: (string | number)[]) => void;
-}>(({ dropDownDatas, dropDownValues = [], onDropDownChange }) => {
+  disabled?: boolean;
+}>(({ dropDownDatas, dropDownValues = [], onDropDownChange, disabled }) => {
   const defaultValues = useMemo(() => dropDownDatas.map(data => data.content[0]), [dropDownDatas]);
 
   const currentValues = dropDownValues.length > 0 ? dropDownValues : defaultValues;
@@ -124,6 +127,7 @@ const DropDownSection = React.memo<{
           datas={Array.isArray(data.content) ? data.content : [data.content]}
           label={data.label}
           value={currentValues[index]}
+          disabled={disabled}
           onChange={value => handleDropDownChange(index, value)}
         />
       ))}
@@ -135,12 +139,13 @@ export const FormElement = React.memo<FormElementProps>(props => {
   const { label, explanation, type, width, sideContent } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // 텍스트 입력값은 "다음" 버튼 검증(isEmptyValue)과 같은 기준을 써서 공백만 입력해도 체크가 켜지지 않게 합니다.
   const hasValue = (() => {
     switch (type) {
       case "input":
-        return props.value !== null && props.value !== undefined && props.value !== "";
+        return !isEmptyValue(props.value);
       case "textArea":
-        return typeof props.textAreaValue === "string" && props.textAreaValue.trim() !== "";
+        return !isEmptyValue(props.textAreaValue);
       case "imgSelector":
         return !!props.imgUrl;
       case "radio":
@@ -148,22 +153,12 @@ export const FormElement = React.memo<FormElementProps>(props => {
       case "dropDown":
         return (props.dropDownValues?.length ?? 0) > 0;
       case "search":
-        return (
-          props.selectedName !== null &&
-          props.selectedName !== undefined &&
-          props.selectedName !== "" &&
-          props.selectedCode !== null &&
-          props.selectedCode !== undefined &&
-          props.selectedCode !== ""
-        );
+        return !isEmptyValue(props.selectedName) && !isEmptyValue(props.selectedCode);
       case "address":
         return (
-          props.addressDetailValue !== null &&
-          props.addressValue !== null &&
-          props.postalCodeValue !== null &&
-          props.addressDetailValue !== "" &&
-          props.addressValue !== "" &&
-          props.postalCodeValue !== ""
+          !isEmptyValue(props.addressDetailValue) &&
+          !isEmptyValue(props.addressValue) &&
+          !isEmptyValue(props.postalCodeValue)
         );
       default:
         return false;
@@ -226,6 +221,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
             dropDownDatas={props.dropDownDatas}
             dropDownValues={props.dropDownValues}
             onDropDownChange={props.onDropDownChange}
+            disabled={props.disabled}
           />
         );
 

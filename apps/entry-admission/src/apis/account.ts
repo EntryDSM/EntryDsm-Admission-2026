@@ -3,7 +3,7 @@ import { Http } from "./http";
 export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
 
 export interface MyAccount {
-  userId: number;
+  userId: string;
   role: "ADMIN" | "MONITOR" | "STUDENT";
   status: "ACTIVE" | "DELETED" | "SUSPENDED";
   name: string;
