@@ -66,7 +66,7 @@ export const SchoolSearchModal = ({
       toast.error("학교 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
       return;
     }
-    const schools = result.data.schools ?? [];
+    const schools = result.data?.schools ?? [];
 
     setDatas(schools.filter(school => school.name.includes(searchValue.trim())));
   };
