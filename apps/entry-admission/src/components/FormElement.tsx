@@ -24,6 +24,7 @@ interface BaseFormElementProps {
 interface InputProps {
   type: "input";
   value?: string | number | null;
+  isComplete?: boolean;
   onInputChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   inputType?: "phone" | "number" | "text";
@@ -138,7 +139,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
   const hasValue = (() => {
     switch (type) {
       case "input":
-        return props.value !== null && props.value !== undefined && props.value !== "";
+        return props.isComplete ?? (props.value !== null && props.value !== undefined && props.value !== "");
       case "textArea":
         return typeof props.textAreaValue === "string" && props.textAreaValue.trim() !== "";
       case "imgSelector":
