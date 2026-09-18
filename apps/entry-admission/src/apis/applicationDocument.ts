@@ -15,11 +15,10 @@ export interface GetApplicationDocumentResponse {
 }
 
 // 파일 자체가 아닌 존재 여부와 저장소 key/fileName 메타데이터만 조회합니다.
-export const getApplicationDocument = async (applicantId: string) =>
-  Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}/${applicantId}`);
+export const getApplicationDocument = async () =>
+  Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}`);
 
 // applicantId별 조회 결과를 React Query 캐시에 분리하기 위한 키입니다.
-export const applicationDocumentQueryKey = (applicantId: string) => ["application-document", applicantId] as const;
 
 // key가 URL이면 그대로 사용하고, 저장소 상대 경로면 API 서버 기준 URL로 만듭니다.
 export const getApplicationDocumentUrl = (key: string | null | undefined) => {
@@ -40,10 +39,8 @@ export const getApplicationDocumentUrl = (key: string | null | undefined) => {
   return `${baseUrl}/${key.replace(/^\//, "")}`;
 };
 
-// receiptCode가 있을 때만 원서 문서 조회 요청을 실행합니다.
-export const useApplicationDocument = (applicantId: string | null | undefined) =>
+export const useApplicationDocument = () =>
   useQuery({
-    queryKey: applicationDocumentQueryKey(applicantId ?? ""),
-    queryFn: () => getApplicationDocument(applicantId!),
-    enabled: Boolean(applicantId),
+    queryKey: ["application-document"],
+    queryFn: () => getApplicationDocument(),
   });
