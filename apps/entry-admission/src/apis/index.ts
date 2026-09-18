@@ -7,3 +7,4 @@ export * from "./applicationDocument";
 export * from "./pdfPreview";
 export * from "./evaluation";
 export * from "./types";
+export * from "./queryClient";

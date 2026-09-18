@@ -48,6 +48,8 @@ export const MyPage = () => {
   const { data: userInfo } = useQuery({
     queryKey: ["my-account"],
     queryFn: getMyAccount,
+    // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
+    meta: { sentryIgnoreStatuses: [401] },
   });
   const { data: applicationStatus } = useQuery({
     queryKey: ["application-status"],
