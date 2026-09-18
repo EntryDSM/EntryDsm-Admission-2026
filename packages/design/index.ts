@@ -4,3 +4,4 @@ export * from "./src/Skeleton";
 export * from "./src/Flex";
 export * from "./src/colors";
 export * from "./src/Text";
+export * from "./src/breakpoints";

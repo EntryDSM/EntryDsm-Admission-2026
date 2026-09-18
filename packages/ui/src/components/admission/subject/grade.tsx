@@ -1,6 +1,6 @@
 ﻿import styled from "@emotion/styled";
 
-import { colors } from "@entry/design";
+import { colors, media } from "@entry/design";
 import { Cancel } from "../../../assets";
 
 interface IGradeType {
@@ -9,22 +9,16 @@ interface IGradeType {
   isSelected: boolean;
   onSelect?: () => void;
   width?: string;
-  height?: string;
   fontSize?: string;
   gap?: string;
   groupName?: string;
 }
 
-export const Grade = ({ grade, isCancel, isSelected, onSelect, width, height, fontSize, groupName }: IGradeType) => {
+export const Grade = ({ grade, isCancel, isSelected, onSelect, width, fontSize, groupName }: IGradeType) => {
   const value = isCancel ? "x" : (grade ?? "");
 
   return (
-    <GradeContainer
-      $width={width || "45px"}
-      $height={height || "45px"}
-      $fontSize={fontSize || "22px"}
-      $isClick={isSelected}
-    >
+    <GradeContainer $width={width || "45px"} $fontSize={fontSize || "22px"} $isClick={isSelected}>
       <Radio
         $isClick={isSelected}
         type="radio"
@@ -60,11 +54,10 @@ const CancelContent = styled.span`
 const GradeContainer = styled.label<{
   $isClick?: boolean;
   $width: string;
-  $height: string;
   $fontSize: string;
 }>`
-  width: ${props => props.$width};
-  height: ${props => props.$height};
+  width: min(100%, ${props => props.$width});
+  height: auto;
   color: ${props => (props.$isClick ? colors.extra.realWhite : colors.orange[800])};
   background-color: ${props => (props.$isClick ? colors.orange[800] : "none")};
   border: 2px solid ${colors.orange[800]};
@@ -76,6 +69,13 @@ const GradeContainer = styled.label<{
   font-weight: 450;
   transition: all 0.2s ease;
   position: relative;
+  min-width: 0;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+
+  ${media.medium} {
+    font-size: min(${props => props.$fontSize}, 16px);
+  }
 
   &:has(input:focus-visible) {
     outline: 3px solid ${colors.orange[800]};

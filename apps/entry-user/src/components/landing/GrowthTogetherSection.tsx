@@ -1,4 +1,4 @@
-import { media } from "../../styles/breakpoints";
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
@@ -42,6 +42,7 @@ const Container = styled.div<{ backgroundImage: string }>`
 
   ${media.medium} {
     height: 350px;
+    margin-top: 64px;
   }
 `;
 

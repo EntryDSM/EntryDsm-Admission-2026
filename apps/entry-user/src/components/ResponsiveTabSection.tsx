@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { TabSection } from "@entry/ui";
-import { media } from "../styles/breakpoints";
+import { media } from "@entry/design";
 
 interface ResponsiveTabSectionProps {
   options: { key: string; label: string }[];

@@ -1,4 +1,4 @@
-import { media } from "../../../styles/breakpoints";
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { dmsLogo, jobisLogo, pickLogo, xquareLogo } from "../../../assets";
 import { type BannerId } from "./BannerContainer";

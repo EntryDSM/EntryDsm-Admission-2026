@@ -1,4 +1,4 @@
-import { media } from "../../styles/breakpoints";
+import { media } from "@entry/design";
 import React from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
@@ -55,7 +55,7 @@ const Container = styled.div`
     padding: 50px 80px;
   }
 
-  ${media.tablet} {
+  ${media.desktop} {
     flex-direction: column;
     gap: 40px;
     padding: 40px 40px;
@@ -75,7 +75,7 @@ const StatCard = styled.div`
   text-align: left;
   flex: 1;
 
-  ${media.tablet} {
+  ${media.desktop} {
     align-items: center;
     text-align: center;
     max-width: 300px;
@@ -85,7 +85,7 @@ const StatCard = styled.div`
 const IconWrapper = styled.div`
   margin-bottom: 20px;
 
-  ${media.tablet} {
+  ${media.desktop} {
     margin-bottom: 16px;
   }
 
@@ -107,7 +107,7 @@ const Icon = styled.div<{ isText?: boolean }>`
     object-fit: contain;
   }
 
-  ${media.tablet} {
+  ${media.desktop} {
     font-size: 40px;
     transform: ${props => (props.isText ? "translateY(-6px)" : "none")};
 
@@ -133,7 +133,7 @@ const Title = styled.h3`
   font-weight: 600;
   margin: 0 0 15px 0;
 
-  ${media.tablet} {
+  ${media.desktop} {
     font-size: 18px;
     margin-bottom: 12px;
   }
@@ -151,7 +151,7 @@ const Description = styled.p`
   margin: 0;
   white-space: pre-wrap;
 
-  ${media.tablet} {
+  ${media.desktop} {
     font-size: 13px;
   }
 

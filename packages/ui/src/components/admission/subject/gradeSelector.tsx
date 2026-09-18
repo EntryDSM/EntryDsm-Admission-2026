@@ -1,5 +1,6 @@
 ﻿import styled from "@emotion/styled";
 
+import { media } from "@entry/design";
 import { Grade } from "./grade";
 
 interface IGradeSelectorType {
@@ -27,7 +28,6 @@ export const GradeSelector = ({ selected, onSelect, size = "large", groupName }:
           groupName={groupName}
           onSelect={() => handleSelect(grade)}
           width={isSmall ? "30px" : "45px"}
-          height={isSmall ? "30px" : "45px"}
           fontSize={isSmall ? "15px" : "22px"}
         />
       ))}
@@ -37,14 +37,26 @@ export const GradeSelector = ({ selected, onSelect, size = "large", groupName }:
         groupName={groupName}
         onSelect={() => handleSelect("X")}
         width={isSmall ? "30px" : "45px"}
-        height={isSmall ? "30px" : "45px"}
       />
     </GradeSelectorContainer>
   );
 };
 
 const GradeSelectorContainer = styled.div<{ $gap: string }>`
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: center;
+  justify-items: center;
   gap: ${props => props.$gap};
+  width: min(100%, 400px);
+  min-width: 0;
+
+  ${media.tablet} {
+    gap: clamp(4px, 1vw, 12px);
+  }
+
+  ${media.medium} {
+    flex: 1;
+    gap: 4px;
+  }
 `;

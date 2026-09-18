@@ -2,13 +2,14 @@
 import { useLocation } from "react-router";
 import styled from "@emotion/styled";
 
-import { colors } from "@entry/design";
+import { colors, media } from "@entry/design";
 
 interface IScorePageNav {
   datas: { path: string; name: string }[];
+  compactOnMobile?: boolean;
 }
 
-export const ScorePageNav = ({ datas }: IScorePageNav) => {
+export const ScorePageNav = ({ datas, compactOnMobile = false }: IScorePageNav) => {
   const location = useLocation();
 
   useEffect(() => {
@@ -20,7 +21,7 @@ export const ScorePageNav = ({ datas }: IScorePageNav) => {
   }, [location.pathname, datas]);
 
   return (
-    <Container>
+    <Container compactOnMobile={compactOnMobile}>
       {datas.map((data, index) => (
         <NavItem isFirst={index === 0} key={index} flex={1}>
           {index !== 0 && <Line isActive={index <= activeIndex} />}
@@ -34,12 +35,48 @@ export const ScorePageNav = ({ datas }: IScorePageNav) => {
   );
 };
 
-const Container = styled.div`
+const Container = styled.div<{ compactOnMobile: boolean }>`
   display: flex;
   flex: 1;
   align-items: center;
   gap: 20px;
   height: fit-content;
+
+  ${({ compactOnMobile }) =>
+    compactOnMobile &&
+    `${media.tablet} {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+
+      > div {
+        flex: none;
+        gap: 0;
+      }
+
+      > div > div:first-child:not(:last-child) {
+        display: none;
+      }
+
+      > div > div:last-child {
+        flex-direction: row;
+        text-align: left;
+        gap: 8px;
+      }
+
+      > div > div:last-child > div:last-child {
+        white-space: normal;
+        word-break: keep-all;
+        text-align: left;
+        font-size: 13px;
+      }
+
+      > div > div:last-child > div:first-child {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+    }`}
 `;
 
 const NavItem = styled.div<{ isFirst: boolean; flex: number }>`

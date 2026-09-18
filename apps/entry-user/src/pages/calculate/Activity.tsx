@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
-import { Text } from "@entry/design";
 import { AttendanceForm, CertCheckForm } from "@entry/ui";
 import { useCalculationPageData, type CalculationState } from "../../contexts";
+import { media } from "@entry/design";
 
 // API 연동 없음
 // Activity 페이지는 계산 컨텍스트의 로컬 상태만 사용합니다.
@@ -45,6 +45,10 @@ const Container = styled.div`
   gap: 48px;
   width: 100%;
   height: fit-content;
+
+  ${media.tablet} {
+    gap: 32px;
+  }
 `;
 
 const Section = styled.div`
@@ -56,9 +60,28 @@ const Section = styled.div`
 
 const GridContainer = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   width: 100%;
+
+  ${media.tablet} {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+`;
+
+const SectionTitle = styled.h2`
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+
+  ${media.tablet} {
+    font-size: 20px;
+  }
+
+  ${media.medium} {
+    font-size: 18px;
+  }
 `;
 
 interface ActivityProps {
@@ -114,9 +137,7 @@ export const Activity = ({ pageKey }: ActivityProps) => {
       {dataKey !== "qeActivity" && (
         <>
           <Section>
-            <Text fontSize={24} fontWeight={600}>
-              출결
-            </Text>
+            <SectionTitle>출결</SectionTitle>
             <GridContainer>
               <AttendanceForm
                 width="100%"
@@ -153,11 +174,9 @@ export const Activity = ({ pageKey }: ActivityProps) => {
             </GridContainer>
           </Section>
           <Section>
-            <Text fontSize={24} fontWeight={600}>
-              봉사
-            </Text>
+            <SectionTitle>봉사</SectionTitle>
             <AttendanceForm
-              width="748px"
+              width="100%"
               title="봉사시간"
               value={safeActivityData.volunteerHours}
               onChange={handleVolunteerHoursChange}
@@ -167,17 +186,17 @@ export const Activity = ({ pageKey }: ActivityProps) => {
         </>
       )}
       <Section>
-        <Text fontSize={24} fontWeight={600}>
-          자격증
-        </Text>
+        <SectionTitle>자격증</SectionTitle>
         <CertCheckForm
           width="100%"
+          compactOnMobile
           title="DSM 알고리즘 대회 입상"
           value={safeActivityData.dsmAlgorithm}
           onChange={handleDsmAlgorithmChange}
         />
         <CertCheckForm
           width="100%"
+          compactOnMobile
           title="프로그래밍기능사 자격증 취득"
           value={safeActivityData.infoProcessing}
           onChange={handleInfoProcessingChange}

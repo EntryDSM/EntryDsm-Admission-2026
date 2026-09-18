@@ -1,4 +1,4 @@
-import { media } from "../styles/breakpoints";
+import { media } from "@entry/design";
 import { useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";

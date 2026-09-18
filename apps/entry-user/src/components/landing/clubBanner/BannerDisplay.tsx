@@ -1,4 +1,4 @@
-import { media } from "../../../styles/breakpoints";
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { dms, jobis, pick, xquare } from "../../../assets";
 import { BannerHover } from "./BannerHover";

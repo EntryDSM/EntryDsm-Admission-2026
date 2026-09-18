@@ -1,4 +1,4 @@
-import { media } from "../../../styles/breakpoints";
+import { media } from "@entry/design";
 import { useState } from "react";
 import styled from "@emotion/styled";
 import { BannerSelector } from "./BannerSelector";
@@ -29,12 +29,8 @@ export const BannerContainer = () => {
 };
 
 const Container = styled.div`
-  width: 100vw;
+  width: 100%;
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
   box-sizing: border-box;
 `;
 
