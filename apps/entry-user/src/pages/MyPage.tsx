@@ -138,7 +138,7 @@ export const MyPage = () => {
             </StatusInfo>
           </StatusBox>
         </ApplicationStatusSection>
-        <Flex width="fit-content" height="fit-content" gap={12}>
+        <Flex width="fit-content" height="fit-content" gap={12} style={{ marginTop: 24 }}>
           <Btn
             backgroundColor={colors.orange[800]}
             color="#FFFFFF"
