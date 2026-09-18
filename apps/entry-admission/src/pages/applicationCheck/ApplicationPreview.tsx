@@ -4,7 +4,7 @@ import { getApplicationDocumentUrl, getStartedApplicantId, useApplicationDocumen
 
 export const ApplicationPreview = () => {
   const applicantId = getStartedApplicantId()?.toString();
-  const { data: applicationDocument, isError, isPending } = useApplicationDocument(applicantId);
+  const { data: applicationDocument, isError, isPending } = useApplicationDocument();
   const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.downloadUrl) : null;
   const fileName = applicationDocument?.fileName ?? "원서 파일";
 
