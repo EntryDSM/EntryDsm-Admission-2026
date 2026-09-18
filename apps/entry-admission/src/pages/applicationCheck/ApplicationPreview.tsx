@@ -6,7 +6,7 @@ export const ApplicationPreview = () => {
   const applicantId = getStartedApplicantId()?.toString();
   const { data: applicationDocument, isError, isPending } = useApplicationDocument(applicantId);
   const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.downloadUrl) : null;
-  const isPdf = applicationDocument?.fileName.toLowerCase().endsWith(".pdf");
+  const fileName = applicationDocument?.fileName ?? "원서 파일";
 
   return (
     <Container>
@@ -36,16 +36,10 @@ export const ApplicationPreview = () => {
         </ApplicationLoadingContainer>
       ) : (
         <Flex width="100%" height="fit-content" isColumn={true}>
-          <NoticeText>{applicationDocument.fileName}</NoticeText>
+          <NoticeText>{fileName}</NoticeText>
           <ApplicationContainer>
             <PdfViewport>
-              {isPdf ? (
-                <PdfFrame title="원서 미리보기" src={documentUrl} />
-              ) : (
-                <FileLink href={documentUrl} target="_blank" rel="noreferrer">
-                  {applicationDocument.fileName} 열기
-                </FileLink>
-              )}
+              <PdfFrame title="원서 미리보기" src={documentUrl} />
             </PdfViewport>
           </ApplicationContainer>
         </Flex>
@@ -85,13 +79,6 @@ const PdfFrame = styled.iframe`
   height: 1120px;
   border: 0;
   display: block;
-`;
-
-const FileLink = styled.a`
-  display: block;
-  padding: 40px;
-  color: ${colors.orange[800]};
-  text-align: center;
 `;
 
 const ApplicationLoadingContainer = styled(Skeleton)`
