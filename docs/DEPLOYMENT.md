@@ -61,16 +61,19 @@ Cloudflare 대시보드 → Workers & Pages → Create → Workers → **Import 
 각 Worker → Settings → **Build** 의 변수(Variables)로 설정한다. **Worker별로 따로 설정하므로 prod와 stag가 서로 다른 값을 가진다.**
 값은 빌드 타임에 박히므로 **변경 후 재빌드해야 반영**된다. (런타임 Worker 변수가 아니라 **빌드 변수**여야 vite 빌드에 주입된다.)
 
-| 이름                       | prod 값 예시                       | stag 값 예시                            | 사용 앱                                          |
-| -------------------------- | ---------------------------------- | --------------------------------------- | ------------------------------------------------ |
-| `VITE_API_BASE_URL`        | prod 백엔드 API URL                | stag 백엔드 API URL                     | admin, admission, monitoring, user               |
-| `VITE_IDENTITY_API_URL`    | prod 인증 백엔드 URL               | stag 인증 백엔드 URL                    | auth                                             |
-| `VITE_USER_APP_URL`        | `https://entrydsm.hs.kr`           | `https://stag.entrydsm.hs.kr`           | **전 앱** (공용 헤더 링크, auth 로그인 리디렉션) |
-| `VITE_AUTH_APP_URL`        | `https://auth.entrydsm.hs.kr`      | `https://stag-auth.entrydsm.hs.kr`      | **전 앱** (공용 헤더 로그인 링크)                |
-| `VITE_ADMISSION_APP_URL`   | `https://admission.entrydsm.hs.kr` | `https://stag-admission.entrydsm.hs.kr` | user (지원하기 링크)                             |
-| `VITE_SCHOOL_HOMEPAGE_URL` | `https://dsmhs.djsch.kr/main.do`   | 동일                                    | user (학교 홈페이지 링크)                        |
-| `VITE_ADMISSION_ROUND`     | `2026-1`                           | `2026-1`                                | monitoring                                       |
+| 이름                       | prod 값 예시                       | stag 값 예시                            | 사용 앱                                                                     |
+| -------------------------- | ---------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL`        | prod 백엔드 API URL                | stag 백엔드 API URL                     | admin, admission, monitoring, user                                          |
+| `VITE_IDENTITY_API_URL`    | prod 인증 백엔드 URL               | stag 인증 백엔드 URL                    | auth                                                                        |
+| `VITE_USER_APP_URL`        | `https://entrydsm.hs.kr`           | `https://stag.entrydsm.hs.kr`           | **전 앱** (공용 헤더 링크, auth 로그인 리디렉션)                            |
+| `VITE_AUTH_APP_URL`        | `https://auth.entrydsm.hs.kr`      | `https://stag-auth.entrydsm.hs.kr`      | **전 앱** (공용 헤더 로그인 링크)                                           |
+| `VITE_ADMISSION_APP_URL`   | `https://admission.entrydsm.hs.kr` | `https://stag-admission.entrydsm.hs.kr` | user (지원하기 링크)                                                        |
+| `VITE_SCHOOL_HOMEPAGE_URL` | `https://dsmhs.djsch.kr/main.do`   | 동일                                    | user (학교 홈페이지 링크)                                                   |
+| `VITE_ADMISSION_ROUND`     | `2026-1`                           | `2026-1`                                | monitoring                                                                  |
+| `VITE_SENTRY_DSN`          | 앱별 Sentry 프로젝트 DSN           | 동일 (환경은 아래 변수로 구분)          | **전 앱** — 비우면 Sentry 꺼짐 ([OBSERVABILITY.md](./OBSERVABILITY.md) 5절) |
+| `VITE_SENTRY_ENVIRONMENT`  | `production`                       | `staging`                               | **전 앱** (미설정 시 `development` 로 기록)                                 |
 
+- Sentry release(`<앱 이름>@<커밋 SHA>`)는 빌드 변수가 아니다. 각 앱 `vite.config.ts`가 Workers Builds의 `WORKERS_CI_COMMIT_SHA`로 자동 주입한다 ([OBSERVABILITY.md](./OBSERVABILITY.md) 5절).
 - stag도 vite **프로덕션 빌드**(`import.meta.env.PROD`)이므로 필수 변수 검증이 동일하게 적용된다: `VITE_USER_APP_URL`·`VITE_AUTH_APP_URL`은 공용 패키지(`@entry/ui`)의 env 모듈이 앱 로드 시 검증하며, 값이 비면 **앱이 로드 시점에 에러를 던진다** (조용한 오작동 방지). stag Worker 10개 중 5개에도 전부 넣어야 한다.
 - ⚠️ 변수를 만들어 두지 않으면 빈 문자열이 번들에 박히고, 코드의 `?? "기본값"` 은 빈 문자열에는 동작하지 않는다. 흰 화면(특히 admin)이 나오면 변수 누락부터 확인한다.
 - ⚠️ stag 앱에 prod 링크 값(`VITE_USER_APP_URL` 등)을 넣으면 stag에서 로그인·헤더 이동 시 prod로 새어 나간다. 표의 stag 열대로 넣을 것.

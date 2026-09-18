@@ -36,6 +36,7 @@
       "dependencies": {
         "@entry/design": "^0.0.0",
         "@entry/hooks": "^0.0.0",
+        "@entry/observability": "^0.0.0",
         "@entry/ui": "^0.0.0",
         "@entry/utils": "^0.0.0",
         "@tanstack/react-query": "^5.101.2",
@@ -64,6 +65,7 @@
       "dependencies": {
         "@entry/design": "^0.0.0",
         "@entry/hooks": "^0.0.0",
+        "@entry/observability": "^0.0.0",
         "@entry/ui": "^0.0.0",
         "@entry/utils": "^0.0.0",
         "react": "^19.2.4",
@@ -90,6 +92,7 @@
       "dependencies": {
         "@entry/design": "^0.0.0",
         "@entry/hooks": "^0.0.0",
+        "@entry/observability": "^0.0.0",
         "@entry/ui": "^0.0.0",
         "@entry/utils": "^0.0.0",
         "react": "^19.2.4",
@@ -116,6 +119,7 @@
       "dependencies": {
         "@entry/design": "^0.0.0",
         "@entry/hooks": "^0.0.0",
+        "@entry/observability": "^0.0.0",
         "@entry/ui": "^0.0.0",
         "@entry/utils": "^0.0.0",
         "@tanstack/react-query": "^5.101.2",
@@ -146,6 +150,7 @@
       "dependencies": {
         "@entry/design": "^0.0.0",
         "@entry/hooks": "^0.0.0",
+        "@entry/observability": "^0.0.0",
         "@entry/ui": "^0.0.0",
         "@entry/utils": "^0.0.0",
         "react": "^19.2.4",
@@ -192,6 +197,15 @@
       "version": "0.0.0",
       "dependencies": {
         "@entry/utils": "^0.0.0",
+      },
+    },
+    "packages/observability": {
+      "name": "@entry/observability",
+      "version": "0.0.0",
+      "dependencies": {
+        "@entry/utils": "^0.0.0",
+        "@sentry/react": "^10.75.0",
+        "react": "^19.2.7",
       },
     },
     "packages/typescript-config": {
@@ -302,6 +316,8 @@
     "@entry/design": ["@entry/design@workspace:packages/design"],
 
     "@entry/hooks": ["@entry/hooks@workspace:packages/hooks"],
+
+    "@entry/observability": ["@entry/observability@workspace:packages/observability"],
 
     "@entry/ui": ["@entry/ui@workspace:packages/ui"],
 
@@ -504,6 +520,22 @@
     "@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.0.0-rc.15", "", { "os": "win32", "cpu": "x64" }, "sha512-3P2A8L+x75qavWLe/Dll3EYBJLQmtkJN8rfh+U/eR3MqMgL/h98PhYI+JFfXuDPgPeCB7iZAKiqii5vqOvnA0g=="],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-rc.7", "", {}, "sha512-qujRfC8sFVInYSPPMLQByRh7zhwkGFS4+tyMQ83srV1qrxL4g8E2tyxVVyxd0+8QeBM1mIk9KbWxkegRr76XzA=="],
+
+    "@sentry/browser": ["@sentry/browser@10.75.0", "", { "dependencies": { "@sentry/browser-utils": "10.75.0", "@sentry/conventions": "^0.16.0", "@sentry/core": "10.75.0", "@sentry/feedback": "10.75.0", "@sentry/replay": "10.75.0", "@sentry/replay-canvas": "10.75.0" } }, "sha512-CKGSJLWISQ6LgMaGnMpY+XvwWQ2iiHTayUs6SGLIvYeaGo2GTjS/Z4pnbCVHb2t1VxLZksyehgcC6ZYGJeQpzQ=="],
+
+    "@sentry/browser-utils": ["@sentry/browser-utils@10.75.0", "", { "dependencies": { "@sentry/conventions": "^0.16.0", "@sentry/core": "10.75.0" } }, "sha512-yZfdQ87RLat/7retF8zA6Z9zCAT12IyaPvIiu+bbi1E1V1OqDpS8MKNa/6LF69Ap7DVTORi9ITEgjlAqTXF0xQ=="],
+
+    "@sentry/conventions": ["@sentry/conventions@0.16.0", "", {}, "sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ=="],
+
+    "@sentry/core": ["@sentry/core@10.75.0", "", { "dependencies": { "@sentry/conventions": "^0.16.0" } }, "sha512-5wDQpQqjJ6RHdPR+z6Q+47XlwoxRKBv0yyB0LKHqL/1azPOQbR+nllyLmmQDcoJpaksuLSmLA1q6hFX7gjDT2w=="],
+
+    "@sentry/feedback": ["@sentry/feedback@10.75.0", "", { "dependencies": { "@sentry/core": "10.75.0" } }, "sha512-YLVAFQXELJAOg7ke4oLkd8t5l0fJUockLlTQJg/2Trh7SB5Q4mkSwlnAkEAqDQ618vnpFsG/tnYMwtfZeffHjA=="],
+
+    "@sentry/react": ["@sentry/react@10.75.0", "", { "dependencies": { "@sentry/browser": "10.75.0", "@sentry/conventions": "^0.16.0", "@sentry/core": "10.75.0" }, "peerDependencies": { "react": "^16.14.0 || 17.x || 18.x || 19.x" } }, "sha512-ghWv99h7k4WgMucqBhf4jZn+G0Owm5gCBCVKOKu88UDCWUd9aVJ8FGosAkATp/x/ogcZTnqG2dcXBD+1U+BJeA=="],
+
+    "@sentry/replay": ["@sentry/replay@10.75.0", "", { "dependencies": { "@sentry/browser-utils": "10.75.0", "@sentry/core": "10.75.0" } }, "sha512-p4xxEo/ayiMZG9tygr09YjqYAd52uq8Qi0EVoRRgUe70nQda0HVPVW519JLq0G+Th/5O5sKME9y1layLU3xlPg=="],
+
+    "@sentry/replay-canvas": ["@sentry/replay-canvas@10.75.0", "", { "dependencies": { "@sentry/core": "10.75.0", "@sentry/replay": "10.75.0" } }, "sha512-LNokI5Ud22nZ/o2il/2SfbNIARupWrbS6Mh9jZroZTjD38FN0Oi9vIexj6h1HN81C6+lP2Tmpaj+fl3/wOizzA=="],
 
     "@sindresorhus/is": ["@sindresorhus/is@7.2.0", "", {}, "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw=="],
 

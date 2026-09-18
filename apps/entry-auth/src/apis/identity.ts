@@ -1,4 +1,5 @@
 import { resolveRequiredUrl } from "@entry/utils";
+import { reportApiError } from "@entry/observability";
 
 const API_BASE_URL = resolveRequiredUrl(
   "VITE_IDENTITY_API_URL",
@@ -88,6 +89,16 @@ const getErrorDetails = (body: unknown) => {
 };
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  try {
+    return await requestOrThrow<T>(path, init);
+  } catch (error) {
+    // 4xx 포함 모든 실패를 Sentry 로 보고한다(팀 결정, docs/OBSERVABILITY.md 3절). 경로의 쿼리스트링(PASS 토큰 등)은 보고 전에 제거된다.
+    reportApiError(error, { source: "fetch", target: path });
+    throw error;
+  }
+};
+
+const requestOrThrow = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: "include",

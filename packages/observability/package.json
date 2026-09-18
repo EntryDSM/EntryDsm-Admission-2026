@@ -1,0 +1,14 @@
+{
+  "name": "@entry/observability",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@entry/utils": "^0.0.0",
+    "@sentry/react": "^10.75.0",
+    "react": "^19.2.7"
+  }
+}

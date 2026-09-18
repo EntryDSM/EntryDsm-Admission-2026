@@ -1,5 +1,5 @@
 import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken";
-import { redactClientLog as redact } from "./redactClientLog";
+import { redactClientLog as redact } from "@entry/utils";
 
 interface ClientLog {
   level: "ERROR" | "WARN";

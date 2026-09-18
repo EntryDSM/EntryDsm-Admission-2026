@@ -23,6 +23,8 @@ export const Main = () => {
     queryKey: ["my-account"],
     queryFn: getMyAccount,
     retry: false,
+    // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
+    meta: { sentryIgnoreStatuses: [401] },
   });
   const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
   const currentServerTime = serverTime ? toDate(serverTime) : null;
