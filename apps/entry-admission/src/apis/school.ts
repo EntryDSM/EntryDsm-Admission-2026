@@ -15,10 +15,13 @@ export interface GetMiddleSchoolInformationResponse {
 
 // 학교명으로 검색하되, 검색창 입력만으로 요청하지 않고 호출 화면의 refetch로 실행합니다.
 export const useGetSchoolSearch = (schoolName: string) => {
+  const page = 10;
+
   return useQuery({
     // 검색어별로 결과를 5분간 분리 캐시해 같은 검색의 중복 요청을 줄입니다.
     queryKey: ["school", schoolName],
-    queryFn: () => Http.get<GetMiddleSchoolInformationResponse>("/api/application/v11/middle-school"),
+    queryFn: () =>
+      Http.get<GetMiddleSchoolInformationResponse>("/api/application/v11/middle-school", { params: { page } }),
     enabled: false,
     staleTime: 5 * 60 * 1000,
   });

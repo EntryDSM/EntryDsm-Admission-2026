@@ -204,11 +204,6 @@ const ContentContainer = styled.div`
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
-  -ms-overflow-style: none;
-
-  ::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const Content = styled.button`
