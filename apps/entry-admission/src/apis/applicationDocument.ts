@@ -22,12 +22,21 @@ export const getApplicationDocument = async (applicantId: string) =>
 export const applicationDocumentQueryKey = (applicantId: string) => ["application-document", applicantId] as const;
 
 // key가 URL이면 그대로 사용하고, 저장소 상대 경로면 API 서버 기준 URL로 만듭니다.
-export const getApplicationDocumentUrl = (key: string) => {
+export const getApplicationDocumentUrl = (key: string | null | undefined) => {
+  if (!key) {
+    return null;
+  }
+
   if (/^https?:\/\//i.test(key)) {
     return key;
   }
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!apiBaseUrl) {
+    return null;
+  }
+
+  const baseUrl = apiBaseUrl.replace(/\/$/, "");
   return `${baseUrl}/${key.replace(/^\//, "")}`;
 };
 
