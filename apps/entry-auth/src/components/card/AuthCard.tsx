@@ -14,7 +14,7 @@ export const AuthCard = ({ isStudent, title }: IAuthCardType) => {
       <SignUpIcon isStudent={isStudent} />
       <ContentBox>
         <TitleContainer>{title}</TitleContainer>
-        <Description>EntryDSM에 {isStudent ? "학생" : "보호자"} 명의로 가입합니다.</Description>
+        <Description>EntryDSM에 {isStudent ? "학생" : "보호자"} 명의로 인증합니다.</Description>
       </ContentBox>
       <img src={RigthArrow} alt="Right Arrow icon" width={15} height={15} />
     </AuthCardContainer>
