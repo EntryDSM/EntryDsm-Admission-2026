@@ -35,7 +35,7 @@ export type AccountRole = "ADMIN" | "MONITOR" | "STUDENT";
 /** 계정 상태 */
 export type AccountStatus = "ACTIVE" | "DELETED" | "SUSPENDED";
 
-/** 가입 유형 (본인/부모님 명의) */
+/** 가입 유형 (본인/보호자 명의) */
 export type SignupType = "SELF" | "PARENT";
 
 /** identity 도메인의 지원 상태 — admin 도메인 `ApplicantStatus` 와 값 체계가 다르다. */

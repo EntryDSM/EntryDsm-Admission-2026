@@ -19,7 +19,7 @@ interface ScheduleRowProps {
 /**
  * 일정 한 건(시작/종료)을 렌더하는 memoized 행.
  * `field` 참조가 그대로면(=다른 행만 편집됨) 리렌더를 건너뛴다.
- * 부모의 `onChange` 는 안정적이라 행 내부 핸들러도 `index` 기준으로 안정적으로 유지된다.
+ * 보호자의 `onChange` 는 안정적이라 행 내부 핸들러도 `index` 기준으로 안정적으로 유지된다.
  */
 const ScheduleRow = memo(({ field, index, onChange }: ScheduleRowProps) => {
   const handleStartChange = useCallback((value: string) => onChange(index, "start", value), [onChange, index]);

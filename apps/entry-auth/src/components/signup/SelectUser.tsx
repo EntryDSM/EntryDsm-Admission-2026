@@ -58,7 +58,7 @@ export const SelectUser = ({ onVerified }: SelectUserProps) => {
             if (event.key === "Enter" || event.key === " ") handleCardClick("parent");
           }}
         >
-          <AuthCard isStudent={false} title="부모 명의로 인증" />
+          <AuthCard isStudent={false} title="보호자 명의로 인증" />
         </CardWrapper>
       </CardContainer>
 
@@ -84,6 +84,7 @@ const CardWrapper = styled.div`
   width: 100%;
   display: flex;
   justify-content: center;
+  cursor: pointer;
 `;
 
 const SelectUserContainer = styled.div`
