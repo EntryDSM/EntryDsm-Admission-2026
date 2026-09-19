@@ -1,16 +1,8 @@
 import { colors, media } from "@entry/design";
 import { Btn, EntryLogo, USER_APP_URL } from "@entry/ui";
 import styled from "@emotion/styled";
-import { useState } from "react";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
-import {
-  clearStartedApplicantId,
-  getApplicationStatus,
-  getStartedApplicantId,
-  useGetAllSchedule,
-  useStartApplication,
-} from "../apis";
+import { useGetAllSchedule, useStartApplication } from "../apis";
 import type { ScheduleDateTime } from "../apis";
 import { LinkIcon } from "../assets";
 
@@ -31,7 +23,6 @@ export const Landing = () => {
   const navigate = useNavigate();
   const { mutateAsync: startApplication, isPending } = useStartApplication();
   const { data: schedules } = useGetAllSchedule();
-  const [isCheckingApplicationStatus, setIsCheckingApplicationStatus] = useState(false);
   const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
   const startDate = formatScheduleDate(applicationSchedule?.startAt);
   const endDate = formatScheduleDate(applicationSchedule?.endAt);
@@ -40,28 +31,6 @@ export const Landing = () => {
 
   // 로그인 여부는 RequireAuth 가드와 서버 401 처리(http.ts)가 담당한다.
   const handleStartApplication = async () => {
-    const startedApplicantId = getStartedApplicantId();
-
-    setIsCheckingApplicationStatus(true);
-    try {
-      const { applicantStatus } = await getApplicationStatus();
-
-      if (applicantStatus !== "COMPLETED") {
-        toast.error("이미 원서를 작성했거나 제출한 계정입니다.");
-        return;
-      }
-
-      // 서버에는 원서가 없는데 브라우저에만 이전 ID가 남은 경우 새 원서를 시작합니다.
-      if (startedApplicantId !== null) {
-        clearStartedApplicantId();
-      }
-    } catch {
-      toast.error("원서 작성 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.");
-      return;
-    } finally {
-      setIsCheckingApplicationStatus(false);
-    }
-
     try {
       await startApplication();
       navigate("/application-classification");
@@ -212,11 +181,7 @@ export const Landing = () => {
       </NoticeSection>
 
       <ButtonArea>
-        <Btn
-          width="100%"
-          onClick={() => void handleStartApplication()}
-          isBlocked={isPending || isCheckingApplicationStatus}
-        >
+        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isPending}>
           접수하기
         </Btn>
       </ButtonArea>
