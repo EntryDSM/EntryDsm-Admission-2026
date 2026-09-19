@@ -2,6 +2,7 @@ import { colors, media } from "@entry/design";
 import { Btn, EntryLogo, USER_APP_URL } from "@entry/ui";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
 import { useGetAllSchedule, useStartApplication } from "../apis";
 import type { ScheduleDateTime } from "../apis";
 import { LinkIcon } from "../assets";
@@ -39,6 +40,7 @@ export const Landing = () => {
     }
   };
 
+  toast.error("원서 작성 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
   return (
     <Container>
       <PageHeader>
