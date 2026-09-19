@@ -48,7 +48,7 @@ export const SelectUser = ({ onVerified }: SelectUserProps) => {
             if (event.key === "Enter" || event.key === " ") handleCardClick("student");
           }}
         >
-          <AuthCard isStudent title="학생 명의로 인증" />
+          <AuthCard isStudent title="학생 명의로 가입" />
         </CardWrapper>
         <CardWrapper
           role="button"
@@ -58,7 +58,7 @@ export const SelectUser = ({ onVerified }: SelectUserProps) => {
             if (event.key === "Enter" || event.key === " ") handleCardClick("parent");
           }}
         >
-          <AuthCard isStudent={false} title="부모 명의로 인증" />
+          <AuthCard isStudent={false} title="부모 명의로 가입" />
         </CardWrapper>
       </CardContainer>
 

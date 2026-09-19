@@ -30,7 +30,7 @@ export const Footer = () => {
 
           <ContactInfoRow>
             <ContactText>
-              Fax: 교무실 042-867-9900, 취업센터: 042-866-8844, 사업자 등록 번호: 314830160, 기관 메일: dsmhs@korea.kr
+              Fax: 교무실 042-867-9900, 취업센터: 042-866-8844, 사업자 등록 번호: 3148301600, 기관 메일: dsmhs@korea.kr
             </ContactText>
           </ContactInfoRow>
 

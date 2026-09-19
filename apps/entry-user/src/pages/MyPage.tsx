@@ -179,6 +179,7 @@ export const MyPage = () => {
               borderColor={colors.gray[500]}
               hoverBackgroundColor="transparent"
               onClick={handleShowAccountInfo}
+              width="500px"
             >
               계정 정보 조회
             </Btn>
@@ -191,6 +192,7 @@ export const MyPage = () => {
               color={colors.gray[500]}
               borderColor={colors.gray[500]}
               hoverBackgroundColor="transparent"
+              width="500px"
               onClick={handleChangePassword}
             >
               비밀번호 변경
