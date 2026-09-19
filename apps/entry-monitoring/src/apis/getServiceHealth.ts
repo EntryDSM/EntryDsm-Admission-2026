@@ -23,4 +23,4 @@ export interface ServiceHealthData {
 }
 
 export const getServiceHealth = (signal?: AbortSignal) =>
-  http.get<ServiceHealthData>("/api/monitor/v1/health", { signal });
+  http.get<ServiceHealthData>("/api/monitor/v11/health", { signal });
