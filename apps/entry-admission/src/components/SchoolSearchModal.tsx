@@ -88,7 +88,7 @@ export const SchoolSearchModal = ({
               학교 검색하기
             </Text>
             <Text fontSize={20} fontWeight={400} color={colors.gray[400]}>
-              학교이름을 입력해 학교를 선택하세요
+              학교이름을 입력해 학교를 선택하세요 (검색이 되지 않는 경우, 지역명을 포함하여 검색해보세요)
             </Text>
           </Flex>
           <Wrapper>
@@ -111,8 +111,22 @@ export const SchoolSearchModal = ({
             {datas.length > 0 ? (
               datas.map(data => (
                 <Content type="button" onClick={() => contentClick(data.name, data.code)} key={data.code}>
-                  <Text>{data.name}</Text>
-                  <Text color={colors.orange[800]}>{data.code}</Text>
+                  <SchoolInfo>
+                    <Flex width="100%" height="fit-content" alignItems="center" gap={20}>
+                      <Text fontWeight={600} color={colors.extra.realBlack}>
+                        {data.name}
+                      </Text>
+                      <Text fontSize={18} color={colors.orange[800]}>
+                        {data.code}
+                      </Text>
+                    </Flex>
+                    {/* 동명 학교를 구분할 수 있도록 서버가 준 주소를 함께 보여줍니다. 주소가 없는 학교는 이름·코드만 표시합니다. */}
+                    {data.address && (
+                      <Text fontSize={13} fontWeight={400} color={colors.gray[400]}>
+                        {data.address}
+                      </Text>
+                    )}
+                  </SchoolInfo>
                   {tempSelectedCode === data.code || selectedCode === data.code ? (
                     <Check />
                   ) : (
@@ -211,7 +225,7 @@ const Content = styled.button`
   gap: 20px;
   align-items: center;
   width: 100%;
-  padding: 16px 20px;
+  padding: 14px 20px;
   border: none;
   color: ${colors.gray[400]};
   font-size: 16px;
@@ -230,6 +244,15 @@ const Content = styled.button`
     background-color: ${colors.gray[50]};
     box-shadow: inset 0 0 0 2px ${colors.orange[800]};
   }
+`;
+
+// 이름·코드 줄과 주소 줄을 세로로 쌓고, 남는 너비를 차지해 체크 아이콘을 오른쪽 끝으로 밀어냅니다.
+const SchoolInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 `;
 
 const ImageContainer = styled.div`
