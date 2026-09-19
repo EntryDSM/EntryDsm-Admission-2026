@@ -22,12 +22,11 @@ import {
   SubmitCheck,
   Submitted,
   GuardianInfo,
-  Page404,
 } from "./pages";
 import { ApplicationPreview } from "./pages/applicationCheck";
 import { AttendanceVolunteer, GedScore } from "./pages/ged";
 import { RequireAuth } from "./components/RequireAuth";
-import { DocumentTitleOutlet } from "@entry/ui";
+import { DocumentTitleOutlet, ErrorPage } from "@entry/ui";
 
 export const Router = createBrowserRouter([
   {
@@ -181,7 +180,7 @@ export const Router = createBrowserRouter([
       },
       {
         path: "*",
-        element: <Page404 />,
+        element: <ErrorPage status={404} />,
         handle: { title: "404" },
       },
     ],

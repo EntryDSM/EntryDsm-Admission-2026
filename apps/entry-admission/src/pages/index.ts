@@ -5,4 +5,3 @@ export * from "./score";
 export * from "./Activity";
 export * from "./applicationCheck";
 export * from "./Landing";
-export * from "./Page404";

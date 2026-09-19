@@ -212,7 +212,7 @@ export const Landing = () => {
       <NoticeSection>
         <NoticeTitle>문의처</NoticeTitle>
         <BulletList>
-          <li>042) 866-8820, 8822, 대덕소프트웨어마이스터고등학교 SW교육부</li>
+          <li>042) 866-8820, 042) 866-8822 (대덕소프트웨어마이스터고등학교 SW교육부)</li>
           <li>
             <ContactLink href="http://dsmhs.djsch.kr" target="_blank" rel="noopener noreferrer">
               http://dsmhs.djsch.kr

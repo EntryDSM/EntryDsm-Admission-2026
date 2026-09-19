@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import { DocumentTitleOutlet } from "@entry/ui";
+import { DocumentTitleOutlet, ErrorPage } from "@entry/ui";
 import { AppLayout } from "./layout";
 import { FindPasswordPage, SignUpPage, LoginPage, PassResultPage } from "./pages";
 
@@ -33,6 +33,11 @@ export const Router = createBrowserRouter([
             handle: { title: "비밀번호 찾기" },
           },
         ],
+      },
+      {
+        path: "*",
+        element: <ErrorPage status={404} />,
+        handle: { title: "404" },
       },
     ],
   },
