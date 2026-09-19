@@ -222,7 +222,7 @@ const ContentContainer = styled.div`
 
 const Content = styled.button`
   display: flex;
-  gap: 20px;
+  gap: 8px;
   align-items: center;
   width: 100%;
   padding: 14px 20px;

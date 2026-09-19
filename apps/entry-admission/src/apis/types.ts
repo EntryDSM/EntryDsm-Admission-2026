@@ -290,7 +290,6 @@ export type ApplicationRegion = "DAEJEON" | "NATIONAL";
 export type GraduationType = "PROSPECTIVE" | "GRADUATED" | "GED";
 
 export interface UpdateApplicationClassificationRequest {
-  applicantId: number;
   admissionType: AdmissionType;
   region: ApplicationRegion;
   graduationType: GraduationType;
@@ -315,7 +314,6 @@ export interface UpdateApplicantPersonalProfileResponse {
 }
 
 export interface UpdateApplicantPersonalInformationRequest {
-  applicantId: number;
   photoFileId: number;
   name: string;
   phoneNumber: string;
@@ -327,7 +325,6 @@ export interface UpdateApplicantPersonalInformationRequest {
 export type UpdateApplicantPersonalInformationResponse = null;
 
 export interface UpdateGuardianPersonalInformationRequest {
-  applicantId: number;
   guardianName: string;
   guardianPhoneNumber: string;
   guardianGender: ApplicantGender;
@@ -342,7 +339,6 @@ export interface UpdateGuardianPersonalInformationRequest {
 export type UpdateGuardianPersonalInformationResponse = null;
 
 export interface UpdateMiddleSchoolInformationRequest {
-  applicantId: number;
   schoolName: string;
   studentNumber: string;
   schoolPhone: string;
@@ -352,14 +348,12 @@ export interface UpdateMiddleSchoolInformationRequest {
 export type UpdateMiddleSchoolInformationResponse = null;
 
 export interface UpdateSelfIntroductionRequest {
-  applicantId: number;
   introduction: string;
 }
 
 export type UpdateSelfIntroductionResponse = null;
 
 export interface UpdateStudyPlanRequest {
-  applicantId: number;
   studyPlan: string;
 }
 
