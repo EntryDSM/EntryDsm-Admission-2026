@@ -69,7 +69,7 @@ export const startApplication = async () => {
 
 // 지원 유형, 지역, 졸업 구분을 작성 중인 원서에 저장합니다.
 export const updateApplicationClassification = async ({ ...data }: UpdateApplicationClassificationRequest) => {
-  return Http.patch<UpdateApplicationClassificationResponse>(`${APPLICATIONS_ENDPOINT}/applicantstype`, data);
+  return Http.patch<UpdateApplicationClassificationResponse>(`${APPLICATIONS_ENDPOINT}/type`, data);
 };
 
 // 증명사진 업로드 api
