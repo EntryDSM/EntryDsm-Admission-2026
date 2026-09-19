@@ -82,6 +82,15 @@ export const MyPage = () => {
   const hasApplication = applicantStatus !== "NONE";
   const isSubmitted = SUBMITTED_STATUSES.includes(applicantStatus);
 
+  const handleShowAccountInfo = () => {
+    if (!userInfo) {
+      toast.error("계정 정보를 불러오지 못했습니다.");
+      return;
+    }
+
+    toast.info(`유저 ID: ${userInfo.userId}`);
+  };
+
   const handleChangePassword = () => {
     window.location.href = `${AUTH_APP_URL.replace(/\/$/, "")}/find-password`;
   };
@@ -150,7 +159,7 @@ export const MyPage = () => {
             원서 다운로드
           </Btn>
           <Btn
-            backgroundColor={colors.gray[50]}
+            backgroundColor="#FFFFFF"
             color={colors.orange[800]}
             borderColor={colors.orange[800]}
             hoverBackgroundColor="transparent"
@@ -163,9 +172,22 @@ export const MyPage = () => {
         <SettingsTitle>설정</SettingsTitle>
         <SettingsSection>
           <SettingsRow>
+            <SettingsLabel>계정 확인</SettingsLabel>
+            <Btn
+              backgroundColor="#FFFFFF"
+              color={colors.gray[500]}
+              borderColor={colors.gray[500]}
+              hoverBackgroundColor="transparent"
+              onClick={handleShowAccountInfo}
+            >
+              계정 정보 조회
+            </Btn>
+          </SettingsRow>
+
+          <SettingsRow>
             <SettingsLabel>비밀번호</SettingsLabel>
             <Btn
-              backgroundColor={colors.gray[50]}
+              backgroundColor="#FFFFFF"
               color={colors.gray[500]}
               borderColor={colors.gray[500]}
               hoverBackgroundColor="transparent"
@@ -179,7 +201,7 @@ export const MyPage = () => {
             <SettingsLabel>계정</SettingsLabel>
             <SettingsButtonGroup>
               <Btn
-                backgroundColor={colors.gray[50]}
+                backgroundColor="#FFFFFF"
                 color={colors.gray[500]}
                 borderColor={colors.gray[500]}
                 hoverBackgroundColor="transparent"
@@ -188,7 +210,7 @@ export const MyPage = () => {
                 로그아웃
               </Btn>
               <Btn
-                backgroundColor={colors.gray[50]}
+                backgroundColor="#FFFFFF"
                 color={colors.extra.error}
                 borderColor={colors.extra.error}
                 hoverBackgroundColor="transparent"
@@ -205,7 +227,10 @@ export const MyPage = () => {
         isOpen={openModal.delete}
         title="탈퇴하시겠습니까?"
         content="탈퇴 시 모든 정보가 삭제되며, 다시 복구할 수 없습니다."
+        confirmText="확인했습니다"
+        confirmDescription='탈퇴를 위해서는 "확인했습니다"를 작성해주세요.'
         btnText="탈퇴하기"
+        isLoading={deleteAccountMutation.isPending}
         onClick={() => deleteAccountMutation.mutate()}
       />
 
@@ -228,7 +253,7 @@ const PageContainer = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  width: min(1540px, calc(100% - 48px));
+  width: min(1200px, calc(100% - 48px));
   display: flex;
   flex-direction: column;
 

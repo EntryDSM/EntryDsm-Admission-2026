@@ -81,28 +81,15 @@ export const AdmissionOverviewPage = () => {
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 1540px;
+  /* 공지사항 페이지와 같은 본문 폭(최대 1200px)과 좌우 여백(24px, 480px 이하 16px)을 쓴다 */
+  width: min(1200px, calc(100% - 48px));
   min-height: calc(100vh - 70px);
   min-height: calc(100svh - 70px);
   margin: 0 auto;
   padding: 42px 0 0 0;
 
-  @media (max-width: 1780px) {
-    max-width: none;
-    padding-left: 120px;
-    padding-right: 120px;
-  }
-
-  /* 본문 폭(1040px)이 유지되도록 좌우 여백을 줄인다 - 표에 가로 스크롤이 생기지 않게 */
-  @media (max-width: 1400px) {
-    padding-left: 60px;
-    padding-right: 60px;
-  }
-
-  @media (max-width: 1200px) {
-    padding-left: 20px;
-    padding-right: 20px;
+  ${media.medium} {
+    width: calc(100% - 32px);
   }
 
   ${media.tablet} {
