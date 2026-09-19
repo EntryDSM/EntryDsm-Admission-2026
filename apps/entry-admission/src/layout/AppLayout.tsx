@@ -265,7 +265,6 @@ export const AppLayout = () => {
             "졸업 구분"
           );
           await updateApplicationClassification({
-            applicantId,
             admissionType: getMappedValue(admissionTypes, state.applicationClassification.typeSelection, "전형"),
             region: getMappedValue(regions, state.applicationClassification.regionSelection, "지역"),
             graduationType: graduationTypeValue,
@@ -282,7 +281,6 @@ export const AppLayout = () => {
           const { id } = await updateApplicantPersonalProfile({ file });
 
           await updateApplicantPersonalInformation({
-            applicantId,
             photoFileId: id,
             name: applicantName,
             phoneNumber: applicantNumber,
@@ -309,7 +307,6 @@ export const AppLayout = () => {
           } = state.guardianInfo;
           const selectedRelationship = getRequiredValue(relationship[0], "보호자 관계");
           await updateGuardianPersonalInformation({
-            applicantId,
             guardianName,
             guardianPhoneNumber: guardianNumber,
             guardianGender: getMappedValue(genders, guardianGender, "보호자 성별"),
@@ -324,7 +321,6 @@ export const AppLayout = () => {
         case "/middle-school-info": {
           const { schoolName, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
           await updateMiddleSchoolInformation({
-            applicantId,
             schoolName: getRequiredValue(schoolName, "중학교 이름"),
             studentNumber: String(getRequiredValue(studentId, "중학교 학번")),
             schoolPhone: getRequiredValue(schoolPhone, "중학교 전화번호"),
@@ -333,10 +329,10 @@ export const AppLayout = () => {
           break;
         }
         case "/personal-statements":
-          await updateSelfIntroduction({ applicantId, introduction: state.personalStatements.personalStmt });
+          await updateSelfIntroduction({ introduction: state.personalStatements.personalStmt });
           break;
         case "/statement-of-purpose":
-          await updateStudyPlan({ applicantId, studyPlan: state.statementOfPurpose.studyPlan });
+          await updateStudyPlan({ studyPlan: state.statementOfPurpose.studyPlan });
           break;
         case "/first-graduate":
         case "/second-graduate":

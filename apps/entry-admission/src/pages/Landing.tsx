@@ -46,17 +46,7 @@ export const Landing = () => {
     try {
       const { applicantStatus } = await getApplicationStatus();
 
-      if (applicantStatus === "DRAFT") {
-        if (startedApplicantId === null) {
-          toast.error("작성 중인 원서를 찾았지만 원서 정보를 복원할 수 없습니다. 관리자에게 문의해 주세요.");
-          return;
-        }
-
-        navigate("/application-classification");
-        return;
-      }
-
-      if (applicantStatus !== "NONE") {
+      if (applicantStatus !== "COMPLETED") {
         toast.error("이미 원서를 작성했거나 제출한 계정입니다.");
         return;
       }
