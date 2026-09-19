@@ -70,7 +70,7 @@ export const Router = createBrowserRouter([
       },
       {
         path: "*",
-        element: <ErrorPage errorMsg="404 Page Not Found" />,
+        element: <ErrorPage status={404} homeHref="/" />,
         handle: { title: "404" },
       },
     ],

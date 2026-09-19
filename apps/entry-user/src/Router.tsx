@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router";
-import { DocumentTitleOutlet } from "@entry/ui";
+import { DocumentTitleOutlet, ErrorPage } from "@entry/ui";
 import { AppLayout, CalculateLayout } from "./layout";
 
 // TODO: 자기가 개발한 부분 라우터만 주석 해제하고 수정하기 - 작년 라우터 코드임
@@ -17,7 +17,6 @@ import {
   QEDScore,
   Main,
   NoticePage,
-  //Page404,
   //ErrorFixingPage,
   ReturnSoon,
 } from "./pages";
@@ -150,7 +149,8 @@ export const Router = createBrowserRouter([
       },
       {
         path: "*",
-        // element: <Page404 />,
+        element: <ErrorPage status={404} homeHref="/" />,
+        handle: { title: "404" },
       },
     ],
   },
