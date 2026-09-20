@@ -12,6 +12,8 @@ export const SubmitCheck = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { clearAllData } = useApplicationData();
+  // "확인했습니다"를 정확히 입력하기 전이나 제출 중에는 제출 버튼을 비활성화한다.
+  const isSubmitBlocked = message !== "확인했습니다" || isSubmitting;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
@@ -22,7 +24,7 @@ export const SubmitCheck = () => {
   };
 
   const handleSubmit = async () => {
-    if (message !== "확인했습니다" || isSubmitting) {
+    if (isSubmitBlocked) {
       return;
     }
 
@@ -71,17 +73,17 @@ export const SubmitCheck = () => {
               >
                 취소
               </PreviousBtn>
-              <Btn
+              <SubmitButton
                 width="83px"
                 onClick={() => void handleSubmit()}
-                backgroundColor={colors.orange[100]}
-                color={colors.orange[700]}
-                borderColor={colors.orange[300]}
+                backgroundColor={isSubmitBlocked ? colors.orange[500] : colors.orange[100]}
+                color={isSubmitBlocked ? colors.extra.realWhite : colors.orange[700]}
+                borderColor={isSubmitBlocked ? "transparent" : colors.orange[300]}
                 hoverBackgroundColor={colors.orange[100]}
-                isBlocked={message !== "확인했습니다" || isSubmitting}
+                isBlocked={isSubmitBlocked}
               >
                 {isSubmitting ? "제출 중" : "제출"}
-              </Btn>
+              </SubmitButton>
             </ButtonRow>
           </Flex>
         </ModalCard>
@@ -114,4 +116,9 @@ const ButtonRow = styled.div`
   display: flex;
   justify-content: end;
   gap: 16px;
+`;
+
+// 제출 버튼은 비활성화 시 흐리게 하는 대신 다음 버튼(ApplicationNav)과 같은 연한 주황(colors.orange[500], #FFC19D)으로 채운다.
+const SubmitButton = styled(Btn)`
+  opacity: 1;
 `;

@@ -12,6 +12,7 @@ interface IPreviousBtnType {
   hoverBackgroundColor?: string;
   isBlocked?: boolean;
   disabled?: boolean;
+  className?: string;
 }
 
 export const PreviousBtn: React.FC<IPreviousBtnType> = ({
@@ -24,6 +25,7 @@ export const PreviousBtn: React.FC<IPreviousBtnType> = ({
   onClick,
   isBlocked = false,
   disabled = false,
+  className,
 }) => {
   const isDisabled = isBlocked || disabled;
 
@@ -37,6 +39,7 @@ export const PreviousBtn: React.FC<IPreviousBtnType> = ({
       onClick={onClick}
       isBlocked={isDisabled}
       disabled={isDisabled}
+      className={className}
     >
       {children}
     </StyledBtn>
