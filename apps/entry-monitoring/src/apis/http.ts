@@ -78,6 +78,6 @@ const request = async <T>(path: string, options: RequestInit = {}, allowEmptyRes
 
 export const http = {
   get: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: "GET" }),
-  post: <T = null>(path: string, payload: unknown, options?: RequestInit) =>
-    request<T>(path, { ...options, method: "POST", body: JSON.stringify(payload) }),
+  post: <T = null>(path: string, payload: unknown, options?: RequestInit, allowEmptyResponse = false) =>
+    request<T>(path, { ...options, method: "POST", body: JSON.stringify(payload) }, allowEmptyResponse),
 };
