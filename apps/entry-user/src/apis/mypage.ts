@@ -70,12 +70,11 @@ const APPLICATION_DOCUMENT_ENDPOINT = "/api/document/v11/applications";
 
 export interface GetApplicationDocumentResponse {
   fileName: string;
-  exists: boolean;
   size: number;
   downloadUrl: string;
   expiresIn: number;
 }
 
 // 파일 자체가 아닌 존재 여부와 저장소 key/fileName 메타데이터만 조회합니다.
-export const getApplicationDocument = async (applicantId: string) =>
-  Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}/${applicantId}`);
+export const getApplicationDocument = () =>
+  Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}`);

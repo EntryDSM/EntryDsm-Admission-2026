@@ -1,22 +1,15 @@
 import { colors, Flex, Skeleton, Text } from "@entry/design";
 import styled from "@emotion/styled";
-import { getApplicationDocumentUrl, getStartedApplicantId, useApplicationDocument } from "../../apis";
+import { getApplicationDocumentUrl, useApplicationDocument } from "../../apis";
 
 export const ApplicationPreview = () => {
-  const applicantId = getStartedApplicantId()?.toString();
   const { data: applicationDocument, isError, isPending } = useApplicationDocument();
   const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.downloadUrl) : null;
   const fileName = applicationDocument?.fileName ?? "원서 파일";
 
   return (
     <Container>
-      {!applicantId ? (
-        <ApplicationLoadingContainer>
-          <Text fontSize={20} color={colors.gray[400]}>
-            작성 중인 원서 정보를 찾을 수 없습니다.
-          </Text>
-        </ApplicationLoadingContainer>
-      ) : isPending ? (
+      {isPending ? (
         <ApplicationLoadingContainer>
           <Text fontSize={20} color={colors.gray[400]}>
             원서 파일을 조회하고 있습니다.
@@ -28,7 +21,7 @@ export const ApplicationPreview = () => {
             원서 파일을 불러오지 못했습니다.
           </Text>
         </ApplicationLoadingContainer>
-      ) : !applicationDocument?.exists || !documentUrl ? (
+      ) : !documentUrl ? (
         <ApplicationLoadingContainer>
           <Text fontSize={20} color={colors.gray[400]}>
             저장된 원서 파일이 없습니다.

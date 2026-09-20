@@ -19,6 +19,7 @@ import {
   submitExpectedGrades,
   submitGedScores,
   submitGrades,
+  resultGrades,
 } from "../apis";
 import { HttpError } from "../apis/http";
 import { ApplicationNav } from "../components";
@@ -335,30 +336,25 @@ export const AppLayout = () => {
           await updateStudyPlan({ studyPlan: state.statementOfPurpose.studyPlan });
           break;
         case "/first-graduate":
+          await submitGrades(state.firstGraduate, "3-2");
+          break;
         case "/second-graduate":
+          await submitGrades(state.secondGraduate, "3-1");
+          break;
         case "/third-graduate":
-          // 학기별 입력값은 자동 저장만 하고, 마지막 성적 페이지에서 한 번에 서버로 전송합니다.
+          await submitGrades(state.thirdGraduate, "2-2");
           break;
         case "/fourth-graduate":
-          // 마지막 성적 페이지에서 네 학기 성적을 명세의 단일 학기 body로 순서대로 전송합니다.
-          await submitGrades([
-            { formValues: state.firstGraduate, schoolSemester: "3-2" },
-            { formValues: state.secondGraduate, schoolSemester: "3-1" },
-            { formValues: state.thirdGraduate, schoolSemester: "2-2" },
-            { formValues: state.fourthGraduate, schoolSemester: "2-1" },
-          ]);
+          await submitGrades(state.fourthGraduate, "2-1");
           break;
         case "/first-prospective-graduate":
+          await submitExpectedGrades(state.firstGraduateProspective, "3-1");
+          break;
         case "/second-prospective-graduate":
-          // 학기별 입력값은 자동 저장만 하고, 마지막 성적 페이지에서 한 번에 서버로 전송합니다.
+          await submitExpectedGrades(state.secondGraduateProspective, "2-2");
           break;
         case "/third-prospective-graduate":
-          // 마지막 성적 페이지에서 세 학기 성적을 명세의 단일 학기 body로 순서대로 전송합니다.
-          await submitExpectedGrades([
-            { formValues: state.firstGraduateProspective, schoolSemester: "3-1" },
-            { formValues: state.secondGraduateProspective, schoolSemester: "2-2" },
-            { formValues: state.thirdGraduateProspective, schoolSemester: "2-1" },
-          ]);
+          await submitExpectedGrades(state.thirdGraduateProspective, "2-1");
           break;
         case "/ged/score":
           await submitGedScores({
@@ -389,6 +385,7 @@ export const AppLayout = () => {
               programmingCertified: getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
             }),
           ]);
+          await resultGrades();
           break;
         }
         case "/ged/attendance-volunteer":

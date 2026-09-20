@@ -69,23 +69,16 @@ const expectedGradesRequest = (
   };
 };
 
-// 서버가 요구한 중복 schoolSemester/subjects 키를 보존해 모든 학기를 하나의 요청 body로 만듭니다.
-const serializeSemesterGrades = <TSemester extends string>(
-  grades: { formValues: ExpectedGradeFormValues; schoolSemester: TSemester }[],
-  createRequest: (formValues: ExpectedGradeFormValues, schoolSemester: TSemester) => object
-) =>
-  `{${grades
-    .map(({ formValues, schoolSemester }) => JSON.stringify(createRequest(formValues, schoolSemester)).slice(1, -1))
-    .join(",")}}`;
-
-// 마지막 성적 페이지에서 모든 학기를 한 번의 API 요청으로 저장합니다.
-export const submitExpectedGrades = async (grades: SubmitExpectedGradesVariables[]) => {
-  await Http.postSerializedJson<void>(expectedGradesPath, serializeSemesterGrades(grades, expectedGradesRequest));
-};
+// 각 학기의 다음 버튼에서 해당 학기 성적을 즉시 저장합니다.
+export const submitExpectedGrades = async (
+  formValues: ExpectedGradeFormValues,
+  schoolSemester: SubmitExpectedGradesRequest["schoolSemester"]
+) => Http.post<void>(expectedGradesPath, expectedGradesRequest(formValues, schoolSemester));
 
 export const useSubmitExpectedGrades = () =>
   useMutation({
-    mutationFn: (grades: SubmitExpectedGradesVariables[]) => submitExpectedGrades(grades),
+    mutationFn: ({ formValues, schoolSemester }: SubmitExpectedGradesVariables) =>
+      submitExpectedGrades(formValues, schoolSemester),
     onSuccess: () => {
       toast.success("성적이 저장되었습니다.");
     },
@@ -117,14 +110,15 @@ const gradesRequest = (
   };
 };
 
-// 마지막 성적 페이지에서 모든 학기를 한 번의 API 요청으로 저장합니다.
-export const submitGrades = async (grades: SubmitGradesVariables[]) => {
-  await Http.postSerializedJson<void>(gradesPath, serializeSemesterGrades(grades, gradesRequest));
-};
+// 각 학기의 다음 버튼에서 해당 학기 성적을 즉시 저장합니다.
+export const submitGrades = async (
+  formValues: ExpectedGradeFormValues,
+  schoolSemester: SubmitGradesRequest["schoolSemester"]
+) => Http.post<void>(gradesPath, gradesRequest(formValues, schoolSemester));
 
 export const useSubmitGrades = () =>
   useMutation({
-    mutationFn: (grades: SubmitGradesVariables[]) => submitGrades(grades),
+    mutationFn: ({ formValues, schoolSemester }: SubmitGradesVariables) => submitGrades(formValues, schoolSemester),
     onSuccess: () => {
       toast.success("성적이 저장되었습니다.");
     },
@@ -223,3 +217,6 @@ export const useSubmitCertificates = () =>
       toast.error(error instanceof Error ? error.message : "자격증 취득 정보 저장에 실패했습니다.");
     },
   });
+
+// 성적, 출결, 자격증이 모두 저장된 뒤 지원자의 산출 결과를 갱신합니다.
+export const resultGrades = () => Http.post<void>("/api/evaluation/v11/evaluations/result", {});
