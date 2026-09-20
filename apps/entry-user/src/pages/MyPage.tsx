@@ -97,13 +97,7 @@ export const MyPage = () => {
 
   // applicantId 조회 api 나올 때까지 11로 고정
   const handleDownloadApplication = async () => {
-    const document = await getApplicationDocument("11");
-
-    if (!document.exists) {
-      toast.error("원서 파일이 없습니다.");
-      return;
-    }
-
+    const document = await getApplicationDocument();
     window.location.href = document.downloadUrl;
   };
 
