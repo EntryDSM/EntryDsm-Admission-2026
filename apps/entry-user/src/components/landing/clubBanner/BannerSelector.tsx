@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { type BannerId } from "./BannerContainer";
@@ -34,13 +35,13 @@ const SelectorContainer = styled.div`
   overflow-x: auto;
   margin-bottom: 40px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     border-radius: 6px;
     padding: 3px;
     margin-bottom: 20px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     border-radius: 4px;
     padding: 2px;
     margin-bottom: 5px;
@@ -70,13 +71,13 @@ const TabButton = styled.button<{ isActive: boolean }>`
     font-size: 13px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 8px 16px;
     font-size: 12px;
     border-radius: 4px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 6px 12px;
     font-size: 11px;
     border-radius: 3px;

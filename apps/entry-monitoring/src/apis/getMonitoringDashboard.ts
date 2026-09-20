@@ -95,7 +95,10 @@ export const toMonitoringData = (dashboard: DashboardData): MonitoringData => ({
   serverErrorLogs: [],
   serverLogTotalCount: 0,
   summary: {
-    total: getActiveUsers(dashboard.services.items, "TOTAL"),
+    total: ["IDENTITY", "AUTH", "APPLICATION"].reduce(
+      (total, service) => total + getActiveUsers(dashboard.services.items, service),
+      0
+    ),
     user: getActiveUsers(dashboard.services.items, "IDENTITY"),
     auth: getActiveUsers(dashboard.services.items, "AUTH"),
     application: getActiveUsers(dashboard.services.items, "APPLICATION"),

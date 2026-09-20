@@ -177,7 +177,11 @@ curl -sI http://localhost:8787/any/deep/route    # 200, text/html(SPA fallback),
 - **`canonical`·`og:url`** — 정적 `index.html` 하나가 모든 경로에 서빙되므로 루트 URL로 고정하면 `/faq`, `/notice`도 "대표 URL은 `/`"라고
   선언하게 되어 하위 페이지 색인이 루트로 합쳐질 위험이 있다. 생략하면 Google은 실제 URL을 대표로 쓰고, 메신저는 공유한 주소를 그대로 쓴다.
 - **`og:image`** — 1200×630 PNG/JPG가 필요한데 저장소에 적합한 이미지가 없다 (SVG 파비콘은 대부분의 미리보기가 지원하지 않음). 추후 과제(13절).
-- **경로별 title/description** — 정적 HTML로는 불가능. `react-helmet-async` 같은 런타임 방식이나 프리렌더링이 필요하다. 추후 과제.
+- **경로별 title/description** — 정적 HTML로는 불가능해 추후 과제였으나, `<title>`은 2026-09-14에 런타임 방식으로 구현했다:
+  각 앱 Router의 라우트에 `handle: { title: "…" }`을 달고, 라우터 최상단의 `DocumentTitleOutlet`(@entry/ui)이 `document.title`을
+  "페이지명 | 서비스명"으로 갱신한다 (공지 상세는 `usePageTitle`로 로드 후 실제 공지 제목으로 덮어씀). Google은 JS 렌더링 후의
+  제목을 색인하므로 검색결과에도 반영된다. 정적 HTML 응답의 `<title>`은 여전히 위 표의 기본값 하나다.
+  `description`은 여전히 추후 과제(13절).
 
 ## 7. sitemap.xml
 
@@ -325,7 +329,8 @@ Git Bash 기준. PowerShell에서는 `curl` 대신 `curl.exe`를 쓴다 (`curl`�
 
 ## 13. 추후 과제
 
-- **경로별 메타**: `/notice/:id` 제목·설명, `/faq` 등 페이지별 `<title>`·`description` — `react-helmet-async` 도입 또는 빌드 시 프리렌더링.
+- **경로별 `description`**: 페이지별 `<title>`은 라우터 handle + `document.title` 방식으로 구현 완료(6절). `description`·`og:*`의
+  경로별 값은 미구현 — `react-helmet-async` 도입 또는 빌드 시 프리렌더링 필요.
 - **`og:image`**: 1200×630 PNG 제작 후 `public/`에 추가하고 `<meta property="og:image" content="https://entrydsm.hs.kr/og.png" />` 삽입.
 - **4개 앱 `lang="ko"`**: 지금은 entry-user만 `ko`로 바꿨다. 나머지도 한국어 UI이므로 정정할 것(검색과 무관, 접근성).
 - **stag noindex**: 8절의 `_headers` 호스트 규칙을 선제적으로 넣을지 결정.

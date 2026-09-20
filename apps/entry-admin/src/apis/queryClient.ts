@@ -1,5 +1,6 @@
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { getSentryIgnoreStatuses, reportApiError } from "@entry/observability";
 
 import { HttpError } from "./http";
 
@@ -20,16 +21,34 @@ const getErrorMessage = (error: unknown) => {
   return "네트워크 오류가 발생했습니다.";
 };
 
-/** 앱 전역 QueryClient. 쿼리 에러는 이곳에서 일괄 토스트 처리한다. */
+/** 앱 전역 QueryClient. 쿼리 에러는 이곳에서 일괄 토스트 처리하고, 쿼리·뮤테이션 에러는 모두 Sentry 로 보고한다. */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      // 자체 에러 화면을 가진 쿼리(예: 어드민 접근 가드)는 meta 로 전역 토스트를 끈다.
+      // 토스트 여부와 무관하게 보고한다 (4xx 는 warning 레벨 — docs/OBSERVABILITY.md 3절).
+      // 정상 흐름인 상태 코드는 쿼리의 meta.sentryIgnoreStatuses 로 제외한다.
+      reportApiError(error, {
+        source: "query",
+        target: query.queryKey,
+        ignoreStatuses: getSentryIgnoreStatuses(query.meta),
+      });
+
+      // 자체 에러 화면을 가진 쿼리(예: 접근 가드)는 meta 로 전역 토스트를 끈다.
       if (query.meta?.suppressGlobalErrorToast) {
         return;
       }
 
       toast.error(getErrorMessage(error));
+    },
+  }),
+  mutationCache: new MutationCache({
+    // 뮤테이션의 화면 처리는 각 훅이 직접 하므로(관례) 여기서는 보고만 한다.
+    onError: (error, _variables, _context, mutation) => {
+      reportApiError(error, {
+        source: "mutation",
+        target: mutation.options.mutationKey,
+        ignoreStatuses: getSentryIgnoreStatuses(mutation.options.meta),
+      });
     },
   }),
   defaultOptions: {

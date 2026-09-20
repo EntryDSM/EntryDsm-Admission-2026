@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { SCHOOL_HOMEPAGE_URL } from "../../utils/env";
@@ -27,12 +28,12 @@ const Container = styled.div`
   gap: 24px;
   margin-top: 60px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 40px 20px;
     gap: 20px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 30px 15px;
     gap: 18px;
   }
@@ -45,11 +46,11 @@ const TextContent = styled.p`
   font-weight: 550;
   line-height: 1.4;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 18px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
     line-height: 1.3;
   }
@@ -80,12 +81,12 @@ const Button = styled.button`
     transform: translateY(0);
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 10px 28px;
     font-size: 15px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 8px 24px;
     font-size: 14px;
   }

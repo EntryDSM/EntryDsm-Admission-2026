@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { dmsLogo, jobisLogo, pickLogo, xquareLogo } from "../../../assets";
 import { type BannerId } from "./BannerContainer";
@@ -68,12 +69,12 @@ const HoverContainer = styled.div`
     padding: 30px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     border-radius: 8px;
     padding: 25px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     border-radius: 6px;
     padding: 20px;
   }
@@ -93,12 +94,12 @@ const TitleSection = styled.div`
   gap: 12px;
   margin-bottom: 30px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     gap: 10px;
     margin-bottom: 16px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     gap: 8px;
     margin-bottom: 12px;
   }
@@ -109,12 +110,12 @@ const IconImg = styled.img`
   height: 40px;
   object-fit: contain;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     width: 35px;
     height: 35px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     width: 30px;
     height: 30px;
   }
@@ -126,11 +127,11 @@ const Title = styled.h3`
   color: white;
   margin: 0;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 30px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 25px;
   }
 `;
@@ -143,11 +144,11 @@ const Description = styled.p`
   font-weight: 600;
   white-space: pre-wrap;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 16px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;

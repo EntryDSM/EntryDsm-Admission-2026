@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { Activity1, Activity2, Activity3, Activity4 } from "../../assets/landing/award";
 import { colors } from "@entry/design";
@@ -53,11 +54,11 @@ const Container = styled.div`
     padding: 60px 80px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 40px 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 30px 20px;
   }
 `;
@@ -69,12 +70,12 @@ const Title = styled.h2`
   text-align: left;
   margin: 0 0 90px 0;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 32px;
     margin-bottom: 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 28px;
     margin-bottom: 30px;
   }
@@ -90,12 +91,12 @@ const AwardsGrid = styled.div`
   gap: 45px;
   margin: 0 auto;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     grid-template-columns: 1fr;
     gap: 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     gap: 30px;
   }
 `;
@@ -118,11 +119,11 @@ const AwardCard = styled.div`
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     height: 120px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     height: 100px;
   }
 `;
@@ -133,11 +134,11 @@ const AwardImage = styled.img`
   object-fit: cover;
   flex-shrink: 0;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     width: 170px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     width: 100px;
   }
 `;
@@ -151,12 +152,12 @@ const AwardInfo = styled.div`
   flex: 1;
   padding: 24px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 20px;
     gap: 6px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 16px;
     gap: 4px;
   }
@@ -167,11 +168,11 @@ const Year = styled.div`
   font-weight: 700;
   color: #ff6b35;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 18px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
   }
 `;
@@ -182,11 +183,11 @@ const AwardTitle = styled.div`
   color: #333;
   line-height: 1.4;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 18px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
   }
 `;

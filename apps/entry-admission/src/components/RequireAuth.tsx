@@ -4,6 +4,7 @@ import { Outlet, useLocation } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { colors } from "@entry/design";
 import { USER_APP_URL } from "@entry/ui";
+import { useSentryUser } from "@entry/observability";
 import { QueryKeys } from "../apis/query";
 import { HttpError } from "../apis/http";
 import { useMyAccount } from "../hooks/useMyAccount";
@@ -18,7 +19,10 @@ export const RequireAuth = () => {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
   const previousPathname = useRef(pathname);
-  const { accountError, isCheckingAccount, refetchAccount } = useMyAccount();
+  const { account, accountError, isCheckingAccount, refetchAccount } = useMyAccount();
+
+  // 로그인 사용자의 내부 userId 만 Sentry user.id 로 붙인다 (docs/OBSERVABILITY.md 5절).
+  useSentryUser(account?.userId);
 
   // 첫 마운트는 쿼리 자체가 조회하므로, 실제로 경로가 바뀌었을 때만 다시 확인한다.
   useEffect(() => {

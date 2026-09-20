@@ -35,7 +35,7 @@ export type AccountRole = "ADMIN" | "MONITOR" | "STUDENT";
 /** 계정 상태 */
 export type AccountStatus = "ACTIVE" | "DELETED" | "SUSPENDED";
 
-/** 가입 유형 (본인/부모님 명의) */
+/** 가입 유형 (본인/보호자 명의) */
 export type SignupType = "SELF" | "PARENT";
 
 /** identity 도메인의 지원 상태 — admin 도메인 `ApplicantStatus` 와 값 체계가 다르다. */
@@ -370,7 +370,7 @@ export interface NoticeDetail {
   createdAt: string;
   /** ISO datetime */
   updatedAt: string;
-  division?: NoticeDivision;
+  division?: NoticeDivision | UpdateNoticePayload["division"];
   isPinned?: boolean;
 }
 
@@ -381,5 +381,14 @@ export interface CreateNoticePayload {
   content: string;
   isPinned: boolean;
   /** 파일관리(document) 업로드 API 미연동이라 현재는 보내지 않는다. */
+  attachmentIds?: string[];
+}
+
+/** 공지 수정 요청 (PATCH /api/v11/admin/notices/{noticeId}) */
+export interface UpdateNoticePayload {
+  title: string;
+  content: string;
+  division: "ADMISSION_NOTICE" | "PROSPECTIVE_STUDENT";
+  isPinned: boolean;
   attachmentIds?: string[];
 }

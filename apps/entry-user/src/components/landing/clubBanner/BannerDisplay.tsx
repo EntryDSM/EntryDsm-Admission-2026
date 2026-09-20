@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { dms, jobis, pick, xquare } from "../../../assets";
 import { BannerHover } from "./BannerHover";
@@ -49,11 +50,11 @@ const DisplayContainer = styled.div`
     min-height: 350px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     min-height: 300px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     min-height: 250px;
   }
 `;
@@ -70,11 +71,11 @@ const BannerWrapper = styled.div`
     border-radius: 12px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     border-radius: 8px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     border-radius: 6px;
   }
 
@@ -93,11 +94,11 @@ const BannerImage = styled.img`
     border-radius: 12px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     border-radius: 8px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     border-radius: 6px;
   }
 `;
@@ -117,7 +118,7 @@ const IndicatorGroup = styled.div`
     gap: 10px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     right: 20px;
     gap: 8px;
     bottom: 20px;
@@ -127,7 +128,7 @@ const IndicatorGroup = styled.div`
     justify-content: center;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     right: 16px;
     bottom: 16px;
     gap: 6px;
@@ -148,12 +149,12 @@ const Indicator = styled.div<{ isActive?: boolean }>`
     height: 9px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     width: 8px;
     height: 8px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     width: 6px;
     height: 6px;
   }

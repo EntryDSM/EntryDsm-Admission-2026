@@ -131,6 +131,10 @@ export const CommonHeader = ({ transparent = false, isLoggedIn = false, isLoadin
     return () => window.removeEventListener("scroll", handleScroll);
   }, [transparent]);
 
+  useEffect(() => {
+    setIsSideClick(false);
+  }, [pathname]);
+
   const isTransparent = transparent && !isScrolled;
 
   const navData = [
@@ -201,17 +205,29 @@ export const CommonHeader = ({ transparent = false, isLoggedIn = false, isLoadin
             로그인
           </Btn>
         )}
-        <SideBarBtnIcon onClick={() => setIsSideClick(!isSideClick)} />
+        <CommonMenuButton
+          type="button"
+          aria-label={isSideClick ? "메뉴 닫기" : "메뉴 열기"}
+          aria-expanded={isSideClick}
+          aria-controls="common-header-menu"
+          onClick={() => setIsSideClick(prev => !prev)}
+        >
+          <SideBarBtnIcon color={isTransparent ? colors.extra.realWhite : colors.gray[500]} />
+        </CommonMenuButton>
       </CommonHeaderActionSection>
       {isSideClick && (
-        <SideNavContainer>
+        <CommonSideNavContainer id="common-header-menu" aria-label="주요 메뉴">
           {navData.map(data => (
-            <SideNavContent key={data.name} onClick={() => navClick(data.path)}>
+            <CommonSideNavContent key={data.name} type="button" onClick={() => navClick(data.path)}>
               {data.name}
-            </SideNavContent>
+            </CommonSideNavContent>
           ))}
-          {isLoggedIn && <SideNavContent onClick={() => navClick("/mypage")}>마이페이지</SideNavContent>}
-        </SideNavContainer>
+          {isLoggedIn && (
+            <CommonSideNavContent type="button" onClick={() => navClick("/mypage")}>
+              마이페이지
+            </CommonSideNavContent>
+          )}
+        </CommonSideNavContainer>
       )}
     </HeaderContainer>
   );
@@ -304,6 +320,10 @@ const CommonHeaderLogoSection = styled.div`
     min-width: 0;
     justify-content: flex-start;
   }
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
 `;
 
 const CommonHeaderLogoText = styled.div<{ isTransparent?: boolean }>`
@@ -314,7 +334,11 @@ const CommonHeaderLogoText = styled.div<{ isTransparent?: boolean }>`
   transition: color 0.3s ease-in-out;
 
   @media (max-width: 480px) {
-    display: none;
+    font-size: 20px;
+  }
+
+  @media (max-width: 360px) {
+    font-size: 18px;
   }
 `;
 
@@ -328,6 +352,72 @@ const CommonHeaderActionSection = styled.div`
   @media (max-width: 1200px) {
     gap: 12px;
     flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    gap: 8px;
+
+    > button:not(:last-child) {
+      width: 84px;
+      min-width: 0;
+      height: 40px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+  }
+`;
+
+const CommonMenuButton = styled.button`
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: transparent;
+  cursor: pointer;
+
+  @media (max-width: 1200px) {
+    display: flex;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colors.orange[800]};
+    border-radius: 8px;
+  }
+`;
+
+const CommonSideNavContainer = styled.nav`
+  position: absolute;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  max-height: calc(100dvh - 70px);
+  overflow-y: auto;
+  padding: 8px 16px 16px;
+  background-color: ${colors.extra.realWhite};
+  border-bottom: 1px solid ${colors.gray[200]};
+  box-shadow: 0 8px 16px rgb(0 0 0 / 8%);
+
+  @media (min-width: 1201px) {
+    display: none;
+  }
+`;
+
+const CommonSideNavContent = styled.button`
+  display: block;
+  width: 100%;
+  padding: 14px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: ${colors.gray[500]};
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background-color: ${colors.gray[100]};
   }
 `;
 

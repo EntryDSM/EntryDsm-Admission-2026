@@ -1,12 +1,14 @@
 import styled from "@emotion/styled";
 import { canProceedToNext, GRADUATION_TYPES, type GraduationType, useApplicationData, usePageData } from "@entry/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import {
   getApplicationStorageKey,
   getStartedApplicantId,
+  clearStartedApplicantId,
   updateApplicantPersonalInformation,
+  updateApplicantPersonalProfile,
   updateApplicationClassification,
   updateGuardianPersonalInformation,
   updateMiddleSchoolInformation,
@@ -17,7 +19,9 @@ import {
   submitExpectedGrades,
   submitGedScores,
   submitGrades,
+  resultGrades,
 } from "../apis";
+import { HttpError } from "../apis/http";
 import { ApplicationNav } from "../components";
 
 const admissionTypes = {
@@ -44,15 +48,9 @@ const genders = {
 
 const specialAdmissionTypes = {
   국가유공자: "NATIONAL_MERIT",
-  "특례입학 대상자": "PRIVILEGED_ADMISSION",
-  "특례 입학 대상": "PRIVILEGED_ADMISSION",
-  "해당 없음": "NOTHING",
-} as const;
-
-const guardianRelations = {
-  부: "FATHER",
-  모: "MOTHER",
-  기타: "OTHER",
+  "특례 입학 대상": "SPECIAL_ADMISSION",
+  "특례입학 대상자": "SPECIAL_ADMISSION",
+  "해당 없음": "NONE",
 } as const;
 
 const getRequiredValue = <T,>(value: T | null | undefined, fieldName: string): T => {
@@ -106,20 +104,34 @@ const getRequiredBoolean = (value: "O" | "X" | null, fieldName: string) => {
   return value === "O";
 };
 
+const isApplicantAccessDeniedError = (error: unknown) => {
+  if (!(error instanceof HttpError) || error.status !== 403 || !error.body || typeof error.body !== "object") {
+    return false;
+  }
+
+  const body = error.body as { error?: { code?: string } };
+  return body.error?.code === "APPLICANT_ACCESS_DENIED";
+};
+
 export const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [classificationData] = usePageData("applicationClassification");
-  const { state, loadedStorageKey, loadFromStorage, saveToStorage } = useApplicationData();
+  const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData } = useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
+  // 입력 중인 원서의 500ms 지연 저장 타이머입니다. 접근 권한이 사라지면 즉시 취소합니다.
+  const autoSaveTimerRef = useRef<number | null>(null);
+  // 새 원서를 시작할 때 받은 ID로 브라우저별 임시저장 공간을 구분합니다.
   const applicantId = getStartedApplicantId();
   const storageKey = applicantId === null ? null : getApplicationStorageKey(applicantId);
+  // 저장 데이터를 불러온 뒤에만 자동 저장을 시작해 빈 초기 상태가 기존 데이터를 덮어쓰지 않게 합니다.
   const isStorageLoaded = !storageKey || loadedStorageKey === storageKey;
 
   useEffect(() => {
     if (storageKey && loadedStorageKey !== storageKey) {
       setHasStorageLoadError(false);
+      // 원서 페이지 진입 시 현재 applicantId의 IndexedDB 임시저장 데이터를 한 번 복원합니다.
       void loadFromStorage(storageKey).catch(error => {
         console.error("원서 임시저장 데이터를 불러오지 못했습니다.", error);
         toast.error("원서 임시저장 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.");
@@ -129,16 +141,24 @@ export const AppLayout = () => {
   }, [loadFromStorage, loadedStorageKey, storageKey]);
 
   useEffect(() => {
+    // 복원이 끝나지 않았거나 다른 원서의 데이터가 로드된 상태에서는 저장하지 않습니다.
     if (!isStorageLoaded || !storageKey || loadedStorageKey !== storageKey) {
       return;
     }
 
+    // state가 바뀔 때마다 500ms를 기다립니다. 계속 입력하면 cleanup이 이전 타이머를 취소합니다.
     const timer = window.setTimeout(() => {
+      // 사용자가 입력을 멈춘 최종 상태 전체를 현재 원서의 IndexedDB 키에 저장합니다.
       void saveToStorage(storageKey);
     }, 500);
+    autoSaveTimerRef.current = timer;
 
     return () => {
+      // 다음 입력, 페이지 이동, 언마운트 시에는 이전 예약 저장을 취소합니다.
       window.clearTimeout(timer);
+      if (autoSaveTimerRef.current === timer) {
+        autoSaveTimerRef.current = null;
+      }
     };
   }, [isStorageLoaded, loadedStorageKey, saveToStorage, state, storageKey]);
   const pageGraduateRoutes = [
@@ -246,7 +266,6 @@ export const AppLayout = () => {
             "졸업 구분"
           );
           await updateApplicationClassification({
-            applicantId,
             admissionType: getMappedValue(admissionTypes, state.applicationClassification.typeSelection, "전형"),
             region: getMappedValue(regions, state.applicationClassification.regionSelection, "지역"),
             graduationType: graduationTypeValue,
@@ -258,9 +277,12 @@ export const AppLayout = () => {
         case "/applicant-info": {
           const { idPhoto, applicantName, applicantNumber, gender, dateOfBirth } = state.applicantInfo;
 
+          const file = getRequiredValue(idPhoto, "증명사진");
+
+          const { id } = await updateApplicantPersonalProfile({ file });
+
           await updateApplicantPersonalInformation({
-            applicantId,
-            profileImage: getRequiredValue(idPhoto, "증명사진"),
+            photoFileId: id,
             name: applicantName,
             phoneNumber: applicantNumber,
             gender: getMappedValue(genders, gender, "성별"),
@@ -274,23 +296,34 @@ export const AppLayout = () => {
           break;
         }
         case "/guardian-info": {
-          const { guardianName, guardianNumber, guardianGender, relationship, postalCode, address, addressDetail } =
-            state.guardianInfo;
+          const {
+            guardianName,
+            guardianNumber,
+            guardianGender,
+            relationship,
+            otherRelationship,
+            postalCode,
+            address,
+            addressDetail,
+          } = state.guardianInfo;
+          const selectedRelationship = getRequiredValue(relationship[0], "보호자 관계");
           await updateGuardianPersonalInformation({
-            applicantId,
             guardianName,
             guardianPhoneNumber: guardianNumber,
             guardianGender: getMappedValue(genders, guardianGender, "보호자 성별"),
-            guardianRelation: getMappedValue(guardianRelations, String(relationship[0]), "보호자 관계"),
+            guardianRelation:
+              selectedRelationship === "기타"
+                ? getRequiredValue(otherRelationship, "지원자와의 관계(기타)")
+                : selectedRelationship,
             address: { zipCode: postalCode, addressBase: address, addressDetail },
           });
           break;
         }
         case "/middle-school-info": {
-          const { schoolName, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
+          const { schoolName, schoolCode, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
           await updateMiddleSchoolInformation({
-            applicantId,
             schoolName: getRequiredValue(schoolName, "중학교 이름"),
+            schoolCode: getRequiredValue(schoolCode, "중학교 코드"),
             studentNumber: String(getRequiredValue(studentId, "중학교 학번")),
             schoolPhone: getRequiredValue(schoolPhone, "중학교 전화번호"),
             teacherName: getRequiredValue(teacherName, "중학교 교사 성명"),
@@ -298,10 +331,10 @@ export const AppLayout = () => {
           break;
         }
         case "/personal-statements":
-          await updateSelfIntroduction({ applicantId, introduction: state.personalStatements.personalStmt });
+          await updateSelfIntroduction({ introduction: state.personalStatements.personalStmt });
           break;
         case "/statement-of-purpose":
-          await updateStudyPlan({ applicantId, studyPlan: state.statementOfPurpose.studyPlan });
+          await updateStudyPlan({ studyPlan: state.statementOfPurpose.studyPlan });
           break;
         case "/first-graduate":
           await submitGrades(state.firstGraduate, "3-2");
@@ -353,6 +386,7 @@ export const AppLayout = () => {
               programmingCertified: getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
             }),
           ]);
+          await resultGrades();
           break;
         }
         case "/ged/attendance-volunteer":
@@ -377,6 +411,18 @@ export const AppLayout = () => {
 
       return true;
     } catch (error) {
+      if (isApplicantAccessDeniedError(error)) {
+        if (autoSaveTimerRef.current !== null) {
+          window.clearTimeout(autoSaveTimerRef.current);
+          autoSaveTimerRef.current = null;
+        }
+        clearStartedApplicantId();
+        await clearAllData(getApplicationStorageKey(applicantId));
+        toast.error("원서 작성 권한이 없어 임시저장 데이터를 초기화했습니다. 다시 접수해 주세요.");
+        navigate("/", { replace: true });
+        return false;
+      }
+
       toast.error(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
       return false;
     } finally {

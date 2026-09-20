@@ -1,8 +1,10 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
-import { colors, Text } from "@entry/design";
-import { ScorePageNav, TabSection, Btn } from "@entry/ui";
+import { colors } from "@entry/design";
+import { ScorePageNav, Btn } from "@entry/ui";
+import { ResponsiveTabSection } from "../components/ResponsiveTabSection";
 import { ScoreResultModal } from "../components";
 import { useCalculationData } from "../contexts";
 import { calculateAdmissionScores } from "../utils/admissionScoreCalculator";
@@ -151,19 +153,15 @@ export const CalculateLayout = () => {
     <PageContainer>
       <ContentWrapper>
         <ContentContainer>
-          <TabSection options={CALCULATION_TYPES} activeType={activeType} onTypeChange={handleTypeChange} />
+          <ResponsiveTabSection options={CALCULATION_TYPES} activeType={activeType} onTypeChange={handleTypeChange} />
 
           <HeaderSection>
             <TitleSection>
-              <Text fontSize={32} fontWeight={600}>
-                {currentData ? currentData.name : "Error"}
-              </Text>
-              <Text isOverFlow={true} fontSize={16} fontWeight={400} color={colors.gray[400]}>
-                {currentExplanation}
-              </Text>
+              <StepTitle>{currentData ? currentData.name : "Error"}</StepTitle>
+              <StepExplanation>{currentExplanation}</StepExplanation>
             </TitleSection>
             <NavigationSection>
-              <ScorePageNav datas={scoreNavData} />
+              <ScorePageNav datas={scoreNavData} compactOnMobile />
             </NavigationSection>
           </HeaderSection>
 
@@ -228,6 +226,11 @@ const ContentContainer = styled.div`
   flex-direction: column;
   gap: 40px;
   padding: 40px 24px 0;
+
+  ${media.tablet} {
+    padding: 28px 16px 0;
+    gap: 28px;
+  }
 `;
 
 const HeaderSection = styled.div`
@@ -238,21 +241,59 @@ const HeaderSection = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 36px 20px;
+
+  ${media.tablet} {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
 `;
 
 const TitleSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
+`;
+
+const StepTitle = styled.h1`
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+
+  ${media.tablet} {
+    font-size: 26px;
+  }
+
+  ${media.medium} {
+    font-size: 22px;
+  }
+`;
+
+const StepExplanation = styled.p`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  color: ${colors.gray[400]};
+
+  ${media.medium} {
+    font-size: 14px;
+    line-height: 1.5;
+  }
 `;
 
 const NavigationSection = styled.div`
   display: flex;
   flex: 1;
+  width: 100%;
   min-width: min(100%, 620px);
 
-  @media (max-width: 960px) {
+  ${media.desktop} {
     min-width: 100%;
+  }
+
+  ${media.tablet} {
+    min-width: 0;
   }
 `;
 

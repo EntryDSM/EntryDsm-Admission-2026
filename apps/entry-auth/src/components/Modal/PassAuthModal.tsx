@@ -12,7 +12,7 @@ interface PassAuthModalProps {
 }
 
 export const PassAuthModal = ({ isOpen, onClose, onRetry, userType, isLoading, error }: PassAuthModalProps) => {
-  const title = userType === "student" ? "학생 명의 본인인증" : "부모 명의 본인인증";
+  const title = userType === "student" ? "학생 명의 본인인증" : "보호자 명의 본인인증";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>

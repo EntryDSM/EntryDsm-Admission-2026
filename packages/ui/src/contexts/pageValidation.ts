@@ -32,7 +32,7 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
   const studentId = getObjectFieldValue(data, "studentId");
   if (studentId !== null && studentId !== undefined) {
     const studentIdStr = String(studentId);
-    if (studentIdStr.length !== 5) {
+    if (!/^\d{5}$/.test(studentIdStr)) {
       missingFields.push("studentId_invalid");
     }
   }

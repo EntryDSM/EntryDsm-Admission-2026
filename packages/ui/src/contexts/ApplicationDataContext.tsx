@@ -34,7 +34,7 @@ interface IGuardianInfoType {
 interface IMiddleSchoolInfoType {
   schoolName: string;
   schoolCode: string;
-  studentId: number | null;
+  studentId: string;
   schoolPhone: string;
   teacherName: string;
 }
@@ -140,7 +140,7 @@ const initialState: ApplicationState = {
   middleSchoolInfo: {
     schoolName: "",
     schoolCode: "",
-    studentId: null,
+    studentId: "",
     schoolPhone: "",
     teacherName: "",
   },
@@ -410,6 +410,7 @@ export const ApplicationDataProvider: React.FC<{
   const saveToStorage = useCallback(
     async (storageKey: string) => {
       try {
+        // AppLayout이 전달한 원서별 키로 React 메모리 state 전체를 IndexedDB에 덮어씁니다.
         await saveToIndexedDB(storageKey, state);
         // console.log('데이터가 임시저장되었습니다.');
       } catch (error) {
@@ -420,6 +421,7 @@ export const ApplicationDataProvider: React.FC<{
   );
 
   const loadFromStorage = useCallback(async (storageKey: string) => {
+    // 해당 원서 키에 이전 저장본이 있으면 복원하고, 없으면 빈 원서 상태로 시작합니다.
     const savedData = await loadFromIndexedDB(storageKey);
     if (savedData) {
       dispatch({ type: "LOAD_FROM_STORAGE", payload: savedData });
@@ -427,22 +429,23 @@ export const ApplicationDataProvider: React.FC<{
       dispatch({ type: "CLEAR_ALL_DATA" });
     }
 
-    // IndexedDB를 정상적으로 읽은 경우에만 자동 저장을 허용합니다.
+    // IndexedDB를 정상적으로 읽은 경우에만 AppLayout이 자동 저장을 허용합니다.
     setLoadedStorageKey(storageKey);
   }, []);
 
   const clearAllData = useCallback(async (storageKey?: string) => {
+    // 먼저 로드 완료 표시를 해제해 빈 초기 state가 기존 원서 키로 자동 저장되지 않게 합니다.
+    setLoadedStorageKey(null);
+    dispatch({ type: "CLEAR_ALL_DATA" });
+
     if (storageKey) {
       try {
+        // 메모리 초기화와 별개로 브라우저 IndexedDB의 해당 원서 임시저장본도 삭제합니다.
         await deleteFromIndexedDB(storageKey);
       } catch (error) {
         console.error("원서 임시저장 데이터 삭제 실패:", error);
       }
     }
-
-    // 삭제 중에는 기존 키를 유지해 AppLayout이 데이터를 다시 복원하지 않도록 합니다.
-    dispatch({ type: "CLEAR_ALL_DATA" });
-    setLoadedStorageKey(null);
   }, []);
 
   const value: ApplicationContextType = {

@@ -3,9 +3,8 @@ import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn, TabSection, useModal } from "@entry/ui";
 import { useNavigate } from "react-router";
-import { toast } from "react-toastify";
 
-import { useNotices, useQnas } from "../hooks";
+import { useDeleteNotice, useNotices, useQnas } from "../hooks";
 import { getNoticeDivision, type NoticeType } from "../utils";
 import { PagiNation, QnaDetailModal } from "../components";
 
@@ -25,6 +24,7 @@ export const NoticeList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFaqId, setSelectedFaqId] = useState<number | null>(null);
   const { isOpen, open, close } = useModal();
+  const { deleteNotice, isDeleting, deletingNoticeId } = useDeleteNotice();
 
   const isQnaTab = activeTab === "QNA";
   const activeDivision = isQnaTab ? undefined : getNoticeDivision(activeTab);
@@ -59,9 +59,18 @@ export const NoticeList = () => {
     navigate(`/notice/edit/${id}`);
   };
 
-  const handleDeleteClick = () => {
-    // 공지 삭제 API 는 명세에 없어 아직 연동하지 않는다.
-    toast.info("아직 지원하지 않는 기능입니다.");
+  const handleDeleteClick = (noticeId: number) => {
+    if (isDeleting || !confirm("이 공지사항을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    deleteNotice(noticeId, {
+      onSuccess: () => {
+        if (notices.length === 1 && currentPage > 1) {
+          setCurrentPage(page => page - 1);
+        }
+      },
+    });
   };
 
   const handleQnaClick = (faqId: number) => {
@@ -153,8 +162,12 @@ export const NoticeList = () => {
                       <ActionButton onClick={() => handleEditClick(notice.noticeId)} color="#3b82f6">
                         수정
                       </ActionButton>
-                      <ActionButton onClick={handleDeleteClick} color="#ef4444">
-                        삭제
+                      <ActionButton
+                        onClick={() => handleDeleteClick(notice.noticeId)}
+                        color="#ef4444"
+                        disabled={isDeleting}
+                      >
+                        {isDeleting && deletingNoticeId === notice.noticeId ? "삭제 중..." : "삭제"}
                       </ActionButton>
                     </ActionButtons>
                   </TableCell>

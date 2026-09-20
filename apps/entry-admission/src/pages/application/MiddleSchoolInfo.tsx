@@ -1,17 +1,14 @@
+import { useState, useEffect } from "react";
+
 import { Flex } from "@entry/design";
 import { usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
 
 export const MiddleSchoolInfo = () => {
   const [datas, setDatas] = usePageData("middleSchoolInfo");
-  // TODO: 검색 api 없어서 임시로 모달창 없이 입력창에 입력하는 형식으로 임시 대체함
-  // const [selectedName, setSelectedName] = useState<string | null>(datas.schoolName || null);
-  // const [selectedCode, setSelectedCode] = useState<string | null>(datas.schoolCode || null);
 
-  const handleSchoolNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setDatas({ ...datas, schoolName: value });
-  };
+  const [selectedName, setSelectedName] = useState<string | null>(datas.schoolName || null);
+  const [selectedCode, setSelectedCode] = useState<string | null>(datas.schoolCode || null);
 
   const handleSchoolPhoneChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -19,7 +16,7 @@ export const MiddleSchoolInfo = () => {
   };
 
   const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.replace(/\D/g, "").slice(0, 5);
     setDatas({ ...datas, studentId: value });
   };
 
@@ -28,18 +25,19 @@ export const MiddleSchoolInfo = () => {
     setDatas({ ...datas, teacherName: value });
   };
 
-  // useEffect(() => {
-  //   setDatas({ ...datas, schoolCode: selectedCode, schoolName: selectedName });
-  // }, [selectedName, selectedCode]);
+  useEffect(() => {
+    setDatas({ ...datas, schoolCode: selectedCode, schoolName: selectedName });
+  }, [selectedName, selectedCode]);
 
   return (
     <Flex isColumn={true} width="100%" height="fit-content">
       <FormElement
-        type="input"
+        type="search"
         label="중학교 이름"
-        inputType="text"
-        onInputChange={handleSchoolNameChange}
-        value={datas.schoolName}
+        selectedName={selectedName}
+        setSelectedName={setSelectedName}
+        selectedCode={selectedCode}
+        setSelectedCode={setSelectedCode}
       />
       <FormElement
         width="300px"
@@ -49,6 +47,7 @@ export const MiddleSchoolInfo = () => {
         placeholder="중학교 학번을 입력해주세요."
         onInputChange={handleStudentIdChange}
         value={datas.studentId}
+        isComplete={/^\d{5}$/.test(String(datas.studentId ?? ""))}
         explanation="5자리 숫자 형식으로 입력해주세요. (예: 30112)"
         maxLength={5}
       />

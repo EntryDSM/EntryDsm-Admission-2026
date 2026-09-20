@@ -28,6 +28,9 @@ const request = async <T>(path: string, options: RequestInit = {}, allowEmptyRes
   headers.set("Accept", "application/json");
   if (options.method === "POST") {
     headers.set("Content-Type", "application/json");
+  }
+  // GET·HEAD·OPTIONS 를 제외한 모든 요청은 게이트웨이 CSRF 더블서브밋 검사를 통과해야 합니다.
+  if (!["GET", "HEAD", "OPTIONS"].includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
     headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, options.signal));
   }
   const response = await fetch(`${API_BASE_URL}${path}`, {

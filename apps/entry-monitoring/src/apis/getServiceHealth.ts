@@ -4,15 +4,15 @@ export type ServiceHealthStatus = "UP" | "DEGRADED" | "DOWN";
 
 export interface ServiceHealthDependency {
   name: string;
-  status: string;
+  status: ServiceHealthStatus;
 }
 
 export interface ServiceHealthItem {
   service: string;
   label: string;
-  status: string;
-  responseTimeMs: number;
-  version: string;
+  status: ServiceHealthStatus;
+  responseTimeMs: number | null;
+  version: string | null;
   dependencies: ServiceHealthDependency[];
 }
 

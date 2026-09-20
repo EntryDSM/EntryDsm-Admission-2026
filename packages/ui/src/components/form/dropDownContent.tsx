@@ -8,10 +8,11 @@ interface IDropDownType {
   datas: (string | number)[];
   label?: string;
   value?: string | number;
+  disabled?: boolean;
   onChange?: (value: string | number) => void;
 }
 
-export const DropDownContent = ({ datas, label, value, onChange }: IDropDownType) => {
+export const DropDownContent = ({ datas, label, value, disabled = false, onChange }: IDropDownType) => {
   const [content, setContent] = useState<string | number>(() => {
     return value ?? datas[0] ?? "";
   });
@@ -39,7 +40,7 @@ export const DropDownContent = ({ datas, label, value, onChange }: IDropDownType
     <Flex width="fit-content" height="fit-content" gap={12} alignItems="center">
       <DropAllContainer>
         <Flex isColumn={true} width="fit-content" height="fit-content">
-          <DropHead type="button" ref={headRef} onClick={() => setIsClick(!isClick)}>
+          <DropHead type="button" ref={headRef} disabled={disabled} onClick={() => setIsClick(!isClick)}>
             {content}
             <DropDownImg isClick={isClick} src={dropdownArrow} alt="arrow" />
           </DropHead>
@@ -78,6 +79,11 @@ const DropHead = styled.button`
   font-size: 16px;
   background-color: ${colors.extra.realWhite};
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
 
   &:focus-visible {
     outline: 2px solid ${colors.orange[800]};

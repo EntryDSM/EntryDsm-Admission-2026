@@ -6,7 +6,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["VITE_*"]
+      "env": ["VITE_*", "WORKERS_CI_COMMIT_SHA"]
     },
     "lint": {
       "dependsOn": ["^lint"]

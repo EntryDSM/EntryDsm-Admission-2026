@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { useNavigate, Link } from "react-router";
@@ -80,11 +81,11 @@ const Container = styled.div`
   width: 100%;
   padding: 80px 0 100px 0;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 60px 0 80px 0;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 40px 0 60px 0;
   }
 `;
@@ -98,11 +99,11 @@ const ContentWrapper = styled.div`
     padding: 0 80px;
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 0 40px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 0 20px;
   }
 `;
@@ -113,11 +114,11 @@ const Title = styled.h2`
   color: ${colors.gray[500]};
   margin-bottom: 8px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 30px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 26px;
   }
 `;
@@ -128,12 +129,12 @@ const SubTitle = styled.div`
   color: ${colors.gray[500]};
   margin-bottom: 40px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 30px;
     margin-bottom: 30px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 26px;
     margin-bottom: 25px;
   }
@@ -149,11 +150,11 @@ const Divider = styled.div`
   background: ${colors.orange[800]};
   margin-bottom: 80px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     margin-bottom: 60px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     margin-bottom: 40px;
   }
 `;
@@ -170,7 +171,7 @@ const SectionTitle = styled.h3`
   font-weight: 550;
   color: #333;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 18px;
   }
 `;
@@ -212,12 +213,12 @@ const MainNoticeCard = styled.div`
   border-radius: 8px;
   margin-bottom: 8px;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 5px 11px;
     margin-bottom: 20px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 4px 9px;
     margin-bottom: 18px;
   }
@@ -239,12 +240,12 @@ const NoticeCard = styled(Link)`
     background-color: ${colors.gray[50]};
   }
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     padding: 18px 0;
     margin-bottom: 16px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     padding: 16px 0;
     margin-bottom: 14px;
   }
@@ -269,11 +270,11 @@ const MainNoticeTitle = styled.div`
   font-weight: 500;
   line-height: 1.4;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 14px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 13px;
   }
 `;
@@ -294,11 +295,11 @@ const NoticeTitle = styled.div`
   gap: 8px;
   line-height: 1.4;
 
-  @media (max-width: 768px) {
+  ${media.tablet} {
     font-size: 14px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 13px;
   }
 `;
@@ -307,7 +308,7 @@ const NoticeDate = styled.div`
   font-size: 12px;
   color: #999;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 11px;
   }
 `;

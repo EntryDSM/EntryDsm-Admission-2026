@@ -1,4 +1,5 @@
-import { redactClientLog as redact } from "./redactClientLog";
+import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken";
+import { redactClientLog as redact } from "@entry/utils";
 
 interface ClientLog {
   level: "ERROR" | "WARN";
@@ -36,15 +37,23 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
       if (!disposed) buffer = [...entries, ...buffer].slice(0, 100);
     };
     try {
-      if (beacon && navigator.sendBeacon?.(endpoint, new Blob([body], { type: "application/json" }))) return;
+      // 로그인 쿠키가 실린 요청은 게이트웨이가 CSRF 더블서브밋을 검사하므로 토큰을 붙여 보냅니다.
+      // 페이지 이탈(beacon) 경로는 재발급 왕복이 불가능하므로 캐시된 토큰만 쓰고, 없으면 sendBeacon 으로 보냅니다.
+      const token = beacon ? getCachedCsrfToken() : await ensureCsrfToken(apiBaseUrl);
+      if (beacon && !token && navigator.sendBeacon?.(endpoint, new Blob([body], { type: "application/json" }))) return;
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: token
+          ? { "Content-Type": "application/json", "X-XSRF-TOKEN": token }
+          : { "Content-Type": "application/json" },
         credentials: "include",
         body,
         keepalive: beacon,
       });
-      if (response.status === 429 || response.status >= 500) retry();
+      if (response.status === 403) {
+        invalidateCsrfToken();
+        retry();
+      } else if (response.status === 429 || response.status >= 500) retry();
     } catch {
       retry();
     } finally {

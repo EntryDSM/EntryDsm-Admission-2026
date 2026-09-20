@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import React from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
@@ -8,7 +9,7 @@ const statistics = [
     kind: "text",
     icon: "97%",
     title: "취업률",
-    description: "작년 취업률은 97%이며,\n모든 취업을 향해 달리고 있어요!",
+    description: "작년 취업률은 97%이며,\n모든 학생의 취업을 향해 달리고 있어요!",
   },
   {
     kind: "img",
@@ -20,7 +21,7 @@ const statistics = [
     kind: "img",
     icon: PrizeImg,
     title: "MOU",
-    description: "다양한 기업과 MOU를 체결하여,\n매년 학생들의 취업으로\n이어지고 있어요!",
+    description: "다양한 기업과 MOU를 체결하여,\n매년 학생들의 취업으로 이어지고 있어요!",
   },
 ];
 
@@ -54,14 +55,14 @@ const Container = styled.div`
     padding: 50px 80px;
   }
 
-  @media (max-width: 768px) {
+  ${media.desktop} {
     flex-direction: column;
     gap: 40px;
     padding: 40px 40px;
     align-items: center;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     gap: 30px;
     padding: 30px 20px;
   }
@@ -74,7 +75,7 @@ const StatCard = styled.div`
   text-align: left;
   flex: 1;
 
-  @media (max-width: 768px) {
+  ${media.desktop} {
     align-items: center;
     text-align: center;
     max-width: 300px;
@@ -84,11 +85,11 @@ const StatCard = styled.div`
 const IconWrapper = styled.div`
   margin-bottom: 20px;
 
-  @media (max-width: 768px) {
+  ${media.desktop} {
     margin-bottom: 16px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     margin-bottom: 12px;
   }
 `;
@@ -106,7 +107,7 @@ const Icon = styled.div<{ isText?: boolean }>`
     object-fit: contain;
   }
 
-  @media (max-width: 768px) {
+  ${media.desktop} {
     font-size: 40px;
     transform: ${props => (props.isText ? "translateY(-6px)" : "none")};
 
@@ -116,7 +117,7 @@ const Icon = styled.div<{ isText?: boolean }>`
     }
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 32px;
     transform: ${props => (props.isText ? "translateY(-4px)" : "none")};
 
@@ -132,12 +133,12 @@ const Title = styled.h3`
   font-weight: 600;
   margin: 0 0 15px 0;
 
-  @media (max-width: 768px) {
+  ${media.desktop} {
     font-size: 18px;
     margin-bottom: 12px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
     margin-bottom: 10px;
   }
@@ -150,11 +151,11 @@ const Description = styled.p`
   margin: 0;
   white-space: pre-wrap;
 
-  @media (max-width: 768px) {
+  ${media.desktop} {
     font-size: 13px;
   }
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 12px;
   }
 `;

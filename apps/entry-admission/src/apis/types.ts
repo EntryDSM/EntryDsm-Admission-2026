@@ -290,7 +290,6 @@ export type ApplicationRegion = "DAEJEON" | "NATIONAL";
 export type GraduationType = "PROSPECTIVE" | "GRADUATED" | "GED";
 
 export interface UpdateApplicationClassificationRequest {
-  applicantId: number;
   admissionType: AdmissionType;
   region: ApplicationRegion;
   graduationType: GraduationType;
@@ -301,11 +300,21 @@ export type UpdateApplicationClassificationResponse = null;
 
 export type ApplicantGender = "MALE" | "FEMALE";
 
-export type SpecialAdmissionType = "NATIONAL_MERIT" | "PRIVILEGED_ADMISSION" | "NOTHING";
+export type SpecialAdmissionType = "NONE" | "NATIONAL_MERIT" | "SPECIAL_ADMISSION";
+
+export interface UpdateApplicantPersonalProfileRequest {
+  file: File;
+}
+
+export interface UpdateApplicantPersonalProfileResponse {
+  id: number;
+  key: string;
+  fileName: string;
+  url: string;
+}
 
 export interface UpdateApplicantPersonalInformationRequest {
-  applicantId: number;
-  profileImage: File;
+  photoFileId: number;
   name: string;
   phoneNumber: string;
   gender: ApplicantGender;
@@ -315,14 +324,11 @@ export interface UpdateApplicantPersonalInformationRequest {
 
 export type UpdateApplicantPersonalInformationResponse = null;
 
-export type GuardianRelation = "FATHER" | "MOTHER" | "OTHER";
-
 export interface UpdateGuardianPersonalInformationRequest {
-  applicantId: number;
   guardianName: string;
   guardianPhoneNumber: string;
   guardianGender: ApplicantGender;
-  guardianRelation: GuardianRelation;
+  guardianRelation: string;
   address: {
     zipCode: string;
     addressBase: string;
@@ -333,8 +339,8 @@ export interface UpdateGuardianPersonalInformationRequest {
 export type UpdateGuardianPersonalInformationResponse = null;
 
 export interface UpdateMiddleSchoolInformationRequest {
-  applicantId: number;
   schoolName: string;
+  schoolCode: string;
   studentNumber: string;
   schoolPhone: string;
   teacherName: string;
@@ -343,14 +349,12 @@ export interface UpdateMiddleSchoolInformationRequest {
 export type UpdateMiddleSchoolInformationResponse = null;
 
 export interface UpdateSelfIntroductionRequest {
-  applicantId: number;
   introduction: string;
 }
 
 export type UpdateSelfIntroductionResponse = null;
 
 export interface UpdateStudyPlanRequest {
-  applicantId: number;
   studyPlan: string;
 }
 

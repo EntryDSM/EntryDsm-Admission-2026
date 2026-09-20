@@ -1,23 +1,15 @@
 import { colors, Flex, Skeleton, Text } from "@entry/design";
 import styled from "@emotion/styled";
-import { getApplicationDocumentUrl, getStartedApplicantId, useApplicationDocument } from "../../apis";
+import { getApplicationDocumentUrl, useApplicationDocument } from "../../apis";
 
 export const ApplicationPreview = () => {
-  // receiptCode API가 확정되기 전까지 현재 작성 원서의 applicantId를 조회 식별자로 사용합니다.
-  const receiptCode = getStartedApplicantId()?.toString();
-  const { data: applicationDocument, isError, isPending } = useApplicationDocument(receiptCode);
-  const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.key) : null;
-  const isPdf = applicationDocument?.fileName.toLowerCase().endsWith(".pdf");
+  const { data: applicationDocument, isError, isPending } = useApplicationDocument();
+  const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.downloadUrl) : null;
+  const fileName = applicationDocument?.fileName ?? "원서 파일";
 
   return (
     <Container>
-      {!receiptCode ? (
-        <ApplicationLoadingContainer>
-          <Text fontSize={20} color={colors.gray[400]}>
-            작성 중인 원서 정보를 찾을 수 없습니다.
-          </Text>
-        </ApplicationLoadingContainer>
-      ) : isPending ? (
+      {isPending ? (
         <ApplicationLoadingContainer>
           <Text fontSize={20} color={colors.gray[400]}>
             원서 파일을 조회하고 있습니다.
@@ -29,7 +21,7 @@ export const ApplicationPreview = () => {
             원서 파일을 불러오지 못했습니다.
           </Text>
         </ApplicationLoadingContainer>
-      ) : !applicationDocument?.exists || !documentUrl ? (
+      ) : !documentUrl ? (
         <ApplicationLoadingContainer>
           <Text fontSize={20} color={colors.gray[400]}>
             저장된 원서 파일이 없습니다.
@@ -37,16 +29,10 @@ export const ApplicationPreview = () => {
         </ApplicationLoadingContainer>
       ) : (
         <Flex width="100%" height="fit-content" isColumn={true}>
-          <NoticeText>{applicationDocument.fileName}</NoticeText>
+          <NoticeText>{fileName}</NoticeText>
           <ApplicationContainer>
             <PdfViewport>
-              {isPdf ? (
-                <PdfFrame title="원서 미리보기" src={documentUrl} />
-              ) : (
-                <FileLink href={documentUrl} target="_blank" rel="noreferrer">
-                  {applicationDocument.fileName} 열기
-                </FileLink>
-              )}
+              <PdfFrame title="원서 미리보기" src={documentUrl} />
             </PdfViewport>
           </ApplicationContainer>
         </Flex>
@@ -86,13 +72,6 @@ const PdfFrame = styled.iframe`
   height: 1120px;
   border: 0;
   display: block;
-`;
-
-const FileLink = styled.a`
-  display: block;
-  padding: 40px;
-  color: ${colors.orange[800]};
-  text-align: center;
 `;
 
 const ApplicationLoadingContainer = styled(Skeleton)`

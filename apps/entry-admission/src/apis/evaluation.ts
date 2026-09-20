@@ -69,6 +69,7 @@ const expectedGradesRequest = (
   };
 };
 
+// 각 학기의 다음 버튼에서 해당 학기 성적을 즉시 저장합니다.
 export const submitExpectedGrades = async (
   formValues: ExpectedGradeFormValues,
   schoolSemester: SubmitExpectedGradesRequest["schoolSemester"]
@@ -109,6 +110,7 @@ const gradesRequest = (
   };
 };
 
+// 각 학기의 다음 버튼에서 해당 학기 성적을 즉시 저장합니다.
 export const submitGrades = async (
   formValues: ExpectedGradeFormValues,
   schoolSemester: SubmitGradesRequest["schoolSemester"]
@@ -215,3 +217,6 @@ export const useSubmitCertificates = () =>
       toast.error(error instanceof Error ? error.message : "자격증 취득 정보 저장에 실패했습니다.");
     },
   });
+
+// 성적, 출결, 자격증이 모두 저장된 뒤 지원자의 산출 결과를 갱신합니다.
+export const resultGrades = () => Http.post<void>("/api/evaluation/v11/evaluations/result", {});

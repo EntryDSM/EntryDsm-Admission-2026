@@ -6,8 +6,8 @@ import { useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
 
 import type { NoticeDetail } from "../apis";
-import { useNoticeDetail } from "../hooks";
-import { toNoticeFormValue } from "../utils";
+import { useNoticeDetail, useUpdateNotice } from "../hooks";
+import { toNoticeFormValue, toUpdateNoticePayload } from "../utils";
 import { INITIAL_NOTICE_FORM_VALUE, NoticeForm, type NoticeAttachment, type NoticeFormValue } from "../components";
 
 export const NoticeEdit = () => {
@@ -69,12 +69,16 @@ type NoticeEditFormProps = {
 
 const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
   const navigate = useNavigate();
+  const { updateNotice, isUpdating } = useUpdateNotice(noticeId);
   const [formData, setFormData] = useState<NoticeFormValue>(() =>
     notice ? toNoticeFormValue(notice) : { ...INITIAL_NOTICE_FORM_VALUE }
   );
   const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
 
   const handleSubmit = () => {
+    if (isUpdating) {
+      return;
+    }
     if (!formData.title.trim()) {
       alert("제목을 입력해주세요.");
       return;
@@ -84,8 +88,13 @@ const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
       return;
     }
 
-    // 공지 수정 API 는 명세에 없어 아직 연동하지 않는다.
-    toast.info("아직 지원하지 않는 기능입니다.");
+    if (attachments.length > 0) {
+      toast.info("첨부파일 업로드는 아직 지원되지 않아 제외하고 수정합니다.");
+    }
+
+    updateNotice(toUpdateNoticePayload(formData), {
+      onSuccess: () => navigate("/notice"),
+    });
   };
 
   const handleCancel = () => {
@@ -112,7 +121,7 @@ const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
           value={formData}
           attachments={attachments}
           uploadButtonText="파일 추가"
-          uploadGuideText="새로운 파일을 추가하거나 기존 파일을 삭제할 수 있습니다."
+          uploadGuideText="파일 업로드는 아직 지원되지 않습니다."
           attachmentLabel="첨부된 파일"
           setValue={setFormData}
           setAttachments={setAttachments}
@@ -123,7 +132,7 @@ const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
             취소
           </Btn>
           <Btn backgroundColor="#22c55e" hoverBackgroundColor="#16a34a" onClick={handleSubmit}>
-            수정 완료
+            {isUpdating ? "수정 중..." : "수정 완료"}
           </Btn>
         </ButtonSection>
       </Flex>

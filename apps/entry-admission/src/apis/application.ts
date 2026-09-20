@@ -5,6 +5,8 @@ import type {
   StartApplicationResponse,
   UpdateApplicationClassificationRequest,
   UpdateApplicationClassificationResponse,
+  UpdateApplicantPersonalProfileRequest,
+  UpdateApplicantPersonalProfileResponse,
   UpdateApplicantPersonalInformationRequest,
   UpdateApplicantPersonalInformationResponse,
   UpdateGuardianPersonalInformationRequest,
@@ -66,60 +68,40 @@ export const startApplication = async () => {
 };
 
 // 지원 유형, 지역, 졸업 구분을 작성 중인 원서에 저장합니다.
-export const updateApplicationClassification = async ({
-  applicantId,
-  ...data
-}: UpdateApplicationClassificationRequest) => {
-  return Http.patch<UpdateApplicationClassificationResponse>(`${APPLICATIONS_ENDPOINT}/${applicantId}/type`, data);
+export const updateApplicationClassification = async ({ ...data }: UpdateApplicationClassificationRequest) => {
+  return Http.patch<UpdateApplicationClassificationResponse>(`${APPLICATIONS_ENDPOINT}/type`, data);
 };
 
-// 증명사진을 포함하므로 JSON이 아닌 multipart/form-data로 지원자 정보를 저장합니다.
-export const updateApplicantPersonalInformation = async ({
-  applicantId,
-  profileImage,
-  name,
-  phoneNumber,
-  gender,
-  birthdate,
-  specialAdmissionType,
-}: UpdateApplicantPersonalInformationRequest) => {
+// 증명사진 업로드 api
+export const updateApplicantPersonalProfile = async ({ file }: UpdateApplicantPersonalProfileRequest) => {
   const formData = new FormData();
-  formData.append("profileImage", profileImage);
-  formData.append("name", name);
-  formData.append("phoneNumber", phoneNumber);
-  formData.append("gender", gender);
-  formData.append("birthdate", birthdate);
-  formData.append("specialAdmissionType", specialAdmissionType);
+  formData.append("file", file);
 
-  return Http.patchFormData<UpdateApplicantPersonalInformationResponse>(
-    `${APPLICATIONS_ENDPOINT}/${applicantId}/personal`,
-    formData
-  );
+  return Http.postFormData<UpdateApplicantPersonalProfileResponse>(`/api/document/v11/photos`, formData);
+};
+
+// 지원자 정보를 저장합니다.
+export const updateApplicantPersonalInformation = async ({ ...data }: UpdateApplicantPersonalInformationRequest) => {
+  return Http.patch<UpdateApplicantPersonalInformationResponse>(`${APPLICATIONS_ENDPOINT}/personal`, data);
 };
 
 // 보호자 연락처와 주소 정보를 저장합니다.
-export const updateGuardianPersonalInformation = async ({
-  applicantId,
-  ...data
-}: UpdateGuardianPersonalInformationRequest) => {
-  return Http.patch<UpdateGuardianPersonalInformationResponse>(`${APPLICATIONS_ENDPOINT}/${applicantId}/family`, data);
+export const updateGuardianPersonalInformation = async ({ ...data }: UpdateGuardianPersonalInformationRequest) => {
+  return Http.patch<UpdateGuardianPersonalInformationResponse>(`${APPLICATIONS_ENDPOINT}/family`, data);
 };
 
 // 중학교와 담임 교사 정보를 저장합니다.
-export const updateMiddleSchoolInformation = async ({ applicantId, ...data }: UpdateMiddleSchoolInformationRequest) => {
-  return Http.patch<UpdateMiddleSchoolInformationResponse>(
-    `${APPLICATIONS_ENDPOINT}/${applicantId}/middle-school`,
-    data
-  );
+export const updateMiddleSchoolInformation = async ({ ...data }: UpdateMiddleSchoolInformationRequest) => {
+  return Http.patch<UpdateMiddleSchoolInformationResponse>(`${APPLICATIONS_ENDPOINT}/middle-school`, data);
 };
 
 // 자기소개서와 학업계획서는 각각 독립된 단계 API로 저장합니다.
-export const updateSelfIntroduction = async ({ applicantId, ...data }: UpdateSelfIntroductionRequest) => {
-  return Http.patch<UpdateSelfIntroductionResponse>(`${APPLICATIONS_ENDPOINT}/${applicantId}/self-introduction`, data);
+export const updateSelfIntroduction = async ({ ...data }: UpdateSelfIntroductionRequest) => {
+  return Http.patch<UpdateSelfIntroductionResponse>(`${APPLICATIONS_ENDPOINT}/self-introduction`, data);
 };
 
-export const updateStudyPlan = async ({ applicantId, ...data }: UpdateStudyPlanRequest) => {
-  return Http.patch<UpdateStudyPlanResponse>(`${APPLICATIONS_ENDPOINT}/${applicantId}/study-plan`, data);
+export const updateStudyPlan = async ({ ...data }: UpdateStudyPlanRequest) => {
+  return Http.patch<UpdateStudyPlanResponse>(`${APPLICATIONS_ENDPOINT}/study-plan`, data);
 };
 
 // 서버에 저장된 작성 내용을 최종 제출 상태로 전환합니다.

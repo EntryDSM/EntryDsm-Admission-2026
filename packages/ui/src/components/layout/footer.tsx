@@ -18,20 +18,18 @@ export const Footer = () => {
           <AddressText>(34111) 대전광역시 유성구 가정북로 76(장동 23-9)</AddressText>
 
           <ContactInfoRow>
-            <ContactText>
-              Tel: 교무실 042-866-8822 (08:30 ~ 16:30), 행정실 042-866-8885 (08:30 ~ 16:30), 당직실 042-866-8888 (평일
-              야간, 휴일)
-            </ContactText>
-          </ContactInfoRow>
-
-          <ContactInfoRow>
-            <ContactText>취업지원센터 전화: 042-866-8843, Fax: 행정실 042-863-4308</ContactText>
+            <ContactText>사업자 등록 번호: 314-83-01600, 기관 메일: dsmhs@korea.kr</ContactText>
           </ContactInfoRow>
 
           <ContactInfoRow>
             <ContactText>
-              Fax: 교무실 042-867-9900, 취업센터: 042-866-8844, 사업자 등록 번호: 314830160, 기관 메일: dsmhs@korea.kr
+              Tel: 교무실 042-866-8822 (08:30 ~ 16:30), 취업지원센터 042-866-8843, 행정실 042-866-8885 (08:30 ~ 16:30),
+              당직실 042-866-8888 (평일 야간, 휴일)
             </ContactText>
+          </ContactInfoRow>
+
+          <ContactInfoRow>
+            <ContactText>Fax: 교무실 042-867-9900, 취업지원센터 042-866-8844, 행정실 042-863-4308</ContactText>
           </ContactInfoRow>
 
           <CopyrightText>Copyright© 대덕소프트웨어마이스터고등학교. All rights reserved.</CopyrightText>
@@ -51,15 +49,25 @@ const FooterContainer = styled.footer`
   width: 100%;
   background-color: ${colors.gray[100]};
   padding: 24px 0;
+
+  @media (max-width: 768px) {
+    padding: 20px 0;
+  }
 `;
 
 const FooterContent = styled.div`
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: 480px) {
+    padding: 0 16px;
+    gap: 12px;
+  }
 `;
 
 const EntryDSMText = styled.h2`
@@ -73,23 +81,41 @@ const LogoContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
 `;
 
 const LogoText = styled.span`
   font-size: 24px;
   font-weight: 600;
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
 `;
 
 const FooterInfoSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  min-width: 0;
 `;
 
 const AddressText = styled.p`
   font-size: 14px;
   color: ${colors.gray[500]};
   margin: 0;
+
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 const ContactInfoRow = styled.div`
@@ -101,6 +127,14 @@ const ContactText = styled.p`
   font-size: 14px;
   color: ${colors.gray[500]};
   margin: 0;
+
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 const CopyrightText = styled.p`
@@ -108,4 +142,11 @@ const CopyrightText = styled.p`
   color: ${colors.gray[500]};
   margin-top: 8px;
   margin-bottom: 0;
+
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;

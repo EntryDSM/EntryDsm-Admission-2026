@@ -3,7 +3,8 @@ import styled from "@emotion/styled";
 import { Outlet, useLocation } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { colors } from "@entry/design";
-import { AUTH_APP_URL } from "@entry/ui";
+import { AUTH_APP_URL, ErrorPage } from "@entry/ui";
+import { useSentryUser } from "@entry/observability";
 
 import { adminQueryKeys, HttpError } from "../apis";
 import { useMyAccount } from "../hooks";
@@ -21,6 +22,9 @@ export const RequireAdmin = () => {
   const queryClient = useQueryClient();
   const previousPathname = useRef(pathname);
   const { account, accountError, isCheckingAccount, refetchAccount } = useMyAccount();
+
+  // 로그인 사용자의 내부 userId 만 Sentry user.id 로 붙인다 (docs/OBSERVABILITY.md 5절).
+  useSentryUser(account?.userId);
 
   // 첫 마운트는 쿼리 자체가 조회하므로, 실제로 경로가 바뀌었을 때만 다시 확인한다.
   useEffect(() => {
@@ -59,13 +63,9 @@ export const RequireAdmin = () => {
     );
   }
 
+  // ADMIN 이 아닌 계정은 공용 403 페이지를 띄운다 (홈 버튼은 유저 앱으로 이동).
   if (account?.role !== "ADMIN") {
-    return (
-      <GuardScreen>
-        관리자 권한이 없습니다.
-        <LoginLink href={AUTH_APP_URL}>로그인 페이지로 이동</LoginLink>
-      </GuardScreen>
-    );
+    return <ErrorPage status={403} />;
   }
 
   return <Outlet />;
@@ -97,10 +97,6 @@ const guardActionStyle = `
   &:hover {
     background-color: ${colors.green[500]};
   }
-`;
-
-const LoginLink = styled.a`
-  ${guardActionStyle}
 `;
 
 const RetryButton = styled.button`

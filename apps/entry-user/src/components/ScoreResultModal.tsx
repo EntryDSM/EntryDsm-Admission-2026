@@ -1,7 +1,7 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { useEffect } from "react";
 
-import { Text } from "@entry/design";
 import { Btn } from "@entry/ui";
 import { ADMISSION_TYPE_LABEL, type AdmissionType } from "../constants/admissionType";
 import type { AdmissionScoreResult } from "../utils/admissionScoreCalculator";
@@ -41,9 +41,7 @@ export const ScoreResultModal = ({ isOpen, onClose, results, errorMessage }: Sco
 
         {errorMessage && (
           <ResultList>
-            <Text fontSize={20} fontWeight={400} color="#FF0000">
-              {errorMessage}
-            </Text>
+            <ErrorText>{errorMessage}</ErrorText>
           </ResultList>
         )}
 
@@ -51,19 +49,10 @@ export const ScoreResultModal = ({ isOpen, onClose, results, errorMessage }: Sco
           <ResultList>
             {results.map(result => (
               <ResultItem key={result.admissionType}>
-                <Text fontSize={24} fontWeight={500}>
-                  {ADMISSION_TYPE_LABEL[result.admissionType as AdmissionType]}
-                </Text>
+                <ResultLabel>{ADMISSION_TYPE_LABEL[result.admissionType as AdmissionType]}</ResultLabel>
                 <ScoreText>
-                  <Text fontSize={24} fontWeight={600} color="#FF6B35">
-                    {formatScore(result.totalScore)}
-                  </Text>
-                  <Text fontSize={24} fontWeight={400} color="#999999">
-                    {" / "}
-                  </Text>
-                  <Text fontSize={24} fontWeight={400} color="#999999">
-                    {result.maxScore}
-                  </Text>
+                  <TotalScore>{formatScore(result.totalScore)}</TotalScore>
+                  <MaxScore> / {result.maxScore}</MaxScore>
                 </ScoreText>
               </ResultItem>
             ))}
@@ -90,19 +79,28 @@ const ModalOverlay = styled.div`
   align-items: center;
   z-index: 9999;
   backdrop-filter: blur(4px);
+  padding: 16px;
 `;
 
 const ModalContainer = styled.div`
   background-color: white;
   border-radius: 24px;
   padding: 32px 36px;
-  width: 970px;
+  width: min(970px, 100%);
   min-height: 429px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  ${media.tablet} {
+    min-height: 0;
+    padding: 24px;
+    gap: 32px;
+  }
 `;
 
 const Title = styled.h2`
@@ -111,6 +109,10 @@ const Title = styled.h2`
   text-align: left;
   margin: 0;
   color: #333;
+
+  ${media.tablet} {
+    font-size: 24px;
+  }
 `;
 
 const ResultList = styled.div`
@@ -119,12 +121,56 @@ const ResultList = styled.div`
   gap: 48px;
   flex: 1;
   justify-content: center;
+
+  ${media.tablet} {
+    gap: 24px;
+  }
 `;
 
 const ResultItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+`;
+
+const ErrorText = styled.p`
+  margin: 0;
+  font-size: 20px;
+  color: #ff0000;
+
+  ${media.medium} {
+    font-size: 16px;
+  }
+`;
+
+const ResultLabel = styled.span`
+  font-size: 24px;
+  font-weight: 500;
+
+  ${media.medium} {
+    font-size: 18px;
+  }
+`;
+
+const TotalScore = styled.span`
+  font-size: 24px;
+  font-weight: 600;
+  color: #ff6b35;
+
+  ${media.medium} {
+    font-size: 18px;
+  }
+`;
+
+const MaxScore = styled.span`
+  font-size: 24px;
+  color: #999999;
+
+  ${media.medium} {
+    font-size: 18px;
+  }
 `;
 
 const ScoreText = styled.div`

@@ -1,3 +1,4 @@
+import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { useState } from "react";
 import { colors } from "@entry/design";
@@ -18,7 +19,7 @@ const faqList = [
   {
     question: "졸업 후 진로는 어떻게 되나요?",
     answer:
-      "저희 학교와 MOU를 맺은 기업수가 500개가 넘습니다. 졸업생들의 주요 진로는 웹, 앱, 보안, 게임, 임베디드 등 다양한 분야의 스타트업 취업, 대기업 계열사, 공무원, 공기업으로 진출하고 있습니다. 2023년 2월 졸업생 취업률 100%, 2024년 2월 졸업생 취업률 97%, 2025년 2월 졸업생 취업률 70% 입니다.",
+      "저희 학교와 MOU를 맺은 기업수가 500개가 넘습니다. 졸업생들의 주요 진로는 웹, 앱, 보안, 게임, 임베디드 등 다양한 분야의 스타트업 취업, 대기업 계열사, 공무원, 공기업으로 진출하고 있습니다. 2023년 2월 졸업생 취업률 100%, 2024년 2월 졸업생 취업률 97%, 2025년 2월 졸업생 취업률 97%, 2026년 2월 졸업생 취업률 96% 입니다.",
   },
   {
     question: "동아리 활동은 어떤 것들이 있나요?",
@@ -164,7 +165,7 @@ const Question = styled.div`
   gap: 12px;
   align-items: center;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 16px;
   }
 `;
@@ -189,7 +190,7 @@ const Answer = styled.div<{ isOpen: boolean }>`
   word-break: keep-all;
   overflow-wrap: break-word;
 
-  @media (max-width: 480px) {
+  ${media.medium} {
     font-size: 14px;
   }
 `;
