@@ -115,7 +115,10 @@ export const LoginPage = () => {
 const BackGroundWrapper = styled.div`
   display: flex;
   justify-content: center;
+  /* 뷰포트 높이가 폼보다 작아질 때 상단이 잘리지 않도록 safe center 로 정렬한다 */
+  align-items: safe center;
   min-height: calc(100vh - 70px);
+  padding: 40px 20px;
 `;
 
 const InputWrapper = styled.div`
@@ -133,11 +136,15 @@ const LoginPageContainer = styled.form`
   align-items: center;
   overflow: visible;
   padding: 6px;
-  margin-bottom: 30px;
 `;
 
 const TitleWrapper = styled.div`
   align-self: flex-start;
+
+  /* 세로 중앙 정렬에서는 공용 타이틀의 상단 여백(60px)이 폼을 위로 밀어올리므로 제거한다 */
+  & > div:first-of-type {
+    margin-top: 0;
+  }
 `;
 
 const LoginButton = styled.button<{ $disabled: boolean }>`
@@ -146,7 +153,7 @@ const LoginButton = styled.button<{ $disabled: boolean }>`
   background-color: ${colors.orange[800]};
   opacity: ${props => (props.$disabled ? "0.4" : "1")};
   color: ${colors.extra.realWhite};
-  margin-top: 20%;
+  margin-top: 80px;
   border: none;
   border-radius: 12px;
   font-size: 15px;

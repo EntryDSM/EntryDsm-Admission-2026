@@ -14,7 +14,7 @@ const SCHEDULE_ITEMS = [
   },
   {
     category: "원서 및 증빙 서류 제출",
-    date: "2026. 10. 19.(월) ~ 10. 22.(목) 17:00 \n (* 본교 접수 시간: 10:00 ~ 17:00)",
+    date: "2026. 10. 19.(월) ~ 10. 22.(목) 17:00 \n (* 방분 접수 시간: 10:00 ~ 17:00)",
     note: "본교 접수처 또는 등기우편",
   },
   { category: "1차 전형 합격자 발표", date: "2026. 10. 26.(월) 15:00", note: "원서접수 사이트" },
@@ -26,7 +26,7 @@ const SCHEDULE_ITEMS = [
   { category: "최종 합격자 발표", date: "2026. 11. 04.(수) 10:00", note: "원서접수 사이트" },
   {
     category: "합격자 등록 (입학동의서 제출)",
-    date: "2026. 11. 06.(금) ~ 11. 13.(금) 17:00 \n (* 본교 접수 시간: 10:00 ~ 17:00)",
+    date: "2026. 11. 06.(금) ~ 11. 13.(금) 17:00 \n (* 방문 접수 시간: 10:00 ~ 17:00)",
     note: "본교 등록 접수처 또는 등기우편",
   },
   {
@@ -63,6 +63,18 @@ export const AdmissionOverviewPage = () => {
         <ScheduleTitle>{SCHEDULE_TITLE}</ScheduleTitle>
         <RecruitmentSchedule scheduleItems={SCHEDULE_ITEMS} notes={SCHEDULE_NOTES} />
 
+        <NoticeSection>
+          <NoticeTitle>문의처</NoticeTitle>
+          <BulletList>
+            <li>042) 866-8820, 042) 866-8822 (대덕소프트웨어마이스터고등학교 SW교육부)</li>
+            <li>
+              <ContactLink href="http://dsmhs.djsch.kr" target="_blank" rel="noopener noreferrer">
+                http://dsmhs.djsch.kr
+              </ContactLink>
+            </li>
+          </BulletList>
+        </NoticeSection>
+
         <AttachmentSection>
           <AttachmentLabel>첨부 파일</AttachmentLabel>
           <AttachmentDivider />
@@ -72,7 +84,6 @@ export const AdmissionOverviewPage = () => {
           </DownloadButton>
         </AttachmentSection>
       </ContentWrapper>
-
       <BottomGap />
     </Container>
   );
@@ -214,4 +225,54 @@ const DownloadIconImg = styled.img`
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+`;
+
+const NoticeSection = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 36px;
+`;
+
+const NoticeTitle = styled.h2`
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: ${colors.orange[800]};
+`;
+
+const BulletList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: ${colors.gray[500]};
+  word-break: keep-all;
+
+  & > li {
+    position: relative;
+    padding-left: 14px;
+  }
+
+  /* 글로벌 스타일이 list-style 을 지우므로 가운뎃점 불릿을 직접 그린다 */
+  & > li::before {
+    content: "·";
+    position: absolute;
+    left: 2px;
+    top: 0;
+    font-weight: 700;
+  }
+
+  ${media.tablet} {
+    font-size: 15px;
+  }
+`;
+
+const ContactLink = styled.a`
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 `;

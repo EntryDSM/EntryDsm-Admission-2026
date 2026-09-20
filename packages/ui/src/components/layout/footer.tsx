@@ -18,20 +18,18 @@ export const Footer = () => {
           <AddressText>(34111) 대전광역시 유성구 가정북로 76(장동 23-9)</AddressText>
 
           <ContactInfoRow>
-            <ContactText>
-              Tel: 교무실 042-866-8822 (08:30 ~ 16:30), 행정실 042-866-8885 (08:30 ~ 16:30), 당직실 042-866-8888 (평일
-              야간, 휴일)
-            </ContactText>
-          </ContactInfoRow>
-
-          <ContactInfoRow>
-            <ContactText>취업지원센터 전화: 042-866-8843, Fax: 행정실 042-863-4308</ContactText>
+            <ContactText>사업자 등록 번호: 314-83-01600, 기관 메일: dsmhs@korea.kr</ContactText>
           </ContactInfoRow>
 
           <ContactInfoRow>
             <ContactText>
-              Fax: 교무실 042-867-9900, 취업센터: 042-866-8844, 사업자 등록 번호: 3148301600, 기관 메일: dsmhs@korea.kr
+              Tel: 교무실 042-866-8822 (08:30 ~ 16:30), 취업지원센터 042-866-8843, 행정실 042-866-8885 (08:30 ~ 16:30),
+              당직실 042-866-8888 (평일 야간, 휴일)
             </ContactText>
+          </ContactInfoRow>
+
+          <ContactInfoRow>
+            <ContactText>Fax: 교무실 042-867-9900, 취업지원센터 042-866-8844, 행정실 042-863-4308</ContactText>
           </ContactInfoRow>
 
           <CopyrightText>Copyright© 대덕소프트웨어마이스터고등학교. All rights reserved.</CopyrightText>
