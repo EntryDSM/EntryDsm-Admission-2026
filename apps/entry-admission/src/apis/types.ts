@@ -340,6 +340,7 @@ export type UpdateGuardianPersonalInformationResponse = null;
 
 export interface UpdateMiddleSchoolInformationRequest {
   schoolName: string;
+  schoolCode: string;
   studentNumber: string;
   schoolPhone: string;
   teacherName: string;
