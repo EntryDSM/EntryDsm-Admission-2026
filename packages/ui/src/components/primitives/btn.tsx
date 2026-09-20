@@ -11,6 +11,7 @@ interface IBtnType {
   borderColor?: string;
   hoverBackgroundColor?: string;
   isBlocked?: boolean;
+  className?: string;
 }
 
 export const Btn = ({
@@ -22,6 +23,7 @@ export const Btn = ({
   children,
   onClick,
   isBlocked = false,
+  className,
 }: IBtnType) => {
   return (
     <BtnContainer
@@ -33,6 +35,7 @@ export const Btn = ({
       onClick={onClick}
       isBlocked={isBlocked}
       disabled={isBlocked}
+      className={className}
     >
       {children}
     </BtnContainer>

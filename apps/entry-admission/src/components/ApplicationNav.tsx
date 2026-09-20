@@ -29,6 +29,16 @@ export const ApplicationNav = ({
   validateCurrentPage,
 }: IApplicationNavType) => {
   const isGraduationTypeSelected = Boolean(graduationType && graduationType.trim());
+  const isLastPage = currentPage >= totalPage;
+  // 현재 페이지의 필수 입력이 모두 채워졌는지 렌더링마다 확인해 다음 버튼의 활성 여부를 정한다.
+  const canProceed = validateCurrentPage?.(currentPage).canProceed ?? true;
+  // 마지막 페이지(제출 확인)에서는 기존처럼 항상 비활성이고, 저장 중이거나 필수 입력이 비어 있으면 비활성화한다.
+  const isNextBlocked = isLastPage || isSaving || !canProceed;
+  const nextLabel = (() => {
+    if (isLastPage && isGraduationTypeSelected) return "제출";
+    if (isSaving) return "저장 중";
+    return "다음";
+  })();
 
   const handlePrevious = () => {
     if (currentPage <= 1) return;
@@ -72,17 +82,9 @@ export const ApplicationNav = ({
         {renderPageIndicators(currentStep, progressSteps)}
       </Flex>
 
-      {currentPage === totalPage ? (
-        isGraduationTypeSelected ? (
-          <NavButton isBlocked={true}>제출</NavButton>
-        ) : (
-          <NavButton isBlocked={true}>다음</NavButton>
-        )
-      ) : (
-        <NavButton isBlocked={isSaving} onClick={() => void handleNext()}>
-          {isSaving ? "저장 중" : "다음"}
-        </NavButton>
-      )}
+      <NextButton isBlocked={isNextBlocked} onClick={() => void handleNext()}>
+        {nextLabel}
+      </NextButton>
     </Flex>
   );
 };
@@ -107,4 +109,10 @@ const PageIndicator = styled.nav<{ isActive: boolean }>`
 const NavButton = styled(PreviousBtn)<{ isBlocked?: boolean }>`
   opacity: ${({ isBlocked }) => (isBlocked ? 0.5 : 1)};
   pointer-events: ${({ isBlocked }) => (isBlocked ? "none" : "auto")};
+`;
+
+// 다음(제출) 버튼은 비활성화 시 흐리게 하는 대신 연한 주황(colors.orange[500], #FFC19D)으로 채운다.
+const NextButton = styled(NavButton)`
+  opacity: 1;
+  background-color: ${({ isBlocked }) => (isBlocked ? colors.orange[500] : colors.orange[800])};
 `;
