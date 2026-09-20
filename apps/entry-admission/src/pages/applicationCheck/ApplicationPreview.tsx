@@ -1,11 +1,10 @@
-import { colors, Flex, Skeleton, Text } from "@entry/design";
+import { colors, Skeleton, Text } from "@entry/design";
 import styled from "@emotion/styled";
 import { getApplicationDocumentUrl, useApplicationDocument } from "../../apis";
 
 export const ApplicationPreview = () => {
   const { data: applicationDocument, isError, isPending } = useApplicationDocument();
   const documentUrl = applicationDocument ? getApplicationDocumentUrl(applicationDocument.downloadUrl) : null;
-  const fileName = applicationDocument?.fileName ?? "원서 파일";
 
   return (
     <Container>
@@ -28,14 +27,9 @@ export const ApplicationPreview = () => {
           </Text>
         </ApplicationLoadingContainer>
       ) : (
-        <Flex width="100%" height="fit-content" isColumn={true}>
-          <NoticeText>{fileName}</NoticeText>
-          <ApplicationContainer>
-            <PdfViewport>
-              <PdfFrame title="원서 미리보기" src={documentUrl} />
-            </PdfViewport>
-          </ApplicationContainer>
-        </Flex>
+        <PdfViewport>
+          <PdfFrame title="원서 미리보기" src={documentUrl} />
+        </PdfViewport>
       )}
     </Container>
   );
@@ -46,16 +40,6 @@ const Container = styled.div`
   flex-direction: column;
   gap: 60px;
   width: 100%;
-`;
-
-const ApplicationContainer = styled.div`
-  width: 100%;
-  background-color: ${colors.gray[400]};
-  display: block;
-  padding: 24px 140px;
-  box-sizing: border-box;
-  max-height: 80vh;
-  overflow-y: auto;
 `;
 
 const PdfViewport = styled.div`
@@ -80,11 +64,4 @@ const ApplicationLoadingContainer = styled(Skeleton)`
   display: flex;
   justify-content: center;
   align-items: center;
-`;
-
-const NoticeText = styled.div`
-  font-size: 16px;
-  font-weight: 500;
-  color: ${colors.gray[500]};
-  padding: 16px 140px;
 `;
