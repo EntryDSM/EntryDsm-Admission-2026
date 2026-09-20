@@ -320,9 +320,10 @@ export const AppLayout = () => {
           break;
         }
         case "/middle-school-info": {
-          const { schoolName, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
+          const { schoolName, schoolCode, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
           await updateMiddleSchoolInformation({
             schoolName: getRequiredValue(schoolName, "중학교 이름"),
+            schoolCode: getRequiredValue(schoolCode, "중학교 코드"),
             studentNumber: String(getRequiredValue(studentId, "중학교 학번")),
             schoolPhone: getRequiredValue(schoolPhone, "중학교 전화번호"),
             teacherName: getRequiredValue(teacherName, "중학교 교사 성명"),
