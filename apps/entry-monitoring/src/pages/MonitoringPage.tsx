@@ -98,7 +98,7 @@ export const MonitoringPage = ({
               key={key}
               label={label}
               value={display(`${data.summary[key]}명`)}
-              valueFontSize="20px"
+              valueFontSize="24px"
               variant={key === "total" ? "primary" : "gray"}
               healthStatus={healthSummary[key] ?? "UNKNOWN"}
             />
