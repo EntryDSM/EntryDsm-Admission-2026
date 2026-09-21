@@ -53,3 +53,6 @@ export const getEducationalStatusLabel = withLabel(EDUCATIONAL_STATUS_LABELS);
 export const getRegionLabel = withLabel(REGION_LABELS);
 export const getGenderLabel = withLabel(GENDER_LABELS);
 export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
+
+/** 원서 원본(우편) 도착 여부 → 지원자 목록·상세 모달의 "상태" 표기. 두 화면이 같은 문구를 쓰도록 한 곳에서 정한다. */
+export const getArrivalStatusLabel = (isArrived?: boolean) => (isArrived ? "원서 도착" : "-");

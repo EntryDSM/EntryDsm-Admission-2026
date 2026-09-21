@@ -5,8 +5,8 @@ import { colors } from "@entry/design";
 import { useApplicantDetail } from "../hooks";
 import { cancel } from "../assets";
 import {
-  getApplicantStatusLabel,
   getApplicationTypeLabel,
+  getArrivalStatusLabel,
   getEducationalStatusLabel,
   getRegionLabel,
 } from "./applicantLabelModel";
@@ -222,7 +222,7 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
 
             <InfoRow>
               <InfoLabel>상태</InfoLabel>
-              <InfoValue>{getApplicantStatusLabel(detail?.status)}</InfoValue>
+              <InfoValue>{getArrivalStatusLabel(detail?.isArrived)}</InfoValue>
             </InfoRow>
           </ApplicantInfo>
         </ModalHeader>
