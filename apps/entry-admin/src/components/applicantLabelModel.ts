@@ -4,4 +4,5 @@ export {
   getEducationalStatusLabel,
   getRegionLabel,
   getApplicantStatusLabel,
+  getArrivalStatusLabel,
 } from "../utils/applicantLabel";
