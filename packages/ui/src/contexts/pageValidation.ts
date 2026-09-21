@@ -163,12 +163,14 @@ export const validatePageData = (state: ApplicationState, route: string) => {
 
 export const canProceedToNext = (state: ApplicationState, currentRoute: string) => {
   const { isValid, missingFields } = validatePageData(state, currentRoute);
-  if (!isValid) {
-    if (missingFields.includes("studentId_invalid")) {
+  const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
+  const requiredFields = isGeneralAdmission ? missingFields.filter(field => field !== "certificate") : missingFields;
+  if (!isValid && requiredFields.length > 0) {
+    if (requiredFields.includes("studentId_invalid")) {
       return { canProceed: false, msg: "학번은 5자리로 입력해주세요." };
     }
 
-    const missingFieldsKR = missingFields.map(field => fieldNameMap[field] || field);
+    const missingFieldsKR = requiredFields.map(field => fieldNameMap[field] || field);
     return {
       canProceed: false,
       msg: `필수 항목이 누락되었습니다. ${missingFieldsKR.join(", ")}`,
