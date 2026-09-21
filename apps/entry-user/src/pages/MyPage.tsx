@@ -95,10 +95,9 @@ export const MyPage = () => {
     window.location.href = `${AUTH_APP_URL.replace(/\/$/, "")}/find-password`;
   };
 
-  // applicantId 조회 api 나올 때까지 11로 고정
   const handleDownloadApplication = async () => {
     const document = await getApplicationDocument();
-    window.location.href = document.downloadUrl;
+    window.open(document.downloadUrl, "_blank");
   };
 
   const handleCheckResult = async () => {
