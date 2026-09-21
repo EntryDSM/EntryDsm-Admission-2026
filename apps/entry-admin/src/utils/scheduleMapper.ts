@@ -53,13 +53,16 @@ export const toScheduleFields = (schedules: AdminSchedule[]): ScheduleFieldView[
       end: toDateTimeInput(schedule.endAt),
     }));
 
-/** 화면 뷰 모델 → 일괄 수정 요청 본문. 명세상 scheduleId 없이 title·시각만 보낸다. */
+/** 화면 뷰 모델 한 행 → 등록(POST)/일괄 수정(PATCH bulk) 공용 요청 항목. scheduleId 없이 title·시각만 보낸다. */
+export const toScheduleRequestItem = (field: ScheduleFieldView): UpdateScheduleItem => ({
+  title: field.title,
+  startAt: toScheduleDateTime(field.start),
+  endAt: toScheduleDateTime(field.end),
+});
+
+/** 화면 뷰 모델 → 일괄 수정 요청 본문 */
 export const toUpdateSchedulePayload = (fields: ScheduleFieldView[]): UpdateScheduleItem[] =>
-  fields.map(field => ({
-    title: field.title,
-    startAt: toScheduleDateTime(field.start),
-    endAt: toScheduleDateTime(field.end),
-  }));
+  fields.map(toScheduleRequestItem);
 
 /** 조회 결과가 비어 있을 때(등록된 일정 없음) 등록 화면에 띄울 기본 일정 목록. */
 export const createDefaultScheduleFields = (): ScheduleFieldView[] =>

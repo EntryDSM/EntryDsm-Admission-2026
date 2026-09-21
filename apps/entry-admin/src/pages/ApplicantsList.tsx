@@ -104,7 +104,7 @@ export const ApplicantsList = () => {
       regions: regions.length > 0 ? regions : undefined,
       admissionTypes: admissionTypes.length > 0 ? admissionTypes : undefined,
       graduationStatuses: graduationStatuses.length > 0 ? graduationStatuses : undefined,
-      isSubmitted: filters.status.received ? true : undefined,
+      isArrived: filters.status.received ? true : undefined,
       page: currentPage,
       size: APPLICANTS_PER_PAGE,
     };
@@ -147,7 +147,7 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "지원자 점검표 출력" → 점검표 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  // "지원자 점검표 출력" → 지원자 목록 엑셀 내보내기 잡(APPLICANT_LIST)을 접수하고 완료되면 다운로드 링크를 연다.
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
@@ -156,7 +156,7 @@ export const ApplicantsList = () => {
     downloadChecklist();
   };
 
-  // "수험표 출력" → 수험표 일괄 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  // "수험표 출력" → 수험표 ZIP 내보내기 잡(ADMISSION_TICKET)을 접수하고 완료되면 다운로드 링크를 연다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
@@ -169,10 +169,10 @@ export const ApplicantsList = () => {
   // `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
   const printActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
-    { label: "지원자 점검표 출력", onClick: handleChecklistClick },
+    { label: "지원자 점검표 출력", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
     { label: "전형 자료 출력", onClick: handlePublishOnlyClick },
     { label: "1차 합격자 명단 출력", onClick: handlePublishOnlyClick },
-    { label: "수험표 출력", onClick: handleAdmissionTicketsClick },
+    { label: "수험표 출력", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
   ];
 
   // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
@@ -187,18 +187,18 @@ export const ApplicantsList = () => {
   };
 
   const handleArrivalClick = (applicant: ApplicantListItem) => {
-    // 도착 취소 API 는 명세에 없어 이미 도착 처리된 원서는 되돌릴 수 없다.
-    if (applicant.isArrived) {
-      toast.info("이미 도착 처리된 원서입니다. (취소 미지원)");
-      return;
-    }
-
     if (isUpdatingArrival) {
       return;
     }
 
-    if (confirm(`${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`)) {
-      updateArrival(applicant.applicantId);
+    // 백엔드가 도착 취소(isArrived: false)를 지원하므로 체크박스로 도착 ↔ 취소를 토글한다.
+    const nextArrived = !applicant.isArrived;
+    const message = nextArrived
+      ? `${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`
+      : `${applicant.applicantName} 지원자의 원서 도착 처리를 취소하시겠습니까?`;
+
+    if (confirm(message)) {
+      updateArrival({ applicantId: applicant.applicantId, isArrived: nextArrived });
     }
   };
 

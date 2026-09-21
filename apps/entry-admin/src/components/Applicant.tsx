@@ -4,7 +4,7 @@ import { colors } from "@entry/design";
 import { getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
 
 type IApplicationComponentType = {
-  receiptCode?: number;
+  receiptCode?: string;
   applicantName?: string;
   examinationNumber?: string;
   applicationType?: string;

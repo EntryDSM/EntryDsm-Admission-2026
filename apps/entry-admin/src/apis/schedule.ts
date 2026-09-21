@@ -21,7 +21,13 @@ export const getSchedules = async () => {
   return unwrap(body);
 };
 
-/** 전형 일정 일괄 수정. 요청자 식별/권한은 다른 API 와 동일하게 인증 쿠키로만 처리한다. */
+/** 전형 일정 등록 (201). bulk 수정은 없는 title 을 404 로 거절하므로 신규 일정은 이 API 로 하나씩 만든다. */
+export const createSchedule = async (schedule: UpdateScheduleItem) => {
+  const body = await http.post<ScheduleEnvelope<AdminSchedule> | AdminSchedule>(SCHEDULES_ENDPOINT, schedule);
+  return unwrap(body);
+};
+
+/** 전형 일정 일괄 수정. title 로 기존 일정을 찾아 시각을 바꾼다. 요청자 식별/권한은 인증 쿠키로만 처리한다. */
 export const updateSchedules = async (schedules: UpdateScheduleItem[]) => {
   const body = await http.patch<ScheduleEnvelope<AdminSchedule[]> | AdminSchedule[]>(
     `${SCHEDULES_ENDPOINT}/bulk`,
