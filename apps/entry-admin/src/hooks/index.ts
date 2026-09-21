@@ -16,4 +16,4 @@ export * from "./useUpdateApplicantArrival";
 export * from "./useFirstScreening";
 export * from "./useRegisterFinalResult";
 export * from "./useIssueExamineeNumbers";
-export * from "./useDocumentDownloads";
+export * from "./useExportDownloads";

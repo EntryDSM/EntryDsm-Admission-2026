@@ -39,9 +39,9 @@ const GENDER_LABELS: Record<string, string> = {
   FEMALE: "여자",
 };
 
+// 백엔드 `ApplicantStatus.label`(엑셀 등 대외 문서 표기)과 같은 문구를 쓴다.
 const APPLICANT_STATUS_LABELS: Record<string, string> = {
-  NOT_SUBMITTED: "미제출",
-  SUBMITTED: "제출 완료",
+  PENDING: "심사 대기",
   FIRST_PASS: "1차 합격",
   FIRST_FAIL: "1차 불합격",
   FINAL_PASS: "최종 합격",
