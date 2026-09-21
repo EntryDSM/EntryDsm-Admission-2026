@@ -104,7 +104,7 @@ export const ApplicantsList = () => {
       regions: regions.length > 0 ? regions : undefined,
       admissionTypes: admissionTypes.length > 0 ? admissionTypes : undefined,
       graduationStatuses: graduationStatuses.length > 0 ? graduationStatuses : undefined,
-      isSubmitted: filters.status.received ? true : undefined,
+      isArrived: filters.status.received ? true : undefined,
       page: currentPage,
       size: APPLICANTS_PER_PAGE,
     };

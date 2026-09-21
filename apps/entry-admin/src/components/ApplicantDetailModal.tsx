@@ -4,7 +4,12 @@ import { colors } from "@entry/design";
 
 import { useApplicantDetail } from "../hooks";
 import { cancel } from "../assets";
-import { getApplicantStatusLabel, getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
+import {
+  getApplicantStatusLabel,
+  getApplicationTypeLabel,
+  getEducationalStatusLabel,
+  getRegionLabel,
+} from "./applicantLabelModel";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -127,7 +132,7 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
     ));
   };
 
-  const regionLabel = detail ? (detail.isDaejeon ? "대전" : "전국") : "-";
+  const regionLabel = getRegionLabel(detail?.region);
   const maxScore = getMaxScore(detail?.applicationType);
 
   if (!isOpen) {

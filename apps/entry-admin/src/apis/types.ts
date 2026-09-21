@@ -15,17 +15,10 @@ export type AdmissionType = "GENERAL" | "MEISTER" | "SOCIAL";
 export type GraduationStatus = "EXPECTED" | "GRADUATED" | "GED";
 
 /**
- * 지원자 전형 상태.
- * 명세 예시(`FIRST_PASS` / `FIRST_FAIL`) 외 값은 미확정이라, 알려진 값 + 임의 문자열을 허용한다.
+ * 지원자 전형 상태 (백엔드 `ApplicantStatus` enum, 2026-09-21 확인).
+ * 정상 흐름은 `PENDING` → 1차 결과 → 최종 결과 순으로만 진행한다.
  */
-export type ApplicantStatus =
-  | "NOT_SUBMITTED"
-  | "SUBMITTED"
-  | "FIRST_PASS"
-  | "FIRST_FAIL"
-  | "FINAL_PASS"
-  | "FINAL_FAIL"
-  | (string & {});
+export type ApplicantStatus = "PENDING" | "FIRST_PASS" | "FIRST_FAIL" | "FINAL_PASS" | "FINAL_FAIL";
 
 /* ───────────── 내 계정 조회 (GET /api/identity/v11/accounts/me) ───────────── */
 
@@ -66,70 +59,74 @@ export type GetApplicantsParams = {
   regions?: Region[];
   admissionTypes?: AdmissionType[];
   graduationStatuses?: GraduationStatus[];
-  /** 원서 도착 여부 */
-  isSubmitted?: boolean;
+  /** 원서 원본(우편) 도착 여부 (이전 이름 `isSubmitted`) */
+  isArrived?: boolean;
   statuses?: ApplicantStatus[];
   /** 1-indexed, 기본 1 */
   page?: number;
   /** 기본 10, 최대 100 */
   size?: number;
-  /** `{field},{direction}` 형식 (예: `createdAt,desc`) */
-  sort?: string;
 };
 
-/** 목록 응답의 단일 지원자 요약 */
+/**
+ * 목록 응답의 단일 지원자 요약.
+ * 별도 접수 번호는 없고 `applicantId` 가 접수 순서를 겸한다(화면 표기는 `formatReceiptNumber` 참고).
+ * 이름·지역·전형·학력은 제출된 원서에도 비어 있을 수 있어 nullable 이다.
+ */
 export interface AdminApplicantSummary {
   applicantId: number;
-  receiptNumber: number;
-  name: string;
-  region: Region;
-  admissionType: AdmissionType;
-  graduationStatus: GraduationStatus;
+  name: string | null;
+  region: Region | null;
+  admissionType: AdmissionType | null;
+  graduationStatus: GraduationStatus | null;
   examineeNumber: string | null;
-  isSubmitted: boolean;
+  /** 원서 원본(우편) 도착 여부 */
+  isArrived: boolean;
   status: ApplicantStatus;
 }
 
-export interface PageInfo {
-  currentPage: number;
-  totalPages: number;
+/** admin 도메인 공통 규약의 목록 응답 형식 */
+export interface AdminPageResponse<T> {
+  items: T[];
+  /** 1-indexed */
+  page: number;
+  size: number;
   totalElements: number;
-  pageSize: number;
+  totalPages: number;
 }
 
-export interface GetApplicantsResponse {
-  applicants: AdminApplicantSummary[];
-  pageInfo: PageInfo;
-}
+export type GetApplicantsResponse = AdminPageResponse<AdminApplicantSummary>;
 
 /* ───────────────────── 상세 조회 (GET /applicants/{id}) ───────────────────── */
 
+/** application 이 산출한 총점. 과목·출결·봉사 세부 점수는 내려오지 않는다. */
 export interface ApplicantScore {
-  subjectScore: number;
-  attendanceScore: number;
-  volunteerScore: number;
   totalScore: number;
 }
 
+/** 상세 응답. 목록과 같은 이유로 원서 항목은 nullable 이다. */
 export interface AdminApplicantDetail {
   applicantId: number;
-  receiptNumber: number;
-  name: string;
+  name: string | null;
   /** ISO date (예: `2010-03-15`) */
-  birthDate: string;
-  phoneNumber: string;
-  region: Region;
-  admissionType: AdmissionType;
-  graduationStatus: GraduationStatus;
-  schoolName: string;
+  birthDate: string | null;
+  phoneNumber: string | null;
+  region: Region | null;
+  admissionType: AdmissionType | null;
+  graduationStatus: GraduationStatus | null;
+  schoolName: string | null;
   examineeNumber: string | null;
-  isSubmitted: boolean;
+  /** 원서 원본(우편) 도착 여부 */
+  isArrived: boolean;
   status: ApplicantStatus;
-  score: ApplicantScore;
+  /** 총점이 아직 없으면 null */
+  score: ApplicantScore | null;
+  /** ISO datetime — 원서를 제출한 시각 */
+  submittedAt: string | null;
+  /** ISO datetime — 원서 원본(우편)이 도착한 시각 */
+  arrivedAt: string | null;
   /** ISO datetime */
-  submittedAt: string;
-  /** ISO datetime */
-  updatedAt: string;
+  updatedAt: string | null;
 }
 
 /* ───────────── 1차 합격자 일괄 산출 (POST /screenings/first/results) ───────────── */
