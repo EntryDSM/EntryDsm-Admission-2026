@@ -8,8 +8,10 @@ interface ActivityPagePropsType {
 
 export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
   const [datas, setDatas] = usePageData(pageKey);
+  const [applicationClassification] = usePageData("applicationClassification");
   const currentlocation = useLocation();
   const prospectiveGraduation = "/activity-prospective-graduate";
+  const isGeneralAdmission = applicationClassification.typeSelection === "일반";
 
   const safeData = datas || { dsmAlgorithm: null, certificate: null };
 
@@ -128,12 +130,9 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
         </Text>
         <Flex isColumn={true} width="100%" gap={0} height="fit-content">
           <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
-          <CertCheckForm
-            onChange={certificateChange}
-            title="프로그래밍 기능사 자격증"
-            value={safeData.certificate}
-            helperText="＊프로그래밍 기능사 자격증 취득여부 가산점은 일반전형일 경우 들어가지 않습니다."
-          />
+          {!isGeneralAdmission && (
+            <CertCheckForm onChange={certificateChange} title="프로그래밍 기능사 자격증" value={safeData.certificate} />
+          )}
         </Flex>
       </Flex>
     </Flex>

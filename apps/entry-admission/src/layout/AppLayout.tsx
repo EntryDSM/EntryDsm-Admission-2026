@@ -372,6 +372,7 @@ export const AppLayout = () => {
         case "/activity-prospective-graduate": {
           const activity =
             currentRoute === "/activity-graduate" ? state.activityGraduate : state.activityGraduateProspective;
+          const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
 
           await Promise.all([
             submitAcademicRecords({
@@ -383,24 +384,27 @@ export const AppLayout = () => {
             }),
             submitCertificates({
               dsmAlgorithmAwarded: getRequiredBoolean(activity.dsmAlgorithm, "DSM 알고리즘 대회 입상 여부"),
-              programmingCertified: getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
+              programmingCertified: isGeneralAdmission
+                ? false
+                : getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
             }),
           ]);
           await resultGrades();
           break;
         }
-        case "/ged/attendance-volunteer":
+        case "/ged/attendance-volunteer": {
+          const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
           await submitCertificates({
             dsmAlgorithmAwarded: getRequiredBoolean(
               state.attendanceVolunteer.dsmAlgorithm,
               "DSM 알고리즘 대회 입상 여부"
             ),
-            programmingCertified: getRequiredBoolean(
-              state.attendanceVolunteer.certificate,
-              "프로그래밍 기능사 자격증 여부"
-            ),
+            programmingCertified: isGeneralAdmission
+              ? false
+              : getRequiredBoolean(state.attendanceVolunteer.certificate, "프로그래밍 기능사 자격증 여부"),
           });
           break;
+        }
         case "/application-preview":
         case "/submit-check":
           break;
