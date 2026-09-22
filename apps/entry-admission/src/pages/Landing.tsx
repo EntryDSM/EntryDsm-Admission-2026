@@ -1,10 +1,13 @@
 import { colors, media } from "@entry/design";
 import { Btn, EntryLogo, USER_APP_URL } from "@entry/ui";
 import styled from "@emotion/styled";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useGetAllSchedule, useStartApplication } from "../apis";
 import type { ScheduleDateTime } from "../apis";
 import { LinkIcon } from "../assets";
+import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
+import { findApplicationSchedule } from "../utils/schedule";
 
 // 전형 요강 PDF 는 entry-user 의 public 폴더에서 서빙되므로 사용자 앱 도메인으로 연결한다.
 const GUIDELINE_FILE_NAME = "2027학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형 요강.pdf";
@@ -21,9 +24,12 @@ const formatScheduleDate = (date: ScheduleDateTime | undefined) => {
 
 export const Landing = () => {
   const navigate = useNavigate();
-  const { mutateAsync: startApplication, isPending } = useStartApplication();
+  const { mutateAsync: startApplication } = useStartApplication();
+  const verifyApplicationPeriod = useVerifyApplicationPeriod();
+  // 기간 확인과 원서 시작이 끝날 때까지 접수하기 버튼을 막아 원서가 두 번 만들어지지 않게 한다.
+  const [isStarting, setIsStarting] = useState(false);
   const { data: schedules } = useGetAllSchedule();
-  const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
+  const applicationSchedule = findApplicationSchedule(schedules);
   const startDate = formatScheduleDate(applicationSchedule?.startAt);
   const endDate = formatScheduleDate(applicationSchedule?.endAt);
   // 일정을 아직 받지 못했거나 등록되지 않았으면 날짜 대신 일반 문구로 안내한다.
@@ -31,11 +37,23 @@ export const Landing = () => {
 
   // 로그인 여부는 RequireAuth 가드와 서버 401 처리(http.ts)가 담당한다.
   const handleStartApplication = async () => {
+    if (isStarting) {
+      return;
+    }
+
+    setIsStarting(true);
     try {
+      // 접수 시작 직전에 서버 시각 기준 접수 기간을 다시 확인한다. 마감됐으면 가드가 유저 앱으로 보낸다.
+      if (!(await verifyApplicationPeriod())) {
+        return;
+      }
+
       await startApplication();
       navigate("/application-classification");
     } catch {
       // useStartApplication의 onError에서 사용자에게 실패 안내를 표시합니다.
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -181,7 +199,7 @@ export const Landing = () => {
       </NoticeSection>
 
       <ButtonArea>
-        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isPending}>
+        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isStarting}>
           접수하기
         </Btn>
       </ButtonArea>

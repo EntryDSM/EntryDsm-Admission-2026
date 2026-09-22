@@ -12,3 +12,4 @@ export * from "./examineeNumber";
 export * from "./export";
 export * from "./admissionQuota";
 export * from "./document";
+export * from "./essay";

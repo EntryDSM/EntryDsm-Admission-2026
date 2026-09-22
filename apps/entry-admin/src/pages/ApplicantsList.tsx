@@ -9,6 +9,7 @@ import {
   useDownloadAdmissionFile,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
+  useDownloadEssays,
   useDownloadFirstPassList,
   useFirstScreening,
   useIssueExamineeNumbers,
@@ -133,6 +134,7 @@ export const ApplicantsList = () => {
   const { downloadAdmissionTickets, isDownloadingAdmissionTickets } = useDownloadAdmissionTickets();
   const { downloadAdmissionFile, isDownloadingAdmissionFile } = useDownloadAdmissionFile();
   const { downloadFirstPassList, isDownloadingFirstPassList } = useDownloadFirstPassList();
+  const { downloadEssays, isDownloadingEssays } = useDownloadEssays();
 
   const { issueExamineeNumbers, isIssuingExamineeNumbers } = useIssueExamineeNumbers();
 
@@ -184,6 +186,16 @@ export const ApplicantsList = () => {
     downloadFirstPassList();
   };
 
+  // "자기소개서·학업계획서 다운로드" → GET /essays 가 전체 지원자의 서식 3 PDF 를 ZIP 으로 스트리밍하면 Blob 으로 받아 저장한다.
+  // 서명 URL·잡 폴링이 없고 조건도 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  const handleEssaysClick = () => {
+    if (isDownloadingEssays) {
+      return;
+    }
+
+    downloadEssays();
+  };
+
   // 출력/다운로드 액션 모음. `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
   const printActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
@@ -191,6 +203,7 @@ export const ApplicantsList = () => {
     { label: "전형 자료 출력", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
     { label: "1차 합격자 명단 출력", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
     { label: "수험표 출력", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
+    { label: "자기소개서·학업계획서 다운로드", onClick: handleEssaysClick, isPending: isDownloadingEssays },
   ];
 
   // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
