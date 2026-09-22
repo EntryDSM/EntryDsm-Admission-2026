@@ -99,8 +99,17 @@ export type GetApplicantsResponse = AdminPageResponse<AdminApplicantSummary>;
 
 /* ───────────────────── 상세 조회 (GET /applicants/{id}) ───────────────────── */
 
-/** application 이 산출한 총점. 과목·출결·봉사 세부 점수는 내려오지 않는다. */
+/**
+ * application 이 산출한 점수. `totalScore` 는 항상 있고, 세부 항목(교과·출결·봉사·가산점)은
+ * 백엔드 #263(feat/260-admin-applicant-detail)이 배포된 뒤에만 내려오므로 옵셔널이다(배포 전 응답은 `totalScore` 만).
+ * 세부 항목은 application `ScoreCalculator.calculateBreakdown` 결과(소수 셋째 자리 반올림)이고,
+ * `totalScore` 는 전형별 상한(일반 173·특별 119)으로 잘린 저장값이라 항목 합과 다를 수 있다.
+ */
 export interface ApplicantScore {
+  subjectScore?: number;
+  attendanceScore?: number;
+  volunteerScore?: number;
+  additionalScore?: number;
   totalScore: number;
 }
 
@@ -127,6 +136,15 @@ export interface AdminApplicantDetail {
   arrivedAt: string | null;
   /** ISO datetime */
   updatedAt: string | null;
+  /**
+   * 증명사진 파일 ID(`photo_…`). 사진 자체는 document `GET /api/document/v11/photos/{photoFileId}` 가
+   * 서명 URL 로 준다({@link DocumentFile}). 올리지 않았으면 null. (백엔드 #252, 2026-09-21)
+   */
+  photoFileId: string | null;
+  /** 자기소개서. 지원자가 쓴 줄바꿈(`\n`)이 그대로 있다. 쓰지 않았으면 null */
+  introduction: string | null;
+  /** 학업계획서. `introduction` 과 같다 */
+  studyPlan: string | null;
 }
 
 /* ───────────── 1차 합격자 일괄 산출 (POST /screenings/first/results) ───────────── */
@@ -150,6 +168,32 @@ export interface FinalScreeningResult {
   status: ApplicantStatus;
   /** ISO datetime */
   processedAt: string;
+}
+
+/* ───────────── 모집 정원 (GET/PUT /admission-quotas) ───────────── */
+
+/**
+ * 지역 → 전형 → 정원(명). 대전/전국 × 일반/마이스터/사회통합 6개 조합이 모두 0 이상으로 채워져야 하며,
+ * 하나라도 빠지거나 음수면 백엔드가 400(INVALID_ADMISSION_QUOTA)으로 거절한다(2026-09-22 백엔드 AdmissionQuota 확인).
+ * 최종 합격자 산출과 경쟁률(COMPETITION_RATE)의 기준이고, 전형별 정원은 두 지역 정원의 합이다.
+ */
+export type AdmissionQuotaMap = Record<Region, Record<AdmissionType, number>>;
+
+/** 조회·수정 응답. 등록된 정원이 없으면 조회는 404(ADMISSION_QUOTA_NOT_FOUND)를 준다. */
+export interface AdmissionQuota {
+  quotas: AdmissionQuotaMap;
+  /** ISO datetime */
+  updatedAt: string;
+  /** 마지막 수정자 — 게이트웨이가 인증 쿠키로 채운 `X-User-Id`(계정 userId) */
+  updatedBy: string;
+}
+
+/**
+ * 전체 교체 요청 (PUT /api/v11/admin/admission-quotas → 200, 저장된 {@link AdmissionQuota}).
+ * swagger 의 필수 헤더 `X-User-Id` 는 게이트웨이가 인증 쿠키로 주입하므로(클라이언트가 보낸 값은 지운다) 본문만 보낸다.
+ */
+export interface UpdateAdmissionQuotaPayload {
+  quotas: AdmissionQuotaMap;
 }
 
 /* ───────────── 수험번호 일괄 발급 (POST /examinee-numbers/issue) ───────────── */
@@ -206,19 +250,46 @@ export interface ExportJob {
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
 /**
- * 요청 가능한 메트릭 — 백엔드 enum 과 동일해야 한다(2026-09-11 백엔드 확인).
- * 이 외 값을 넘기면 바인딩 실패로 400 이 난다. 응답 예시에만 있는 `GENDER_RATIO`/`REGION_STATUS` 는
- * 요청 파라미터로 쓸 수 없다({@link StatisticsMetrics} 참고).
+ * 요청 가능한 메트릭 — 백엔드 `StatisticsMetric` enum 과 동일해야 한다.
+ * 이 외 값이 하나라도 섞이면 바인딩 실패로 요청 전체가 400 이 난다(2026-09-11 백엔드 확인).
+ * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는
+ * 400 으로 거절한다 — `getStatisticsWithOptional` 이 그 경우 핵심 지표만으로 재조회한다.
  */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
-  | "DAILY_TREND";
+  | "DAILY_TREND"
+  | "GENDER_RATIO"
+  | "REGION_STATUS";
 
-/** 성별 (백엔드 표기) */
+/** 성별 (백엔드 `Gender` enum) */
 export type Gender = "MALE" | "FEMALE";
+
+/**
+ * 거주지 시·도 (백엔드 `ResidenceRegion` enum, #264). 원서의 기본 주소에서 시·도 명칭을 찾아 매기고,
+ * 주소가 없거나 알아볼 수 없으면 `ETC` 로 집계한다.
+ */
+export type ResidenceRegion =
+  | "SEOUL"
+  | "BUSAN"
+  | "DAEGU"
+  | "INCHEON"
+  | "GWANGJU"
+  | "DAEJEON"
+  | "ULSAN"
+  | "SEJONG"
+  | "GYEONGGI"
+  | "GANGWON"
+  | "CHUNGBUK"
+  | "CHUNGNAM"
+  | "JEONBUK"
+  | "JEONNAM"
+  | "GYEONGBUK"
+  | "GYEONGNAM"
+  | "JEJU"
+  | "ETC";
 
 /** 지원자 수 (명세 확정) */
 export interface ApplicantCountMetric {
@@ -238,28 +309,31 @@ export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
 /** 일자별 추이 `[{ date: YYYY-MM-DD, count }]` — 원서 제출일 기준 (백엔드 응답 매퍼 확인) */
 export type DailyTrendMetric = { date: string; count: number }[];
 
-/** 지원 성비 (명세 응답 예시 기준) */
+/**
+ * 지원 성비 (백엔드 #264 `AdminResponseMapper` 확인). 성별이 빈 원서는 `byGender`/`byType` 에서 빠지고 `total` 에는 든다.
+ */
 export interface GenderRatioMetric {
   total: number;
   byGender: Partial<Record<Gender, number>>;
-  /** 남성 비율 (0~1) */
+  /** 남학생 비율 (0~1, 소수 셋째 자리 반올림). 지원자가 없으면 0 */
   maleRatio: number;
+  /** 전형별 성별 수. 전형이나 성별이 빈 원서는 빠진다 */
   byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
 }
 
-/** 지역별 접수 현황 (명세 응답 예시 기준) */
+/** 지역별 접수 현황 (백엔드 #264 `AdminResponseMapper` 확인) */
 export interface RegionStatusMetric {
   total: number;
-  /** 관내(LOCAL)/전국(NATIONWIDE) 구분 */
+  /** 모집 범위 — 관내(대전, `LOCAL`)/전국(`NATIONWIDE`). 지역이 빈 원서는 빠진다 */
   byScope: Partial<Record<"LOCAL" | "NATIONWIDE", number>>;
-  /** 시·도 코드 → 수 (예: DAEJEON, SEJONG, …, ETC) */
-  byRegion: Record<string, number>;
+  /** 거주지 시·도 → 수. 집계된 시·도만 담기며, 주소가 없거나 알아볼 수 없으면 `ETC` */
+  byRegion: Partial<Record<ResidenceRegion, number>>;
 }
 
 /**
  * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
- * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 enum 에 없고 서버(StatisticsService)도 만들지 않는다(2026-09-21 확인)
- * — 성비 카드·시도별 지역 현황은 백엔드가 지표를 추가하기 전까지 빈 값이며, 매퍼는 둘 다 없어도 안전하게 동작한다.
+ * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 #264 배포 전에는 요청할 수 없어 빠져 오며(핵심 지표 재조회 폴백),
+ * 매퍼는 둘 다 없어도 안전하게 동작한다(성비 카드는 빈 값, 지역은 `REGION_DISTRIBUTION` 사용).
  */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
@@ -275,6 +349,23 @@ export interface GetStatisticsResponse {
   /** ISO datetime */
   generatedAt: string;
   metrics: StatisticsMetrics;
+}
+
+/* ───────────── 파일 조회 (GET /api/document/v11/photos/{photoId}) ───────────── */
+
+/**
+ * document 도메인의 파일 응답(configuration `FileResponse`). `downloadUrl` 은 서명 URL 이라 `expiresIn` 초 동안만 유효하다.
+ * 증명사진(PHOTO)은 본인과 ADMIN 만 받을 수 있다(백엔드 `FileCategory` 권한표). 봉투는 admin 과 같은 `{ success, data }`.
+ */
+export interface DocumentFile {
+  /** 공개 ID (`photo_…`) */
+  id: string | null;
+  fileName: string;
+  /** bytes */
+  size: number;
+  downloadUrl: string;
+  /** `downloadUrl` 유효 시간(초) */
+  expiresIn: number;
 }
 
 /* ───────────────── 전형 일정 (GET/PATCH /schedules) ───────────────── */

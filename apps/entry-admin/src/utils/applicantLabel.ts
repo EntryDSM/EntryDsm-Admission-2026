@@ -23,14 +23,26 @@ const EDUCATIONAL_STATUS_LABELS: Record<string, string> = {
 };
 
 const REGION_LABELS: Record<string, string> = {
+  // 모집 범위(Region)
   DAEJEON: "대전",
   NATIONWIDE: "전국",
-  // 통계(REGION_STATUS.byRegion)의 시·도 코드
+  // 통계 REGION_STATUS.byRegion 의 거주지 시·도 코드(백엔드 ResidenceRegion, 17개 + 기타)
+  SEOUL: "서울",
+  BUSAN: "부산",
+  DAEGU: "대구",
+  INCHEON: "인천",
+  GWANGJU: "광주",
+  ULSAN: "울산",
   SEJONG: "세종",
   GYEONGGI: "경기",
-  CHUNGNAM: "충남",
+  GANGWON: "강원",
   CHUNGBUK: "충북",
-  SEOUL: "서울",
+  CHUNGNAM: "충남",
+  JEONBUK: "전북",
+  JEONNAM: "전남",
+  GYEONGBUK: "경북",
+  GYEONGNAM: "경남",
+  JEJU: "제주",
   ETC: "기타",
 };
 

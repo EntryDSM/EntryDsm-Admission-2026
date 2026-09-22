@@ -4,132 +4,95 @@ import styled from "@emotion/styled";
 import { Btn } from "@entry/ui";
 import { useNavigate } from "react-router";
 
+import type { AdmissionQuotaMap, AdmissionType, Region } from "../apis";
 import { InputSection } from "../components";
+import { useAdmissionQuota, useUpdateAdmissionQuota } from "../hooks";
+import {
+  getRegionLabel,
+  parseQuotaInput,
+  QUOTA_ADMISSION_TYPES,
+  QUOTA_REGIONS,
+  summarizeAdmissionQuota,
+  toAdmissionQuotaMap,
+} from "../utils";
 
-type DataState = {
-  daejeonGeneral: number; // 대전 일반
-  nationalGeneral: number; // 전국 일반
-  daejeonMeister: number; // 대전 마이스터
-  nationalMeister: number; // 전국 마이스터
-  daejeonSocialIntegration: number; // 대전 사회통합
-  nationalSocialIntegration: number; // 전국 사회 통합
+/** 전형 이름. 요약 카드는 "○○ 전형", 입력칸은 "대전 ○○전형" 으로 조합한다. */
+const ADMISSION_TYPE_NAMES: Record<AdmissionType, string> = {
+  GENERAL: "일반",
+  MEISTER: "마이스터",
+  SOCIAL: "사회통합",
 };
-
-type TotalState = {
-  general: number;
-  meister: number;
-  socialIntegration: number;
-  total: number;
-};
-
-type QuotaInputItem = {
-  key: keyof DataState;
-  label: string;
-  placeholder: string;
-};
-
-type QuotaInputGroup = {
-  key: string;
-  items: QuotaInputItem[];
-};
-
-const INITIAL_DATA: DataState = {
-  daejeonGeneral: 0,
-  nationalGeneral: 0,
-  daejeonMeister: 0,
-  nationalMeister: 0,
-  daejeonSocialIntegration: 0,
-  nationalSocialIntegration: 0,
-};
-
-const SUMMARY_ITEMS: { key: keyof TotalState; label: string }[] = [
-  { key: "general", label: "일반 전형" },
-  { key: "meister", label: "마이스터 전형" },
-  { key: "socialIntegration", label: "사회통합 전형" },
-  { key: "total", label: "총 인원" },
-];
-
-const INPUT_GROUPS: QuotaInputGroup[] = [
-  {
-    key: "daejeon",
-    items: [
-      {
-        key: "daejeonGeneral",
-        label: "대전 일반전형",
-        placeholder: "일반전형 (대전)",
-      },
-      {
-        key: "daejeonMeister",
-        label: "대전 마이스터전형",
-        placeholder: "마이스터전형 (대전)",
-      },
-      {
-        key: "daejeonSocialIntegration",
-        label: "대전 사회통합전형",
-        placeholder: "사회통합전형 (대전)",
-      },
-    ],
-  },
-  {
-    key: "national",
-    items: [
-      {
-        key: "nationalGeneral",
-        label: "전국 일반전형",
-        placeholder: "일반전형 (전국)",
-      },
-      {
-        key: "nationalMeister",
-        label: "전국 마이스터전형",
-        placeholder: "마이스터전형 (전국)",
-      },
-      {
-        key: "nationalSocialIntegration",
-        label: "전국 사회통합전형",
-        placeholder: "사회통합전형 (전국)",
-      },
-    ],
-  },
-];
 
 export const AdmissionsQuota = () => {
   const navigate = useNavigate();
-  const [datas, setDatas] = useState<DataState>(INITIAL_DATA);
+  const { quota, isLoading, isError, isSuccess, refetch } = useAdmissionQuota();
+  const { updateAdmissionQuota, isUpdating } = useUpdateAdmissionQuota();
 
-  // 공통 onChange handler
+  // 조회가 성공했는데 등록된 정원이 없으면(null) 0 으로 채운 입력칸을 띄워 바로 등록하게 한다.
+  const isRegisterMode = isSuccess && quota === null;
+
+  // 조회 결과를 로컬 편집 상태로 복사해 저장 전까지 서버 캐시와 분리한다 (AdmissionsSchedule 과 같은 패턴).
+  const [quotas, setQuotas] = useState<AdmissionQuotaMap>(() => toAdmissionQuotaMap(quota));
+  // 편집 중(dirty)에는 백그라운드 refetch 가 로컬 편집을 덮어쓰지 않게 동기화를 건너뛴다.
+  const [isDirty, setIsDirty] = useState(false);
+  // 마지막으로 동기화한 조회 결과 참조. 새 조회로 참조가 바뀌면 다시 동기화한다.
+  const [syncedQuota, setSyncedQuota] = useState(quota);
+
+  // effect 대신 렌더 중 상태 조정(React 권장 패턴): 편집 중이 아니고 조회 결과가 바뀌었을 때만 동기화.
+  if (!isDirty && quota !== syncedQuota) {
+    setSyncedQuota(quota);
+    setQuotas(toAdmissionQuotaMap(quota));
+  }
+
+  // 지역 × 전형 한 칸의 onChange handler
   const handleChange = useCallback(
-    (key: keyof DataState) => (e: ChangeEvent<HTMLInputElement>) => {
-      const value = Number(e.target.value);
-      const safeValue = Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
-      setDatas(prev => ({
-        ...prev,
-        [key]: safeValue,
-      }));
+    (region: Region, admissionType: AdmissionType) => (e: ChangeEvent<HTMLInputElement>) => {
+      const value = parseQuotaInput(e.target.value);
+      setIsDirty(true);
+      setQuotas(prev => ({ ...prev, [region]: { ...prev[region], [admissionType]: value } }));
     },
     []
   );
 
-  // datas 변경 시 totalMember 자동 계산
-  const totalMember = useMemo<TotalState>(() => {
-    const general = datas.daejeonGeneral + datas.nationalGeneral;
-    const meister = datas.daejeonMeister + datas.nationalMeister;
-    const socialIntegration = datas.daejeonSocialIntegration + datas.nationalSocialIntegration;
-    const total = general + meister + socialIntegration;
+  // 입력값이 바뀔 때마다 전형별 합계(대전+전국)와 총 인원을 다시 계산한다.
+  const summary = useMemo(() => summarizeAdmissionQuota(quotas), [quotas]);
 
-    return { general, meister, socialIntegration, total };
-  }, [datas]);
+  const summaryItems = [
+    ...QUOTA_ADMISSION_TYPES.map(admissionType => ({
+      key: admissionType,
+      label: `${ADMISSION_TYPE_NAMES[admissionType]} 전형`,
+      value: summary.byType[admissionType],
+    })),
+    { key: "total", label: "총 인원", value: summary.total },
+  ];
 
-  const handleSaveClick = () => undefined;
+  // 총 인원 0 명은 서버가 받아 주긴 하지만 실수일 수밖에 없으므로(등록 모드의 초기값), 한 칸이라도 입력하기 전에는 저장을 막는다.
+  const isSaveBlocked = isLoading || isUpdating || summary.total === 0;
+
+  const handleSaveClick = () => {
+    if (isSaveBlocked) {
+      return;
+    }
+    // 저장이 성공/실패로 끝나면 dirty 를 해제해 서버 최신값과 다시 동기화되게 한다.
+    updateAdmissionQuota(quotas, { onSettled: () => setIsDirty(false) });
+  };
+
+  const saveLabel = isRegisterMode ? "등록" : "저장";
 
   return (
     <Flex isColumn={true} width="100%" height="auto" gap={20}>
       <Flex width="100%" height="auto" alignItems="center" justifyContent="space-between">
         <Text fontSize={32} fontWeight={700}>
-          정원 수정
+          {isRegisterMode ? "정원 등록" : "정원 수정"}
         </Text>
         <Flex width="fit-content" height="fit-content" gap={12}>
-          <Btn onClick={handleSaveClick} backgroundColor={colors.green[500]} hoverBackgroundColor="none">
-            저장
+          <Btn
+            onClick={handleSaveClick}
+            isBlocked={isSaveBlocked}
+            backgroundColor={colors.green[500]}
+            hoverBackgroundColor="none"
+          >
+            {isUpdating ? `${saveLabel} 중...` : saveLabel}
           </Btn>
           <Btn
             onClick={() => navigate(-1)}
@@ -142,37 +105,60 @@ export const AdmissionsQuota = () => {
           </Btn>
         </Flex>
       </Flex>
-      <AllContainer>
-        {SUMMARY_ITEMS.map((item, index) => (
-          <Fragment key={item.key}>
-            {index > 0 && <Line />}
-            <Flex width="100%" height="fit-content" isColumn={true} gap={4} alignItems="center" flex="1">
-              <Text fontSize={20} fontWeight={600}>
-                {item.label}
-              </Text>
-              <Text fontSize={16} color={colors.gray[500]}>
-                총 {totalMember[item.key]}명
-              </Text>
-            </Flex>
-          </Fragment>
-        ))}
-      </AllContainer>
-      <Flex width="100%" height="auto" gap={32}>
-        {INPUT_GROUPS.map(group => (
-          <Flex key={group.key} isColumn={true} width="100%" height="auto">
-            {group.items.map(item => (
-              <InputSection
-                key={item.key}
-                onChange={handleChange(item.key)}
-                value={datas[item.key]}
-                label={item.label}
-                placeholder={item.placeholder}
-                suffix="명"
-              />
+
+      {isLoading ? (
+        <Text fontSize={16} color={colors.gray[400]}>
+          모집 정원을 불러오는 중입니다...
+        </Text>
+      ) : isError && quota === undefined ? (
+        <Flex width="fit-content" height="fit-content" isColumn={true} gap={12}>
+          <Text fontSize={16} color={colors.gray[400]}>
+            모집 정원을 불러오지 못했습니다.
+          </Text>
+          <Btn onClick={() => refetch()} backgroundColor={colors.green[500]} hoverBackgroundColor="none">
+            다시 시도
+          </Btn>
+        </Flex>
+      ) : (
+        <>
+          {isRegisterMode && (
+            <Text fontSize={16} color={colors.gray[400]}>
+              등록된 모집 정원이 없습니다. 지역·전형별 정원을 입력하면 바로 등록할 수 있습니다.
+            </Text>
+          )}
+          <AllContainer>
+            {summaryItems.map((item, index) => (
+              <Fragment key={item.key}>
+                {index > 0 && <Line />}
+                <Flex width="100%" height="fit-content" isColumn={true} gap={4} alignItems="center" flex="1">
+                  <Text fontSize={20} fontWeight={600}>
+                    {item.label}
+                  </Text>
+                  <Text fontSize={16} color={colors.gray[500]}>
+                    총 {item.value}명
+                  </Text>
+                </Flex>
+              </Fragment>
+            ))}
+          </AllContainer>
+          <Flex width="100%" height="auto" gap={32}>
+            {QUOTA_REGIONS.map(region => (
+              <Flex key={region} isColumn={true} width="100%" height="auto">
+                {QUOTA_ADMISSION_TYPES.map(admissionType => (
+                  <InputSection
+                    key={admissionType}
+                    onChange={handleChange(region, admissionType)}
+                    value={quotas[region][admissionType]}
+                    label={`${getRegionLabel(region)} ${ADMISSION_TYPE_NAMES[admissionType]}전형`}
+                    placeholder={`${ADMISSION_TYPE_NAMES[admissionType]}전형 (${getRegionLabel(region)})`}
+                    suffix="명"
+                  />
+                ))}
+              </Flex>
             ))}
           </Flex>
-        ))}
-      </Flex>
+        </>
+      )}
     </Flex>
   );
 };

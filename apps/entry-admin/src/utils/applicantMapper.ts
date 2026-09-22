@@ -40,10 +40,16 @@ export interface ApplicantDetailView {
   isArrived: boolean;
   status: ApplicantStatus;
   totalScore?: number;
-  /** 과목·출결·봉사 세부 점수는 API 가 더 이상 내려주지 않아 항상 비어 있다. */
+  /** 교과·출결·봉사·가산점. 백엔드 #263 배포 전 응답에는 없어 비어 있다(화면은 `-`). */
   subjectScore?: number;
   attendanceScore?: number;
   volunteerScore?: number;
+  additionalScore?: number;
+  /** 증명사진 파일 ID. 사진 URL 은 `useApplicantPhoto` 가 document 에서 받는다. */
+  photoFileId?: string;
+  /** 자기소개서·학업계획서 본문. 지원자가 쓴 줄바꿈(`\n`)이 그대로 있다. */
+  introduction?: string;
+  studyPlan?: string;
 }
 
 /** 지역이 비어 있으면 대전/전국을 판단할 수 없으므로 undefined 로 둔다(화면은 `-` 표기). */
@@ -77,4 +83,11 @@ export const toApplicantDetailView = (dto: AdminApplicantDetail): ApplicantDetai
   isArrived: dto.isArrived,
   status: dto.status,
   totalScore: dto.score?.totalScore,
+  subjectScore: dto.score?.subjectScore,
+  attendanceScore: dto.score?.attendanceScore,
+  volunteerScore: dto.score?.volunteerScore,
+  additionalScore: dto.score?.additionalScore,
+  photoFileId: dto.photoFileId ?? undefined,
+  introduction: dto.introduction ?? undefined,
+  studyPlan: dto.studyPlan ?? undefined,
 });

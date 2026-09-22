@@ -6,3 +6,4 @@ export * from "./applicantMapper";
 export * from "./statisticsMapper";
 export * from "./scheduleMapper";
 export * from "./noticeMapper";
+export * from "./admissionQuotaMapper";
