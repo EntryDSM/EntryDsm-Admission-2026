@@ -1,13 +1,12 @@
 import { useEffect, useRef } from "react";
-import styled from "@emotion/styled";
 import { Outlet, useLocation } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { colors } from "@entry/design";
 import { USER_APP_URL } from "@entry/ui";
 import { useSentryUser } from "@entry/observability";
 import { QueryKeys } from "../apis/query";
 import { HttpError } from "../apis/http";
 import { useMyAccount } from "../hooks/useMyAccount";
+import { GuardButton, GuardLink, GuardScreen } from "./GuardScreen";
 
 /**
  * 어드미션 접근 가드 라우트. 내 계정 조회(GET /api/identity/v11/accounts/me)로 로그인을 확인한다
@@ -54,54 +53,17 @@ export const RequireAuth = () => {
     return (
       <GuardScreen>
         로그인 확인 중 오류가 발생했습니다.
-        <RetryButton type="button" onClick={() => refetchAccount()}>
+        <GuardButton type="button" onClick={() => refetchAccount()}>
           다시 시도
-        </RetryButton>
+        </GuardButton>
       </GuardScreen>
     );
   }
 
   <GuardScreen>
     로그인이 안되어있습니다.
-    <LoginLink href={USER_APP_URL}>유저 페이지로 이동</LoginLink>
+    <GuardLink href={USER_APP_URL}>유저 페이지로 이동</GuardLink>
   </GuardScreen>;
 
   return <Outlet />;
 };
-
-const GuardScreen = styled.div`
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: ${colors.gray[400]};
-  font-size: 18px;
-  font-weight: 500;
-`;
-
-const guardActionStyle = `
-  padding: 10px 20px;
-  border-radius: 8px;
-  background-color: ${colors.orange[400]};
-  color: ${colors.gray[50]};
-  font-size: 16px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-
-  &:hover {
-    background-color: ${colors.orange[500]};
-  }
-`;
-
-const LoginLink = styled.a`
-  ${guardActionStyle}
-`;
-
-const RetryButton = styled.button`
-  ${guardActionStyle}
-  border: none;
-`;
