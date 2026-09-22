@@ -3,10 +3,9 @@ import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn } from "@entry/ui";
 import { useNavigate } from "react-router";
-import { toast } from "react-toastify";
 
 import { useCreateNotice } from "../hooks";
-import { toCreateNoticePayload } from "../utils";
+import { getNewAttachmentFiles, toCreateNoticePayload } from "../utils";
 import { INITIAL_NOTICE_FORM_VALUE, NoticeForm, type NoticeAttachment, type NoticeFormValue } from "../components";
 
 export const NoticeCreate = () => {
@@ -29,14 +28,11 @@ export const NoticeCreate = () => {
       return;
     }
 
-    // 파일 업로드(document) API 미연동이라 첨부파일은 아직 서버로 전송하지 못한다.
-    if (attachments.length > 0) {
-      toast.info("첨부파일 업로드는 아직 지원되지 않아 제외하고 등록합니다.");
-    }
-
-    createNotice(toCreateNoticePayload(formData), {
-      onSuccess: () => navigate("/notice"),
-    });
+    // 첨부파일은 등록 훅이 document 에 먼저 올리고, 받은 공개 ID 를 attachmentIds 로 함께 보낸다.
+    createNotice(
+      { payload: toCreateNoticePayload(formData), files: getNewAttachmentFiles(attachments) },
+      { onSuccess: () => navigate("/notice") }
+    );
   };
 
   const handleCancel = () => {
@@ -58,7 +54,7 @@ export const NoticeCreate = () => {
           value={formData}
           attachments={attachments}
           uploadButtonText="파일 선택"
-          uploadGuideText="여러 파일을 선택할 수 있습니다."
+          uploadGuideText="여러 파일을 선택할 수 있습니다. (PDF·HWP·XLSX·DOCX·JPG·PNG·WEBP, 파일당 최대 20MB)"
           attachmentLabel="업로드된 파일"
           setValue={setFormData}
           setAttachments={setAttachments}

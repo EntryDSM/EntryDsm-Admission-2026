@@ -2,6 +2,8 @@ import { useId, type Dispatch, type SetStateAction, type ChangeEvent } from "rea
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
+
+import { getNoticeAttachmentError, NOTICE_ATTACHMENT_ACCEPT } from "../utils";
 import type { NoticeAttachment, NoticeFormValue } from "./noticeFormModel";
 
 type NoticeFormProps = {
@@ -41,11 +43,18 @@ export const NoticeForm = ({
       }));
     };
 
+  // 서버(document)가 거절할 형식·크기는 올리기 전에 걸러 안내하고, 통과한 파일만 목록에 넣는다.
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
+    const errors = files.map(getNoticeAttachmentError).filter((error): error is string => error !== null);
+    const acceptedFiles = files.filter(file => getNoticeAttachmentError(file) === null);
 
-    if (files.length > 0) {
-      setAttachments(prev => [...prev, ...files.map(createAttachment)]);
+    if (errors.length > 0) {
+      alert(errors.join("\n"));
+    }
+
+    if (acceptedFiles.length > 0) {
+      setAttachments(prev => [...prev, ...acceptedFiles.map(createAttachment)]);
     }
 
     e.target.value = "";
@@ -97,7 +106,13 @@ export const NoticeForm = ({
       <FormRow>
         <FormLabel>첨부파일</FormLabel>
         <FileUploadSection>
-          <FileInput type="file" multiple onChange={handleFileUpload} id={fileInputId} />
+          <FileInput
+            type="file"
+            multiple
+            accept={NOTICE_ATTACHMENT_ACCEPT}
+            onChange={handleFileUpload}
+            id={fileInputId}
+          />
           <FileUploadButton htmlFor={fileInputId}>{uploadButtonText}</FileUploadButton>
           <FileUploadText>{uploadGuideText}</FileUploadText>
         </FileUploadSection>

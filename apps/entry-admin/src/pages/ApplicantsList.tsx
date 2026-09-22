@@ -14,7 +14,7 @@ import {
   useRegisterFinalResult,
   useUpdateApplicantArrival,
 } from "../hooks";
-import type { ApplicantListItem } from "../utils";
+import { type ApplicantListItem, toExportFilter } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
@@ -113,6 +113,9 @@ export const ApplicantsList = () => {
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
+  // 출력물(점검표·수험표)은 화면의 검색어·필터 조건을 그대로 따른다. 조건이 없으면(undefined) 전체 지원자가 대상이다.
+  const exportFilter = useMemo(() => toExportFilter(queryParams), [queryParams]);
+
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
@@ -147,22 +150,22 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "지원자 점검표 출력" → 지원자 목록 엑셀 내보내기 잡(APPLICANT_LIST)을 접수하고 완료되면 다운로드 링크를 연다.
+  // "지원자 점검표 출력" → 현재 검색 조건으로 지원자 목록 엑셀 내보내기 잡(APPLICANT_LIST)을 접수하고 완료되면 다운로드 링크를 연다.
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
     }
 
-    downloadChecklist();
+    downloadChecklist({ filter: exportFilter });
   };
 
-  // "수험표 출력" → 수험표 ZIP 내보내기 잡(ADMISSION_TICKET)을 접수하고 완료되면 다운로드 링크를 연다.
+  // "수험표 출력" → 현재 검색 조건으로 수험표 PDF 내보내기 잡(ADMISSION_TICKET)을 접수하고 완료되면 다운로드 링크를 연다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
     }
 
-    downloadAdmissionTickets();
+    downloadAdmissionTickets({ filter: exportFilter });
   };
 
   // 출력/다운로드 액션 모음. 아직 API 미연동 항목은 안내 토스트만 띄운다.

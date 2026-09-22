@@ -10,3 +10,5 @@ export * from "./notice";
 export * from "./screening";
 export * from "./examineeNumber";
 export * from "./export";
+export * from "./admissionQuota";
+export * from "./document";
