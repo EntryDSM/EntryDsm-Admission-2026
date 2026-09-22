@@ -4,6 +4,7 @@ export * from "./useLogout";
 export * from "./useApplicantDetail";
 export * from "./useApplicantPhoto";
 export * from "./useApplicantDocuments";
+export * from "./useFileDownload";
 export * from "./useStatistics";
 export * from "./useSchedules";
 export * from "./useUpdateSchedules";

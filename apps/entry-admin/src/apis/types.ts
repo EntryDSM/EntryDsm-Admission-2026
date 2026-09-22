@@ -210,8 +210,11 @@ export interface ExamineeNumberIssueResult {
 
 /* ───── 내보내기 잡 (POST /exports → 202, GET /exports/{exportJobId}) ───── */
 
-/** 내보내기 산출물 종류 — 수험표 ZIP / 지원자 목록 엑셀 */
-export type ExportType = "ADMISSION_TICKET" | "APPLICANT_LIST";
+/**
+ * 내보내기 산출물 종류 — 수험표 PDF / 지원자 목록 엑셀 / 1차 합격자 명단 엑셀 / 전형 자료 엑셀.
+ * `FIRST_PASS_LIST`·`ADMISSION_FILE` 은 백엔드 #266(2026-09-22)에서 추가됐고, 각각 `GET /first-pass`·`GET /admission-file` 이 접수한다.
+ */
+export type ExportType = "ADMISSION_TICKET" | "APPLICANT_LIST" | "FIRST_PASS_LIST" | "ADMISSION_FILE";
 
 /** 내보내기 잡 상태. `COMPLETED` 일 때만 `downloadUrl` 이 내려온다. */
 export type ExportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
@@ -233,11 +236,38 @@ export interface CreateExportResult {
   status: ExportStatus;
 }
 
+/**
+ * 전형 자료 출력 접수 응답 (`GET /api/v11/admin/admission-file` → 200). 조건 없이 전체 지원자 대상의 `ADMISSION_FILE` 잡을 접수한다.
+ * 잡 ID 필드명이 `jobId` 로 다르고, 접수 시점이라 `downloadUrl`/`expiresAt` 은 항상 null — 완료 여부는 `GET /exports/{jobId}` 로 폴링한다.
+ */
+export interface AdmissionFileExportJob {
+  jobId: string;
+  status: ExportStatus;
+  totalCount: number;
+  processedCount: number;
+  downloadUrl: string | null;
+  /** ISO datetime */
+  expiresAt: string | null;
+}
+
+/**
+ * 서버가 그 자리에서 파일을 만들어 돌려주는 다운로드 링크 (`GET /api/v11/admin/first-pass` → 200).
+ * 1차 합격자 명단 엑셀(`FIRST_PASS_LIST`)은 잡 폴링 없이 동기로 만들어지며, `downloadUrl` 은 `expiresAt`(기본 15분)까지 유효하다.
+ */
+export interface FileDownloadLink {
+  downloadUrl: string;
+  /** ISO datetime */
+  expiresAt: string;
+}
+
 /** 잡 조회 응답. 완료 시 서명된 `downloadUrl`(기본 15분 유효)이 내려온다. */
 export interface ExportJob {
   exportJobId: string;
   type: ExportType;
   status: ExportStatus;
+  /** 대상/처리 건수. 백엔드 #266 이후 응답에 있고, 그 전 배포(prod)에는 없을 수 있어 optional. */
+  totalCount?: number;
+  processedCount?: number;
   downloadUrl: string | null;
   /** ISO datetime — downloadUrl 만료 시각 */
   expiresAt: string | null;

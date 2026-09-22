@@ -2,13 +2,14 @@ import { useCallback, useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn, useModal } from "@entry/ui";
-import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
 import {
   useApplicants,
+  useDownloadAdmissionFile,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
+  useDownloadFirstPassList,
   useFirstScreening,
   useIssueExamineeNumbers,
   useRegisterFinalResult,
@@ -39,8 +40,6 @@ const EDUCATION_OPTIONS = [
   { key: "graduate", label: "졸업" },
   { key: "exam", label: "검정고시" },
 ] as const;
-
-const PRINT_ACTION_UNAVAILABLE_MESSAGE = "아직 지원하지 않는 기능입니다.";
 
 const APPLICANT_TABLE_HEADERS = [
   "접수 번호",
@@ -132,10 +131,8 @@ export const ApplicantsList = () => {
 
   const { downloadChecklist, isDownloadingChecklist } = useDownloadChecklist();
   const { downloadAdmissionTickets, isDownloadingAdmissionTickets } = useDownloadAdmissionTickets();
-
-  const handlePublishOnlyClick = () => {
-    toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
-  };
+  const { downloadAdmissionFile, isDownloadingAdmissionFile } = useDownloadAdmissionFile();
+  const { downloadFirstPassList, isDownloadingFirstPassList } = useDownloadFirstPassList();
 
   const { issueExamineeNumbers, isIssuingExamineeNumbers } = useIssueExamineeNumbers();
 
@@ -168,13 +165,31 @@ export const ApplicantsList = () => {
     downloadAdmissionTickets({ filter: exportFilter });
   };
 
-  // 출력/다운로드 액션 모음. 아직 API 미연동 항목은 안내 토스트만 띄운다.
-  // `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
+  // "전형 자료 출력" → GET /admission-file 로 전체 지원자 엑셀 잡(ADMISSION_FILE)을 접수하고 완료되면 다운로드 링크를 연다.
+  // 이 API 는 조건을 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  const handleAdmissionFileClick = () => {
+    if (isDownloadingAdmissionFile) {
+      return;
+    }
+
+    downloadAdmissionFile();
+  };
+
+  // "1차 합격자 명단 출력" → GET /first-pass 가 명단 엑셀을 그 자리에서 만들어 서명 URL 을 돌려주면 연다(잡 폴링 없음, 조건 없음).
+  const handleFirstPassListClick = () => {
+    if (isDownloadingFirstPassList) {
+      return;
+    }
+
+    downloadFirstPassList();
+  };
+
+  // 출력/다운로드 액션 모음. `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
   const printActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
     { label: "지원자 점검표 출력", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
-    { label: "전형 자료 출력", onClick: handlePublishOnlyClick },
-    { label: "1차 합격자 명단 출력", onClick: handlePublishOnlyClick },
+    { label: "전형 자료 출력", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
+    { label: "1차 합격자 명단 출력", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
     { label: "수험표 출력", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
   ];
 

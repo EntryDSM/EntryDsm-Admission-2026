@@ -193,17 +193,40 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
               </ApplicantNumber>
             </ApplicantNumberGroup>
 
-            <ApplicantImage>
-              {displayedPhotoUrl ? (
-                <ApplicantPhoto
-                  src={displayedPhotoUrl}
-                  alt={detail?.name ? `${detail.name} 증명사진` : "증명사진"}
-                  onError={() => setBrokenPhotoUrl(displayedPhotoUrl)}
-                />
-              ) : (
-                <ProfilePlaceholder />
-              )}
-            </ApplicantImage>
+            <ApplicantImageGroup>
+              <ApplicantImage>
+                {displayedPhotoUrl ? (
+                  <ApplicantPhoto
+                    src={displayedPhotoUrl}
+                    alt={detail?.name ? `${detail.name} 증명사진` : "증명사진"}
+                    onError={() => setBrokenPhotoUrl(displayedPhotoUrl)}
+                  />
+                ) : (
+                  <ProfilePlaceholder />
+                )}
+              </ApplicantImage>
+
+              <DocumentActions>
+                <DocumentButton
+                  color={colors.gray[50]}
+                  backgroundColor={colors.green[400]}
+                  hoverBackgroundColor={colors.green[500]}
+                  isBlocked={!canDownloadDocuments || isDownloadingApplicationForm}
+                  onClick={() => applicantId !== undefined && downloadApplicationForm(applicantId)}
+                >
+                  {isDownloadingApplicationForm ? "생성 중..." : "원서 출력"}
+                </DocumentButton>
+                <DocumentButton
+                  color={colors.gray[50]}
+                  backgroundColor={colors.green[400]}
+                  hoverBackgroundColor={colors.green[500]}
+                  isBlocked={!canDownloadDocuments || isDownloadingAdmissionTicket}
+                  onClick={() => applicantId !== undefined && downloadAdmissionTicket(applicantId)}
+                >
+                  {isDownloadingAdmissionTicket ? "생성 중..." : "수험표 출력"}
+                </DocumentButton>
+              </DocumentActions>
+            </ApplicantImageGroup>
           </ApplicantPhotoArea>
 
           <ApplicantInfo>
@@ -255,34 +278,6 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
             </InfoRow>
           </ApplicantInfo>
         </ModalHeader>
-
-        <ModalSection>
-          <SectionTitle>서류 출력</SectionTitle>
-          <DocumentActions>
-            <Btn
-              color={colors.gray[50]}
-              backgroundColor={colors.green[400]}
-              hoverBackgroundColor={colors.green[500]}
-              isBlocked={!canDownloadDocuments || isDownloadingApplicationForm}
-              onClick={() => applicantId !== undefined && downloadApplicationForm(applicantId)}
-            >
-              {isDownloadingApplicationForm ? "원서 생성 중..." : "원서 출력"}
-            </Btn>
-            <Btn
-              color={colors.gray[50]}
-              backgroundColor={colors.green[400]}
-              hoverBackgroundColor={colors.green[500]}
-              isBlocked={!canDownloadDocuments || isDownloadingAdmissionTicket}
-              onClick={() => applicantId !== undefined && downloadAdmissionTicket(applicantId)}
-            >
-              {isDownloadingAdmissionTicket ? "수험표 생성 중..." : "수험표 출력"}
-            </Btn>
-          </DocumentActions>
-          <DocumentHint>
-            원서와 수험표는 요청할 때마다 새로 만들어집니다. 개별 수험표에는 수험번호가 찍히지 않으니, 수험번호가
-            필요하면 지원자 목록의 &quot;수험표 출력&quot;으로 일괄 생성해 주세요.
-          </DocumentHint>
-        </ModalSection>
 
         <ModalSection>
           <SectionTitle>자기소개서</SectionTitle>
@@ -449,6 +444,13 @@ const ApplicantPhoto = styled.img`
   object-fit: cover;
 `;
 
+// 사진과 출력 버튼은 한 덩어리로 보이도록 접수·수험번호 묶음과의 간격(24px)보다 좁게 붙인다.
+const ApplicantImageGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
 const ApplicantPhotoArea = styled.div`
   flex-shrink: 0;
   width: 200px;
@@ -563,13 +565,15 @@ const ScoreRow = styled.div`
 
 const DocumentActions = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 `;
 
-const DocumentHint = styled.p`
-  margin: 12px 0 0;
+// 사진 폭(200px)을 둘이 나눠 쓰는 작은 버튼이라 기본 Btn(48px·18px·좌우 24px)보다 한 단계 작게 잡는다.
+const DocumentButton = styled(Btn)`
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
   font-size: 14px;
-  line-height: 1.5;
-  color: ${colors.gray[400]};
 `;
