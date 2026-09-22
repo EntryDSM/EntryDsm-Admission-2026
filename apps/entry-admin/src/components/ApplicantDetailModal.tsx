@@ -1,10 +1,16 @@
-import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+import { Btn } from "@entry/ui";
 
-import { useApplicantDetail } from "../hooks";
+import { useApplicantDetail, useApplicantDocumentDownloads, useApplicantPhoto } from "../hooks";
 import { cancel } from "../assets";
-import { getApplicantStatusLabel, getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
+import {
+  getApplicationTypeLabel,
+  getArrivalStatusLabel,
+  getEducationalStatusLabel,
+  getRegionLabel,
+} from "./applicantLabelModel";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -21,20 +27,38 @@ interface IApplicantDetailModalType {
   onClose: () => void;
 }
 
+/**
+ * 전형별 1차 전형 총점 상한 (백엔드 application `ScoreCalculator` 의 REGULAR/SPECIAL_FIRST_SCREENING_MAX_SCORE).
+ * 교과·출결·봉사 만점(일반 170·특별 110)에 가산점을 더한 값으로, 상세 응답의 `totalScore` 는 이 값으로 잘려 내려온다.
+ */
 const getMaxScore = (applicationType?: string) => {
   if (applicationType === "GENERAL" || applicationType === "COMMON") {
-    return 170;
+    return 173;
   }
 
   if (applicationType === "SOCIAL" || applicationType === "MEISTER") {
-    return 110;
+    return 119;
   }
 
   return "-";
 };
 
+/** 점수 항목 표기. 값이 없으면(총점 미산출이거나 백엔드 #263 배포 전) `-`. */
+const formatScore = (score?: number) => score ?? "-";
+
 export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplicantDetailModalType) => {
   const { detail, isLoading } = useApplicantDetail(applicantId, isOpen);
+  const { photoUrl, isPhotoFetching } = useApplicantPhoto(detail?.photoFileId, isOpen);
+  const {
+    downloadApplicationForm,
+    isDownloadingApplicationForm,
+    downloadAdmissionTicket,
+    isDownloadingAdmissionTicket,
+  } = useApplicantDocumentDownloads();
+  // 상세를 아직 못 받았으면 서류를 만들 지원자가 확정되지 않은 것이므로 출력 버튼을 막는다.
+  const canDownloadDocuments = applicantId !== undefined && !isLoading;
+  // 서명 URL 을 받았는데 이미지가 깨지면(만료·삭제) 그 URL 만 placeholder 로 돌린다. 새 URL 을 받으면 다시 시도한다.
+  const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string>();
   const scrollPositionRef = useRef(0);
   const modalContentRef = useRef<HTMLDivElement>(null);
 
@@ -112,7 +136,7 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
     }
   };
 
-  // 원서 \n 적용 (API 미제공 항목은 null 반환 → 안내 문구로 대체)
+  // 자기소개서·학업계획서는 지원자가 쓴 줄바꿈(\n)이 그대로 오므로 <br /> 로 살린다. 비어 있으면 null → 안내 문구.
   const formatTextWithLineBreaks = (text?: string): ReactNode => {
     if (!text) {
       return null;
@@ -127,8 +151,10 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
     ));
   };
 
-  const regionLabel = detail ? (detail.isDaejeon ? "대전" : "전국") : "-";
+  const regionLabel = getRegionLabel(detail?.region);
   const maxScore = getMaxScore(detail?.applicationType);
+  // 재조회 중에는 캐시된(만료됐을 수 있는) 옛 URL 을 그리지 않고 placeholder 를 보여, 헛된 403 요청과 깜빡임을 막는다.
+  const displayedPhotoUrl = photoUrl && !isPhotoFetching && photoUrl !== brokenPhotoUrl ? photoUrl : undefined;
 
   if (!isOpen) {
     return null;
@@ -167,9 +193,40 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
               </ApplicantNumber>
             </ApplicantNumberGroup>
 
-            <ApplicantImage>
-              <ProfilePlaceholder />
-            </ApplicantImage>
+            <ApplicantImageGroup>
+              <ApplicantImage>
+                {displayedPhotoUrl ? (
+                  <ApplicantPhoto
+                    src={displayedPhotoUrl}
+                    alt={detail?.name ? `${detail.name} 증명사진` : "증명사진"}
+                    onError={() => setBrokenPhotoUrl(displayedPhotoUrl)}
+                  />
+                ) : (
+                  <ProfilePlaceholder />
+                )}
+              </ApplicantImage>
+
+              <DocumentActions>
+                <DocumentButton
+                  color={colors.gray[50]}
+                  backgroundColor={colors.green[400]}
+                  hoverBackgroundColor={colors.green[500]}
+                  isBlocked={!canDownloadDocuments || isDownloadingApplicationForm}
+                  onClick={() => applicantId !== undefined && downloadApplicationForm(applicantId)}
+                >
+                  {isDownloadingApplicationForm ? "생성 중..." : "원서 출력"}
+                </DocumentButton>
+                <DocumentButton
+                  color={colors.gray[50]}
+                  backgroundColor={colors.green[400]}
+                  hoverBackgroundColor={colors.green[500]}
+                  isBlocked={!canDownloadDocuments || isDownloadingAdmissionTicket}
+                  onClick={() => applicantId !== undefined && downloadAdmissionTicket(applicantId)}
+                >
+                  {isDownloadingAdmissionTicket ? "생성 중..." : "수험표 출력"}
+                </DocumentButton>
+              </DocumentActions>
+            </ApplicantImageGroup>
           </ApplicantPhotoArea>
 
           <ApplicantInfo>
@@ -217,28 +274,33 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
 
             <InfoRow>
               <InfoLabel>상태</InfoLabel>
-              <InfoValue>{getApplicantStatusLabel(detail?.status)}</InfoValue>
+              <InfoValue>{getArrivalStatusLabel(detail?.isArrived)}</InfoValue>
             </InfoRow>
           </ApplicantInfo>
         </ModalHeader>
 
         <ModalSection>
           <SectionTitle>자기소개서</SectionTitle>
-          <SectionContent>{formatTextWithLineBreaks(undefined) ?? "작성된 자기소개서가 없습니다."}</SectionContent>
+          <SectionContent>
+            {formatTextWithLineBreaks(detail?.introduction) ?? "작성된 자기소개서가 없습니다."}
+          </SectionContent>
         </ModalSection>
 
         <ModalSection>
           <SectionTitle>학업 계획서</SectionTitle>
-          <SectionContent>{formatTextWithLineBreaks(undefined) ?? "작성된 학업 계획서가 없습니다."}</SectionContent>
+          <SectionContent>
+            {formatTextWithLineBreaks(detail?.studyPlan) ?? "작성된 학업 계획서가 없습니다."}
+          </SectionContent>
         </ModalSection>
 
         <ModalSection>
           <SectionTitle>점수 상세</SectionTitle>
           <SectionContent>
-            <ScoreRow>과목 점수: {detail?.subjectScore ?? "-"}</ScoreRow>
-            <ScoreRow>출결 점수: {detail?.attendanceScore ?? "-"}</ScoreRow>
-            <ScoreRow>봉사 점수: {detail?.volunteerScore ?? "-"}</ScoreRow>
-            <ScoreRow>총점: {detail?.totalScore ?? "-"}</ScoreRow>
+            <ScoreRow>교과 점수: {formatScore(detail?.subjectScore)}</ScoreRow>
+            <ScoreRow>출결 점수: {formatScore(detail?.attendanceScore)}</ScoreRow>
+            <ScoreRow>봉사 점수: {formatScore(detail?.volunteerScore)}</ScoreRow>
+            <ScoreRow>가산점: {formatScore(detail?.additionalScore)}</ScoreRow>
+            <ScoreRow>총점: {formatScore(detail?.totalScore)}</ScoreRow>
           </SectionContent>
         </ModalSection>
       </ModalContent>
@@ -375,6 +437,20 @@ const ApplicantImage = styled.div`
   height: 253px;
 `;
 
+const ApplicantPhoto = styled.img`
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+// 사진과 출력 버튼은 한 덩어리로 보이도록 접수·수험번호 묶음과의 간격(24px)보다 좁게 붙인다.
+const ApplicantImageGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
 const ApplicantPhotoArea = styled.div`
   flex-shrink: 0;
   width: 200px;
@@ -485,4 +561,19 @@ const ScoreRow = styled.div`
   margin-bottom: 6px;
   font-size: 16px;
   color: ${colors.gray[500]};
+`;
+
+const DocumentActions = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+// 사진 폭(200px)을 둘이 나눠 쓰는 작은 버튼이라 기본 Btn(48px·18px·좌우 24px)보다 한 단계 작게 잡는다.
+const DocumentButton = styled(Btn)`
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 14px;
 `;

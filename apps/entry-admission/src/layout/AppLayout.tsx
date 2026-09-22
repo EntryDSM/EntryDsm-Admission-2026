@@ -23,6 +23,7 @@ import {
 } from "../apis";
 import { HttpError } from "../apis/http";
 import { ApplicationNav } from "../components";
+import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 
 const admissionTypes = {
   일반: "REGULAR",
@@ -116,6 +117,7 @@ const isApplicantAccessDeniedError = (error: unknown) => {
 export const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const verifyApplicationPeriod = useVerifyApplicationPeriod();
   const [classificationData] = usePageData("applicationClassification");
   const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData } = useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
@@ -258,6 +260,12 @@ export const AppLayout = () => {
 
     setIsSaving(true);
     try {
+      // 다음 단계로 넘어가기 전에 서버 시각 기준 접수 기간을 다시 확인한다.
+      // 마감됐으면 저장하지 않고, 유저 앱 이동은 RequireApplicationPeriod 가드가 맡는다.
+      if (!(await verifyApplicationPeriod())) {
+        return false;
+      }
+
       switch (currentRoute) {
         case "/application-classification": {
           const graduationTypeValue = getMappedValue(
@@ -372,6 +380,7 @@ export const AppLayout = () => {
         case "/activity-prospective-graduate": {
           const activity =
             currentRoute === "/activity-graduate" ? state.activityGraduate : state.activityGraduateProspective;
+          const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
 
           await Promise.all([
             submitAcademicRecords({
@@ -383,24 +392,27 @@ export const AppLayout = () => {
             }),
             submitCertificates({
               dsmAlgorithmAwarded: getRequiredBoolean(activity.dsmAlgorithm, "DSM 알고리즘 대회 입상 여부"),
-              programmingCertified: getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
+              programmingCertified: isGeneralAdmission
+                ? false
+                : getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
             }),
           ]);
           await resultGrades();
           break;
         }
-        case "/ged/attendance-volunteer":
+        case "/ged/attendance-volunteer": {
+          const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
           await submitCertificates({
             dsmAlgorithmAwarded: getRequiredBoolean(
               state.attendanceVolunteer.dsmAlgorithm,
               "DSM 알고리즘 대회 입상 여부"
             ),
-            programmingCertified: getRequiredBoolean(
-              state.attendanceVolunteer.certificate,
-              "프로그래밍 기능사 자격증 여부"
-            ),
+            programmingCertified: isGeneralAdmission
+              ? false
+              : getRequiredBoolean(state.attendanceVolunteer.certificate, "프로그래밍 기능사 자격증 여부"),
           });
           break;
+        }
         case "/application-preview":
         case "/submit-check":
           break;

@@ -23,10 +23,11 @@ const Container = styled.div`
   align-items: center;
 
   input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    margin: 0 8px 0 0;
+    width: 21px;
+    height: 21px;
+    margin: 0 10px 0 0;
     accent-color: ${colors.green[400]};
+    cursor: pointer;
   }
 `;
 

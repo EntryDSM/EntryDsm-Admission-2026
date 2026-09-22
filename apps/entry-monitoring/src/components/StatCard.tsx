@@ -41,7 +41,6 @@ export const StatCard = ({
   labelFontSize = "14px",
   valueFontSize = "32px",
   detailValues,
-  healthStatus,
   alwaysShowLabel = false,
 }: IStatCardProps & { alwaysShowLabel?: boolean }) => {
   return (
@@ -52,12 +51,6 @@ export const StatCard = ({
         </Label>
       ) : (
         <div></div>
-      )}
-
-      {healthStatus && (
-        <HealthStatus $status={healthStatus}>
-          <span aria-hidden="true">●</span> {healthStatus === "UNKNOWN" ? "미확인" : healthStatus}
-        </HealthStatus>
       )}
 
       {detailValues ? (
@@ -75,17 +68,6 @@ export const StatCard = ({
     </StatCardContainer>
   );
 };
-
-const HealthStatus = styled.span<{ $status: ServiceHealthStatus | "UNKNOWN" }>`
-  align-self: flex-start;
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: #ffffff;
-  color: ${({ $status }) => ({ UP: "#15803d", DEGRADED: "#92400e", DOWN: "#b91c1c", UNKNOWN: "#6b7280" })[$status]};
-  font-size: 10px;
-  font-weight: 700;
-  white-space: nowrap;
-`;
 
 const StatCardContainer = styled.div<{ variant: StatCardVariant }>`
   display: flex;

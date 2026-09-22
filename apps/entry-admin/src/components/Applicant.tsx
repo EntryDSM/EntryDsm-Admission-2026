@@ -1,10 +1,10 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
-import { getApplicationTypeLabel, getEducationalStatusLabel } from "./applicantLabelModel";
+import { getApplicationTypeLabel, getArrivalStatusLabel, getEducationalStatusLabel } from "./applicantLabelModel";
 
 type IApplicationComponentType = {
-  receiptCode?: number;
+  receiptCode?: string;
   applicantName?: string;
   examinationNumber?: string;
   applicationType?: string;
@@ -29,7 +29,7 @@ export const Applicant = ({
   onArrivalClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
-  const statusLabel = isArrived ? "원서 도착" : "-";
+  const statusLabel = getArrivalStatusLabel(isArrived);
 
   const handleRegisterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -104,11 +104,16 @@ const RegisterCell = styled(Cell)`
 `;
 
 const StyledCheckbox = styled.input`
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   margin: 0;
   accent-color: ${colors.green[400]};
   cursor: pointer;
+
+  @media (max-width: 768px) {
+    width: 22px;
+    height: 22px;
+  }
 `;
 
 const RegisterButton = styled.button`

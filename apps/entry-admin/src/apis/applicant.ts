@@ -15,9 +15,10 @@ export const getApplicantDetail = (applicantId: number) =>
   http.get<AdminApplicantDetail>(`${APPLICANTS_ENDPOINT}/${applicantId}`);
 
 /**
- * 원서 도착 처리 (204).
- * 명세상 요청 본문이 없는 PATCH 라(REST 원칙 적용 명시), 도착 상태로 표시하는 단방향 액션으로 해석한다.
- * (도착 취소는 명세에 없어 지원하지 않는다.)
+ * 원서(원본) 도착 표시 (204). 요청 본문 `{ isArrived }` 는 필수(`@NotNull`)다.
+ * - `true`: `arrivedAt` 이 비어 있을 때만 현재 시각으로 채운다(이미 도착 처리된 원서는 그대로).
+ * - `false`: `arrivedAt` 을 지워 도착을 취소한다.
+ * (백엔드 `documents/features/admin-applicant-via-grpc/api-spec.md` "3. 원본 도착 표시" 절)
  */
-export const updateApplicantArrival = (applicantId: number) =>
-  http.patch<void>(`${APPLICANTS_ENDPOINT}/${applicantId}/arrival`);
+export const updateApplicantArrival = (applicantId: number, isArrived: boolean) =>
+  http.patch<void>(`${APPLICANTS_ENDPOINT}/${applicantId}/arrival`, { isArrived });

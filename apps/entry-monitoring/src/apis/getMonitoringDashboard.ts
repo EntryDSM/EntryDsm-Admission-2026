@@ -109,8 +109,6 @@ export const toMonitoringData = (dashboard: DashboardData): MonitoringData => ({
   clientWarnCount: dashboard.clientLog.warnCount,
 });
 
-const DEFAULT_ADMISSION_ROUND = import.meta.env.VITE_ADMISSION_ROUND ?? "2026-1";
-
 const formatDuration = (totalSeconds: number) => {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -124,12 +122,11 @@ const ratioToPercentage = (ratio: number) => Number((ratio * 100).toFixed(2));
 const getActiveUsers = (services: DashboardService[], serviceName: string) =>
   services.find(({ service }) => service === serviceName)?.activeUsers ?? 0;
 
-export const getMonitoringDashboard = async (
-  round = DEFAULT_ADMISSION_ROUND,
-  signal?: AbortSignal
-): Promise<MonitoringData> => {
-  const query = new URLSearchParams({ round });
-  const dashboard = await http.get<DashboardData>(`/api/monitor/v11/dashboard?${query}`, { signal });
+export const getMonitoringDashboard = async (round?: string, signal?: AbortSignal): Promise<MonitoringData> => {
+  const query = new URLSearchParams();
+  if (round) query.set("round", round);
+  const path = `/api/monitor/v11/dashboard${query.size ? `?${query}` : ""}`;
+  const dashboard = await http.get<DashboardData>(path, { signal });
 
   return toMonitoringData(dashboard);
 };

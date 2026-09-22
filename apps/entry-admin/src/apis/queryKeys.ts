@@ -10,8 +10,17 @@ export const adminQueryKeys = {
     list: (params: GetApplicantsParams) => ["admin", "applicants", "list", params] as const,
     detail: (applicantId: number) => ["admin", "applicants", "detail", applicantId] as const,
   },
-  statistics: (metrics: StatisticsMetric[]) => ["admin", "statistics", metrics] as const,
+  statistics: {
+    all: ["admin", "statistics"] as const,
+    byMetrics: (metrics: StatisticsMetric[]) => ["admin", "statistics", metrics] as const,
+  },
   schedules: ["admin", "schedules"] as const,
+  documents: {
+    /** 증명사진 서명 URL — photoFileId 별로 캐시한다 */
+    photo: (photoFileId: string) => ["admin", "documents", "photo", photoFileId] as const,
+  },
+  /** 모집 정원은 단일 리소스라 파라미터 없는 고정 키를 쓴다. */
+  admissionQuota: ["admin", "admission-quota"] as const,
   notices: {
     all: ["admin", "notices"] as const,
     list: (params: GetNoticesParams) => ["admin", "notices", "list", params] as const,

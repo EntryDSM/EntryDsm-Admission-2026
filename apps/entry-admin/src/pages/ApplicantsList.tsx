@@ -2,19 +2,20 @@ import { useCallback, useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn, useModal } from "@entry/ui";
-import { toast } from "react-toastify";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
 import {
   useApplicants,
+  useDownloadAdmissionFile,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
+  useDownloadFirstPassList,
   useFirstScreening,
   useIssueExamineeNumbers,
   useRegisterFinalResult,
   useUpdateApplicantArrival,
 } from "../hooks";
-import type { ApplicantListItem } from "../utils";
+import { type ApplicantListItem, toExportFilter } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
@@ -39,8 +40,6 @@ const EDUCATION_OPTIONS = [
   { key: "graduate", label: "졸업" },
   { key: "exam", label: "검정고시" },
 ] as const;
-
-const PRINT_ACTION_UNAVAILABLE_MESSAGE = "아직 지원하지 않는 기능입니다.";
 
 const APPLICANT_TABLE_HEADERS = [
   "접수 번호",
@@ -104,7 +103,7 @@ export const ApplicantsList = () => {
       regions: regions.length > 0 ? regions : undefined,
       admissionTypes: admissionTypes.length > 0 ? admissionTypes : undefined,
       graduationStatuses: graduationStatuses.length > 0 ? graduationStatuses : undefined,
-      isSubmitted: filters.status.received ? true : undefined,
+      isArrived: filters.status.received ? true : undefined,
       page: currentPage,
       size: APPLICANTS_PER_PAGE,
     };
@@ -112,6 +111,9 @@ export const ApplicantsList = () => {
 
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
+
+  // 출력물(점검표·수험표)은 화면의 검색어·필터 조건을 그대로 따른다. 조건이 없으면(undefined) 전체 지원자가 대상이다.
+  const exportFilter = useMemo(() => toExportFilter(queryParams), [queryParams]);
 
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
@@ -129,10 +131,8 @@ export const ApplicantsList = () => {
 
   const { downloadChecklist, isDownloadingChecklist } = useDownloadChecklist();
   const { downloadAdmissionTickets, isDownloadingAdmissionTickets } = useDownloadAdmissionTickets();
-
-  const handlePublishOnlyClick = () => {
-    toast.info(PRINT_ACTION_UNAVAILABLE_MESSAGE);
-  };
+  const { downloadAdmissionFile, isDownloadingAdmissionFile } = useDownloadAdmissionFile();
+  const { downloadFirstPassList, isDownloadingFirstPassList } = useDownloadFirstPassList();
 
   const { issueExamineeNumbers, isIssuingExamineeNumbers } = useIssueExamineeNumbers();
 
@@ -147,32 +147,50 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "지원자 점검표 출력" → 점검표 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  // "지원자 점검표 출력" → 현재 검색 조건으로 지원자 목록 엑셀 내보내기 잡(APPLICANT_LIST)을 접수하고 완료되면 다운로드 링크를 연다.
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
     }
 
-    downloadChecklist();
+    downloadChecklist({ filter: exportFilter });
   };
 
-  // "수험표 출력" → 수험표 일괄 생성 잡을 조회해 완료 시 다운로드 링크를 연다.
+  // "수험표 출력" → 현재 검색 조건으로 수험표 PDF 내보내기 잡(ADMISSION_TICKET)을 접수하고 완료되면 다운로드 링크를 연다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
     }
 
-    downloadAdmissionTickets();
+    downloadAdmissionTickets({ filter: exportFilter });
   };
 
-  // 출력/다운로드 액션 모음. 아직 API 미연동 항목은 안내 토스트만 띄운다.
-  // `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
+  // "전형 자료 출력" → GET /admission-file 로 전체 지원자 엑셀 잡(ADMISSION_FILE)을 접수하고 완료되면 다운로드 링크를 연다.
+  // 이 API 는 조건을 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  const handleAdmissionFileClick = () => {
+    if (isDownloadingAdmissionFile) {
+      return;
+    }
+
+    downloadAdmissionFile();
+  };
+
+  // "1차 합격자 명단 출력" → GET /first-pass 가 명단 엑셀을 그 자리에서 만들어 서명 URL 을 돌려주면 연다(잡 폴링 없음, 조건 없음).
+  const handleFirstPassListClick = () => {
+    if (isDownloadingFirstPassList) {
+      return;
+    }
+
+    downloadFirstPassList();
+  };
+
+  // 출력/다운로드 액션 모음. `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
   const printActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
-    { label: "지원자 점검표 출력", onClick: handleChecklistClick },
-    { label: "전형 자료 출력", onClick: handlePublishOnlyClick },
-    { label: "1차 합격자 명단 출력", onClick: handlePublishOnlyClick },
-    { label: "수험표 출력", onClick: handleAdmissionTicketsClick },
+    { label: "지원자 점검표 출력", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
+    { label: "전형 자료 출력", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
+    { label: "1차 합격자 명단 출력", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
+    { label: "수험표 출력", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
   ];
 
   // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
@@ -187,18 +205,18 @@ export const ApplicantsList = () => {
   };
 
   const handleArrivalClick = (applicant: ApplicantListItem) => {
-    // 도착 취소 API 는 명세에 없어 이미 도착 처리된 원서는 되돌릴 수 없다.
-    if (applicant.isArrived) {
-      toast.info("이미 도착 처리된 원서입니다. (취소 미지원)");
-      return;
-    }
-
     if (isUpdatingArrival) {
       return;
     }
 
-    if (confirm(`${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`)) {
-      updateArrival(applicant.applicantId);
+    // 백엔드가 도착 취소(isArrived: false)를 지원하므로 체크박스로 도착 ↔ 취소를 토글한다.
+    const nextArrived = !applicant.isArrived;
+    const message = nextArrived
+      ? `${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`
+      : `${applicant.applicantName} 지원자의 원서 도착 처리를 취소하시겠습니까?`;
+
+    if (confirm(message)) {
+      updateArrival({ applicantId: applicant.applicantId, isArrived: nextArrived });
     }
   };
 

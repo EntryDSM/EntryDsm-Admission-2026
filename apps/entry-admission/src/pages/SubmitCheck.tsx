@@ -6,12 +6,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { clearStartedApplicantId, getApplicationStorageKey, getStartedApplicantId, submitApplication } from "../apis";
+import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 
 export const SubmitCheck = () => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { clearAllData } = useApplicationData();
+  const verifyApplicationPeriod = useVerifyApplicationPeriod();
   // "확인했습니다"를 정확히 입력하기 전이나 제출 중에는 제출 버튼을 비활성화한다.
   const isSubmitBlocked = message !== "확인했습니다" || isSubmitting;
 
@@ -30,6 +32,11 @@ export const SubmitCheck = () => {
 
     setIsSubmitting(true);
     try {
+      // 최종 제출 직전에도 서버 시각 기준 접수 기간을 확인한다. 마감됐으면 제출하지 않고 가드가 유저 앱으로 보낸다.
+      if (!(await verifyApplicationPeriod())) {
+        return;
+      }
+
       await submitApplication();
       const applicantId = getStartedApplicantId();
       await clearAllData(applicantId === null ? undefined : getApplicationStorageKey(applicantId));
