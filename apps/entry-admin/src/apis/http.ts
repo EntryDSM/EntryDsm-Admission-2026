@@ -22,7 +22,13 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   options = { ...options, signal: createRequestSignal(options.signal) };
   const headers = new Headers(options.headers);
   // body 없는 GET 이 preflight 없이 나가도록, 본문이 있을 때만 Content-Type 을 붙인다(entry-user 와 동일).
-  if (options.body !== undefined && options.body !== null && !headers.has("Content-Type")) {
+  // FormData 는 브라우저가 multipart boundary 를 포함한 Content-Type 을 직접 붙이므로 지정하지 않는다.
+  if (
+    options.body !== undefined &&
+    options.body !== null &&
+    !(options.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -71,4 +77,7 @@ export const http = {
   put: <T>(path: string, payload?: unknown, options?: RequestInit) =>
     request<T>(path, { ...options, method: "PUT", body: payload === undefined ? undefined : JSON.stringify(payload) }),
   delete: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: "DELETE" }),
+  /** multipart 업로드(파일 첨부). 인증 쿠키·CSRF 헤더는 JSON 요청과 같이 붙고, Content-Type 만 브라우저에 맡긴다. */
+  postFormData: <T>(path: string, formData: FormData, options?: RequestInit) =>
+    request<T>(path, { ...options, method: "POST", body: formData }),
 };

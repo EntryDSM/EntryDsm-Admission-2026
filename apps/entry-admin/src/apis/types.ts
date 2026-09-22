@@ -358,7 +358,7 @@ export interface GetStatisticsResponse {
  * 증명사진(PHOTO)은 본인과 ADMIN 만 받을 수 있다(백엔드 `FileCategory` 권한표). 봉투는 admin 과 같은 `{ success, data }`.
  */
 export interface DocumentFile {
-  /** 공개 ID (`photo_…`) */
+  /** 공개 ID (`photo_…`, `attachment_…`). 지원자 ID 로 찾는 원서·수험표 PDF 는 공개 ID 가 없어 null */
   id: string | null;
   fileName: string;
   /** bytes */
@@ -491,7 +491,7 @@ export interface CreateNoticePayload {
   division: NoticeDivision;
   content: string;
   isPinned: boolean;
-  /** 파일관리(document) 업로드 API 미연동이라 현재는 보내지 않는다. */
+  /** document 첨부 업로드(`POST /api/document/v11/attachments`)가 돌려준 공개 ID(`attachment_…`) 목록. 첨부가 없으면 생략한다. */
   attachmentIds?: string[];
 }
 

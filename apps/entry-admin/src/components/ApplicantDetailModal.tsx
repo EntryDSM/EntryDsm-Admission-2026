@@ -1,8 +1,9 @@
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
+import { Btn } from "@entry/ui";
 
-import { useApplicantDetail, useApplicantPhoto } from "../hooks";
+import { useApplicantDetail, useApplicantDocumentDownloads, useApplicantPhoto } from "../hooks";
 import { cancel } from "../assets";
 import {
   getApplicationTypeLabel,
@@ -48,6 +49,14 @@ const formatScore = (score?: number) => score ?? "-";
 export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplicantDetailModalType) => {
   const { detail, isLoading } = useApplicantDetail(applicantId, isOpen);
   const { photoUrl, isPhotoFetching } = useApplicantPhoto(detail?.photoFileId, isOpen);
+  const {
+    downloadApplicationForm,
+    isDownloadingApplicationForm,
+    downloadAdmissionTicket,
+    isDownloadingAdmissionTicket,
+  } = useApplicantDocumentDownloads();
+  // 상세를 아직 못 받았으면 서류를 만들 지원자가 확정되지 않은 것이므로 출력 버튼을 막는다.
+  const canDownloadDocuments = applicantId !== undefined && !isLoading;
   // 서명 URL 을 받았는데 이미지가 깨지면(만료·삭제) 그 URL 만 placeholder 로 돌린다. 새 URL 을 받으면 다시 시도한다.
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string>();
   const scrollPositionRef = useRef(0);
@@ -246,6 +255,34 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
             </InfoRow>
           </ApplicantInfo>
         </ModalHeader>
+
+        <ModalSection>
+          <SectionTitle>서류 출력</SectionTitle>
+          <DocumentActions>
+            <Btn
+              color={colors.gray[50]}
+              backgroundColor={colors.green[400]}
+              hoverBackgroundColor={colors.green[500]}
+              isBlocked={!canDownloadDocuments || isDownloadingApplicationForm}
+              onClick={() => applicantId !== undefined && downloadApplicationForm(applicantId)}
+            >
+              {isDownloadingApplicationForm ? "원서 생성 중..." : "원서 출력"}
+            </Btn>
+            <Btn
+              color={colors.gray[50]}
+              backgroundColor={colors.green[400]}
+              hoverBackgroundColor={colors.green[500]}
+              isBlocked={!canDownloadDocuments || isDownloadingAdmissionTicket}
+              onClick={() => applicantId !== undefined && downloadAdmissionTicket(applicantId)}
+            >
+              {isDownloadingAdmissionTicket ? "수험표 생성 중..." : "수험표 출력"}
+            </Btn>
+          </DocumentActions>
+          <DocumentHint>
+            원서와 수험표는 요청할 때마다 새로 만들어집니다. 개별 수험표에는 수험번호가 찍히지 않으니, 수험번호가
+            필요하면 지원자 목록의 &quot;수험표 출력&quot;으로 일괄 생성해 주세요.
+          </DocumentHint>
+        </ModalSection>
 
         <ModalSection>
           <SectionTitle>자기소개서</SectionTitle>
@@ -522,4 +559,17 @@ const ScoreRow = styled.div`
   margin-bottom: 6px;
   font-size: 16px;
   color: ${colors.gray[500]};
+`;
+
+const DocumentActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+`;
+
+const DocumentHint = styled.p`
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: ${colors.gray[400]};
 `;

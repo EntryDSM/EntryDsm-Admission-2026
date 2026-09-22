@@ -3,6 +3,8 @@ import type {
   AdminApplicantSummary,
   AdmissionType,
   ApplicantStatus,
+  ExportFilter,
+  GetApplicantsParams,
   GraduationStatus,
   Region,
 } from "../apis/types";
@@ -91,3 +93,21 @@ export const toApplicantDetailView = (dto: AdminApplicantDetail): ApplicantDetai
   introduction: dto.introduction ?? undefined,
   studyPlan: dto.studyPlan ?? undefined,
 });
+
+/**
+ * 지원자 목록 조회 조건 → 내보내기(`POST /exports`) 대상 조건. 페이지 정보는 빼고 값이 있는 조건만 남긴다.
+ * 조건이 하나도 없으면 undefined 를 돌려줘 `filter` 를 생략(전체 지원자)하게 한다.
+ */
+export const toExportFilter = (params: GetApplicantsParams): ExportFilter | undefined => {
+  const { keyword, regions, admissionTypes, graduationStatuses, isArrived, statuses } = params;
+  const filter: ExportFilter = {
+    ...(keyword ? { keyword } : {}),
+    ...(regions && regions.length > 0 ? { regions } : {}),
+    ...(admissionTypes && admissionTypes.length > 0 ? { admissionTypes } : {}),
+    ...(graduationStatuses && graduationStatuses.length > 0 ? { graduationStatuses } : {}),
+    ...(isArrived !== undefined ? { isArrived } : {}),
+    ...(statuses && statuses.length > 0 ? { statuses } : {}),
+  };
+
+  return Object.keys(filter).length > 0 ? filter : undefined;
+};

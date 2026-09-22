@@ -3,6 +3,7 @@ export * from "./useMyAccount";
 export * from "./useLogout";
 export * from "./useApplicantDetail";
 export * from "./useApplicantPhoto";
+export * from "./useApplicantDocuments";
 export * from "./useStatistics";
 export * from "./useSchedules";
 export * from "./useUpdateSchedules";
