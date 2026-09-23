@@ -1,7 +1,7 @@
 import { media } from "@entry/design";
 import { useState, useCallback } from "react";
 import styled from "@emotion/styled";
-import { colors, Flex } from "@entry/design";
+import { colors, Flex, Text } from "@entry/design";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AUTH_APP_URL, Btn, CancelModal, ShowResultModal, USER_APP_URL, useModal } from "@entry/ui";
 import { toast } from "react-toastify";
@@ -137,6 +137,9 @@ export const MyPage = () => {
             <StatusInfo>
               <StatusLabel>지원서 상태 :</StatusLabel>
               <StatusValue isSubmitted={isSubmitted}>{APPLICATION_STATUS_LABEL[applicantStatus]}</StatusValue>
+              {applicantStatus === "COMPLETED" && (
+                <Text color={colors.gray[400]}>*반드시 서류를 출력 후 서명한 뒤 제출하여야 접수가 완료됩니다.</Text>
+              )}
             </StatusInfo>
           </StatusBox>
         </ApplicationStatusSection>
