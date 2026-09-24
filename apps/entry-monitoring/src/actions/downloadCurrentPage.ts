@@ -23,7 +23,7 @@ export const downloadCurrentPage = async (signal?: AbortSignal) => {
     }
 
     // 교차 출처 링크도 Blob URL로 바꿔 파일명과 다운로드 동작을 일관되게 보장합니다.
-    const downloadResponse = await fetch(url.href, { signal: requestSignal });
+    const downloadResponse = await fetch(url.href, { credentials: "include", signal: requestSignal });
     if (!downloadResponse.ok) {
       throw new Error("리포트 파일을 다운로드하지 못했습니다. 다시 시도해 주세요.");
     }
