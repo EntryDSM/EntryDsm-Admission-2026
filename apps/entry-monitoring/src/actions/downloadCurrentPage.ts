@@ -1,4 +1,5 @@
 import { getMonitoringReport } from "../apis/getMonitoringReport";
+import { API_BASE_URL } from "../apis/http";
 
 export const downloadCurrentPage = async (signal?: AbortSignal) => {
   const controller = new AbortController();
@@ -15,7 +16,7 @@ export const downloadCurrentPage = async (signal?: AbortSignal) => {
     requestSignal.throwIfAborted();
     if (Date.now() >= deadline) throw timeoutError;
 
-    const url = new URL(report.downloadUrl);
+    const url = new URL(report.downloadUrl, API_BASE_URL || window.location.origin);
     const expiresAt = Date.parse(report.expiresAt);
     if (!Number.isFinite(expiresAt) || url.protocol !== "https:" || !report.fileName || expiresAt <= Date.now()) {
       throw new Error("리포트 다운로드 링크가 유효하지 않습니다. 다시 시도해 주세요.");
