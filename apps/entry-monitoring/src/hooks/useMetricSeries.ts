@@ -2,24 +2,27 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getMetricSeries, type MetricName, type MetricSeries } from "../apis";
 
-const getLocalDateKey = (date: Date) =>
-  [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(value => String(value).padStart(2, "0")).join("-");
+const KOREAN_TIME_OFFSET = 9 * 60 * 60 * 1_000;
+
+const toKoreanDateTime = (date: Date) =>
+  new Date(date.getTime() + KOREAN_TIME_OFFSET).toISOString().replace("Z", "+09:00");
+
+const getKoreanDateKey = (date: Date) => toKoreanDateTime(date).slice(0, 10);
 
 const getMillisecondsUntilTomorrow = () => {
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1_000);
+  const tomorrowMidnight = new Date(`${getKoreanDateKey(tomorrow)}T00:00:00+09:00`);
 
-  return tomorrow.getTime() - now.getTime();
+  return tomorrowMidnight.getTime() - now.getTime();
 };
 
 const useToday = () => {
-  const [today, setToday] = useState(() => getLocalDateKey(new Date()));
+  const [today, setToday] = useState(() => getKoreanDateKey(new Date()));
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setToday(getLocalDateKey(new Date()));
+      setToday(getKoreanDateKey(new Date()));
     }, getMillisecondsUntilTomorrow() + 1_000);
 
     return () => clearTimeout(timeoutId);
@@ -43,14 +46,12 @@ export const useMetricSeries = () => {
     queryKey: ["monitoring", "metric-series", today, "1h"],
     queryFn: ({ signal }) => {
       const to = new Date();
-      const from = new Date(to);
-      from.setHours(0, 0, 0, 0);
 
       return getMetricSeries(
         {
           metrics: ["API_REQUEST", "VISITOR"],
-          from: from.toISOString(),
-          to: to.toISOString(),
+          from: `${today}T00:00:00.000+09:00`,
+          to: toKoreanDateTime(to),
           interval: "1h",
         },
         signal
