@@ -15,6 +15,8 @@ export const adminQueryKeys = {
     byMetrics: (metrics: StatisticsMetric[]) => ["admin", "statistics", metrics] as const,
   },
   schedules: ["admin", "schedules"] as const,
+  /** 원서 접수 기간 판정(일정 + 서버 시각). 지원자 목록의 접수 취소 ↔ 2차 합격자 등록 버튼 분기에 쓴다. */
+  applicationPeriod: ["admin", "application-period"] as const,
   documents: {
     /** 증명사진 서명 URL — photoFileId 별로 캐시한다 */
     photo: (photoFileId: string) => ["admin", "documents", "photo", photoFileId] as const,

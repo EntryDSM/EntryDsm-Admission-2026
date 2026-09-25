@@ -433,6 +433,11 @@ export interface UpdateScheduleItem {
   endAt: ScheduleDateTime;
 }
 
+/** 서버 현재 시각 (`GET /api/schedule/v11/time` 응답 data). 원서 접수 기간 판정은 브라우저 시계 대신 이 값을 기준으로 한다. */
+export interface CurrentTimeResponse {
+  currentTime: ScheduleDateTime;
+}
+
 /* ───────────── 공지사항·QnA (GET /notifications/..., POST /admin/notices) ───────────── */
 
 /**

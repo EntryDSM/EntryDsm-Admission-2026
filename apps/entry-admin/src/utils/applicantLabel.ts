@@ -68,3 +68,16 @@ export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
 
 /** 원서 원본(우편) 도착 여부 → 지원자 목록·상세 모달의 "상태" 표기. 두 화면이 같은 문구를 쓰도록 한 곳에서 정한다. */
 export const getArrivalStatusLabel = (isArrived?: boolean) => (isArrived ? "원서 도착" : "-");
+
+/**
+ * 지원자 목록 마지막 열 버튼의 역할. 원서 접수 기간에는 접수 취소(원서 삭제), 접수가 끝나면 2차(최종) 합격자 등록.
+ * 열 제목과 버튼 문구가 같은 값을 쓰도록 한 곳에서 정한다.
+ */
+export type ApplicantActionMode = "cancel" | "register";
+
+const APPLICANT_ACTION_LABELS: Record<ApplicantActionMode, string> = {
+  cancel: "접수 취소",
+  register: "2차 합격자 등록",
+};
+
+export const getApplicantActionLabel = (mode: ApplicantActionMode) => APPLICANT_ACTION_LABELS[mode];

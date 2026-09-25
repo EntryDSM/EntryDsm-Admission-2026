@@ -1,7 +1,8 @@
 import { http } from "./http";
-import type { AdminSchedule, UpdateScheduleItem } from "./types";
+import type { AdminSchedule, CurrentTimeResponse, UpdateScheduleItem } from "./types";
 
 const SCHEDULES_ENDPOINT = "/api/schedule/v11/schedules";
+const SERVER_TIME_ENDPOINT = "/api/schedule/v11/time";
 
 /**
  * 일정 API 응답 봉투. 공통 `http` 는 `{ success, data }` 봉투만 벗기므로,
@@ -19,6 +20,15 @@ const unwrap = <T>(body: ScheduleEnvelope<T> | T): T =>
 export const getSchedules = async () => {
   const body = await http.get<ScheduleEnvelope<AdminSchedule[]> | AdminSchedule[]>(SCHEDULES_ENDPOINT);
   return unwrap(body);
+};
+
+/**
+ * 서버 현재 시각. 원서 접수 기간 판정은 브라우저 시계가 아니라 이 값을 기준으로 한다(admission 앱과 같은 기준).
+ * 인증 없이도 응답하는 공개 API 지만 공통 `http` 로 보내도 무방하다.
+ */
+export const getServerTime = async () => {
+  const body = await http.get<ScheduleEnvelope<CurrentTimeResponse> | CurrentTimeResponse>(SERVER_TIME_ENDPOINT);
+  return unwrap(body).currentTime;
 };
 
 /** 전형 일정 등록 (201). bulk 수정은 없는 title 을 404 로 거절하므로 신규 일정은 이 API 로 하나씩 만든다. */
