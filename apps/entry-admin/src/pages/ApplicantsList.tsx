@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { Btn, useModal } from "@entry/ui";
+import { Btn, CancelModal, useModal } from "@entry/ui";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
 import {
   useApplicants,
+  useApplicationPeriod,
+  useCancelApplication,
   useDownloadAdmissionFile,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
@@ -15,8 +17,9 @@ import {
   useIssueExamineeNumbers,
   useRegisterFinalResult,
   useUpdateApplicantArrival,
+  useVerifyApplicationPeriod,
 } from "../hooks";
-import { type ApplicantListItem, toExportFilter } from "../utils";
+import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel, toExportFilter } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
@@ -42,7 +45,8 @@ const EDUCATION_OPTIONS = [
   { key: "exam", label: "검정고시" },
 ] as const;
 
-const APPLICANT_TABLE_HEADERS = [
+/** 마지막 열(지원자별 버튼) 제목은 원서 접수 기간에 따라 "접수 취소" ↔ "2차 합격자 등록" 으로 바뀌므로 렌더 시점에 붙인다. */
+const APPLICANT_TABLE_FIXED_HEADERS = [
   "접수 번호",
   "이름",
   "지역",
@@ -51,7 +55,6 @@ const APPLICANT_TABLE_HEADERS = [
   "수험번호",
   "원서 도착 여부",
   "상태",
-  "2차 합격자 등록",
 ] as const;
 
 type RegionKey = (typeof REGION_OPTIONS)[number]["key"];
@@ -119,6 +122,17 @@ export const ApplicantsList = () => {
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
+
+  // 원서 접수 기간에는 지원자별 버튼이 "접수 취소", 접수가 끝나면(또는 기간 판정에 실패하면) 기존대로 "2차 합격자 등록" 이 된다.
+  const { periodStatus, isCheckingPeriod } = useApplicationPeriod();
+  const applicantActionMode: ApplicantActionMode = periodStatus === "open" ? "cancel" : "register";
+  const tableHeaders = [...APPLICANT_TABLE_FIXED_HEADERS, getApplicantActionLabel(applicantActionMode)];
+
+  const [cancelTarget, setCancelTarget] = useState<ApplicantListItem | null>(null);
+  const [isVerifyingPeriod, setIsVerifyingPeriod] = useState(false);
+  const verifyApplicationPeriod = useVerifyApplicationPeriod();
+  const { cancelApplication, isCancelingApplication } = useCancelApplication();
+  const isCancelInProgress = isVerifyingPeriod || isCancelingApplication;
 
   const handleFirstScreeningClick = () => {
     if (isRunningFirstScreening) {
@@ -216,6 +230,65 @@ export const ApplicantsList = () => {
       registerFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
     }
   };
+
+  // "접수 취소" 버튼 → 되돌릴 수 없는 삭제라 confirm 대신 "확인했습니다" 를 입력받는 모달(원서 최종 제출과 같은 방식)을 연다.
+  const handleCancelClick = (applicant: ApplicantListItem) => {
+    if (isCancelInProgress) {
+      return;
+    }
+
+    setCancelTarget(applicant);
+  };
+
+  // 모달에서 "확인했습니다" 를 입력하고 접수 취소를 누르면, 서버 시각으로 접수 기간을 다시 확인한 뒤 삭제한다.
+  // 접수 기간이 아니거나 확인에 실패하면 삭제하지 않고 모달을 닫는다(안내는 useVerifyApplicationPeriod 가 토스트).
+  const handleCancelConfirm = async () => {
+    if (!cancelTarget || isCancelInProgress) {
+      return;
+    }
+
+    setIsVerifyingPeriod(true);
+    let isOpenPeriod = false;
+    try {
+      isOpenPeriod = await verifyApplicationPeriod();
+    } finally {
+      setIsVerifyingPeriod(false);
+    }
+
+    if (!isOpenPeriod) {
+      setCancelTarget(null);
+      return;
+    }
+
+    // 결과(성공·실패)는 훅이 토스트하므로 요청이 끝나면 모달을 닫는다. 실패 시 다시 시도하려면 "확인했습니다" 부터 다시 입력한다.
+    cancelApplication(
+      { applicantId: cancelTarget.applicantId, applicantName: cancelTarget.applicantName },
+      { onSettled: () => setCancelTarget(null) }
+    );
+  };
+
+  // 요청이 진행 중일 때는 배경 클릭·이전 버튼으로 모달이 닫히지 않게 한다.
+  const handleCancelModalClose = () => {
+    if (isCancelInProgress) {
+      return;
+    }
+
+    setCancelTarget(null);
+  };
+
+  // 지원자별 버튼은 접수 기간에 따라 역할이 바뀐다(접수 취소 ↔ 2차 합격자 등록).
+  const handleActionClick = (applicant: ApplicantListItem) => {
+    if (applicantActionMode === "cancel") {
+      handleCancelClick(applicant);
+      return;
+    }
+
+    handleRegisterClick(applicant);
+  };
+
+  const cancelModalContent = cancelTarget
+    ? `${cancelTarget.applicantName || "해당"} 지원자(접수번호 ${cancelTarget.receiptCode})의 원서가 삭제되며, 삭제된 원서는 복구할 수 없습니다.`
+    : "";
 
   const handleArrivalClick = (applicant: ApplicantListItem) => {
     if (isUpdatingArrival) {
@@ -334,9 +407,9 @@ export const ApplicantsList = () => {
         </FilterControl>
       </Toolbar>
 
-      <TableScroll role="table" aria-label="지원자 목록" aria-colcount={APPLICANT_TABLE_HEADERS.length}>
+      <TableScroll role="table" aria-label="지원자 목록" aria-colcount={tableHeaders.length}>
         <ApplicantsTitle role="row">
-          {APPLICANT_TABLE_HEADERS.map((header, index) => (
+          {tableHeaders.map((header, index) => (
             <Title key={header} role="columnheader" aria-colindex={index + 1}>
               {header}
             </Title>
@@ -344,15 +417,15 @@ export const ApplicantsList = () => {
         </ApplicantsTitle>
 
         <ApplicantsAllList role="rowgroup">
-          {isLoading ? (
+          {isLoading || isCheckingPeriod ? (
             <LoadingContent role="row">
-              <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
+              <LoadingMessage role="cell" aria-colspan={tableHeaders.length}>
                 지원자 조회 데이터 기다리는 중...
               </LoadingMessage>
             </LoadingContent>
           ) : applicants.length === 0 ? (
             <LoadingContent role="row">
-              <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
+              <LoadingMessage role="cell" aria-colspan={tableHeaders.length}>
                 지원자 내역이 없습니다.
               </LoadingMessage>
             </LoadingContent>
@@ -367,8 +440,9 @@ export const ApplicantsList = () => {
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
+                actionMode={applicantActionMode}
                 onClick={() => handleApplicantClick(applicant)}
-                onRegisterClick={() => handleRegisterClick(applicant)}
+                onActionClick={() => handleActionClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))
@@ -379,6 +453,18 @@ export const ApplicantsList = () => {
       {selectedApplicant && (
         <ApplicantDetailModal applicantId={selectedApplicant.applicantId} isOpen={isOpen} onClose={close} />
       )}
+
+      <CancelModal
+        isOpen={cancelTarget !== null}
+        setIsOpen={handleCancelModalClose}
+        title="원서 접수를 취소하시겠습니까?"
+        content={cancelModalContent}
+        confirmText="확인했습니다"
+        confirmDescription='접수 취소를 위해서는 "확인했습니다"를 작성해주세요.'
+        btnText="접수 취소"
+        isLoading={isCancelInProgress}
+        onClick={() => void handleCancelConfirm()}
+      />
 
       <PagiNation currentPage={currentPage} totalPage={totalPage} onPageChange={handlePageChange} />
     </Container>

@@ -22,3 +22,11 @@ export const getApplicantDetail = (applicantId: number) =>
  */
 export const updateApplicantArrival = (applicantId: number, isArrived: boolean) =>
   http.patch<void>(`${APPLICANTS_ENDPOINT}/${applicantId}/arrival`, { isArrived });
+
+/**
+ * 원서 접수 취소 — 지원자 삭제 (204, swagger 는 200 으로 표기).
+ * 백엔드는 application 시스템의 원서 행을 gRPC 로 지운 뒤 admin 의 심사 행도 지우는 하드 삭제라 복구할 수 없다.
+ * 없는 지원자는 404 `APPLICANT_NOT_FOUND`. 백엔드가 접수 기간을 검사하지 않으므로 기간 판정은 화면(useApplicationPeriod)이 맡는다.
+ * (백엔드 `ApplicantController.delete` → `ApplicantService.delete` → application `ApplicationCommandService.deleteApplicant`)
+ */
+export const deleteApplicant = (applicantId: number) => http.delete<void>(`${APPLICANTS_ENDPOINT}/${applicantId}`);
