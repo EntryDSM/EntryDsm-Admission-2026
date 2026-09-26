@@ -73,9 +73,18 @@ export function BarChartCard({ title, labels, values, unit = "", height = 60 }: 
         x: {
           grid: { display: false },
           border: { display: false },
-          ticks: { color: "#9AA0A6", maxRotation: 0, autoSkip: true, maxTicksLimit: 3 },
+          ticks: {
+            color: "#9AA0A6",
+            maxRotation: 0,
+            autoSkip: false,
+            callback: (_value, index) =>
+              index === 0 || index === Math.floor((labels.length - 1) / 2) || index === labels.length - 1
+                ? labels[index]
+                : "",
+          },
         },
         y: {
+          beginAtZero: true,
           grid: { display: false },
           border: { display: false },
           ticks: { display: false },
