@@ -4,19 +4,12 @@ import styled from "@emotion/styled";
 import { Btn } from "@entry/ui";
 import { useNavigate } from "react-router";
 
-import type { AdmissionQuotaMap, AdmissionType, Region } from "../apis";
+import type { AdmissionQuotaMap, AdmissionType } from "../apis";
 import { InputSection } from "../components";
 import { useAdmissionQuota, useUpdateAdmissionQuota } from "../hooks";
-import {
-  getRegionLabel,
-  parseQuotaInput,
-  QUOTA_ADMISSION_TYPES,
-  QUOTA_REGIONS,
-  summarizeAdmissionQuota,
-  toAdmissionQuotaMap,
-} from "../utils";
+import { getAdmissionQuotaTotal, parseQuotaInput, QUOTA_ADMISSION_TYPES, toAdmissionQuotaMap } from "../utils";
 
-/** 전형 이름. 요약 카드는 "○○ 전형", 입력칸은 "대전 ○○전형" 으로 조합한다. */
+/** 전형 이름. 요약 카드는 "○○ 전형", 입력칸은 "○○전형" 으로 조합한다. */
 const ADMISSION_TYPE_NAMES: Record<AdmissionType, string> = {
   GENERAL: "일반",
   MEISTER: "마이스터",
@@ -44,30 +37,30 @@ export const AdmissionsQuota = () => {
     setQuotas(toAdmissionQuotaMap(quota));
   }
 
-  // 지역 × 전형 한 칸의 onChange handler
+  // 전형 한 칸의 onChange handler
   const handleChange = useCallback(
-    (region: Region, admissionType: AdmissionType) => (e: ChangeEvent<HTMLInputElement>) => {
+    (admissionType: AdmissionType) => (e: ChangeEvent<HTMLInputElement>) => {
       const value = parseQuotaInput(e.target.value);
       setIsDirty(true);
-      setQuotas(prev => ({ ...prev, [region]: { ...prev[region], [admissionType]: value } }));
+      setQuotas(prev => ({ ...prev, [admissionType]: value }));
     },
     []
   );
 
-  // 입력값이 바뀔 때마다 전형별 합계(대전+전국)와 총 인원을 다시 계산한다.
-  const summary = useMemo(() => summarizeAdmissionQuota(quotas), [quotas]);
+  // 입력값이 바뀔 때마다 총 인원을 다시 계산한다.
+  const total = useMemo(() => getAdmissionQuotaTotal(quotas), [quotas]);
 
   const summaryItems = [
     ...QUOTA_ADMISSION_TYPES.map(admissionType => ({
       key: admissionType,
       label: `${ADMISSION_TYPE_NAMES[admissionType]} 전형`,
-      value: summary.byType[admissionType],
+      value: quotas[admissionType],
     })),
-    { key: "total", label: "총 인원", value: summary.total },
+    { key: "total", label: "총 인원", value: total },
   ];
 
   // 총 인원 0 명은 서버가 받아 주긴 하지만 실수일 수밖에 없으므로(등록 모드의 초기값), 한 칸이라도 입력하기 전에는 저장을 막는다.
-  const isSaveBlocked = isLoading || isUpdating || summary.total === 0;
+  const isSaveBlocked = isLoading || isUpdating || total === 0;
 
   const handleSaveClick = () => {
     if (isSaveBlocked) {
@@ -123,7 +116,7 @@ export const AdmissionsQuota = () => {
         <>
           {isRegisterMode && (
             <Text fontSize={16} color={colors.gray[400]}>
-              등록된 모집 정원이 없습니다. 지역·전형별 정원을 입력하면 바로 등록할 수 있습니다.
+              등록된 모집 정원이 없습니다. 전형별 정원을 입력하면 바로 등록할 수 있습니다.
             </Text>
           )}
           <AllContainer>
@@ -141,20 +134,16 @@ export const AdmissionsQuota = () => {
               </Fragment>
             ))}
           </AllContainer>
-          <Flex width="100%" height="auto" gap={32}>
-            {QUOTA_REGIONS.map(region => (
-              <Flex key={region} isColumn={true} width="100%" height="auto">
-                {QUOTA_ADMISSION_TYPES.map(admissionType => (
-                  <InputSection
-                    key={admissionType}
-                    onChange={handleChange(region, admissionType)}
-                    value={quotas[region][admissionType]}
-                    label={`${getRegionLabel(region)} ${ADMISSION_TYPE_NAMES[admissionType]}전형`}
-                    placeholder={`${ADMISSION_TYPE_NAMES[admissionType]}전형 (${getRegionLabel(region)})`}
-                    suffix="명"
-                  />
-                ))}
-              </Flex>
+          <Flex isColumn={true} width="100%" height="auto">
+            {QUOTA_ADMISSION_TYPES.map(admissionType => (
+              <InputSection
+                key={admissionType}
+                onChange={handleChange(admissionType)}
+                value={quotas[admissionType]}
+                label={`${ADMISSION_TYPE_NAMES[admissionType]}전형`}
+                placeholder={`${ADMISSION_TYPE_NAMES[admissionType]}전형`}
+                suffix="명"
+              />
             ))}
           </Flex>
         </>

@@ -2,14 +2,17 @@ import { media } from "@entry/design";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { AUTH_APP_URL } from "@entry/ui";
 import { ApplicationTimeline, FaqSection, InfoSection } from "../components";
 import { school } from "../assets";
 import { getSchedules, getServerTime } from "../apis/schedule";
 import { getMyAccount } from "../apis/mypage";
 import { ADMISSION_APP_URL } from "../utils/env";
-import { toDate } from "../utils/schedule";
+import { APPLICATION_SCHEDULE_TITLE, hasFirstAnnouncementStarted, toDate } from "../utils/schedule";
 
 export const Main = () => {
+  const navigate = useNavigate();
   const { data: schedules, isError: isSchedulesError } = useQuery({
     queryKey: ["schedules"],
     queryFn: getSchedules,
@@ -19,14 +22,14 @@ export const Main = () => {
     queryFn: getServerTime,
     refetchInterval: 30_000,
   });
-  const { isSuccess: isLoggedIn } = useQuery({
+  const { isSuccess: isLoggedIn, isPending: isCheckingLogin } = useQuery({
     queryKey: ["my-account"],
     queryFn: getMyAccount,
     retry: false,
     // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
     meta: { sentryIgnoreStatuses: [401] },
   });
-  const applicationSchedule = schedules?.find(schedule => schedule.title === "원서 접수");
+  const applicationSchedule = schedules?.find(schedule => schedule.title === APPLICATION_SCHEDULE_TITLE);
   const currentServerTime = serverTime ? toDate(serverTime) : null;
   const isApplicationPeriod = Boolean(
     applicationSchedule &&
@@ -44,14 +47,39 @@ export const Main = () => {
           : isApplicationPeriod
             ? "원서 접수 기간입니다."
             : "원서 접수 기간이 아닙니다.";
-  const canApply = isLoggedIn && isApplicationPeriod;
+  // 1차 합격 발표 시각부터는 접수가 끝나 지원 버튼이 늘 비활성이므로, 그 자리를 마이페이지와 같은 "합격 결과 확인"(/mypage/result) 으로 쓴다.
+  // 일정·서버 시각을 못 받으면 지원 버튼 그대로다.
+  const isResultStage = hasFirstAnnouncementStarted(schedules, serverTime);
+  // 두 버튼 모두 비로그인 클릭은 로그인 페이지로 보낸다. 로그인 여부를 아직 확인하는 동안은 잘못 보내지 않게 비활성으로 둔다.
+  // 지원하기는 접수 기간이 아닐 때만 비활성이다(비로그인이라고 막지 않는다).
+  const isApplyDisabled = !isApplicationPeriod || isCheckingLogin;
+
+  const goToLogin = () => {
+    window.location.href = AUTH_APP_URL;
+  };
 
   const handleApplyClick = () => {
-    if (!canApply) {
+    if (isApplyDisabled) {
+      return;
+    }
+    if (!isLoggedIn) {
+      goToLogin();
       return;
     }
 
     window.location.href = ADMISSION_APP_URL;
+  };
+
+  const handleCheckResultClick = () => {
+    if (isCheckingLogin) {
+      return;
+    }
+    if (!isLoggedIn) {
+      goToLogin();
+      return;
+    }
+
+    navigate("/mypage/result");
   };
 
   return (
@@ -67,9 +95,15 @@ export const Main = () => {
           </Title>
           <TimelineSection>
             <ApplicationTimeline schedules={schedules} />
-            <ApplyButton onClick={handleApplyClick} disabled={!canApply}>
-              지원하기
-            </ApplyButton>
+            {isResultStage ? (
+              <ActionButton onClick={handleCheckResultClick} disabled={isCheckingLogin}>
+                합격 결과 확인
+              </ActionButton>
+            ) : (
+              <ActionButton onClick={handleApplyClick} disabled={isApplyDisabled}>
+                지원하기
+              </ActionButton>
+            )}
           </TimelineSection>
         </ContentWrapper>
       </MainContainer>
@@ -172,7 +206,7 @@ const TimelineSection = styled.div`
   }
 `;
 
-const ApplyButton = styled.button`
+const ActionButton = styled.button`
   width: 210px;
   margin-top: 60px;
   background-color: ${colors.orange[800]};
