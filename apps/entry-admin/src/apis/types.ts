@@ -173,15 +173,16 @@ export interface FinalScreeningResult {
 /* ───────────── 모집 정원 (GET/PUT /admission-quotas) ───────────── */
 
 /**
- * 지역 → 전형 → 정원(명). 대전/전국 × 일반/마이스터/사회통합 6개 조합이 모두 0 이상으로 채워져야 하며,
- * 하나라도 빠지거나 음수면 백엔드가 400(INVALID_ADMISSION_QUOTA)으로 거절한다(2026-09-22 백엔드 AdmissionQuota 확인).
- * 최종 합격자 산출과 경쟁률(COMPETITION_RATE)의 기준이고, 전형별 정원은 두 지역 정원의 합이다.
+ * 전형 → 정원(명). 일반/마이스터/사회통합 세 전형이 모두 0 이상으로 채워져야 한다(지역 구분 없음, 2026-09-27 API 변경).
+ * 최종 합격자 산출과 경쟁률(COMPETITION_RATE)의 기준이다.
  */
-export type AdmissionQuotaMap = Record<Region, Record<AdmissionType, number>>;
+export type AdmissionQuotaMap = Record<AdmissionType, number>;
 
-/** 조회·수정 응답. 등록된 정원이 없으면 조회는 404(ADMISSION_QUOTA_NOT_FOUND)를 준다. */
-export interface AdmissionQuota {
-  quotas: AdmissionQuotaMap;
+/**
+ * 조회·수정 응답. 전형별 정원이 최상위 키로 평면 배치되고 수정 정보가 따라온다.
+ * 등록된 정원이 없으면 조회는 404(ADMISSION_QUOTA_NOT_FOUND)를 준다.
+ */
+export interface AdmissionQuota extends AdmissionQuotaMap {
   /** ISO datetime */
   updatedAt: string;
   /** 마지막 수정자 — 게이트웨이가 인증 쿠키로 채운 `X-User-Id`(계정 userId) */
@@ -189,12 +190,10 @@ export interface AdmissionQuota {
 }
 
 /**
- * 전체 교체 요청 (PUT /api/v11/admin/admission-quotas → 200, 저장된 {@link AdmissionQuota}).
+ * 전체 교체 요청 본문 `{ GENERAL, MEISTER, SOCIAL }` (PUT /api/v11/admin/admission-quotas → 200, 저장된 {@link AdmissionQuota}).
  * swagger 의 필수 헤더 `X-User-Id` 는 게이트웨이가 인증 쿠키로 주입하므로(클라이언트가 보낸 값은 지운다) 본문만 보낸다.
  */
-export interface UpdateAdmissionQuotaPayload {
-  quotas: AdmissionQuotaMap;
-}
+export type UpdateAdmissionQuotaPayload = AdmissionQuotaMap;
 
 /* ───────────── 수험번호 일괄 발급 (POST /examinee-numbers/issue) ───────────── */
 
