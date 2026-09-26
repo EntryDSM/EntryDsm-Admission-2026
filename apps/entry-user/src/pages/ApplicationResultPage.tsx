@@ -41,9 +41,9 @@ export const ApplicationResultPage = () => {
     // 비로그인 상태의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
     meta: { sentryIgnoreStatuses: [401] },
   });
-  const result = resultQuery.data;
-  const round = result ? getScreeningRound(result.passStatus) : null;
-  const isPassed = result ? isPassedStatus(result.passStatus) : false;
+  const passStatus = resultQuery.data?.passStatus;
+  const round = passStatus ? getScreeningRound(passStatus) : null;
+  const isPassed = passStatus ? isPassedStatus(passStatus) : false;
   // 일정 안내(2차 전형·합격자 등록·OT)는 합격자에게만 보여주므로 그때만 일정을 조회한다.
   const { data: schedules } = useQuery({
     queryKey: ["schedules"],
@@ -114,6 +114,9 @@ export const ApplicationResultPage = () => {
       </ResultNotice>
     );
   }
+
+  // 로딩·오류를 거르고 나면 data 가 있는 성공 상태만 남는다 (미리 꺼내 둔 별칭은 좁혀지지 않아 여기서 읽는다).
+  const result = resultQuery.data;
 
   if (result.passStatus === "PENDING") {
     return (
