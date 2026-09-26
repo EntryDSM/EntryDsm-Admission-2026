@@ -20,8 +20,8 @@ export const useMetricSeries = () => {
       );
 
       return {
-        apiRequest: toMetricChartData(data.series, "API_REQUEST", from),
-        visitor: toMetricChartData(data.series, "VISITOR", from),
+        apiRequest: toMetricChartData(data.series, "API_REQUEST", from, to),
+        visitor: toMetricChartData(data.series, "VISITOR", from, to),
       };
     },
   });

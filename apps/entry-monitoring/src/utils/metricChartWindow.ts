@@ -7,14 +7,16 @@ const KOREAN_TIME_OFFSET = 9 * HOUR;
 export const toKoreanDateTime = (date: Date) =>
   new Date(date.getTime() + KOREAN_TIME_OFFSET).toISOString().replace("Z", "+09:00");
 
-// Include the current partial hour and the preceding eleven hourly buckets.
-export const getMetricWindowStart = (now: Date) =>
-  new Date(Math.floor(now.getTime() / HOUR) * HOUR - (VISIBLE_HOURS - 1) * HOUR);
+export const getMetricWindowStart = (now: Date) => new Date(now.getTime() - VISIBLE_HOURS * HOUR);
 
-export const toMetricChartData = (series: MetricSeries[], metricName: MetricName, from: Date) => {
+export const toMetricChartData = (series: MetricSeries[], metricName: MetricName, from: Date, to: Date) => {
   const points = series.find(({ metric }) => metric === metricName)?.points ?? [];
   const valuesByHour = new Map(points.map(({ t, v }) => [Math.floor(new Date(t).getTime() / HOUR) * HOUR, v]));
-  const hours = Array.from({ length: VISIBLE_HOURS }, (_, index) => from.getTime() + index * HOUR);
+  // A rolling twelve-hour range can overlap thirteen clock-hour buckets.
+  // Include both partial buckets, but exclude a bucket starting exactly at `to`.
+  const firstHour = Math.floor(from.getTime() / HOUR) * HOUR;
+  const endHour = Math.ceil(to.getTime() / HOUR) * HOUR;
+  const hours = Array.from({ length: (endHour - firstHour) / HOUR }, (_, index) => firstHour + index * HOUR);
 
   return {
     labels: hours.map(hour => toKoreanDateTime(new Date(hour)).slice(11, 16)),
