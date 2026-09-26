@@ -22,6 +22,5 @@ export * from "./useRegisterFinalResult";
 export * from "./useCancelApplication";
 export * from "./useIssueExamineeNumbers";
 export * from "./useExportDownloads";
-export * from "./useEssayDownload";
 export * from "./useAdmissionQuota";
 export * from "./useUpdateAdmissionQuota";
