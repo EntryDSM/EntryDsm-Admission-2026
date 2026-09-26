@@ -19,7 +19,7 @@ import {
   useUpdateApplicantArrival,
   useVerifyApplicationPeriod,
 } from "../hooks";
-import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel, toExportFilter } from "../utils";
+import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel } from "../utils";
 import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
@@ -116,9 +116,6 @@ export const ApplicantsList = () => {
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
-  // 출력물(점검표·수험표)은 화면의 검색어·필터 조건을 그대로 따른다. 조건이 없으면(undefined) 전체 지원자가 대상이다.
-  const exportFilter = useMemo(() => toExportFilter(queryParams), [queryParams]);
-
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
@@ -163,26 +160,28 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "지원자 점검표 출력" → 현재 검색 조건으로 지원자 목록 엑셀 내보내기 잡(APPLICANT_LIST)을 접수하고 완료되면 다운로드 링크를 연다.
+  // 출력물 5종은 전부 POST /exports 에 type 만 보내 접수하는 비동기 잡이다(백엔드 #293). 대상 조건은 받지 않아 화면의 검색어·필터와
+  // 무관하게 수험표는 1차 합격자 전체, 나머지는 전체 지원자가 대상이며, 완료되면 서명된 다운로드 링크를 연다.
+
+  // "점검표 출력" → 지원자 점검표 엑셀(APPLICATION_CHECKLIST)
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
     }
 
-    downloadChecklist({ filter: exportFilter });
+    downloadChecklist();
   };
 
-  // "수험표 출력" → 현재 검색 조건으로 수험표 PDF 내보내기 잡(ADMISSION_TICKET)을 접수하고 완료되면 다운로드 링크를 연다.
+  // "수험표 출력" → 1차 합격자 수험표 묶음 엑셀(ADMISSION_TICKET). 1차 합격자가 없으면 서버가 접수하지 않고 409 로 알려준다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
     }
 
-    downloadAdmissionTickets({ filter: exportFilter });
+    downloadAdmissionTickets();
   };
 
-  // "전형 자료 출력" → GET /admission-file 로 전체 지원자 엑셀 잡(ADMISSION_FILE)을 접수하고 완료되면 다운로드 링크를 연다.
-  // 이 API 는 조건을 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  // "전형 자료 출력" → 전형 자료 엑셀(ADMISSION_FILE)
   const handleAdmissionFileClick = () => {
     if (isDownloadingAdmissionFile) {
       return;
@@ -191,7 +190,7 @@ export const ApplicantsList = () => {
     downloadAdmissionFile();
   };
 
-  // "1차 합격자 명단 출력" → GET /first-pass 가 명단 엑셀을 그 자리에서 만들어 서명 URL 을 돌려주면 연다(잡 폴링 없음, 조건 없음).
+  // "1차 합격 명단 출력" → 1차 합격자 명단 엑셀(FIRST_PASS)
   const handleFirstPassListClick = () => {
     if (isDownloadingFirstPassList) {
       return;
@@ -200,8 +199,7 @@ export const ApplicantsList = () => {
     downloadFirstPassList();
   };
 
-  // "자기소개서·학업계획서 다운로드" → GET /essays 가 전체 지원자의 서식 3 PDF 를 ZIP 으로 스트리밍하면 Blob 으로 받아 저장한다.
-  // 서명 URL·잡 폴링이 없고 조건도 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  // "자기소개서·학업계획서 출력" → 지원자별 서식 3 PDF 묶음 ZIP(ESSAYS). 미작성 항목은 서버가 뺀다.
   const handleEssaysClick = () => {
     if (isDownloadingEssays) {
       return;
