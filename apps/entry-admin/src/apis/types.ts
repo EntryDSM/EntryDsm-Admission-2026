@@ -211,53 +211,31 @@ export interface ExamineeNumberIssueResult {
 /* ───── 내보내기 잡 (POST /exports → 202, GET /exports/{exportJobId}) ───── */
 
 /**
- * 내보내기 산출물 종류 — 수험표 PDF / 지원자 목록 엑셀 / 1차 합격자 명단 엑셀 / 전형 자료 엑셀.
- * `FIRST_PASS_LIST`·`ADMISSION_FILE` 은 백엔드 #266(2026-09-22)에서 추가됐고, 각각 `GET /first-pass`·`GET /admission-file` 이 접수한다.
+ * 내보내기 산출물 종류. 관리자 파일 출력은 전부 `POST /exports` 에 `{ type }` 만 보내 접수하는 비동기 잡으로 통일됐다(백엔드 #293).
+ * 대상 조건(`filter`)은 받지 않는다 — 수험표는 서버가 1차 합격자 전체를 고르고, 나머지는 전체 지원자가 대상이다.
+ *
+ * - `ADMISSION_TICKET`: 1차 합격자 수험표 묶음(1차 합격자, XLSX 한 파일). 1차 합격자가 없으면 접수가 409 로 거절된다.
+ * - `FIRST_PASS`: 1차 합격자 명단(1차 합격자, XLSX)
+ * - `ADMISSION_FILE`: 전형 자료(전체 지원자, XLSX)
+ * - `APPLICATION_CHECKLIST`: 지원자 점검표(전형 자료와 같은 전체 지원자, XLSX)
+ * - `ESSAYS`: 자기소개서·학업계획서 PDF 묶음(전체 지원자 중 PDF 가 있는 항목, ZIP)
  */
-export type ExportType = "ADMISSION_TICKET" | "APPLICANT_LIST" | "FIRST_PASS_LIST" | "ADMISSION_FILE";
+export type ExportType = "ADMISSION_TICKET" | "FIRST_PASS" | "ADMISSION_FILE" | "APPLICATION_CHECKLIST" | "ESSAYS";
 
 /** 내보내기 잡 상태. `COMPLETED` 일 때만 `downloadUrl` 이 내려온다. */
 export type ExportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
-/** 내보내기 대상 조건. 지원자 목록 조회(`GET /applicants`)와 같은 조건이며, 비어 있으면 거르지 않는다. */
-export type ExportFilter = Pick<
-  GetApplicantsParams,
-  "keyword" | "regions" | "admissionTypes" | "graduationStatuses" | "isArrived" | "statuses"
->;
-
 export interface CreateExportPayload {
   type: ExportType;
-  filter?: ExportFilter;
 }
 
-/** 잡 접수 응답 (202 Accepted). 실제 생성은 서버가 비동기로 진행한다. */
+/**
+ * 잡 접수 응답 (202 Accepted). 실제 생성은 서버가 비동기로 진행한다.
+ * 수험표(`ADMISSION_TICKET`)는 1차 합격자가 없으면 접수 자체가 409 `ADMISSION_TICKET_NO_TARGET` 로 실패한다.
+ */
 export interface CreateExportResult {
   exportJobId: string;
   status: ExportStatus;
-}
-
-/**
- * 전형 자료 출력 접수 응답 (`GET /api/v11/admin/admission-file` → 200). 조건 없이 전체 지원자 대상의 `ADMISSION_FILE` 잡을 접수한다.
- * 잡 ID 필드명이 `jobId` 로 다르고, 접수 시점이라 `downloadUrl`/`expiresAt` 은 항상 null — 완료 여부는 `GET /exports/{jobId}` 로 폴링한다.
- */
-export interface AdmissionFileExportJob {
-  jobId: string;
-  status: ExportStatus;
-  totalCount: number;
-  processedCount: number;
-  downloadUrl: string | null;
-  /** ISO datetime */
-  expiresAt: string | null;
-}
-
-/**
- * 서버가 그 자리에서 파일을 만들어 돌려주는 다운로드 링크 (`GET /api/v11/admin/first-pass` → 200).
- * 1차 합격자 명단 엑셀(`FIRST_PASS_LIST`)은 잡 폴링 없이 동기로 만들어지며, `downloadUrl` 은 `expiresAt`(기본 15분)까지 유효하다.
- */
-export interface FileDownloadLink {
-  downloadUrl: string;
-  /** ISO datetime */
-  expiresAt: string;
 }
 
 /** 잡 조회 응답. 완료 시 서명된 `downloadUrl`(기본 15분 유효)이 내려온다. */

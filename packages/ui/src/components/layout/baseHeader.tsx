@@ -182,7 +182,7 @@ export const CommonHeader = ({ transparent = false, isLoggedIn = false, isLoadin
           <Flex gap={20} alignItems="center" width="fit-content" height="fit-content">
             <NavContent
               onClick={() => navClick("/mypage")}
-              isPath={pathname === "/mypage"}
+              isPath={pathname.startsWith("/mypage")}
               isTransparent={isTransparent}
             >
               마이페이지
