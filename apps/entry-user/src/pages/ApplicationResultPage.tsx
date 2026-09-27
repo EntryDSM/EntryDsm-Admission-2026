@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { colors, media } from "@entry/design";
 import { AUTH_APP_URL, Btn, usePageTitle } from "@entry/ui";
 import { toast } from "react-toastify";
 import { HttpError } from "../apis/http";
-import { getApplicationResult, type ApplicationResult } from "../apis/mypage";
+import { getApplicationResult, getRegistrationDocument, type ApplicationResult } from "../apis/mypage";
 import { getSchedules, type Schedule } from "../apis/schedule";
 import {
   PASS_STATUS_LABEL,
@@ -20,6 +20,7 @@ import {
   labelOf,
   type ScreeningRound,
 } from "../utils/applicationResult";
+import { openDownloadWindow } from "../utils/download";
 import { formatScheduleDate, formatScheduleDateWithTime, formatScheduleTime, hasScheduleTime } from "../utils/schedule";
 
 const SCHOOL_NAME = "대덕소프트웨어마이스터고등학교";
@@ -27,6 +28,15 @@ const SCHOOL_ADDRESS = `대전광역시 유성구 가정북로 76, ${SCHOOL_NAME
 const SCHOOL_HOMEPAGE = "http://dsmhs.djsch.kr";
 const UNDECIDED_SCHEDULE = "추후 안내";
 const HOME_BUTTON_LABEL = "홈으로 돌아가기";
+
+/** 합격자 등록 서류 조회 실패 안내. 403 은 최종 합격자가 아닐 때, 404 는 관리자가 아직 서류를 올리지 않았을 때다. */
+const REGISTRATION_DOCUMENT_ERROR_MESSAGE: Record<number, string> = {
+  401: "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요.",
+  403: "최종 합격자만 합격자 등록 서류를 받을 수 있습니다.",
+  404: "합격자 등록 서류가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.",
+};
+const REGISTRATION_DOCUMENT_FALLBACK_ERROR_MESSAGE =
+  "합격자 등록 서류를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
 
 /**
  * 합격자 발표 페이지 (/mypage/result). 마이페이지의 "합격 결과 확인" 버튼으로 들어온다.
@@ -176,10 +186,28 @@ const ResultAnnouncement = ({ result, round, isPassed, schedules, onGoHome }: Re
     ? `축하합니다! ${result.name} 지원자님은 ${roundText} 합격하였습니다.`
     : `아쉽게도 ${result.name} 지원자님은 ${roundText} 불합격하였습니다.`;
 
-  const handleDownloadRegistrationDocuments = () => {
-    // TODO: 합격자 등록 서류 다운로드 API 연동
-    toast.info("합격자 등록 서류 다운로드는 준비 중입니다.");
-  };
+  // 서명된 URL 은 곧 만료되므로 캐시하지 않고 누를 때마다 새로 받는다.
+  const registrationDocumentMutation = useMutation({
+    mutationFn: getRegistrationDocument,
+    onSuccess: ({ downloadUrl }) => {
+      if (openDownloadWindow(downloadUrl)) {
+        return;
+      }
+
+      // 응답을 기다린 뒤의 window.open 은 클릭과 떨어져 있어 브라우저가 팝업으로 막을 수 있다. 그때는 토스트를 눌러 열게 한다.
+      toast.info("팝업이 차단되었습니다. 여기를 누르면 합격자 등록 서류가 열립니다.", {
+        autoClose: 15_000,
+        onClick: () => openDownloadWindow(downloadUrl),
+      });
+    },
+    onError: (error: unknown) => {
+      const status = error instanceof HttpError ? error.status : undefined;
+      toast.error(
+        (status !== undefined && REGISTRATION_DOCUMENT_ERROR_MESSAGE[status]) ||
+          REGISTRATION_DOCUMENT_FALLBACK_ERROR_MESSAGE
+      );
+    },
+  });
 
   return (
     <PageContainer>
@@ -292,7 +320,11 @@ const ResultAnnouncement = ({ result, round, isPassed, schedules, onGoHome }: Re
         <ButtonRow>
           {isFinalPassed && (
             <ActionSlot grow={3.6}>
-              <Btn width="100%" onClick={handleDownloadRegistrationDocuments}>
+              <Btn
+                width="100%"
+                onClick={() => registrationDocumentMutation.mutate()}
+                isBlocked={registrationDocumentMutation.isPending}
+              >
                 합격자 등록 서류 다운로드
               </Btn>
             </ActionSlot>
