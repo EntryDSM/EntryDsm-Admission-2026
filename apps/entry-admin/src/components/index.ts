@@ -2,6 +2,7 @@ export * from "./Keyword";
 export * from "./CalculatorPost";
 export * from "./FindApplicantInput";
 export * from "./CheckBox";
+export * from "./DownloadButton";
 export * from "./Applicant";
 export * from "./Pagination";
 export * from "./ApplicantDetailModal";
