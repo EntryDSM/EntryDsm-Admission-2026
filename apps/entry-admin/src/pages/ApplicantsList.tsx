@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
-import { Btn, useModal } from "@entry/ui";
+import { Btn, CancelModal, useModal } from "@entry/ui";
 
 import type { AdmissionType, GetApplicantsParams, GraduationStatus, Region } from "../apis";
 import {
   useApplicants,
+  useApplicationPeriod,
+  useCancelApplication,
   useDownloadAdmissionFile,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
@@ -15,9 +17,17 @@ import {
   useIssueExamineeNumbers,
   useRegisterFinalResult,
   useUpdateApplicantArrival,
+  useVerifyApplicationPeriod,
 } from "../hooks";
-import { type ApplicantListItem, toExportFilter } from "../utils";
-import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
+import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel } from "../utils";
+import {
+  Applicant,
+  ApplicantDetailModal,
+  CheckBox,
+  DownloadButton,
+  FindApplicantInput,
+  PagiNation,
+} from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
 
@@ -42,7 +52,8 @@ const EDUCATION_OPTIONS = [
   { key: "exam", label: "검정고시" },
 ] as const;
 
-const APPLICANT_TABLE_HEADERS = [
+/** 마지막 열(지원자별 버튼) 제목은 원서 접수 기간에 따라 "접수 취소" ↔ "2차 합격자 등록" 으로 바뀌므로 렌더 시점에 붙인다. */
+const APPLICANT_TABLE_FIXED_HEADERS = [
   "접수 번호",
   "이름",
   "지역",
@@ -51,7 +62,6 @@ const APPLICANT_TABLE_HEADERS = [
   "수험번호",
   "원서 도착 여부",
   "상태",
-  "2차 합격자 등록",
 ] as const;
 
 type RegionKey = (typeof REGION_OPTIONS)[number]["key"];
@@ -113,12 +123,20 @@ export const ApplicantsList = () => {
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
-  // 출력물(점검표·수험표)은 화면의 검색어·필터 조건을 그대로 따른다. 조건이 없으면(undefined) 전체 지원자가 대상이다.
-  const exportFilter = useMemo(() => toExportFilter(queryParams), [queryParams]);
-
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
+
+  // 원서 접수 기간에는 지원자별 버튼이 "접수 취소", 접수가 끝나면(또는 기간 판정에 실패하면) 기존대로 "2차 합격자 등록" 이 된다.
+  const { periodStatus, isCheckingPeriod } = useApplicationPeriod();
+  const applicantActionMode: ApplicantActionMode = periodStatus === "open" ? "cancel" : "register";
+  const tableHeaders = [...APPLICANT_TABLE_FIXED_HEADERS, getApplicantActionLabel(applicantActionMode)];
+
+  const [cancelTarget, setCancelTarget] = useState<ApplicantListItem | null>(null);
+  const [isVerifyingPeriod, setIsVerifyingPeriod] = useState(false);
+  const verifyApplicationPeriod = useVerifyApplicationPeriod();
+  const { cancelApplication, isCancelingApplication } = useCancelApplication();
+  const isCancelInProgress = isVerifyingPeriod || isCancelingApplication;
 
   const handleFirstScreeningClick = () => {
     if (isRunningFirstScreening) {
@@ -149,26 +167,28 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "지원자 점검표 출력" → 현재 검색 조건으로 지원자 목록 엑셀 내보내기 잡(APPLICANT_LIST)을 접수하고 완료되면 다운로드 링크를 연다.
+  // 출력물 5종은 전부 POST /exports 에 type 만 보내 접수하는 비동기 잡이다(백엔드 #293). 대상 조건은 받지 않아 화면의 검색어·필터와
+  // 무관하게 수험표는 1차 합격자 전체, 나머지는 전체 지원자가 대상이며, 완료되면 서명된 다운로드 링크를 연다.
+
+  // "점검표" → 지원자 점검표 엑셀(APPLICATION_CHECKLIST)
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
     }
 
-    downloadChecklist({ filter: exportFilter });
+    downloadChecklist();
   };
 
-  // "수험표 출력" → 현재 검색 조건으로 수험표 PDF 내보내기 잡(ADMISSION_TICKET)을 접수하고 완료되면 다운로드 링크를 연다.
+  // "수험표" → 1차 합격자 수험표 묶음 엑셀(ADMISSION_TICKET). 1차 합격자가 없으면 서버가 접수하지 않고 409 로 알려준다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
     }
 
-    downloadAdmissionTickets({ filter: exportFilter });
+    downloadAdmissionTickets();
   };
 
-  // "전형 자료 출력" → GET /admission-file 로 전체 지원자 엑셀 잡(ADMISSION_FILE)을 접수하고 완료되면 다운로드 링크를 연다.
-  // 이 API 는 조건을 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  // "전형 자료" → 전형 자료 엑셀(ADMISSION_FILE)
   const handleAdmissionFileClick = () => {
     if (isDownloadingAdmissionFile) {
       return;
@@ -177,7 +197,7 @@ export const ApplicantsList = () => {
     downloadAdmissionFile();
   };
 
-  // "1차 합격자 명단 출력" → GET /first-pass 가 명단 엑셀을 그 자리에서 만들어 서명 URL 을 돌려주면 연다(잡 폴링 없음, 조건 없음).
+  // "1차 합격 명단" → 1차 합격자 명단 엑셀(FIRST_PASS)
   const handleFirstPassListClick = () => {
     if (isDownloadingFirstPassList) {
       return;
@@ -186,8 +206,7 @@ export const ApplicantsList = () => {
     downloadFirstPassList();
   };
 
-  // "자기소개서·학업계획서 다운로드" → GET /essays 가 전체 지원자의 서식 3 PDF 를 ZIP 으로 스트리밍하면 Blob 으로 받아 저장한다.
-  // 서명 URL·잡 폴링이 없고 조건도 받지 않으므로 화면 필터와 무관하게 항상 전체 지원자가 대상이다.
+  // "자기소개서·학업계획서" → 지원자별 서식 3 PDF 묶음 ZIP(ESSAYS). 미작성 항목은 서버가 뺀다.
   const handleEssaysClick = () => {
     if (isDownloadingEssays) {
       return;
@@ -196,14 +215,20 @@ export const ApplicantsList = () => {
     downloadEssays();
   };
 
-  // 출력/다운로드 액션 모음. `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
-  const printActions = [
+  // 지원자 데이터를 바꾸는 전형 처리 액션 모음. `isPending` 이 true 인 동안은 버튼을 흐리게 막아 진행 상태를 보여준다.
+  // 문구에 "중..." 을 붙이면 버튼이 넓어져, 폭이 빠듯한 화면에서 파일 다운로드 묶음이 다음 줄로 밀렸다 돌아온다.
+  const processActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
-    { label: "점검표 출력", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
-    { label: "전형 자료 출력", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
-    { label: "1차 합격 명단 출력", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
-    { label: "수험표 출력", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
-    { label: "자기소개서·학업계획서 출력", onClick: handleEssaysClick, isPending: isDownloadingEssays },
+    { label: "1차 합격자 산출", onClick: handleFirstScreeningClick, isPending: isRunningFirstScreening },
+  ];
+
+  // 파일 다운로드 액션 모음. 진행 상태는 DownloadButton 이 문구를 바꾸지 않고 아이콘과 색으로 보여준다.
+  const downloadActions = [
+    { label: "점검표", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
+    { label: "전형 자료", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
+    { label: "1차 합격 명단", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
+    { label: "자기소개서·학업계획서", onClick: handleEssaysClick, isPending: isDownloadingEssays },
+    { label: "수험표", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
   ];
 
   // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
@@ -216,6 +241,65 @@ export const ApplicantsList = () => {
       registerFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
     }
   };
+
+  // "접수 취소" 버튼 → 되돌릴 수 없는 삭제라 confirm 대신 "확인했습니다" 를 입력받는 모달(원서 최종 제출과 같은 방식)을 연다.
+  const handleCancelClick = (applicant: ApplicantListItem) => {
+    if (isCancelInProgress) {
+      return;
+    }
+
+    setCancelTarget(applicant);
+  };
+
+  // 모달에서 "확인했습니다" 를 입력하고 접수 취소를 누르면, 서버 시각으로 접수 기간을 다시 확인한 뒤 삭제한다.
+  // 접수 기간이 아니거나 확인에 실패하면 삭제하지 않고 모달을 닫는다(안내는 useVerifyApplicationPeriod 가 토스트).
+  const handleCancelConfirm = async () => {
+    if (!cancelTarget || isCancelInProgress) {
+      return;
+    }
+
+    setIsVerifyingPeriod(true);
+    let isOpenPeriod = false;
+    try {
+      isOpenPeriod = await verifyApplicationPeriod();
+    } finally {
+      setIsVerifyingPeriod(false);
+    }
+
+    if (!isOpenPeriod) {
+      setCancelTarget(null);
+      return;
+    }
+
+    // 결과(성공·실패)는 훅이 토스트하므로 요청이 끝나면 모달을 닫는다. 실패 시 다시 시도하려면 "확인했습니다" 부터 다시 입력한다.
+    cancelApplication(
+      { applicantId: cancelTarget.applicantId, applicantName: cancelTarget.applicantName },
+      { onSettled: () => setCancelTarget(null) }
+    );
+  };
+
+  // 요청이 진행 중일 때는 배경 클릭·이전 버튼으로 모달이 닫히지 않게 한다.
+  const handleCancelModalClose = () => {
+    if (isCancelInProgress) {
+      return;
+    }
+
+    setCancelTarget(null);
+  };
+
+  // 지원자별 버튼은 접수 기간에 따라 역할이 바뀐다(접수 취소 ↔ 2차 합격자 등록).
+  const handleActionClick = (applicant: ApplicantListItem) => {
+    if (applicantActionMode === "cancel") {
+      handleCancelClick(applicant);
+      return;
+    }
+
+    handleRegisterClick(applicant);
+  };
+
+  const cancelModalContent = cancelTarget
+    ? `${cancelTarget.applicantName || "해당"} 지원자(접수번호 ${cancelTarget.receiptCode})의 원서가 삭제되며, 삭제된 원서는 복구할 수 없습니다.`
+    : "";
 
   const handleArrivalClick = (applicant: ApplicantListItem) => {
     if (isUpdatingArrival) {
@@ -265,27 +349,39 @@ export const ApplicantsList = () => {
       </SearchSection>
 
       <Toolbar>
-        <ButtonContainer>
-          {printActions.map(action => (
-            <Btn
-              key={action.label}
-              color={colors.gray[50]}
-              backgroundColor={colors.green[400]}
-              hoverBackgroundColor={colors.green[500]}
-              onClick={action.onClick}
-            >
-              {action.isPending ? `${action.label} 중...` : action.label}
-            </Btn>
-          ))}
-          <Btn
-            color={colors.gray[50]}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            onClick={handleFirstScreeningClick}
-          >
-            {isRunningFirstScreening ? "1차 합격자 산출 중..." : "1차 합격자 산출"}
-          </Btn>
-        </ButtonContainer>
+        <ActionRow>
+          <ActionGroup role="group" aria-labelledby="applicant-process-actions">
+            <ActionGroupLabel id="applicant-process-actions">전형 처리</ActionGroupLabel>
+            <ActionButtons>
+              {processActions.map(action => (
+                <Btn
+                  key={action.label}
+                  color={colors.gray[50]}
+                  backgroundColor={colors.green[400]}
+                  hoverBackgroundColor={colors.green[500]}
+                  isBlocked={action.isPending}
+                  onClick={action.onClick}
+                >
+                  {action.label}
+                </Btn>
+              ))}
+            </ActionButtons>
+          </ActionGroup>
+
+          <ActionGroup role="group" aria-labelledby="applicant-download-actions">
+            <ActionGroupLabel id="applicant-download-actions">파일 다운로드</ActionGroupLabel>
+            <ActionButtons>
+              {downloadActions.map(action => (
+                <DownloadButton
+                  key={action.label}
+                  label={action.label}
+                  isPending={action.isPending}
+                  onClick={action.onClick}
+                />
+              ))}
+            </ActionButtons>
+          </ActionGroup>
+        </ActionRow>
 
         <FilterControl>
           <FilterGroup>
@@ -334,9 +430,9 @@ export const ApplicantsList = () => {
         </FilterControl>
       </Toolbar>
 
-      <TableScroll role="table" aria-label="지원자 목록" aria-colcount={APPLICANT_TABLE_HEADERS.length}>
+      <TableScroll role="table" aria-label="지원자 목록" aria-colcount={tableHeaders.length}>
         <ApplicantsTitle role="row">
-          {APPLICANT_TABLE_HEADERS.map((header, index) => (
+          {tableHeaders.map((header, index) => (
             <Title key={header} role="columnheader" aria-colindex={index + 1}>
               {header}
             </Title>
@@ -344,15 +440,15 @@ export const ApplicantsList = () => {
         </ApplicantsTitle>
 
         <ApplicantsAllList role="rowgroup">
-          {isLoading ? (
+          {isLoading || isCheckingPeriod ? (
             <LoadingContent role="row">
-              <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
+              <LoadingMessage role="cell" aria-colspan={tableHeaders.length}>
                 지원자 조회 데이터 기다리는 중...
               </LoadingMessage>
             </LoadingContent>
           ) : applicants.length === 0 ? (
             <LoadingContent role="row">
-              <LoadingMessage role="cell" aria-colspan={APPLICANT_TABLE_HEADERS.length}>
+              <LoadingMessage role="cell" aria-colspan={tableHeaders.length}>
                 지원자 내역이 없습니다.
               </LoadingMessage>
             </LoadingContent>
@@ -367,8 +463,9 @@ export const ApplicantsList = () => {
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
+                actionMode={applicantActionMode}
                 onClick={() => handleApplicantClick(applicant)}
-                onRegisterClick={() => handleRegisterClick(applicant)}
+                onActionClick={() => handleActionClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))
@@ -379,6 +476,18 @@ export const ApplicantsList = () => {
       {selectedApplicant && (
         <ApplicantDetailModal applicantId={selectedApplicant.applicantId} isOpen={isOpen} onClose={close} />
       )}
+
+      <CancelModal
+        isOpen={cancelTarget !== null}
+        setIsOpen={handleCancelModalClose}
+        title="원서 접수를 취소하시겠습니까?"
+        content={cancelModalContent}
+        confirmText="확인했습니다"
+        confirmDescription='접수 취소를 위해서는 "확인했습니다"를 작성해주세요.'
+        btnText="접수 취소"
+        isLoading={isCancelInProgress}
+        onClick={() => void handleCancelConfirm()}
+      />
 
       <PagiNation currentPage={currentPage} totalPage={totalPage} onPageChange={handlePageChange} />
     </Container>
@@ -402,28 +511,45 @@ const SearchSection = styled.div`
   justify-content: center;
 `;
 
+// 버튼·필터는 표보다 좌우로 최대 36px 씩 안쪽에 둔다(1440px 화면에서 폭 1168px).
+// 화면이 좁아지면 안쪽 여백부터 줄여, 버튼이 한 줄에 놓이는 폭 1168px 을 되도록 지킨다.
 const Toolbar = styled.section`
   width: 100%;
   max-width: 1540px;
+  padding: 0 clamp(0px, calc((100% - 1168px) / 2), 36px);
   display: flex;
   flex-direction: column;
   gap: 19px;
   margin-top: 32px;
 `;
 
-const ButtonContainer = styled.div`
+const ActionRow = styled.div`
   width: 100%;
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 16px 24px;
+`;
 
-  button {
-    height: 48px;
-    border-radius: 12px;
-    font-size: 20px;
-    font-weight: 500;
-  }
+const ActionGroup = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const ActionGroupLabel = styled.span`
+  color: ${colors.gray[400]};
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 `;
 
 const FilterControl = styled.div`

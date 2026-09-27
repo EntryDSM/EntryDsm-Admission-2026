@@ -1,15 +1,15 @@
 import { media } from "@entry/design";
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router";
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AUTH_APP_URL, Btn, CancelModal, ShowResultModal, USER_APP_URL, useModal } from "@entry/ui";
+import { AUTH_APP_URL, Btn, CancelModal, USER_APP_URL } from "@entry/ui";
 import { toast } from "react-toastify";
 import {
   type ApplicantStatus,
   deleteMyAccount,
   getApplicationDocument,
-  getApplicationResult,
   getApplicationStatus,
   getMyAccount,
   logout,
@@ -33,7 +33,6 @@ export const MyPage = () => {
     cancelCredentials: false,
     download: false,
   });
-  const [isPass, setIsPass] = useState(false);
 
   const openModalHandler = useCallback((modalName: keyof typeof openModal) => {
     setOpenModal(prev => ({ ...prev, [modalName]: true }));
@@ -43,7 +42,7 @@ export const MyPage = () => {
     setOpenModal(prev => ({ ...prev, [modalName]: false }));
   }, []);
 
-  const resultModal = useModal();
+  const navigate = useNavigate();
 
   const { data: userInfo } = useQuery({
     queryKey: ["my-account"],
@@ -54,12 +53,6 @@ export const MyPage = () => {
   const { data: applicationStatus } = useQuery({
     queryKey: ["application-status"],
     queryFn: getApplicationStatus,
-  });
-  const resultQuery = useQuery({
-    queryKey: ["application-result"],
-    queryFn: getApplicationResult,
-    enabled: false,
-    retry: false,
   });
   const deleteAccountMutation = useMutation({
     mutationFn: deleteMyAccount,
@@ -100,23 +93,9 @@ export const MyPage = () => {
     window.open(document.downloadUrl, "_blank");
   };
 
-  const handleCheckResult = async () => {
-    if (resultQuery.isFetching) return;
-
-    const { data, isError } = await resultQuery.refetch();
-
-    if (isError || !data) {
-      toast.error("합격 결과를 불러오지 못했습니다.");
-      return;
-    }
-
-    if (data.passStatus === "PENDING") {
-      toast.info("아직 합격 결과가 발표되지 않았습니다.");
-      return;
-    }
-
-    setIsPass(data.passStatus === "PASSED");
-    resultModal.open();
+  // 합격 결과는 팝업 대신 전용 페이지(/mypage/result)에서 보여준다. 발표 전·오류 안내도 그 페이지가 맡는다.
+  const handleCheckResult = () => {
+    navigate("/mypage/result");
   };
 
   const handleLogout = () => {
@@ -162,7 +141,6 @@ export const MyPage = () => {
             borderColor={colors.orange[800]}
             hoverBackgroundColor="transparent"
             onClick={handleCheckResult}
-            isBlocked={resultQuery.isFetching}
           >
             합격 결과 확인
           </Btn>
@@ -233,8 +211,6 @@ export const MyPage = () => {
         isLoading={deleteAccountMutation.isPending}
         onClick={() => deleteAccountMutation.mutate()}
       />
-
-      <ShowResultModal isOpen={resultModal.isOpen} onClose={resultModal.close} isPass={isPass} />
     </PageContainer>
   );
 };

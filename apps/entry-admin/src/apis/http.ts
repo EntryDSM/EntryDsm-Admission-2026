@@ -14,43 +14,11 @@ export class HttpError extends Error {
   }
 }
 
-/**
- * 파일 본문을 그대로 내려주는 응답(ZIP 스트리밍 등)을 받은 결과.
- * `fileName` 은 `Content-Disposition` 에서 읽는데, 게이트웨이 CORS 가 그 헤더를 노출하지 않으면(exposedHeaders 에 없음) null 이다.
- */
-export interface DownloadedFile {
-  blob: Blob;
-  fileName: string | null;
-}
-
 interface ErrorBody {
   error?: { code?: string; message?: string };
 }
 
 const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
-
-/**
- * `Content-Disposition: attachment; filename="…"; filename*=UTF-8''…` 에서 파일명을 읽는다.
- * Spring 은 한글 파일명을 quoted-printable `filename` 과 RFC 5987 `filename*` 둘 다로 쓰므로 `filename*` 을 우선한다.
- */
-const parseContentDispositionFileName = (header: string | null): string | null => {
-  if (!header) {
-    return null;
-  }
-
-  const extended = /filename\*\s*=\s*utf-8''([^;]+)/i.exec(header);
-  if (extended) {
-    try {
-      return decodeURIComponent(extended[1].trim()) || null;
-    } catch {
-      // 잘못 인코딩된 값이면 아래의 일반 filename 으로 넘어간다.
-    }
-  }
-
-  const plain = /filename\s*=\s*(?:"([^"]*)"|([^;]+))/i.exec(header);
-  const fileName = (plain?.[1] ?? plain?.[2])?.trim();
-  return fileName ? fileName : null;
-};
 
 const isJsonResponse = (response: Response) =>
   response.headers.get("content-type")?.includes("application/json") ?? false;
@@ -112,24 +80,6 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   return body as T;
 };
 
-/**
- * 파일 본문을 그대로 받는 요청(예: ZIP 스트리밍). 성공하면 Blob 과 `Content-Disposition` 파일명을 돌려주고,
- * 실패는 JSON 에러 봉투를 읽어 `HttpError` 로 던진다.
- * 본문을 다 받을 때까지 기다리므로 큰 파일은 공용 타임아웃(30초)에 걸릴 수 있다 — 호출자가 `signal` 로 넉넉히 준다.
- */
-const requestFile = async (path: string, options: RequestInit = {}): Promise<DownloadedFile> => {
-  const response = await send(path, options);
-
-  if (!response.ok) {
-    throw await toHttpError(response);
-  }
-
-  return {
-    blob: await response.blob(),
-    fileName: parseContentDispositionFileName(response.headers.get("content-disposition")),
-  };
-};
-
 export const http = {
   get: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: "GET" }),
   post: <T>(path: string, payload?: unknown, options?: RequestInit) =>
@@ -146,6 +96,4 @@ export const http = {
   /** multipart 업로드(파일 첨부). 인증 쿠키·CSRF 헤더는 JSON 요청과 같이 붙고, Content-Type 만 브라우저에 맡긴다. */
   postFormData: <T>(path: string, formData: FormData, options?: RequestInit) =>
     request<T>(path, { ...options, method: "POST", body: formData }),
-  /** 파일 본문을 직접 내려주는 GET(ZIP 등). JSON 봉투를 벗기지 않고 Blob 으로 돌려준다. */
-  getFile: (path: string, options?: RequestInit) => requestFile(path, { ...options, method: "GET" }),
 };

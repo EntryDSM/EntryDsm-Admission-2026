@@ -93,7 +93,14 @@ export const AdminHeader = ({ disabledPaths, onDisabledNavClick, onLogout }: Adm
             </NavContent>
           ))}
         </Flex>
-        <Btn onClick={handleLogout}>로그아웃</Btn>
+        <Btn
+          onClick={handleLogout}
+          color={colors.gray[50]}
+          backgroundColor={colors.green[400]}
+          hoverBackgroundColor={colors.green[500]}
+        >
+          로그아웃
+        </Btn>
         <SideBarBtnIcon onClick={() => setIsSideClick(!isSideClick)} />
       </Flex>
       {isSideClick && (
@@ -182,7 +189,7 @@ export const CommonHeader = ({ transparent = false, isLoggedIn = false, isLoadin
           <Flex gap={20} alignItems="center" width="fit-content" height="fit-content">
             <NavContent
               onClick={() => navClick("/mypage")}
-              isPath={pathname === "/mypage"}
+              isPath={pathname.startsWith("/mypage")}
               isTransparent={isTransparent}
             >
               마이페이지

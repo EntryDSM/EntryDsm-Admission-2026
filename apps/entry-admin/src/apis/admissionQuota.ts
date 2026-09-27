@@ -23,7 +23,7 @@ export const getAdmissionQuota = async (): Promise<AdmissionQuota | null> => {
 };
 
 /**
- * 모집 정원 전체 교체(PUT). 6개 조합을 모두 보내야 하며 저장된 정원을 돌려준다(200).
+ * 모집 정원 전체 교체(PUT). 본문은 전형별 정원 `{ GENERAL, MEISTER, SOCIAL }` 이며 저장된 정원을 돌려준다(200).
  * 수정자(`X-User-Id`)는 게이트웨이가 인증 쿠키로 주입하므로 클라이언트는 헤더를 보내지 않는다.
  */
 export const updateAdmissionQuota = (payload: UpdateAdmissionQuotaPayload) =>

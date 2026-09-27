@@ -1,65 +1,29 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getMetricSeries, type MetricName, type MetricSeries } from "../apis";
-
-const getLocalDateKey = (date: Date) =>
-  [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(value => String(value).padStart(2, "0")).join("-");
-
-const getMillisecondsUntilTomorrow = () => {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-
-  return tomorrow.getTime() - now.getTime();
-};
-
-const useToday = () => {
-  const [today, setToday] = useState(() => getLocalDateKey(new Date()));
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setToday(getLocalDateKey(new Date()));
-    }, getMillisecondsUntilTomorrow() + 1_000);
-
-    return () => clearTimeout(timeoutId);
-  }, [today]);
-
-  return today;
-};
-
-const toChartData = (series: MetricSeries[], metricName: MetricName) => {
-  const points = series.find(({ metric }) => metric === metricName)?.points ?? [];
-
-  return {
-    labels: points.map(({ t }) => t.slice(11, 16)),
-    values: points.map(({ v }) => v),
-  };
-};
+import { getMetricSeries } from "../apis";
+import { getMetricWindowStart, toKoreanDateTime, toMetricChartData } from "../utils/metricChartWindow";
 
 export const useMetricSeries = () => {
-  const today = useToday();
   const query = useQuery({
-    queryKey: ["monitoring", "metric-series", today, "1h"],
-    queryFn: ({ signal }) => {
+    queryKey: ["monitoring", "metric-series", "recent-12-hours", "1h"],
+    refetchInterval: 30_000,
+    queryFn: async ({ signal }) => {
       const to = new Date();
-      const from = new Date(to);
-      from.setHours(0, 0, 0, 0);
-
-      return getMetricSeries(
+      const from = getMetricWindowStart(to);
+      const data = await getMetricSeries(
         {
           metrics: ["API_REQUEST", "VISITOR"],
-          from: from.toISOString(),
-          to: to.toISOString(),
+          from: toKoreanDateTime(from),
+          to: toKoreanDateTime(to),
           interval: "1h",
         },
         signal
       );
+
+      return {
+        apiRequest: toMetricChartData(data.series, "API_REQUEST", from, to),
+        visitor: toMetricChartData(data.series, "VISITOR", from, to),
+      };
     },
-    select: data => ({
-      apiRequest: toChartData(data.series, "API_REQUEST"),
-      visitor: toChartData(data.series, "VISITOR"),
-    }),
   });
 
   return {

@@ -8,6 +8,7 @@ import {
   NoticeDetailPage,
   AdmissionOverviewPage,
   MyPage,
+  ApplicationResultPage,
   FaqPage,
   ScoreFirst,
   ScoreSecond,
@@ -67,6 +68,12 @@ export const Router = createBrowserRouter([
             path: "/mypage",
             element: <MyPage />,
             handle: { title: "마이페이지" },
+          },
+          {
+            // 마이페이지 "합격 결과 확인" → 합격자 발표. 로드 후 페이지 안에서 usePageTitle로 회차 제목(1차/최종)으로 덮어쓴다.
+            path: "/mypage/result",
+            element: <ApplicationResultPage />,
+            handle: { title: "합격자 발표" },
           },
           {
             path: "/error_fixing",

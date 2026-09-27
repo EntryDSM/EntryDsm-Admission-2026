@@ -173,15 +173,16 @@ export interface FinalScreeningResult {
 /* ───────────── 모집 정원 (GET/PUT /admission-quotas) ───────────── */
 
 /**
- * 지역 → 전형 → 정원(명). 대전/전국 × 일반/마이스터/사회통합 6개 조합이 모두 0 이상으로 채워져야 하며,
- * 하나라도 빠지거나 음수면 백엔드가 400(INVALID_ADMISSION_QUOTA)으로 거절한다(2026-09-22 백엔드 AdmissionQuota 확인).
- * 최종 합격자 산출과 경쟁률(COMPETITION_RATE)의 기준이고, 전형별 정원은 두 지역 정원의 합이다.
+ * 전형 → 정원(명). 일반/마이스터/사회통합 세 전형이 모두 0 이상으로 채워져야 한다(지역 구분 없음, 2026-09-27 API 변경).
+ * 최종 합격자 산출과 경쟁률(COMPETITION_RATE)의 기준이다.
  */
-export type AdmissionQuotaMap = Record<Region, Record<AdmissionType, number>>;
+export type AdmissionQuotaMap = Record<AdmissionType, number>;
 
-/** 조회·수정 응답. 등록된 정원이 없으면 조회는 404(ADMISSION_QUOTA_NOT_FOUND)를 준다. */
-export interface AdmissionQuota {
-  quotas: AdmissionQuotaMap;
+/**
+ * 조회·수정 응답. 전형별 정원이 최상위 키로 평면 배치되고 수정 정보가 따라온다.
+ * 등록된 정원이 없으면 조회는 404(ADMISSION_QUOTA_NOT_FOUND)를 준다.
+ */
+export interface AdmissionQuota extends AdmissionQuotaMap {
   /** ISO datetime */
   updatedAt: string;
   /** 마지막 수정자 — 게이트웨이가 인증 쿠키로 채운 `X-User-Id`(계정 userId) */
@@ -189,12 +190,10 @@ export interface AdmissionQuota {
 }
 
 /**
- * 전체 교체 요청 (PUT /api/v11/admin/admission-quotas → 200, 저장된 {@link AdmissionQuota}).
+ * 전체 교체 요청 본문 `{ GENERAL, MEISTER, SOCIAL }` (PUT /api/v11/admin/admission-quotas → 200, 저장된 {@link AdmissionQuota}).
  * swagger 의 필수 헤더 `X-User-Id` 는 게이트웨이가 인증 쿠키로 주입하므로(클라이언트가 보낸 값은 지운다) 본문만 보낸다.
  */
-export interface UpdateAdmissionQuotaPayload {
-  quotas: AdmissionQuotaMap;
-}
+export type UpdateAdmissionQuotaPayload = AdmissionQuotaMap;
 
 /* ───────────── 수험번호 일괄 발급 (POST /examinee-numbers/issue) ───────────── */
 
@@ -211,53 +210,31 @@ export interface ExamineeNumberIssueResult {
 /* ───── 내보내기 잡 (POST /exports → 202, GET /exports/{exportJobId}) ───── */
 
 /**
- * 내보내기 산출물 종류 — 수험표 PDF / 지원자 목록 엑셀 / 1차 합격자 명단 엑셀 / 전형 자료 엑셀.
- * `FIRST_PASS_LIST`·`ADMISSION_FILE` 은 백엔드 #266(2026-09-22)에서 추가됐고, 각각 `GET /first-pass`·`GET /admission-file` 이 접수한다.
+ * 내보내기 산출물 종류. 관리자 파일 출력은 전부 `POST /exports` 에 `{ type }` 만 보내 접수하는 비동기 잡으로 통일됐다(백엔드 #293).
+ * 대상 조건(`filter`)은 받지 않는다 — 수험표는 서버가 1차 합격자 전체를 고르고, 나머지는 전체 지원자가 대상이다.
+ *
+ * - `ADMISSION_TICKET`: 1차 합격자 수험표 묶음(1차 합격자, XLSX 한 파일). 1차 합격자가 없으면 접수가 409 로 거절된다.
+ * - `FIRST_PASS`: 1차 합격자 명단(1차 합격자, XLSX)
+ * - `ADMISSION_FILE`: 전형 자료(전체 지원자, XLSX)
+ * - `APPLICATION_CHECKLIST`: 지원자 점검표(전형 자료와 같은 전체 지원자, XLSX)
+ * - `ESSAYS`: 자기소개서·학업계획서 PDF 묶음(전체 지원자 중 PDF 가 있는 항목, ZIP)
  */
-export type ExportType = "ADMISSION_TICKET" | "APPLICANT_LIST" | "FIRST_PASS_LIST" | "ADMISSION_FILE";
+export type ExportType = "ADMISSION_TICKET" | "FIRST_PASS" | "ADMISSION_FILE" | "APPLICATION_CHECKLIST" | "ESSAYS";
 
 /** 내보내기 잡 상태. `COMPLETED` 일 때만 `downloadUrl` 이 내려온다. */
 export type ExportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
-/** 내보내기 대상 조건. 지원자 목록 조회(`GET /applicants`)와 같은 조건이며, 비어 있으면 거르지 않는다. */
-export type ExportFilter = Pick<
-  GetApplicantsParams,
-  "keyword" | "regions" | "admissionTypes" | "graduationStatuses" | "isArrived" | "statuses"
->;
-
 export interface CreateExportPayload {
   type: ExportType;
-  filter?: ExportFilter;
 }
 
-/** 잡 접수 응답 (202 Accepted). 실제 생성은 서버가 비동기로 진행한다. */
+/**
+ * 잡 접수 응답 (202 Accepted). 실제 생성은 서버가 비동기로 진행한다.
+ * 수험표(`ADMISSION_TICKET`)는 1차 합격자가 없으면 접수 자체가 409 `ADMISSION_TICKET_NO_TARGET` 로 실패한다.
+ */
 export interface CreateExportResult {
   exportJobId: string;
   status: ExportStatus;
-}
-
-/**
- * 전형 자료 출력 접수 응답 (`GET /api/v11/admin/admission-file` → 200). 조건 없이 전체 지원자 대상의 `ADMISSION_FILE` 잡을 접수한다.
- * 잡 ID 필드명이 `jobId` 로 다르고, 접수 시점이라 `downloadUrl`/`expiresAt` 은 항상 null — 완료 여부는 `GET /exports/{jobId}` 로 폴링한다.
- */
-export interface AdmissionFileExportJob {
-  jobId: string;
-  status: ExportStatus;
-  totalCount: number;
-  processedCount: number;
-  downloadUrl: string | null;
-  /** ISO datetime */
-  expiresAt: string | null;
-}
-
-/**
- * 서버가 그 자리에서 파일을 만들어 돌려주는 다운로드 링크 (`GET /api/v11/admin/first-pass` → 200).
- * 1차 합격자 명단 엑셀(`FIRST_PASS_LIST`)은 잡 폴링 없이 동기로 만들어지며, `downloadUrl` 은 `expiresAt`(기본 15분)까지 유효하다.
- */
-export interface FileDownloadLink {
-  downloadUrl: string;
-  /** ISO datetime */
-  expiresAt: string;
 }
 
 /** 잡 조회 응답. 완료 시 서명된 `downloadUrl`(기본 15분 유효)이 내려온다. */
@@ -330,7 +307,10 @@ export interface ApplicantCountMetric {
 /** 전형별 경쟁률 (명세 확정) */
 export type CompetitionRateMetric = Partial<Record<AdmissionType, number>>;
 
-/** 지역별 분포 `{ DAEJEON|NATIONWIDE: 수 }` (백엔드 응답 매퍼 확인, 2026-09-21) */
+/**
+ * 지역별 분포 `{ DAEJEON|NATIONWIDE: 수 }` — 원서의 모집 지역 기준 (백엔드 응답 매퍼 확인, 2026-09-21).
+ * 집계된 지역만 담기고 지역이 빈 원서는 빠진다. 홈 "지역별 접수 현황"이 이 맵에 담긴 지역을 전부 표시한다.
+ */
 export type RegionDistributionMetric = Record<string, number>;
 
 /** 전형별 분포 `{ 전형: 수 }` (백엔드 응답 매퍼 확인) */
@@ -363,7 +343,7 @@ export interface RegionStatusMetric {
 /**
  * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
  * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 #264 배포 전에는 요청할 수 없어 빠져 오며(핵심 지표 재조회 폴백),
- * 매퍼는 둘 다 없어도 안전하게 동작한다(성비 카드는 빈 값, 지역은 `REGION_DISTRIBUTION` 사용).
+ * 매퍼는 둘 다 없어도 안전하게 동작한다(성비 카드는 빈 값, 지역은 언제나 `REGION_DISTRIBUTION` 만 사용).
  */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
@@ -431,6 +411,11 @@ export interface UpdateScheduleItem {
   title: string;
   startAt: ScheduleDateTime;
   endAt: ScheduleDateTime;
+}
+
+/** 서버 현재 시각 (`GET /api/schedule/v11/time` 응답 data). 원서 접수 기간 판정은 브라우저 시계 대신 이 값을 기준으로 한다. */
+export interface CurrentTimeResponse {
+  currentTime: ScheduleDateTime;
 }
 
 /* ───────────── 공지사항·QnA (GET /notifications/..., POST /admin/notices) ───────────── */

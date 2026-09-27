@@ -1,7 +1,9 @@
 import { Http } from "./http";
+import type { AdmissionType, ApplicationRegion } from "./types";
 
 export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
-export type PassStatus = "PENDING" | "PASSED" | "FAILED";
+/** 합격 여부. PENDING 은 발표 전, FIRST_* 는 1차(서류) 전형, FINAL_* 은 2차(최종) 전형 결과다. */
+export type PassStatus = "PENDING" | "FIRST_PASSED" | "FIRST_FAILED" | "FINAL_PASSED" | "FINAL_FAILED";
 
 export interface MyAccount {
   userId: number;
@@ -22,9 +24,24 @@ export interface ApplicationStatus {
   updatedAt: string;
 }
 
+/** GET /api/identity/v11/applications/result 응답 data */
 export interface ApplicationResult {
+  /** 접수번호 (예: "0006") */
+  applicationNumber: string;
+  /** 수험번호. 발급 전이면 null */
+  examineeNumber: string | null;
+  name: string;
+  /** YYYY-MM-DD */
+  birthDate: string;
+  region: ApplicationRegion;
+  admissionType: AdmissionType;
   passStatus: PassStatus;
-  announcedAt: string;
+  /** 합불 사항 표기 문구 (예: "1차 전형 합격") */
+  passDescription: string;
+  /** 비고. 없으면 null */
+  note: string | null;
+  /** 발표 시각(ISO 8601). 발표 전이면 null */
+  announcedAt: string | null;
 }
 
 export interface ResetPasswordRequest {
