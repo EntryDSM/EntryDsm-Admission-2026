@@ -7,10 +7,11 @@ import { toCompetitionData, toGenderData, toRegionData } from "../utils";
 const CORE_METRICS: StatisticsMetric[] = ["APPLICANT_COUNT", "COMPETITION_RATE", "REGION_DISTRIBUTION"];
 
 /**
- * 성비·시도별 접수 현황. 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는 400 으로 거절한다
- * → `getStatisticsWithOptional` 이 핵심 지표만으로 재조회한다(성비 카드는 빈 값, 지역은 REGION_DISTRIBUTION 사용).
+ * 성비. 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는 400 으로 거절한다
+ * → `getStatisticsWithOptional` 이 핵심 지표만으로 재조회한다(성비 카드는 빈 값).
+ * 같은 PR 의 `REGION_STATUS` 는 지역별 접수 현황이 `REGION_DISTRIBUTION` 만 표시하므로 요청하지 않는다.
  */
-const OPTIONAL_METRICS: StatisticsMetric[] = ["GENDER_RATIO", "REGION_STATUS"];
+const OPTIONAL_METRICS: StatisticsMetric[] = ["GENDER_RATIO"];
 
 /**
  * 지원 현황 통계 조회 훅.
