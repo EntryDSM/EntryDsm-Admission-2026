@@ -11,3 +11,5 @@ export { TwoIcon } from "./TwoIcon";
 export { ThreeIcon } from "./ThreeIcon";
 export { FourIcon } from "./FourIcon";
 export { ArrowIcon } from "./ArrowIcon";
+export { DownloadIcon } from "./DownloadIcon";
+export { SpinnerIcon } from "./SpinnerIcon";

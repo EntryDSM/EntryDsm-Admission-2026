@@ -20,7 +20,14 @@ import {
   useVerifyApplicationPeriod,
 } from "../hooks";
 import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel } from "../utils";
-import { Applicant, ApplicantDetailModal, CheckBox, FindApplicantInput, PagiNation } from "../components";
+import {
+  Applicant,
+  ApplicantDetailModal,
+  CheckBox,
+  DownloadButton,
+  FindApplicantInput,
+  PagiNation,
+} from "../components";
 
 type FilterGroupType = "region" | "admission" | "status" | "education";
 
@@ -163,7 +170,7 @@ export const ApplicantsList = () => {
   // 출력물 5종은 전부 POST /exports 에 type 만 보내 접수하는 비동기 잡이다(백엔드 #293). 대상 조건은 받지 않아 화면의 검색어·필터와
   // 무관하게 수험표는 1차 합격자 전체, 나머지는 전체 지원자가 대상이며, 완료되면 서명된 다운로드 링크를 연다.
 
-  // "점검표 출력" → 지원자 점검표 엑셀(APPLICATION_CHECKLIST)
+  // "점검표" → 지원자 점검표 엑셀(APPLICATION_CHECKLIST)
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
@@ -172,7 +179,7 @@ export const ApplicantsList = () => {
     downloadChecklist();
   };
 
-  // "수험표 출력" → 1차 합격자 수험표 묶음 엑셀(ADMISSION_TICKET). 1차 합격자가 없으면 서버가 접수하지 않고 409 로 알려준다.
+  // "수험표" → 1차 합격자 수험표 묶음 엑셀(ADMISSION_TICKET). 1차 합격자가 없으면 서버가 접수하지 않고 409 로 알려준다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
@@ -181,7 +188,7 @@ export const ApplicantsList = () => {
     downloadAdmissionTickets();
   };
 
-  // "전형 자료 출력" → 전형 자료 엑셀(ADMISSION_FILE)
+  // "전형 자료" → 전형 자료 엑셀(ADMISSION_FILE)
   const handleAdmissionFileClick = () => {
     if (isDownloadingAdmissionFile) {
       return;
@@ -190,7 +197,7 @@ export const ApplicantsList = () => {
     downloadAdmissionFile();
   };
 
-  // "1차 합격 명단 출력" → 1차 합격자 명단 엑셀(FIRST_PASS)
+  // "1차 합격 명단" → 1차 합격자 명단 엑셀(FIRST_PASS)
   const handleFirstPassListClick = () => {
     if (isDownloadingFirstPassList) {
       return;
@@ -199,7 +206,7 @@ export const ApplicantsList = () => {
     downloadFirstPassList();
   };
 
-  // "자기소개서·학업계획서 출력" → 지원자별 서식 3 PDF 묶음 ZIP(ESSAYS). 미작성 항목은 서버가 뺀다.
+  // "자기소개서·학업계획서" → 지원자별 서식 3 PDF 묶음 ZIP(ESSAYS). 미작성 항목은 서버가 뺀다.
   const handleEssaysClick = () => {
     if (isDownloadingEssays) {
       return;
@@ -208,14 +215,20 @@ export const ApplicantsList = () => {
     downloadEssays();
   };
 
-  // 출력/다운로드 액션 모음. `isPending` 이 true 인 동안은 버튼 문구에 "중..." 을 붙여 진행 상태를 보여준다.
-  const printActions = [
+  // 지원자 데이터를 바꾸는 전형 처리 액션 모음. `isPending` 이 true 인 동안은 버튼을 흐리게 막아 진행 상태를 보여준다.
+  // 문구에 "중..." 을 붙이면 버튼이 넓어져, 폭이 빠듯한 화면에서 파일 다운로드 묶음이 다음 줄로 밀렸다 돌아온다.
+  const processActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
-    { label: "점검표 출력", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
-    { label: "전형 자료 출력", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
-    { label: "1차 합격 명단 출력", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
-    { label: "수험표 출력", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
-    { label: "자기소개서·학업계획서 출력", onClick: handleEssaysClick, isPending: isDownloadingEssays },
+    { label: "1차 합격자 산출", onClick: handleFirstScreeningClick, isPending: isRunningFirstScreening },
+  ];
+
+  // 파일 다운로드 액션 모음. 진행 상태는 DownloadButton 이 문구를 바꾸지 않고 아이콘과 색으로 보여준다.
+  const downloadActions = [
+    { label: "점검표", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
+    { label: "전형 자료", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
+    { label: "1차 합격 명단", onClick: handleFirstPassListClick, isPending: isDownloadingFirstPassList },
+    { label: "자기소개서·학업계획서", onClick: handleEssaysClick, isPending: isDownloadingEssays },
+    { label: "수험표", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
   ];
 
   // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
@@ -336,27 +349,39 @@ export const ApplicantsList = () => {
       </SearchSection>
 
       <Toolbar>
-        <ButtonContainer>
-          {printActions.map(action => (
-            <Btn
-              key={action.label}
-              color={colors.gray[50]}
-              backgroundColor={colors.green[400]}
-              hoverBackgroundColor={colors.green[500]}
-              onClick={action.onClick}
-            >
-              {action.isPending ? `${action.label} 중...` : action.label}
-            </Btn>
-          ))}
-          <Btn
-            color={colors.gray[50]}
-            backgroundColor={colors.green[400]}
-            hoverBackgroundColor={colors.green[500]}
-            onClick={handleFirstScreeningClick}
-          >
-            {isRunningFirstScreening ? "1차 합격자 산출 중..." : "1차 합격자 산출"}
-          </Btn>
-        </ButtonContainer>
+        <ActionRow>
+          <ActionGroup role="group" aria-labelledby="applicant-process-actions">
+            <ActionGroupLabel id="applicant-process-actions">전형 처리</ActionGroupLabel>
+            <ActionButtons>
+              {processActions.map(action => (
+                <Btn
+                  key={action.label}
+                  color={colors.gray[50]}
+                  backgroundColor={colors.green[400]}
+                  hoverBackgroundColor={colors.green[500]}
+                  isBlocked={action.isPending}
+                  onClick={action.onClick}
+                >
+                  {action.label}
+                </Btn>
+              ))}
+            </ActionButtons>
+          </ActionGroup>
+
+          <ActionGroup role="group" aria-labelledby="applicant-download-actions">
+            <ActionGroupLabel id="applicant-download-actions">파일 다운로드</ActionGroupLabel>
+            <ActionButtons>
+              {downloadActions.map(action => (
+                <DownloadButton
+                  key={action.label}
+                  label={action.label}
+                  isPending={action.isPending}
+                  onClick={action.onClick}
+                />
+              ))}
+            </ActionButtons>
+          </ActionGroup>
+        </ActionRow>
 
         <FilterControl>
           <FilterGroup>
@@ -486,28 +511,45 @@ const SearchSection = styled.div`
   justify-content: center;
 `;
 
+// 버튼·필터는 표보다 좌우로 최대 36px 씩 안쪽에 둔다(1440px 화면에서 폭 1168px).
+// 화면이 좁아지면 안쪽 여백부터 줄여, 버튼이 한 줄에 놓이는 폭 1168px 을 되도록 지킨다.
 const Toolbar = styled.section`
   width: 100%;
   max-width: 1540px;
+  padding: 0 clamp(0px, calc((100% - 1168px) / 2), 36px);
   display: flex;
   flex-direction: column;
   gap: 19px;
   margin-top: 32px;
 `;
 
-const ButtonContainer = styled.div`
+const ActionRow = styled.div`
   width: 100%;
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 16px 24px;
+`;
 
-  button {
-    height: 48px;
-    border-radius: 12px;
-    font-size: 20px;
-    font-weight: 500;
-  }
+const ActionGroup = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const ActionGroupLabel = styled.span`
+  color: ${colors.gray[400]};
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 `;
 
 const FilterControl = styled.div`
