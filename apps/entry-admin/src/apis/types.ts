@@ -307,7 +307,10 @@ export interface ApplicantCountMetric {
 /** 전형별 경쟁률 (명세 확정) */
 export type CompetitionRateMetric = Partial<Record<AdmissionType, number>>;
 
-/** 지역별 분포 `{ DAEJEON|NATIONWIDE: 수 }` (백엔드 응답 매퍼 확인, 2026-09-21) */
+/**
+ * 지역별 분포 `{ DAEJEON|NATIONWIDE: 수 }` — 원서의 모집 지역 기준 (백엔드 응답 매퍼 확인, 2026-09-21).
+ * 집계된 지역만 담기고 지역이 빈 원서는 빠진다. 홈 "지역별 접수 현황"이 이 맵에 담긴 지역을 전부 표시한다.
+ */
 export type RegionDistributionMetric = Record<string, number>;
 
 /** 전형별 분포 `{ 전형: 수 }` (백엔드 응답 매퍼 확인) */
@@ -340,7 +343,7 @@ export interface RegionStatusMetric {
 /**
  * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
  * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 #264 배포 전에는 요청할 수 없어 빠져 오며(핵심 지표 재조회 폴백),
- * 매퍼는 둘 다 없어도 안전하게 동작한다(성비 카드는 빈 값, 지역은 `REGION_DISTRIBUTION` 사용).
+ * 매퍼는 둘 다 없어도 안전하게 동작한다(성비 카드는 빈 값, 지역은 언제나 `REGION_DISTRIBUTION` 만 사용).
  */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
