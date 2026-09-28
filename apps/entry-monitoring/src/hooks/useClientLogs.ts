@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getClientLogs } from "../apis";
+import { toKoreanDateTime } from "../utils/metricChartWindow";
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
@@ -13,8 +14,8 @@ export const useClientLogs = () => {
       return getClientLogs(
         {
           level: ["ERROR", "WARN"],
-          from: from.toISOString(),
-          to: to.toISOString(),
+          from: toKoreanDateTime(from),
+          to: toKoreanDateTime(to),
           size: 100,
         },
         signal
