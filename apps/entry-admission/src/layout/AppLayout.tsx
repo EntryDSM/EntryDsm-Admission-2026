@@ -7,6 +7,7 @@ import {
   getApplicationStorageKey,
   getStartedApplicantId,
   clearStartedApplicantId,
+  getMyAccount,
   updateApplicantPersonalInformation,
   updateApplicantPersonalProfile,
   updateApplicationClassification,
@@ -28,8 +29,12 @@ import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 const admissionTypes = {
   일반: "REGULAR",
   "마이스터 인재": "MEISTER",
+  사회통합: "SOCIAL",
   "사회통합(민감정보 처리 약관 확인)": "SOCIAL",
 } as const;
+
+const isSocialIntegrationAdmission = (value: string) =>
+  value === "사회통합" || value === "사회통합(민감정보 처리 약관 확인)";
 
 const regions = {
   대전: "DAEJEON",
@@ -119,7 +124,8 @@ export const AppLayout = () => {
   const location = useLocation();
   const verifyApplicationPeriod = useVerifyApplicationPeriod();
   const [classificationData] = usePageData("applicationClassification");
-  const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData } = useApplicationData();
+  const { state, loadedStorageKey, loadFromStorage, saveToStorage, clearAllData, updatePageData } =
+    useApplicationData();
   const [isSaving, setIsSaving] = useState(false);
   const [hasStorageLoadError, setHasStorageLoadError] = useState(false);
   // 입력 중인 원서의 500ms 지연 저장 타이머입니다. 접근 권한이 사라지면 즉시 취소합니다.
@@ -268,6 +274,19 @@ export const AppLayout = () => {
 
       switch (currentRoute) {
         case "/application-classification": {
+          const selectedAdmissionType = state.applicationClassification.typeSelection;
+          if (isSocialIntegrationAdmission(selectedAdmissionType)) {
+            const account = await getMyAccount();
+            if (!account.is_sensitive_agree) {
+              updatePageData("applicationClassification", {
+                ...state.applicationClassification,
+                typeSelection: "",
+              });
+              toast.error("민감정보 처리 동의가 필요해 사회통합전형을 저장할 수 없습니다.");
+              return false;
+            }
+          }
+
           const graduationTypeValue = getMappedValue(
             graduationTypes,
             state.applicationClassification.graduationType,

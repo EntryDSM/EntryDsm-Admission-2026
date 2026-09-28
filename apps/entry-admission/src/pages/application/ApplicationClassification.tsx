@@ -1,4 +1,5 @@
 ﻿import { useMemo, useEffect, useState } from "react";
+import { useRef } from "react";
 import { Flex } from "@entry/design";
 import { FormElement } from "../../components";
 import { getMyAccount, type MyAccount, getSensitiveAgree } from "../../apis";
@@ -8,6 +9,11 @@ import { toast } from "react-toastify";
 
 const GENERAL_ONLY_SPECIAL_NOTES = ["국가유공자", "특례입학 대상자"] as const;
 const SPECIAL_NOTE_OPTIONS = [...GENERAL_ONLY_SPECIAL_NOTES, "해당 없음"];
+const SOCIAL_INTEGRATION_OPTION = "사회통합(민감정보 처리 약관 확인)";
+const LEGACY_SOCIAL_INTEGRATION_OPTION = "사회통합";
+
+const isSocialIntegrationOption = (value: string) =>
+  value === SOCIAL_INTEGRATION_OPTION || value === LEGACY_SOCIAL_INTEGRATION_OPTION;
 
 export const ApplicationClassification = () => {
   const [datas, setDatas] = usePageData("applicationClassification");
@@ -55,7 +61,7 @@ export const ApplicationClassification = () => {
   }, [graduationType, years, months, days]);
 
   const formRadioData = [
-    { name: "유형선택", data: ["일반", "마이스터 인재", "사회통합(민감정보 처리 약관 확인)"] },
+    { name: "유형선택", data: ["일반", "마이스터 인재", SOCIAL_INTEGRATION_OPTION] },
     { name: "지역선택", data: ["대전", "전국"] },
     {
       name: "졸업구분",
@@ -92,6 +98,7 @@ export const ApplicationClassification = () => {
 
   const [account, setAccount] = useState<MyAccount | null>(null);
   const [isAccountLoading, setIsAccountLoading] = useState(true);
+  const isSensitiveAgreementSubmittingRef = useRef(false);
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -110,12 +117,25 @@ export const ApplicationClassification = () => {
 
   const hasSensitiveAgreement = account?.is_sensitive_agree === true;
 
+  // 이전 임시저장에 남은 사회통합 선택도 현재 동의 상태와 맞지 않으면 해제한다.
+  useEffect(() => {
+    if (isAccountLoading || !account || account.is_sensitive_agree || !isSocialIntegrationOption(datas.typeSelection)) {
+      return;
+    }
+
+    setDatas({
+      ...datas,
+      typeSelection: "",
+    });
+    toast.info("민감정보 처리 동의가 필요해 사회통합전형 선택이 해제되었습니다.");
+  }, [account, datas, isAccountLoading, setDatas]);
+
   const handleTypeSelection = async (value: string) => {
     if (requiresRegularAdmission && value !== "일반") {
       return;
     }
 
-    if (value === "사회통합(민감정보 처리 약관 확인)") {
+    if (value === SOCIAL_INTEGRATION_OPTION) {
       if (isAccountLoading) {
         toast.info("민감정보 동의 상태를 확인하고 있습니다.");
         return;
@@ -127,11 +147,17 @@ export const ApplicationClassification = () => {
       }
 
       if (!hasSensitiveAgreement) {
+        if (isSensitiveAgreementSubmittingRef.current) {
+          return;
+        }
+
         const agreement = confirm("민감정보 처리를 동의하시겠습니까?");
 
         if (!agreement) {
           return;
         }
+
+        isSensitiveAgreementSubmittingRef.current = true;
 
         try {
           await getSensitiveAgree({ sensitiveAgree: true });
@@ -141,14 +167,13 @@ export const ApplicationClassification = () => {
         } catch {
           toast.error("민감정보 처리 동의 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
           return;
+        } finally {
+          isSensitiveAgreementSubmittingRef.current = false;
         }
       }
     }
 
-    setDatas({
-      ...datas,
-      typeSelection: value,
-    });
+    setDatas({ typeSelection: value });
   };
 
   const handleDropdownChange = (values: (string | number)[]) => {
@@ -173,7 +198,7 @@ export const ApplicationClassification = () => {
         radioDatas={formRadioData[0].data}
         selectedRadio={datas?.typeSelection}
         setSelectedRadio={handleTypeSelection}
-        disabledRadioDatas={requiresRegularAdmission ? ["마이스터 인재", "사회통합(민감정보 처리 약관 확인)"] : []}
+        disabledRadioDatas={requiresRegularAdmission ? ["마이스터 인재", SOCIAL_INTEGRATION_OPTION] : []}
       />
       <FormElement
         label="지역 선택"
