@@ -1,10 +1,11 @@
 import { colors, media } from "@entry/design";
 import { Btn, EntryLogo, USER_APP_URL } from "@entry/ui";
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useGetAllSchedule, useStartApplication } from "../apis";
 import type { ScheduleDateTime } from "../apis";
+import { HttpError } from "../apis/http";
 import { LinkIcon } from "../assets";
 import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 import { findApplicationSchedule } from "../utils/schedule";
@@ -26,8 +27,6 @@ export const Landing = () => {
   const navigate = useNavigate();
   const { mutateAsync: startApplication } = useStartApplication();
   const verifyApplicationPeriod = useVerifyApplicationPeriod();
-  // 기간 확인과 원서 시작이 끝날 때까지 접수하기 버튼을 막아 원서가 두 번 만들어지지 않게 한다.
-  const [isStarting, setIsStarting] = useState(false);
   const { data: schedules } = useGetAllSchedule();
   const applicationSchedule = findApplicationSchedule(schedules);
   const startDate = formatScheduleDate(applicationSchedule?.startAt);
@@ -37,11 +36,6 @@ export const Landing = () => {
 
   // 로그인 여부는 RequireAuth 가드와 서버 401 처리(http.ts)가 담당한다.
   const handleStartApplication = async () => {
-    if (isStarting) {
-      return;
-    }
-
-    setIsStarting(true);
     try {
       // 접수 시작 직전에 서버 시각 기준 접수 기간을 다시 확인한다. 마감됐으면 가드가 유저 앱으로 보낸다.
       if (!(await verifyApplicationPeriod())) {
@@ -50,10 +44,11 @@ export const Landing = () => {
 
       await startApplication();
       navigate("/application-classification");
-    } catch {
+    } catch (error) {
       // useStartApplication의 onError에서 사용자에게 실패 안내를 표시합니다.
-    } finally {
-      setIsStarting(false);
+      if (error instanceof HttpError && error.status === 409) {
+        toast.error("이미 제출한 원서가 있습니다. 마이페이지에서 원서 상태를 확인해 주세요.");
+      }
     }
   };
 
@@ -199,7 +194,7 @@ export const Landing = () => {
       </NoticeSection>
 
       <ButtonArea>
-        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isStarting}>
+        <Btn width="100%" onClick={() => void handleStartApplication()}>
           접수하기
         </Btn>
       </ButtonArea>

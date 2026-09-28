@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Http } from "./http";
+import { Http, HttpError } from "./http";
 import type {
   StartApplicationResponse,
   UpdateApplicationClassificationRequest,
@@ -116,7 +116,11 @@ export const useStartApplication = () =>
     onSuccess: response => {
       setStartedApplicantId(response.applicantId);
     },
-    onError: () => {
+    onError: error => {
+      if (error instanceof HttpError && error.status === 409) {
+        return;
+      }
+
       toast.error("원서 작성 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
     },
   });
