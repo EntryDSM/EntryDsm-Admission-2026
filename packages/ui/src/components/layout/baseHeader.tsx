@@ -1,4 +1,4 @@
-﻿import styled from "@emotion/styled";
+import styled from "@emotion/styled";
 import { useNavigate, useLocation, Link } from "react-router";
 import { useEffect, useState } from "react";
 
@@ -496,6 +496,7 @@ const HeaderContainer = styled.header<{ isTransparent?: boolean }>`
 
 const NoPathHeaderContainer = styled(HeaderContainer)`
   justify-content: flex-start;
+  cursor: pointer;
 `;
 
 const NavContent = styled.button<{ isPath?: boolean; isTransparent?: boolean }>`
