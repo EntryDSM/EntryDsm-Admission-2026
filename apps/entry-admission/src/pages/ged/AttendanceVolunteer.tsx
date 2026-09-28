@@ -24,7 +24,7 @@ export const AttendanceVolunteer = () => {
   return (
     <Flex width="100%" isColumn={true} gap={20} height="100%">
       <Text fontSize={32} fontWeight={600} color={colors.gray[500]}>
-        자격증
+        가산점
       </Text>
       <Flex isColumn={true} width="100%" height="fit-content" gap={0} justifyContent="center">
         <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
