@@ -54,8 +54,8 @@ export const FaqPage = () => {
     {
       id: 1,
       title: "입학 전형 일정은 어떻게 되나요?",
-      content:
-        "2027학년도 입학전형 일정은 다음과 같습니다. 원서접수: 10월 19일 오전 9시부터 ~ 22일 오후 5시, 1차 합격자 발표: 10월 26일 오후 3시, 2차 전형 면접: 10월 30일, 최종 합격자 발표: 11월 4일 오전 10시 입니다.",
+      content: `2027학년도 입학전형 일정은 다음과 같습니다.
+원서접수: 10월 19일 오전 9시부터 ~ 22일 오후 5시, 1차 합격자 발표: 10월 26일 오후 3시, 2차 전형 면접: 10월 30일, 최종 합격자 발표: 11월 4일 오전 10시 입니다.`,
       category: "admission",
     },
     {
@@ -331,6 +331,7 @@ const AnswerLabel = styled.div`
 `;
 
 const AnswerContent = styled.div`
+  white-space: pre-line;
   font-size: 14px;
   line-height: 1.6;
   color: ${colors.gray[500]};
