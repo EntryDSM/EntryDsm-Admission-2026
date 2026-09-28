@@ -16,6 +16,7 @@ export const NoPathHeader = () => {
         alignItems="center"
         height="fit-content"
         width="fit-content"
+        style={{ cursor: "pointer" }}
         onClick={() => {
           window.location.href = USER_APP_URL;
         }}
@@ -496,7 +497,6 @@ const HeaderContainer = styled.header<{ isTransparent?: boolean }>`
 
 const NoPathHeaderContainer = styled(HeaderContainer)`
   justify-content: flex-start;
-  cursor: pointer;
 `;
 
 const NavContent = styled.button<{ isPath?: boolean; isTransparent?: boolean }>`
