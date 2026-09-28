@@ -53,11 +53,11 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
             <Caution />
             {currentlocation.pathname === prospectiveGraduation ? (
               <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
-                출결 상황은 9월 30일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+                출결 상황은 9월 30일까지의 1, 2, 3학년 전체 횟수를 합산합니다.
               </Text>
             ) : (
               <Text fontSize={16} fontWeight={300} color={colors.orange[700]}>
-                출결 상황은 졸업일까지의 1, 2, 3학년 전체 시간을 합산합니다.
+                출결 상황은 졸업일까지의 1, 2, 3학년 전체 횟수를 합산합니다.
               </Text>
             )}
           </Flex>
