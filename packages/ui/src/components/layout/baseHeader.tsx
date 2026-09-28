@@ -1,4 +1,4 @@
-﻿import styled from "@emotion/styled";
+import styled from "@emotion/styled";
 import { useNavigate, useLocation, Link } from "react-router";
 import { useEffect, useState } from "react";
 
@@ -16,6 +16,7 @@ export const NoPathHeader = () => {
         alignItems="center"
         height="fit-content"
         width="fit-content"
+        style={{ cursor: "pointer" }}
         onClick={() => {
           window.location.href = USER_APP_URL;
         }}
