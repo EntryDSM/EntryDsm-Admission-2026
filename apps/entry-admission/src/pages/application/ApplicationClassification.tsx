@@ -1,8 +1,10 @@
-﻿import { useMemo } from "react";
+﻿import { useMemo, useEffect, useState } from "react";
 import { Flex } from "@entry/design";
 import { FormElement } from "../../components";
+import { getMyAccount, type MyAccount, getSensitiveAgree } from "../../apis";
 import { usePageData } from "@entry/ui";
 import { GRADUATION_TYPES, type GraduationType } from "@entry/ui";
+import { toast } from "react-toastify";
 
 const GENERAL_ONLY_SPECIAL_NOTES = ["국가유공자", "특례입학 대상자"] as const;
 const SPECIAL_NOTE_OPTIONS = [...GENERAL_ONLY_SPECIAL_NOTES, "해당 없음"];
@@ -53,21 +55,13 @@ export const ApplicationClassification = () => {
   }, [graduationType, years, months, days]);
 
   const formRadioData = [
-    { name: "유형선택", data: ["일반", "마이스터 인재", "사회통합"] },
+    { name: "유형선택", data: ["일반", "마이스터 인재", "사회통합(민감정보 처리 약관 확인)"] },
     { name: "지역선택", data: ["대전", "전국"] },
     {
       name: "졸업구분",
       data: ["졸업 예정", "졸업", "검정고시(중학교 졸업 학력)"],
     },
   ];
-
-  const handleTypeSelection = (value: string) => {
-    if (GENERAL_ONLY_SPECIAL_NOTES.includes(datas.specialNotes as (typeof GENERAL_ONLY_SPECIAL_NOTES)[number])) {
-      return;
-    }
-
-    setDatas({ ...datas, typeSelection: value });
-  };
 
   const handleSpecialNotesSelection = (value: string) => {
     const requiresRegularAdmission = GENERAL_ONLY_SPECIAL_NOTES.includes(
@@ -96,6 +90,67 @@ export const ApplicationClassification = () => {
     setDatas({ ...datas, graduationType: value, graduationDate: defaultDate });
   };
 
+  const [account, setAccount] = useState<MyAccount | null>(null);
+  const [isAccountLoading, setIsAccountLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAccount = async () => {
+      try {
+        const result = await getMyAccount();
+        setAccount(result);
+      } catch {
+        toast.error("민감정보 동의 상태를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      } finally {
+        setIsAccountLoading(false);
+      }
+    };
+
+    void fetchAccount();
+  }, []);
+
+  const hasSensitiveAgreement = account?.is_sensitive_agree === true;
+
+  const handleTypeSelection = async (value: string) => {
+    if (requiresRegularAdmission && value !== "일반") {
+      return;
+    }
+
+    if (value === "사회통합(민감정보 처리 약관 확인)") {
+      if (isAccountLoading) {
+        toast.info("민감정보 동의 상태를 확인하고 있습니다.");
+        return;
+      }
+
+      if (!account) {
+        toast.error("민감정보 동의 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+
+      if (!hasSensitiveAgreement) {
+        const agreement = confirm("민감정보 처리를 동의하시겠습니까?");
+
+        if (!agreement) {
+          return;
+        }
+
+        try {
+          await getSensitiveAgree({ sensitiveAgree: true });
+
+          const result = await getMyAccount();
+          setAccount(result);
+        } catch {
+          toast.error("민감정보 처리 동의 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+          return;
+        }
+      }
+    }
+
+    setDatas({
+      ...datas,
+      typeSelection: value,
+    });
+  };
+
   const handleDropdownChange = (values: (string | number)[]) => {
     setDatas({ ...datas, graduationDate: values });
   };
@@ -118,7 +173,7 @@ export const ApplicationClassification = () => {
         radioDatas={formRadioData[0].data}
         selectedRadio={datas?.typeSelection}
         setSelectedRadio={handleTypeSelection}
-        disabledRadioDatas={requiresRegularAdmission ? ["마이스터 인재", "사회통합"] : []}
+        disabledRadioDatas={requiresRegularAdmission ? ["마이스터 인재", "사회통합(민감정보 처리 약관 확인)"] : []}
       />
       <FormElement
         label="지역 선택"

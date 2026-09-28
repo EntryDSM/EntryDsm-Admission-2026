@@ -28,7 +28,7 @@ import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 const admissionTypes = {
   일반: "REGULAR",
   "마이스터 인재": "MEISTER",
-  사회통합: "SOCIAL",
+  "사회통합(민감정보 처리 약관 확인)": "SOCIAL",
 } as const;
 
 const regions = {
