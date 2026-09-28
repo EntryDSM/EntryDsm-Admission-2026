@@ -33,8 +33,8 @@ const CALCULATION_TYPES = [
 const SCORE_PAGES: Record<CalculationType, Array<{ path: string; name: string }>> = {
   primary: [
     { path: "/first-graduate", name: "3학년 1학기" },
-    { path: "/second-graduate", name: "직전 학기" },
-    { path: "/third-graduate", name: "직전 전 학기" },
+    { path: "/second-graduate", name: "직전학기" },
+    { path: "/third-graduate", name: "직전전학기" },
     { path: "/activity", name: "출결 및 봉사" },
   ],
   graduated: [

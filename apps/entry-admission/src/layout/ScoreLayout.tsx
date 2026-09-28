@@ -43,8 +43,8 @@ export const GraduateScoreLayout = () => {
   const datas = [
     { path: "/first-graduate", name: "3학년 2학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     { path: "/second-graduate", name: "3학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
-    { path: "/third-graduate", name: "2학년 2학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
-    { path: "/fourth-graduate", name: "2학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
+    { path: "/third-graduate", name: "직전학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
+    { path: "/fourth-graduate", name: "직전전학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     {
       path: "/activity-graduate",
       name: "출결 및 봉사",
@@ -81,10 +81,10 @@ export const ProspectiveGraduateScoreLayout = () => {
     { path: "/first-prospective-graduate", name: "3학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     {
       path: "/second-prospective-graduate",
-      name: "2학년 2학기",
+      name: "직전학기",
       explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요.",
     },
-    { path: "/third-prospective-graduate", name: "2학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
+    { path: "/third-prospective-graduate", name: "직전전학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     {
       path: "/activity-prospective-graduate",
       name: "출결 및 봉사",

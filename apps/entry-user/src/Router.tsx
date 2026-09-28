@@ -97,12 +97,12 @@ export const Router = createBrowserRouter([
               {
                 path: "primary/second-graduate",
                 element: <ScoreSecond pageKey="primarySecond" />,
-                handle: { title: "모의 성적 계산 - 직전 학기" },
+                handle: { title: "모의 성적 계산 - 직전학기" },
               },
               {
                 path: "primary/third-graduate",
                 element: <ScoreThird pageKey="primaryThird" />,
-                handle: { title: "모의 성적 계산 - 직전 전 학기" },
+                handle: { title: "모의 성적 계산 - 직전전학기" },
               },
               {
                 path: "primary/activity",
@@ -122,12 +122,12 @@ export const Router = createBrowserRouter([
               {
                 path: "graduated/second2",
                 element: <ScoreFirst pageKey="graduatedSecond2" />,
-                handle: { title: "모의 성적 계산 - 2학년 2학기" },
+                handle: { title: "모의 성적 계산 - 직전학기" },
               },
               {
                 path: "graduated/second1",
                 element: <ScoreFourth pageKey="graduatedSecond1" />,
-                handle: { title: "모의 성적 계산 - 2학년 1학기" },
+                handle: { title: "모의 성적 계산 - 직전전학기" },
               },
               {
                 path: "graduated/activity",
