@@ -1,6 +1,6 @@
 ﻿import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
-import { Btn, InputContent, PreviousBtn, useApplicationData } from "@entry/ui";
+import { Btn, InputContent, useApplicationData } from "@entry/ui";
 import { ApplicationPreview } from "./applicationCheck/index";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -70,7 +70,7 @@ export const SubmitCheck = () => {
               placeholder='"확인했습니다"를 입력하세요'
             />
             <ButtonRow>
-              <PreviousBtn
+              <Btn
                 width="83px"
                 backgroundColor={colors.gray[50]}
                 color={colors.gray[400]}
@@ -79,7 +79,7 @@ export const SubmitCheck = () => {
                 onClick={handleClose}
               >
                 취소
-              </PreviousBtn>
+              </Btn>
               <SubmitButton
                 width="83px"
                 onClick={() => void handleSubmit()}
