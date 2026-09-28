@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getServerLogs } from "../apis";
+import { toKoreanDateTime } from "../utils/metricChartWindow";
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
@@ -11,7 +12,7 @@ export const useServerLogs = () => {
         {
           service: "APPLICATION",
           status: "5xx",
-          from: new Date(Date.now() - ONE_HOUR_IN_MILLISECONDS).toISOString(),
+          from: toKoreanDateTime(new Date(Date.now() - ONE_HOUR_IN_MILLISECONDS)),
           size: 20,
         },
         signal
