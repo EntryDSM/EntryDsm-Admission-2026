@@ -40,8 +40,8 @@ export const ApplicationNav = ({
     return "다음";
   })();
 
+  // 첫 페이지에서는 0 페이지를 넘겨 지원자 유의사항(랜딩)으로 돌아가게 한다(AppLayout.setCurrentPage).
   const handlePrevious = () => {
-    if (currentPage <= 1) return;
     setCurrentPage(currentPage - 1);
   };
 
@@ -71,7 +71,6 @@ export const ApplicationNav = ({
         backgroundColor={colors.gray[50]}
         color={colors.orange[800]}
         borderColor={colors.orange[800]}
-        isBlocked={currentPage <= 1}
         hoverBackgroundColor={colors.gray[50]}
         onClick={handlePrevious}
       >

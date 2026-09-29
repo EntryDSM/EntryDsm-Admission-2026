@@ -249,6 +249,15 @@ export const AppLayout = () => {
   }, [applicantId, currentIndex, isStorageLoaded, navigate, routes, state]);
 
   const setCurrentPage = (page: number) => {
+    // 첫 페이지(지원자 유형 구분)에서 이전을 누르면 지원자 유의사항(랜딩)으로 돌아간다.
+    // 레이아웃을 벗어나면 예약된 자동 저장이 취소되므로 바로 저장하고 이동한다.
+    // 랜딩에서 다시 시작해도 서버는 기존 원서(applicantId)를 그대로 돌려준다.
+    if (page < 1) {
+      if (storageKey) void saveToStorage(storageKey);
+      navigate("/");
+      return;
+    }
+
     const path = routes[page - 1];
     if (path && !currentPath.includes(path)) navigate(path);
   };
