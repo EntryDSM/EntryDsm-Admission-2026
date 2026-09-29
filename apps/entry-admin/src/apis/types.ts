@@ -259,8 +259,9 @@ export interface ExportJob {
 /**
  * 요청 가능한 메트릭 — 백엔드 `StatisticsMetric` enum 과 동일해야 한다.
  * 이 외 값이 하나라도 섞이면 바인딩 실패로 요청 전체가 400 이 난다(2026-09-11 백엔드 확인).
- * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는
+ * `GENDER_RATIO` 는 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는
  * 400 으로 거절한다 — `getStatisticsWithOptional` 이 그 경우 핵심 지표만으로 재조회한다.
+ * `REGION_STATUS` 는 백엔드 #325 에서 `REGION_DISTRIBUTION` 으로 통합되며 사라졌다(보내면 400).
  */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
@@ -268,8 +269,7 @@ export type StatisticsMetric =
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
   | "DAILY_TREND"
-  | "GENDER_RATIO"
-  | "REGION_STATUS";
+  | "GENDER_RATIO";
 
 /** 성별 (백엔드 `Gender` enum) */
 export type Gender = "MALE" | "FEMALE";
@@ -308,10 +308,16 @@ export interface ApplicantCountMetric {
 export type CompetitionRateMetric = Partial<Record<AdmissionType, number>>;
 
 /**
- * 지역별 분포 `{ DAEJEON|NATIONWIDE: 수 }` — 원서의 모집 지역 기준 (백엔드 응답 매퍼 확인, 2026-09-21).
- * 집계된 지역만 담기고 지역이 빈 원서는 빠진다. 홈 "지역별 접수 현황"이 이 맵에 담긴 지역을 전부 표시한다.
+ * 지역별 분포 (백엔드 #325 `AdminResponseMapper` 확인, 2026-09-29) — 옛 `REGION_STATUS` 구조가 이 이름으로 옮겨 왔다.
+ * 홈 "지역별 접수 현황"은 `byRegion`(거주지 시·도)을 표시한다.
  */
-export type RegionDistributionMetric = Record<string, number>;
+export interface RegionDistributionMetric {
+  total: number;
+  /** 모집 범위 — 관내(대전, `LOCAL`)/전국(`NATIONWIDE`). 지역이 빈 원서는 빠진다 */
+  byScope: Partial<Record<"LOCAL" | "NATIONWIDE", number>>;
+  /** 거주지 시·도 → 수. 집계된 시·도만 담기며, 주소에서 정식 시·도 명칭을 못 찾으면 `ETC` */
+  byRegion: Partial<Record<ResidenceRegion, number>>;
+}
 
 /** 전형별 분포 `{ 전형: 수 }` (백엔드 응답 매퍼 확인) */
 export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
@@ -331,19 +337,10 @@ export interface GenderRatioMetric {
   byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
 }
 
-/** 지역별 접수 현황 (백엔드 #264 `AdminResponseMapper` 확인) */
-export interface RegionStatusMetric {
-  total: number;
-  /** 모집 범위 — 관내(대전, `LOCAL`)/전국(`NATIONWIDE`). 지역이 빈 원서는 빠진다 */
-  byScope: Partial<Record<"LOCAL" | "NATIONWIDE", number>>;
-  /** 거주지 시·도 → 수. 집계된 시·도만 담기며, 주소가 없거나 알아볼 수 없으면 `ETC` */
-  byRegion: Partial<Record<ResidenceRegion, number>>;
-}
-
 /**
  * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
- * `GENDER_RATIO`/`REGION_STATUS` 는 백엔드 #264 배포 전에는 요청할 수 없어 빠져 오며(핵심 지표 재조회 폴백),
- * 매퍼는 둘 다 없어도 안전하게 동작한다(성비 카드는 빈 값, 지역은 언제나 `REGION_DISTRIBUTION` 만 사용).
+ * `GENDER_RATIO` 는 백엔드 #264 배포 전에는 요청할 수 없어 빠져 올 수 있으며(핵심 지표 재조회 폴백),
+ * 매퍼는 없어도 안전하게 동작한다(성비 카드는 빈 값).
  */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
@@ -352,7 +349,6 @@ export interface StatisticsMetrics {
   TYPE_DISTRIBUTION?: TypeDistributionMetric;
   DAILY_TREND?: DailyTrendMetric;
   GENDER_RATIO?: GenderRatioMetric;
-  REGION_STATUS?: RegionStatusMetric;
 }
 
 export interface GetStatisticsResponse {
