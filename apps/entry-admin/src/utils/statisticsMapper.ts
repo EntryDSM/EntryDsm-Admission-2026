@@ -21,11 +21,9 @@ export const toCompetitionData = (metrics: StatisticsMetrics): CompetitionDatum[
 };
 
 // 지역 카드 순서. 백엔드 맵은 집계 순서라 요청마다 뒤바뀔 수 있어 고정 순서로 정렬한다
-// — 모집 지역(대전·전국)이 먼저. `REGION_DISTRIBUTION` 은 지금 이 둘만 담지만, 담겨 온 지역은 전부 표시하므로
-// 시·도 코드가 실려 와도 순서가 흔들리지 않게 백엔드 ResidenceRegion enum 순서(기타는 마지막)까지 정해 둔다.
+// — 학교가 있는 대전이 먼저, 나머지는 백엔드 ResidenceRegion enum 순서(기타는 마지막).
 const REGION_ORDER = [
   "DAEJEON",
-  "NATIONWIDE",
   "SEOUL",
   "BUSAN",
   "DAEGU",
@@ -53,16 +51,16 @@ const getRegionRank = (region: string) => {
 
 /**
  * 지역별 접수 현황 → `{ 지역라벨: 수 }` (삽입 순서 = 화면 카드 순서).
- * `REGION_DISTRIBUTION`(원서의 모집 지역 기준)에 담겨 온 지역을 하나도 빼지 않고 그대로 옮긴다.
- * 지역 코드는 한국어 라벨로 변환한다. 주소로 추정한 거주지 시·도인 `REGION_STATUS.byRegion` 은 쓰지 않는다.
+ * `REGION_DISTRIBUTION.byRegion`(원서 주소의 거주지 시·도 기준)에 담겨 온 시·도를 하나도 빼지 않고 그대로 옮긴다.
+ * 시·도 코드는 한국어 라벨로 변환한다. 집계된 시·도만 담겨 오므로 0 으로 채우지 않는다.
  */
 export const toRegionData = (metrics: StatisticsMetrics): Record<string, number> => {
-  const distribution = metrics.REGION_DISTRIBUTION ?? {};
+  const byRegion = metrics.REGION_DISTRIBUTION?.byRegion ?? {};
 
-  return Object.entries(distribution)
+  return Object.entries(byRegion)
     .sort(([regionA], [regionB]) => getRegionRank(regionA) - getRegionRank(regionB))
     .reduce<Record<string, number>>((acc, [region, count]) => {
-      acc[getRegionLabel(region)] = count;
+      acc[getRegionLabel(region)] = count ?? 0;
       return acc;
     }, {});
 };

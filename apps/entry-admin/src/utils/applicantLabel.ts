@@ -26,7 +26,7 @@ const REGION_LABELS: Record<string, string> = {
   // 모집 범위(Region)
   DAEJEON: "대전",
   NATIONWIDE: "전국",
-  // 통계 REGION_STATUS.byRegion 의 거주지 시·도 코드(백엔드 ResidenceRegion, 17개 + 기타)
+  // 통계 REGION_DISTRIBUTION.byRegion 의 거주지 시·도 코드(백엔드 ResidenceRegion, 17개 + 기타)
   SEOUL: "서울",
   BUSAN: "부산",
   DAEGU: "대구",
