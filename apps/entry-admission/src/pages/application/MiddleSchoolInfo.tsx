@@ -48,7 +48,7 @@ export const MiddleSchoolInfo = () => {
         onInputChange={handleStudentIdChange}
         value={datas.studentId}
         isComplete={/^\d{5}$/.test(String(datas.studentId ?? ""))}
-        explanation="5자리 숫자 형식으로 입력해주세요. (예: 30112)"
+        explanation="5자리 숫자 형식으로 입력해주세요. (예: 3학년 1반 12번인 경우 30112)"
         maxLength={5}
       />
       <FormElement

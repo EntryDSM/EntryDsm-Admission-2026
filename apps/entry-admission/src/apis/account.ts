@@ -11,7 +11,7 @@ export interface MyAccount {
   birthdate: string;
   signupType: "SELF" | "PARENT";
   applicantStatus: ApplicantStatus;
-  is_sensitive_agree: boolean;
+  sensitiveAgree: boolean;
   createdAt: string;
   updatedAt: string;
 }
