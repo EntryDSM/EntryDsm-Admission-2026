@@ -93,6 +93,17 @@ export const MyPage = () => {
     window.open(document.downloadUrl, "_blank");
   };
 
+  // 원서 접수 취소는 API 를 연동하지 않고 문의처 안내만 한다.
+  const handleCancelApplication = () => {
+    toast.info(
+      <>
+        원서 취소는 문의처로 연락해 주세요.
+        <br />
+        042-866-8820, 8822
+      </>
+    );
+  };
+
   // 합격 결과는 팝업 대신 전용 페이지(/mypage/result)에서 보여준다. 발표 전·오류 안내도 그 페이지가 맡는다.
   const handleCheckResult = () => {
     navigate("/mypage/result");
@@ -124,27 +135,40 @@ export const MyPage = () => {
             </StatusInfo>
           </StatusBox>
         </ApplicationStatusSection>
-        <Flex width="fit-content" height="fit-content" gap={12} style={{ marginTop: 24 }}>
-          <Btn
-            backgroundColor={colors.orange[800]}
-            color="#FFFFFF"
-            borderColor={colors.orange[800]}
-            hoverBackgroundColor={colors.orange[800]}
-            onClick={() => handleDownloadApplication()}
-            isBlocked={!isSubmitted}
-          >
-            원서 다운로드
-          </Btn>
-          <Btn
-            backgroundColor="#FFFFFF"
-            color={colors.orange[800]}
-            borderColor={colors.orange[800]}
-            hoverBackgroundColor="transparent"
-            onClick={handleCheckResult}
-          >
-            합격 결과 확인
-          </Btn>
-        </Flex>
+        <ButtonGroup>
+          <Flex width="fit-content" height="fit-content" gap={12}>
+            <Btn
+              backgroundColor={colors.orange[800]}
+              color="#FFFFFF"
+              borderColor={colors.orange[800]}
+              hoverBackgroundColor={colors.orange[800]}
+              onClick={() => handleDownloadApplication()}
+              isBlocked={!isSubmitted}
+            >
+              원서 다운로드
+            </Btn>
+            <Btn
+              backgroundColor="#FFFFFF"
+              color={colors.orange[800]}
+              borderColor={colors.orange[800]}
+              hoverBackgroundColor="transparent"
+              onClick={handleCheckResult}
+            >
+              합격 결과 확인
+            </Btn>
+          </Flex>
+          {hasApplication && (
+            <Btn
+              backgroundColor={colors.gray[50]}
+              color={colors.extra.error}
+              borderColor={colors.extra.error}
+              hoverBackgroundColor="transparent"
+              onClick={handleCancelApplication}
+            >
+              원서 접수 취소
+            </Btn>
+          )}
+        </ButtonGroup>
         <SettingsTitle>설정</SettingsTitle>
         <SettingsSection>
           <SettingsRow>
@@ -298,6 +322,15 @@ const SettingsLabel = styled.span`
   ${media.tablet} {
     font-size: 16px;
   }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 `;
 
 const SettingsButtonGroup = styled.div`
