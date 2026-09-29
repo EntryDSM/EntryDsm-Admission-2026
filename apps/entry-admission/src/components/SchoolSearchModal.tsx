@@ -33,8 +33,18 @@ export const SchoolSearchModal = ({
   };
 
   const contentClick = (name: string, code: string) => {
-    setTempSelectedName(prev => (prev === name && tempSelectedCode === code ? null : name));
-    setTempSelectedCode(prev => (prev === code ? null : code));
+    const isSelected = tempSelectedName === name && tempSelectedCode === code;
+    const nextName = isSelected ? null : name;
+    const nextCode = isSelected ? null : code;
+
+    setTempSelectedName(nextName);
+    setTempSelectedCode(nextCode);
+    setSelectedName(nextName);
+    setSelectedCode(nextCode);
+
+    setIsShow(false);
+    setDatas([]);
+    setSearchValue("");
   };
 
   const handleClose = () => {
@@ -50,13 +60,14 @@ export const SchoolSearchModal = ({
     if (backRef.current === e.target) handleClose();
   };
 
-  const handleConfirmClick = () => {
-    setSelectedName(tempSelectedName);
-    setSelectedCode(tempSelectedCode);
-    setIsShow(false);
-    setDatas([]);
-    setSearchValue("");
-  };
+  //흠.. 나중에 쓸 것 같음... 선택 버튼을 누르면 선택한 중학교 입력 및 모달 창 닫는 함수
+  // const handleConfirmClick = () => {
+  //   setSelectedName(tempSelectedName);
+  //   setSelectedCode(tempSelectedCode);
+  //   setIsShow(false);
+  //   setDatas([]);
+  //   setSearchValue("");
+  // };
 
   const handleSearchClick = async () => {
     if (searchValue.trim() === "") return;
@@ -127,11 +138,7 @@ export const SchoolSearchModal = ({
                       </Text>
                     )}
                   </SchoolInfo>
-                  {tempSelectedCode === data.code || selectedCode === data.code ? (
-                    <Check />
-                  ) : (
-                    <Check color="transparent" />
-                  )}
+                  {tempSelectedCode === data.code ? <Check /> : <Check color="transparent" />}
                 </Content>
               ))
             ) : (
@@ -152,7 +159,8 @@ export const SchoolSearchModal = ({
             >
               취소
             </PreviousBtn>
-            <PreviousBtn onClick={handleConfirmClick}>선택</PreviousBtn>
+            {/* 선택 버튼을 누르면 선택한 중학교 입력 및 모달창 나가는 버튼 */}
+            {/* <PreviousBtn onClick={handleConfirmClick}>선택</PreviousBtn> */}
           </Flex>
         </Modal>
       </ModalBack>
