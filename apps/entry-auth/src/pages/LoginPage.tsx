@@ -170,14 +170,9 @@ const LoginButton = styled.button<{ $disabled: boolean }>`
 const LoginKindContainer = styled.div`
   display: flex;
   align-items: center;
-  color: ${colors.gray[300]};
+  color: ${colors.gray[400]};
   gap: 22px;
   margin-top: 22px;
-
-  div:hover {
-    color: ${colors.gray[400]};
-    transition: all 0.3s ease-out;
-  }
 `;
 
 const AuthLink = styled.div`

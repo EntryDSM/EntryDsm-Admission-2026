@@ -12,11 +12,7 @@ export const AuthLink = styled.button`
   border-inline-end: none;
   padding: 0;
   font: inherit;
-  color: ${colors.gray[300]};
-  transition: color 0.3s ease-out;
-  &:hover {
-    color: ${colors.gray[400]};
-  }
+  color: ${colors.gray[400]};
 `;
 
 export const AuthLinkText = styled.button`
@@ -25,9 +21,5 @@ export const AuthLinkText = styled.button`
   border: none;
   padding: 0;
   font: inherit;
-  color: ${colors.gray[300]};
-  &:hover {
-    color: ${colors.gray[400]};
-    transition: all 0.3s ease-out;
-  }
+  color: ${colors.gray[400]};
 `;

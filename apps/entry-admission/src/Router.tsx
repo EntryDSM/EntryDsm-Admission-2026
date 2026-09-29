@@ -117,12 +117,12 @@ export const Router = createBrowserRouter([
                               {
                                 path: "second-prospective-graduate",
                                 element: <ScoreSecond pageKey={"secondGraduateProspective"} />,
-                                handle: { title: "2학년 2학기 성적" },
+                                handle: { title: "직전학기 성적" },
                               },
                               {
                                 path: "third-prospective-graduate",
                                 element: <ScoreThird pageKey={"thirdGraduateProspective"} />,
-                                handle: { title: "2학년 1학기 성적" },
+                                handle: { title: "직전전학기 성적" },
                               },
                               {
                                 path: "activity-prospective-graduate",

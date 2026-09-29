@@ -8,8 +8,8 @@ import { useNavigate } from "react-router";
 const faqList = [
   {
     question: "입학 전형 일정은 어떻게 되나요?",
-    answer:
-      "2027학년도 입학전형 일정은 다음과 같습니다. 원서접수: 10월 19일 오전 9시부터 ~ 22일 오후 5시, 1차 합격자 발표: 10월 26일 오후 3시, 2차 전형 면접: 10월 30일, 최종 합격자 발표: 11월 4일 오전 10시 입니다.",
+    answer: `2027학년도 입학전형 일정은 다음과 같습니다.
+      원서접수: 10월 19일 오전 9시부터 ~ 22일 오후 5시, 1차 합격자 발표: 10월 26일 오후 3시, 2차 전형 면접: 10월 30일, 최종 합격자 발표: 11월 4일 오전 10시 입니다.`,
   },
   {
     question: "합격자 등록은 어떻게 하나요?",
@@ -189,6 +189,7 @@ const Answer = styled.div<{ isOpen: boolean }>`
 
   word-break: keep-all;
   overflow-wrap: break-word;
+  white-space: pre-line;
 
   ${media.medium} {
     font-size: 14px;

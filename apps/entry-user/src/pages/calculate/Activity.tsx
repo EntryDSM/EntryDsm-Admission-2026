@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
-import { AttendanceForm, CertCheckForm } from "@entry/ui";
+import { AttendanceForm, Caution, CertCheckForm } from "@entry/ui";
 import { useCalculationPageData, type CalculationState } from "../../contexts";
-import { media } from "@entry/design";
+import { colors, media } from "@entry/design";
 
 // API 연동 없음
 // Activity 페이지는 계산 컨텍스트의 로컬 상태만 사용합니다.
@@ -84,12 +84,35 @@ const SectionTitle = styled.h2`
   }
 `;
 
+const SectionHeader = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+`;
+
+const SectionNotice = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${colors.orange[700]};
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.5;
+  min-width: 0;
+
+  svg {
+    flex-shrink: 0;
+  }
+`;
+
 interface ActivityProps {
   pageKey: ActivityPageKey;
 }
 
 export const Activity = ({ pageKey }: ActivityProps) => {
   const dataKey = pageKey;
+  const activityDeadline = pageKey === "primaryActivity" ? "9월 30일" : "졸업일";
   const [activityData, setActivityData] = useCalculationPageData(dataKey);
 
   const safeActivityData: ActivityFormData = {
@@ -137,7 +160,13 @@ export const Activity = ({ pageKey }: ActivityProps) => {
       {dataKey !== "qeActivity" && (
         <>
           <Section>
-            <SectionTitle>출결</SectionTitle>
+            <SectionHeader>
+              <SectionTitle>출결</SectionTitle>
+              <SectionNotice>
+                <Caution />
+                <span>출결 상황은 {activityDeadline}까지의 1, 2, 3학년 전체 횟수를 합산합니다.</span>
+              </SectionNotice>
+            </SectionHeader>
             <GridContainer>
               <AttendanceForm
                 width="100%"
@@ -174,7 +203,13 @@ export const Activity = ({ pageKey }: ActivityProps) => {
             </GridContainer>
           </Section>
           <Section>
-            <SectionTitle>봉사</SectionTitle>
+            <SectionHeader>
+              <SectionTitle>봉사</SectionTitle>
+              <SectionNotice>
+                <Caution />
+                <span>봉사 시간은 {activityDeadline}까지의 1, 2, 3학년 전체 시간을 합산합니다.</span>
+              </SectionNotice>
+            </SectionHeader>
             <AttendanceForm
               width="100%"
               title="봉사시간"

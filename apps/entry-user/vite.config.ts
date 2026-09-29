@@ -10,7 +10,8 @@ const NOTICE_IMAGE_EXTENSIONS = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
 /**
  * public/NoticeImg 의 이미지 URL 목록을 `virtual:notice-images` 모듈로 내보낸다(NoticeModal 이 한 장씩 띄운다).
  * 배포된 사이트에서는 폴더 안을 조회할 수 없어서 빌드할 때 목록을 만들어 넣는다.
- * 순서는 파일명 a-z 순이고, 대소문자는 가리지 않으며 숫자는 크기 순(1, 2, 10)이다. 이미지가 아닌 파일은 뺀다.
+ * 순서는 파일명 a-z 순이다. 대소문자는 가리지 않고, 숫자는 크기 순(1, 2, 10)이며, 한글 파일명은 영문 뒤에 온다.
+ * 로컬과 배포 빌드 서버의 결과가 같도록 정렬 로캘을 고정한다. 이미지가 아닌 파일은 뺀다.
  * 개발 서버에서는 폴더에 파일을 넣거나 빼면 목록을 다시 읽고 페이지를 새로고침한다.
  */
 const noticeImages = (): Plugin => {
@@ -20,7 +21,7 @@ const noticeImages = (): Plugin => {
 
   const readImageUrls = () => {
     try {
-      const collator = new Intl.Collator("ko", { numeric: true });
+      const collator = new Intl.Collator("en", { numeric: true });
       return readdirSync(imageDir, { withFileTypes: true })
         .filter(entry => entry.isFile() && NOTICE_IMAGE_EXTENSIONS.test(entry.name))
         .map(entry => entry.name)
