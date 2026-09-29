@@ -418,7 +418,7 @@ export interface CurrentTimeResponse {
   currentTime: ScheduleDateTime;
 }
 
-/* ───────────── 공지사항·QnA (GET /notifications/..., POST /admin/notices) ───────────── */
+/* ───────────── 공지사항 (GET /notifications/..., POST /admin/notices) ───────────── */
 
 /**
  * 공지 분류 (백엔드 `NoticeCategory` 저장값, 2026-09-21 확인). admin 등록/수정 요청의 `division` 과
@@ -436,8 +436,6 @@ export type PageParams = {
 
 /** 공지 목록은 `category` 파라미터로 분류를 거른다(값은 {@link NoticeDivision}). */
 export type GetNoticesParams = PageParams & { category?: NoticeDivision };
-/** QnA 목록의 `category` 는 FAQ 분류 문자열이라 별도 타입을 두지 않는다. */
-export type GetQnasParams = PageParams & { category?: string };
 
 /** notification 도메인 목록 응답 공통 형태 */
 export interface PageResponse<T> {
@@ -465,25 +463,6 @@ export interface NoticeSummary {
 }
 
 export type GetNoticesResponse = PageResponse<NoticeSummary>;
-
-/** 목록 응답의 단일 QnA(자주 묻는 질문) 요약 */
-export interface QnaSummary {
-  faqId: number;
-  category: string;
-  question: string;
-  answer: string;
-}
-
-export type GetQnasResponse = PageResponse<QnaSummary>;
-
-/** QnA 상세 응답 */
-export interface QnaDetail extends QnaSummary {
-  viewCount: number;
-  /** ISO datetime */
-  createdAt: string;
-  /** ISO datetime */
-  updatedAt: string;
-}
 
 /** 상세 응답. `division`/`isPinned` 는 목록과 같은 이유로 optional. */
 export interface NoticeDetail {
