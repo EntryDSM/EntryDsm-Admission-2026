@@ -33,14 +33,11 @@ export const SchoolSearchModal = ({
   };
 
   const contentClick = (name: string, code: string) => {
-    const isSelected = tempSelectedName === name && tempSelectedCode === code;
-    const nextName = isSelected ? null : name;
-    const nextCode = isSelected ? null : code;
+    setTempSelectedName(name);
+    setTempSelectedCode(code);
 
-    setTempSelectedName(nextName);
-    setTempSelectedCode(nextCode);
-    setSelectedName(nextName);
-    setSelectedCode(nextCode);
+    setSelectedName(name);
+    setSelectedCode(code);
 
     setIsShow(false);
     setDatas([]);
@@ -138,7 +135,11 @@ export const SchoolSearchModal = ({
                       </Text>
                     )}
                   </SchoolInfo>
-                  {tempSelectedCode === data.code ? <Check /> : <Check color="transparent" />}
+                  {tempSelectedCode === data.code && tempSelectedName === data.name ? (
+                    <Check />
+                  ) : (
+                    <Check color="transparent" />
+                  )}
                 </Content>
               ))
             ) : (
