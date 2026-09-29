@@ -286,7 +286,7 @@ export const AppLayout = () => {
           const selectedAdmissionType = state.applicationClassification.typeSelection;
           if (isSocialIntegrationAdmission(selectedAdmissionType)) {
             const account = await getMyAccount();
-            if (!account.is_sensitive_agree) {
+            if (!account.sensitiveAgree) {
               updatePageData("applicationClassification", {
                 ...state.applicationClassification,
                 typeSelection: "",

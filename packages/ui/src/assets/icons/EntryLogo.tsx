@@ -31,6 +31,7 @@ export const EntryLogo = ({ width = 26, height = 30, isAdmin = false, isMonitori
       width={width}
       height={height}
       viewBox="0 0 26 30"
+      cursor="pointer"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
