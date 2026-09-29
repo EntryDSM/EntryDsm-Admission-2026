@@ -95,3 +95,21 @@ export interface GetApplicationDocumentResponse {
 // 파일 자체가 아닌 존재 여부와 저장소 key/fileName 메타데이터만 조회합니다.
 export const getApplicationDocument = () =>
   Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}`);
+
+// 최종 합격자 등록 서류 조회에 사용하는 API 경로입니다.
+const REGISTRATION_DOCUMENT_ENDPOINT = "/api/document/v11/registration-documents/latest";
+
+/** GET /api/document/v11/registration-documents/latest 응답 data */
+export interface GetRegistrationDocumentResponse {
+  /** 파일 공개 ID (`registration-document_…`) */
+  id: string;
+  /** 관리자가 올린 원본 파일명 */
+  fileName: string;
+  size: number;
+  /** 서명된 URL. `expiresIn` 초 동안만 열린다. */
+  downloadUrl: string;
+  expiresIn: number;
+}
+
+// 관리자가 가장 최근에 올린 등록 서류를 조회합니다. 최종 합격자가 아니면 403, 올라온 서류가 없으면 404 입니다.
+export const getRegistrationDocument = () => Http.get<GetRegistrationDocumentResponse>(REGISTRATION_DOCUMENT_ENDPOINT);
