@@ -27,7 +27,8 @@ const ErrorLogCardContainer = styled.div`
   gap: 14px;
   padding: 18px;
   width: 100%;
-  height: 100%; // 추가
+  height: 100%;
+  min-width: 0;
   min-height: 0;
   border: 1px solid #cccccc;
   border-radius: 16px;
@@ -51,19 +52,18 @@ const ItemList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow-y: auto; // 여기서 넘치는 항목만 스크롤
+  overflow-y: auto;
   min-height: 0;
 `;
 
 const ItemBox = styled.div`
-  display: flex;
-  align-items: center;
+  flex-shrink: 0;
   padding: 10px 14px;
   border-radius: 10px;
   background-color: #e9e9e9;
   color: #666666;
   font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 `;

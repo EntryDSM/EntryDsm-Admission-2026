@@ -218,10 +218,14 @@ const VisChartArea = styled.div`
 const ClientLogArea = styled.div`
   grid-area: clientlog;
   height: 100%;
+  min-width: 0;
   min-height: 0;
 `;
 const ServerLogArea = styled.div`
   grid-area: serverlog;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
 `;
 const PdfSuccessArea = styled.div`
   grid-area: pdfsuccess;
