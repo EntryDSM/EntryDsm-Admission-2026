@@ -11,6 +11,8 @@ const GENERAL_ONLY_SPECIAL_NOTES = ["국가유공자", "특례입학 대상자"]
 const SPECIAL_NOTE_OPTIONS = [...GENERAL_ONLY_SPECIAL_NOTES, "해당 없음"];
 const SOCIAL_INTEGRATION_OPTION = "사회통합(민감정보 처리 약관 확인)";
 const LEGACY_SOCIAL_INTEGRATION_OPTION = "사회통합";
+const PROSPECTIVE_GRADUATION_YEARS = [2027, 2026];
+const DEFAULT_PROSPECTIVE_GRADUATION_YEAR = 2027;
 
 const isSocialIntegrationOption = (value: string) =>
   value === SOCIAL_INTEGRATION_OPTION || value === LEGACY_SOCIAL_INTEGRATION_OPTION;
@@ -51,7 +53,7 @@ export const ApplicationClassification = () => {
       return [
         {
           data: [
-            { label: "년", content: years },
+            { label: "년", content: PROSPECTIVE_GRADUATION_YEARS },
             { label: "월", content: months },
           ],
         },
@@ -92,9 +94,15 @@ export const ApplicationClassification = () => {
   const handleGraduationTypeSelection = (value: string) => {
     let defaultDate: (string | number)[] = [];
     if (value === "졸업") defaultDate = [currentYear, 1, 1];
-    if (value === "졸업 예정") defaultDate = [currentYear, 1];
+    if (value === "졸업 예정") defaultDate = [DEFAULT_PROSPECTIVE_GRADUATION_YEAR, 1];
     setDatas({ ...datas, graduationType: value, graduationDate: defaultDate });
   };
+
+  useEffect(() => {
+    if (graduationType === "졸업 예정" && !PROSPECTIVE_GRADUATION_YEARS.includes(Number(datas.graduationDate?.[0]))) {
+      setDatas({ graduationDate: [DEFAULT_PROSPECTIVE_GRADUATION_YEAR, datas.graduationDate?.[1] || 1] });
+    }
+  }, [graduationType, datas.graduationDate, setDatas]);
 
   const [account, setAccount] = useState<MyAccount | null>(null);
   const [isAccountLoading, setIsAccountLoading] = useState(true);
