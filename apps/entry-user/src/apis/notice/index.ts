@@ -28,11 +28,15 @@ const getNotice = async <T>(requestPath: string): Promise<T> => {
   return body as T;
 };
 
-export const useGetAllNotice = (category: NoticeCategory) => {
-  const searchParams = new URLSearchParams({ category });
+/** 공지 목록 한 페이지의 개수. 백엔드 기본값(10)과 같다. */
+export const NOTICE_PAGE_SIZE = 10;
+
+/** 공지 목록 한 페이지. `page` 는 백엔드처럼 0부터 센다. 최신순(createdAt·id 내림차순)으로 온다. */
+export const useGetAllNotice = (category: NoticeCategory, page = 0) => {
+  const searchParams = new URLSearchParams({ category, page: String(page), size: String(NOTICE_PAGE_SIZE) });
 
   return useQuery({
-    queryKey: ["notice", category],
+    queryKey: ["notice", "list", category, page],
     queryFn: () => getNotice<NoticePageResponse>(`${path}?${searchParams.toString()}`),
     retry: false,
   });

@@ -1,14 +1,16 @@
 import { Http } from "./http";
 import type { AdmissionType, ApplicationRegion } from "./types";
 
-export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
+/** ARRIVAL 은 관리자가 원서 원본(우편) 도착을 처리한 상태로, 제출 이후 단계다. */
+export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "ARRIVAL" | "REVIEWING" | "COMPLETED" | "CANCELED";
 /** 합격 여부. PENDING 은 발표 전, FIRST_* 는 1차(서류) 전형, FINAL_* 은 2차(최종) 전형 결과다. */
 export type PassStatus = "PENDING" | "FIRST_PASSED" | "FIRST_FAILED" | "FINAL_PASSED" | "FINAL_FAILED";
 
 export interface MyAccount {
-  userId: number;
+  /** 외부 노출용 사용자 ID(`user_…`) */
+  userId: string;
   role: "ADMIN" | "MONITOR" | "STUDENT";
-  status: "ACTIVE" | "DELETED" | "SUSPENDED";
+  status: "ACTIVE" | "INACTIVE" | "DELETED";
   name: string;
   phone: string;
   birthdate: string;
