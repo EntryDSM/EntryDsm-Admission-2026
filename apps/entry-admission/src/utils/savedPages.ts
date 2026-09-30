@@ -9,7 +9,16 @@ const getStorageKey = (applicantId: number) => `entry-application-saved-pages:${
 
 type SavedPages = Record<string, string>;
 
+// localStorage 에 쓰지 못했을 때(용량 초과 등)의 기록. 이게 없으면 "다음" 으로 저장해도 다음 단계에서 앞 단계가
+// "저장 안 됨" 으로 보여 계속 되돌아간다. 새로고침하면 사라지지만, 그때는 해당 단계를 한 번 더 저장하면 된다.
+const memorySavedPages = new Map<number, SavedPages>();
+
 const readSavedPages = (applicantId: number): SavedPages => {
+  const inMemory = memorySavedPages.get(applicantId);
+  if (inMemory) {
+    return { ...inMemory };
+  }
+
   try {
     const saved = JSON.parse(window.localStorage.getItem(getStorageKey(applicantId)) ?? "{}");
     return saved && typeof saved === "object" ? (saved as SavedPages) : {};
@@ -21,8 +30,9 @@ const readSavedPages = (applicantId: number): SavedPages => {
 const writeSavedPages = (applicantId: number, savedPages: SavedPages) => {
   try {
     window.localStorage.setItem(getStorageKey(applicantId), JSON.stringify(savedPages));
+    memorySavedPages.delete(applicantId);
   } catch {
-    // 저장소를 못 쓰면 기록이 남지 않아 앞 단계가 모두 "저장 안 됨" 으로 보인다. 다시 저장하게 될 뿐 잘못 제출되지는 않는다.
+    memorySavedPages.set(applicantId, savedPages);
   }
 };
 
@@ -66,6 +76,7 @@ export const unmarkPagesSaved = (applicantId: number, routes: readonly string[])
 };
 
 export const clearSavedPages = (applicantId: number) => {
+  memorySavedPages.delete(applicantId);
   try {
     window.localStorage.removeItem(getStorageKey(applicantId));
   } catch {

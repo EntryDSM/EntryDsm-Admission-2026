@@ -25,30 +25,36 @@ export const PageNav = ({ totalPages, currentPage, setCurrentPage }: IPageNav) =
   };
 
   return (
-    <Container>
+    <Container aria-label="페이지 이동">
       {currentGroupStart > 1 ? (
-        <NavChange onClick={handlePrevGroup}>
+        <NavChange type="button" aria-label="이전 페이지 묶음" onClick={handlePrevGroup}>
           <ArrowNav />
         </NavChange>
       ) : (
-        <NavChange>
+        <NavChange type="button" aria-label="이전 페이지 묶음" disabled>
           <ArrowNav isBlocked={true} />
         </NavChange>
       )}
       {Array.from({ length: currentGroupEnd - currentGroupStart + 1 }, (_, i) => {
         const page = currentGroupStart + i;
         return (
-          <Nav key={page} isActive={currentPage === page} onClick={() => setCurrentPage(page)}>
+          <Nav
+            key={page}
+            type="button"
+            isActive={currentPage === page}
+            aria-current={currentPage === page ? "page" : undefined}
+            onClick={() => setCurrentPage(page)}
+          >
             {page}
           </Nav>
         );
       })}
       {currentGroupEnd < totalPages ? (
-        <NavChange onClick={handleNextGroup}>
+        <NavChange type="button" aria-label="다음 페이지 묶음" onClick={handleNextGroup}>
           <ArrowNav isRight={true} />
         </NavChange>
       ) : (
-        <NavChange>
+        <NavChange type="button" aria-label="다음 페이지 묶음" disabled>
           <ArrowNav isRight={true} isBlocked={true} />
         </NavChange>
       )}
@@ -56,7 +62,7 @@ export const PageNav = ({ totalPages, currentPage, setCurrentPage }: IPageNav) =
   );
 };
 
-const Container = styled.div`
+const Container = styled.nav`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,7 +76,12 @@ const NavChange = styled.button`
   border: none;
 `;
 
-const Nav = styled.nav<{ isActive: boolean }>`
+// 키보드로도 누를 수 있도록 버튼으로 둔다. 버튼 기본 글꼴 크기(13.33px)·여백이 끼지 않게 초기화한다.
+const Nav = styled.button<{ isActive: boolean }>`
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
   cursor: pointer;
   width: 30px;
   height: 30px;

@@ -63,8 +63,12 @@ const request = async <T>(path: string, options: RequestInit = {}, allowEmptyRes
   if (body && typeof body === "object" && "success" in body && "data" in body) {
     const envelope = body as ApiEnvelope<T>;
 
-    if (!envelope.success || (envelope.data === null && !allowEmptyResponse)) {
-      throw new HttpError(response.status, errorInfo.message ?? "응답 데이터가 없습니다.", errorInfo.code);
+    if (!envelope.success) {
+      throw new HttpError(response.status, getApiErrorMessage(response.status, errorInfo), errorInfo.code);
+    }
+
+    if (envelope.data === null && !allowEmptyResponse) {
+      throw new HttpError(response.status, "응답 데이터가 없습니다.");
     }
 
     return envelope.data as T;

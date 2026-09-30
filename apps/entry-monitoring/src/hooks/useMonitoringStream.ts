@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   API_BASE_URL,
+  getMyAccount,
+  HttpError,
   monitoringQueryKeys,
   type DashboardApi,
   type DashboardBusiness,
@@ -162,7 +164,16 @@ export const useMonitoringStream = () => {
         disconnect();
         // EventSource 는 상태 코드를 알려주지 않는다. 세션 만료(401)일 수 있으니 내 계정을 다시 조회해,
         // 만료됐으면 30초 주기 쿼리를 기다리지 않고 바로 로그인으로 보낸다(RequireMonitoringAccess·queryClient).
-        void queryClient.invalidateQueries({ queryKey: monitoringQueryKeys.account.me });
+        // 가드의 계정 쿼리를 invalidate 하면 다시 조회하는 동안 가드가 확인 중 화면으로 바뀌어 이 페이지가 언마운트되고,
+        // 재연결 대기·백오프와 받아 둔 로그가 초기화된다. 그래서 직접 조회해 401 일 때만 가드 쿼리를 다시 확인시킨다.
+        void getMyAccount().then(
+          account => queryClient.setQueryData(monitoringQueryKeys.account.me, account),
+          (error: unknown) => {
+            if (error instanceof HttpError && error.status === 401) {
+              void queryClient.invalidateQueries({ queryKey: monitoringQueryKeys.account.me });
+            }
+          }
+        );
         reconnectTimer = window.setTimeout(connect, reconnectDelay);
         reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_DELAY);
       };
