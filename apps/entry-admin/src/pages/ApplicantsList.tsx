@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn, CancelModal, useModal } from "@entry/ui";
@@ -122,6 +122,14 @@ export const ApplicantsList = () => {
 
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
+
+  // 마지막 페이지의 마지막 지원자를 접수 취소하거나(다른 관리자가 지운 경우 포함) 페이지 수가 줄면
+  // 빈 페이지에 남지 않도록 마지막 페이지로 당긴다.
+  useEffect(() => {
+    if (pageInfo && currentPage > totalPage) {
+      setCurrentPage(totalPage);
+    }
+  }, [currentPage, pageInfo, totalPage]);
 
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();

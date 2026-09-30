@@ -11,7 +11,8 @@ import { useMyAccount } from "../hooks";
 
 /**
  * 모니터링 접근 가드 라우트. 내 계정 조회(GET /api/identity/v11/accounts/me)로 권한을 확인해
- * `MONITOR` 또는 `ADMIN` 권한일 때만 하위 페이지를 렌더링한다.
+ * `MONITOR` 권한일 때만 하위 페이지를 렌더링한다. 백엔드(observability `JwtAuthInterceptor`)가 `/api/monitor/v11/**` 를
+ * `X-User-Role == MONITOR` 에만 열어 주므로, ADMIN 을 통과시키면 화면만 열리고 데이터는 전부 403 이다.
  * - 미인증(401): 로그인(auth 앱)으로 보낸다.
  * - 모니터링 접근 권한이 없는 계정: 접근 거부 화면을 띄운다.
  * - 네트워크 등 그 외 실패: 페이지를 막고(fail-closed) 재시도 화면을 띄운다.
@@ -63,10 +64,12 @@ export const RequireMonitoringAccess = () => {
     );
   }
 
-  if (account?.role !== "MONITOR" && account?.role !== "ADMIN") {
+  if (account?.role !== "MONITOR") {
     return (
       <GuardScreen>
-        모니터링 접근 권한이 없습니다.
+        {account?.role === "ADMIN"
+          ? "모니터링은 모니터링 전용 계정으로만 볼 수 있습니다. 관리자 계정은 접근할 수 없습니다."
+          : "모니터링 접근 권한이 없습니다."}
         <LoginLink href={AUTH_APP_URL}>로그인 페이지로 이동</LoginLink>
       </GuardScreen>
     );

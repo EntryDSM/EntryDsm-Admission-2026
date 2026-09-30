@@ -1,164 +1,6 @@
-export interface IAdmissionRequest {
-  applicantInfo: IApplicantInfo;
-  addressInfo: IAddressInfo;
-  applicationInfo: IApplicationInfo;
-  schoolInfo: ISchoolInfo;
-  gradeInfo: IGradeInfo;
-  attendanceInfo: IAttendanceInfo;
-  awardAndCertificateInfo: IAwardAndCertificateInfo;
-}
-
-interface IApplicantInfo {
-  applicantName: string;
-  applicantTel: string;
-  birthDate: string;
-  applicantGender: string;
-  parentName: string;
-  parentTel: string;
-  parentRelation: string;
-}
-
-interface IAddressInfo {
-  isDaejeon: boolean;
-  streetAddress: string;
-  detailAddress: string;
-  postalCode: string;
-}
-
-interface IApplicationInfo {
-  applicationType: string | null;
-  educationalStatus: string | null;
-  studentNumber: string | null;
-  graduationDate: string | null;
-  studyPlan: string;
-  selfIntroduce: string;
-  applicationRemark: string;
-}
-
-interface ISchoolInfo {
-  schoolCode: string | null;
-  schoolName: string | null;
-  schoolPhone: string | null;
-  teacherName: string | null;
-}
-
-interface IGradeInfo {
-  koreanGrade: string | null;
-  socialGrade: string | null;
-  historyGrade: string | null;
-  mathGrade: string | null;
-  scienceGrade: string | null;
-  englishGrade: string | null;
-  techAndHomeGrade: string | null;
-  gedKorean: number | null;
-  gedSocial: number | null;
-  gedMath: number | null;
-  gedScience: number | null;
-  gedEnglish: number | null;
-  gedHistory: number | null;
-}
-
-interface IAttendanceInfo {
-  absence: number | null;
-  tardiness: number | null;
-  earlyLeave: number | null;
-  classExit: number | null;
-  volunteer: number | null;
-}
-
-interface IAwardAndCertificateInfo {
-  algorithmAward: boolean;
-  infoProcessingCert: boolean;
-}
-
-export interface IPdfPreviewSuccessRequest {
-  sessionId: string;
-  fileSize: number;
-  generationTime: number;
-}
-
-export interface IPdfPreviewFailedRequest {
-  sessionId: string;
-  errorMessage: string;
-}
-
-export type IPdfPreviewRequest = IAdmissionRequest;
-
 export interface IUpdateScheduleRequest {
   schedules: { type: string; date: string }[];
 }
-
-interface IProspectiveGraduateRequest {
-  applicationType: string;
-  educationalStatus: string;
-  scoreData: IProspectiveGraduateScoreData;
-}
-
-interface IProspectiveGraduateScoreData {
-  kor3_1: number;
-  soc3_1: number;
-  his3_1: number;
-  sci3_1: number;
-  tech3_1: number;
-  math3_1: number;
-  eng3_1: number;
-  kor2_2: number;
-  soc2_2: number;
-  his2_2: number;
-  sci2_2: number;
-  tech2_2: number;
-  math2_2: number;
-  eng2_2: number;
-  kor2_1: number;
-  soc2_1: number;
-  his2_1: number;
-  sci2_1: number;
-  tech2_1: number;
-  math2_1: number;
-  eng2_1: number;
-  earlyLeave: number;
-  tardiness: number;
-  classExit: number;
-  absence: number;
-  dsmAlgorithm: "O" | "X";
-  certificate: "O" | "X";
-  volunteer: number;
-  unexcused: number;
-}
-
-interface IGraduateRequest {
-  applicationType: string;
-  educationalStatus: string;
-  scores: IGraduateScoreData;
-}
-
-interface IGraduateScoreData extends IProspectiveGraduateScoreData {
-  kor3_2: number;
-  soc3_2: number;
-  his3_2: number;
-  sci3_2: number;
-  tech3_2: number;
-  math3_2: number;
-  eng3_2: number;
-}
-
-interface IGedRequest {
-  applicationType: string;
-  educationalStatus: string;
-  scores: {
-    gedKor: number;
-    gedSoc: number;
-    gedHis: number;
-    gedSci: number;
-    gedTech: number;
-    gedMath: number;
-    gedEng: number;
-    dsmAlgorithm: "O" | "X";
-    certificate: "O" | "X";
-  };
-}
-
-export type IValidateRequest = IProspectiveGraduateRequest | IGraduateRequest | IGedRequest;
 
 export const expectedGradeSemesters = ["2-1", "2-2", "3-1"] as const;
 
@@ -306,15 +148,18 @@ export interface UpdateApplicantPersonalProfileRequest {
   file: File;
 }
 
+/** 증명사진 업로드 응답(configuration `FileResponse`). `id` 는 `photo_…` 형태의 공개 ID 다. */
 export interface UpdateApplicantPersonalProfileResponse {
-  id: number;
-  key: string;
+  id: string;
   fileName: string;
-  url: string;
+  size: number;
+  downloadUrl: string;
+  expiresIn: number;
 }
 
 export interface UpdateApplicantPersonalInformationRequest {
-  photoFileId: number;
+  /** 증명사진 업로드 응답의 `id`(`photo_…`) */
+  photoFileId: string;
   name: string;
   phoneNumber: string;
   gender: ApplicantGender;

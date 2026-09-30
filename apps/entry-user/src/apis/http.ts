@@ -75,7 +75,7 @@ const request = async <T>(
   body?: BodyInit | null,
   options: HttpRequestOptions = {}
 ): Promise<T> => {
-  options = { ...options, signal: createRequestSignal(options.signal) };
+  options = { ...options, signal: createRequestSignal(options.signal, body) };
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
     ...createRequestOptions(options),
     method,
@@ -104,7 +104,7 @@ const request = async <T>(
 };
 
 const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
-  options = { ...options, signal: createRequestSignal(options.signal) };
+  options = { ...options, signal: createRequestSignal(options.signal, body) };
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
     ...createRequestOptions(options),
     method,

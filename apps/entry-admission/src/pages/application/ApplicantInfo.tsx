@@ -6,6 +6,7 @@ import { FormElement } from "../../components";
 import { usePageData } from "@entry/ui";
 import type { MyAccount } from "../../apis/account";
 import { QueryKeys } from "../../apis/query";
+import { APPLICANT_NAME_MAX_LENGTH } from "../../utils/inputLimits";
 
 // 계정 전화번호를 직접 입력했을 때와 같은 하이픈 형식으로 맞춥니다. (InputContent phone 타입과 동일한 규칙)
 const formatAccountPhone = (phone: string) => {
@@ -103,7 +104,11 @@ export const ApplicantInfo = () => {
   };
 
   const handleDropdownChange = (values: (string | number)[]) => {
-    setDatas({ ...datas, dateOfBirth: values });
+    const [year, month, day] = values.map(Number);
+    // 31일을 고른 뒤 2월처럼 날이 적은 달로 바꾸면 그 달의 마지막 날로 맞춘다. 그대로 두면 2011-02-31 같은 날짜가 저장된다.
+    const lastDay = year && month ? new Date(year, month, 0).getDate() : undefined;
+    const dateOfBirth = lastDay && day > lastDay ? [values[0], values[1], lastDay] : values;
+    setDatas({ ...datas, dateOfBirth });
   };
 
   const handleImgChange = async (file: File | null) => {
@@ -133,6 +138,7 @@ export const ApplicantInfo = () => {
         label="지원자 성명"
         placeholder="지원자 성명"
         inputType="text"
+        maxLength={APPLICANT_NAME_MAX_LENGTH}
         onInputChange={handleInputChange("applicantName")}
         value={datas.applicantName}
         readonly={isSelfSignup}

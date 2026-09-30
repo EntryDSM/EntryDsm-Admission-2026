@@ -7,6 +7,7 @@ import { colors } from "@entry/design";
 import { AuthInput } from "@entry/ui";
 import { IdentityApiError, resetPassword } from "../../apis";
 import type { PassInfo } from "../../apis";
+import { isPasswordWithinByteLimit, PASSWORD_MAX_UTF8_BYTES, PASSWORD_TOO_LONG_MESSAGE } from "../../utils/password";
 
 interface ChangePasswordProps {
   passInfo: PassInfo;
@@ -20,8 +21,9 @@ const getPasswordResetErrorMessage = (error: unknown) => {
   switch (error.code) {
     case "INVALID_REQUEST_BODY":
       return "입력한 정보를 다시 확인해 주세요.";
-    case "PASS_INFO_NOT_FOUND":
-      return "PASS 인증 정보가 없거나 만료되었습니다. 인증을 다시 진행해 주세요.";
+    // 본인 확인 단계가 계정 없음·이름/생년월일 불일치·PASS 인증 만료를 모두 이 코드 하나로 준다.
+    case "PASS_PROOF_NOT_FOUND":
+      return "PASS 인증 정보가 만료되었거나 사용자 정보가 일치하지 않습니다.";
     case "USER_NOT_FOUND":
       return "입력한 정보와 일치하는 사용자를 찾을 수 없습니다.";
     case "PASSWORD_SAME_AS_OLD":
@@ -43,7 +45,9 @@ export const ChangePassword = ({ passInfo }: ChangePasswordProps) => {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isBirthdateValid = /^\d{4}-\d{2}-\d{2}$/.test(birthdate);
-  const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const isPasswordTooLong = !isPasswordWithinByteLimit(password);
+  const isPasswordValid =
+    password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password) && !isPasswordTooLong;
   const passwordError = password.length > 0 && !isPasswordValid;
   const passwordCheckError = passwordCheck.length > 0 && password !== passwordCheck;
   const isFormValid = isBirthdateValid && isPasswordValid && passwordCheck.length > 0 && password === passwordCheck;
@@ -93,8 +97,13 @@ export const ChangePassword = ({ passInfo }: ChangePasswordProps) => {
         value={password}
         onChange={event => setPassword(event.target.value)}
         placeholder="변경할 비밀번호를 입력하세요"
+        maxLength={PASSWORD_MAX_UTF8_BYTES}
         isError={passwordError}
-        errorMsg="＊8자 이상, 숫자, 특수문자를 포함해 비밀번호를 입력해 주세요."
+        errorMsg={
+          isPasswordTooLong
+            ? `＊${PASSWORD_TOO_LONG_MESSAGE}`
+            : "＊8자 이상, 숫자, 특수문자를 포함해 비밀번호를 입력해 주세요."
+        }
       />
       <AuthInput
         type="password"

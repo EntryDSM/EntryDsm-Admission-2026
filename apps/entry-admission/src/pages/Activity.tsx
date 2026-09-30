@@ -66,7 +66,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           <AttendanceForm
             width={"48%"}
             title="미인정 결석"
-            text="미인정 결석을 입력하세요"
+            text="미인정 결석 일수를 입력하세요"
             defaultCount={10}
             onChange={absenceChange}
             value={datas.absence}
@@ -74,7 +74,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           <AttendanceForm
             width={"48%"}
             title="미인정 조퇴"
-            text="미인정 조퇴를 입력하세요"
+            text="미인정 조퇴 횟수를 입력하세요"
             defaultCount={10}
             onChange={earlyLeaveChange}
             value={datas.earlyLeave}
@@ -82,7 +82,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           <AttendanceForm
             width={"48%"}
             title="미인정 지각"
-            text="미인정 지각을 입력하세요"
+            text="미인정 지각 횟수를 입력하세요"
             defaultCount={10}
             onChange={tardinessChange}
             value={datas.tardiness}
@@ -90,7 +90,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           <AttendanceForm
             width={"48%"}
             title="미인정 결과"
-            text="미인정 결과를 입력하세요"
+            text="미인정 결과 횟수를 입력하세요"
             defaultCount={10}
             value={datas.classExit}
             onChange={classExitChange}
@@ -126,7 +126,7 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
       </Flex>
       <Flex isColumn={true} gap={24} width="100%" height="fit-content">
         <Text fontSize={24} fontWeight={600}>
-          자격증
+          가산점
         </Text>
         <Flex isColumn={true} width="100%" gap={0} height="fit-content">
           <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />

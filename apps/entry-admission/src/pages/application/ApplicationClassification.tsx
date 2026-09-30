@@ -123,11 +123,11 @@ export const ApplicationClassification = () => {
     void fetchAccount();
   }, []);
 
-  const hasSensitiveAgreement = account?.is_sensitive_agree === true;
+  const hasSensitiveAgreement = account?.sensitiveAgree === true;
 
   // 이전 임시저장에 남은 사회통합 선택도 현재 동의 상태와 맞지 않으면 해제한다.
   useEffect(() => {
-    if (isAccountLoading || !account || account.is_sensitive_agree || !isSocialIntegrationOption(datas.typeSelection)) {
+    if (isAccountLoading || !account || account.sensitiveAgree || !isSocialIntegrationOption(datas.typeSelection)) {
       return;
     }
 

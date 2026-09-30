@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Flex } from "@entry/design";
 import { usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
+import { TEACHER_NAME_MAX_LENGTH } from "../../utils/inputLimits";
 
 export const MiddleSchoolInfo = () => {
   const [datas, setDatas] = usePageData("middleSchoolInfo");
@@ -26,8 +27,8 @@ export const MiddleSchoolInfo = () => {
   };
 
   useEffect(() => {
-    setDatas({ ...datas, schoolCode: selectedCode, schoolName: selectedName });
-  }, [selectedName, selectedCode]);
+    setDatas({ schoolCode: selectedCode, schoolName: selectedName });
+  }, [selectedName, selectedCode, setDatas]);
 
   return (
     <Flex isColumn={true} width="100%" height="fit-content">
@@ -48,7 +49,7 @@ export const MiddleSchoolInfo = () => {
         onInputChange={handleStudentIdChange}
         value={datas.studentId}
         isComplete={/^\d{5}$/.test(String(datas.studentId ?? ""))}
-        explanation="5자리 숫자 형식으로 입력해주세요. (예: 30112)"
+        explanation="5자리 숫자 형식으로 입력해주세요. (예: 3학년 1반 12번인 경우 30112)"
         maxLength={5}
       />
       <FormElement
@@ -65,6 +66,7 @@ export const MiddleSchoolInfo = () => {
         type="input"
         label="중학교 교사 성명"
         inputType="text"
+        maxLength={TEACHER_NAME_MAX_LENGTH}
         placeholder="중학교 교사 성명을 입력해주세요."
         onInputChange={handleTeacherNameChange}
         value={datas.teacherName}

@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { IdentityApiError, signup } from "../../apis";
 import type { PassInfo, SignupType } from "../../apis";
 import type { SignupConsents } from "./SignupConsent";
+import { isPasswordWithinByteLimit, PASSWORD_MAX_UTF8_BYTES, PASSWORD_TOO_LONG_MESSAGE } from "../../utils/password";
 
 interface SignupFormProps {
   passInfo: PassInfo;
@@ -52,7 +53,9 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const isPasswordTooLong = !isPasswordWithinByteLimit(password);
+  const isPasswordValid =
+    password.length >= 8 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password) && !isPasswordTooLong;
   const isPasswordConfirmValid = passwordConfirm === password;
   const isBirthdateValid = isValidBirthdate(birthdate);
   const isFormValid =
@@ -70,7 +73,7 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
         birthdate,
         password,
         signupType,
-        is_sensitive_agree: consents.sensitive,
+        sensitiveAgree: consents.sensitive,
       });
       toast.success("회원가입이 완료되었습니다. 로그인해 주세요.");
       navigate("/", { replace: true, state: { signupCompleted: true } });
@@ -108,9 +111,10 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
         isEye
         value={password}
         placeholder="비밀번호를 입력하세요"
+        maxLength={PASSWORD_MAX_UTF8_BYTES}
         onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
         isError={password.length > 0 && !isPasswordValid}
-        errorMsg="8자 이상, 숫자와 특수문자를 포함해 주세요."
+        errorMsg={isPasswordTooLong ? PASSWORD_TOO_LONG_MESSAGE : "8자 이상, 숫자와 특수문자를 포함해 주세요."}
       />
       <AuthInput
         label="비밀번호 확인"

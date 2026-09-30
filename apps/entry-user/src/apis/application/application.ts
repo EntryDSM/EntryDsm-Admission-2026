@@ -1,1 +1,7 @@
-export { cancelApplication, getApplicationDocument, getApplicationResult, getApplicationStatus } from "../mypage";
+export {
+  cancelApplication,
+  getApplicationDocument,
+  getApplicationResult,
+  getApplicationStatus,
+  getRegistrationDocument,
+} from "../mypage";

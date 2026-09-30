@@ -1,14 +1,16 @@
 import { Http } from "./http";
 import type { AdmissionType, ApplicationRegion } from "./types";
 
-export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
+/** ARRIVAL 은 관리자가 원서 원본(우편) 도착을 처리한 상태로, 제출 이후 단계다. */
+export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "ARRIVAL" | "REVIEWING" | "COMPLETED" | "CANCELED";
 /** 합격 여부. PENDING 은 발표 전, FIRST_* 는 1차(서류) 전형, FINAL_* 은 2차(최종) 전형 결과다. */
 export type PassStatus = "PENDING" | "FIRST_PASSED" | "FIRST_FAILED" | "FINAL_PASSED" | "FINAL_FAILED";
 
 export interface MyAccount {
-  userId: number;
+  /** 외부 노출용 사용자 ID(`user_…`) */
+  userId: string;
   role: "ADMIN" | "MONITOR" | "STUDENT";
-  status: "ACTIVE" | "DELETED" | "SUSPENDED";
+  status: "ACTIVE" | "INACTIVE" | "DELETED";
   name: string;
   phone: string;
   birthdate: string;
@@ -95,3 +97,21 @@ export interface GetApplicationDocumentResponse {
 // 파일 자체가 아닌 존재 여부와 저장소 key/fileName 메타데이터만 조회합니다.
 export const getApplicationDocument = () =>
   Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}`);
+
+// 최종 합격자 등록 서류 조회에 사용하는 API 경로입니다.
+const REGISTRATION_DOCUMENT_ENDPOINT = "/api/document/v11/registration-documents/latest";
+
+/** GET /api/document/v11/registration-documents/latest 응답 data */
+export interface GetRegistrationDocumentResponse {
+  /** 파일 공개 ID (`registration-document_…`) */
+  id: string;
+  /** 관리자가 올린 원본 파일명 */
+  fileName: string;
+  size: number;
+  /** 서명된 URL. `expiresIn` 초 동안만 열린다. */
+  downloadUrl: string;
+  expiresIn: number;
+}
+
+// 관리자가 가장 최근에 올린 등록 서류를 조회합니다. 최종 합격자가 아니면 403, 올라온 서류가 없으면 404 입니다.
+export const getRegistrationDocument = () => Http.get<GetRegistrationDocumentResponse>(REGISTRATION_DOCUMENT_ENDPOINT);

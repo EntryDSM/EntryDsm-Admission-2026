@@ -7,11 +7,11 @@ import { toCompetitionData, toGenderData, toRegionData } from "../utils";
 const CORE_METRICS: StatisticsMetric[] = ["APPLICANT_COUNT", "COMPETITION_RATE", "REGION_DISTRIBUTION"];
 
 /**
- * 성비. 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는 400 으로 거절한다
- * → `getStatisticsWithOptional` 이 핵심 지표만으로 재조회한다(성비 카드는 빈 값).
- * 같은 PR 의 `REGION_STATUS` 는 지역별 접수 현황이 `REGION_DISTRIBUTION` 만 표시하므로 요청하지 않는다.
+ * 서버에 따라 없을 수 있는 확장 지표. 모르는 서버는 400 으로 거절하고, `getStatisticsWithOptional` 이 받을 수 있는 것만 합친다.
+ * - `GENDER_RATIO`: 성비. 백엔드 #264(feat/137-admin-statistics). 없으면 성비 카드는 빈 값.
+ * - `FIRST_PASS_QUOTA`: 전형별 1차 선발 인원. 백엔드 #324(develop 2026-09-29, prod 미배포). 없으면 "1차 선발 인원 미등록".
  */
-const OPTIONAL_METRICS: StatisticsMetric[] = ["GENDER_RATIO"];
+const OPTIONAL_METRICS: StatisticsMetric[] = ["GENDER_RATIO", "FIRST_PASS_QUOTA"];
 
 /**
  * 지원 현황 통계 조회 훅.
@@ -28,6 +28,8 @@ export const useStatistics = (metrics: StatisticsMetric[] = CORE_METRICS, option
     competitionData: query.data ? toCompetitionData(query.data.metrics) : [],
     genderData: query.data ? toGenderData(query.data.metrics) : {},
     regionData: query.data ? toRegionData(query.data.metrics) : {},
+    /** 전형 → 1차 선발 인원. 서버가 지표를 모르거나 모집 정원을 등록하지 않았으면 비어 있다. */
+    firstPassQuota: query.data?.metrics.FIRST_PASS_QUOTA ?? {},
     isLoading: query.isLoading,
     isError: query.isError,
     refetch: query.refetch,

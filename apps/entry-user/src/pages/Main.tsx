@@ -9,7 +9,7 @@ import { school } from "../assets";
 import { getSchedules, getServerTime } from "../apis/schedule";
 import { getMyAccount } from "../apis/mypage";
 import { ADMISSION_APP_URL } from "../utils/env";
-import { APPLICATION_SCHEDULE_TITLE, hasFirstAnnouncementStarted, toDate } from "../utils/schedule";
+import { APPLICATION_SCHEDULE_TITLE, hasFirstAnnouncementStarted, toDateTime } from "../utils/schedule";
 
 export const Main = () => {
   const navigate = useNavigate();
@@ -30,12 +30,13 @@ export const Main = () => {
     meta: { sentryIgnoreStatuses: [401] },
   });
   const applicationSchedule = schedules?.find(schedule => schedule.title === APPLICATION_SCHEDULE_TITLE);
-  const currentServerTime = serverTime ? toDate(serverTime) : null;
+  // 백엔드(ApplicationPeriodGuard)처럼 시·분·초까지, 시작·끝 시각을 포함해 비교한다. 날짜만 비교하면 마감일 마감 시각 이후에도 접수 중으로 보인다.
+  const currentServerTime = serverTime ? toDateTime(serverTime) : null;
   const isApplicationPeriod = Boolean(
     applicationSchedule &&
     currentServerTime &&
-    currentServerTime >= toDate(applicationSchedule.startAt) &&
-    currentServerTime <= toDate(applicationSchedule.endAt)
+    currentServerTime >= toDateTime(applicationSchedule.startAt) &&
+    currentServerTime <= toDateTime(applicationSchedule.endAt)
   );
   const applicationPeriodSubtitle =
     isSchedulesError || isServerTimeError

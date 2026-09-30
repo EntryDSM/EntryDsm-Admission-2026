@@ -14,17 +14,28 @@ import {
   getMyAccount,
   logout,
 } from "../apis/mypage";
+import { HttpError } from "../apis/http";
+import { openDownloadWindow } from "../utils/download";
 
 const APPLICATION_STATUS_LABEL: Record<ApplicantStatus, string> = {
   NONE: "미지원",
   DRAFT: "작성 중",
   SUBMITTED: "제출 완료",
+  ARRIVAL: "원서 도착",
   REVIEWING: "검토 중",
   COMPLETED: "전형 완료",
   CANCELED: "제출 취소",
 };
 
-const SUBMITTED_STATUSES: ApplicantStatus[] = ["SUBMITTED", "REVIEWING", "COMPLETED"];
+const SUBMITTED_STATUSES: ApplicantStatus[] = ["SUBMITTED", "ARRIVAL", "REVIEWING", "COMPLETED"];
+
+/** GET /api/document/v11/applications 실패 상태별 안내. 502·503 은 파일 저장소·원서 서비스의 일시 장애다. */
+const APPLICATION_DOCUMENT_ERROR_MESSAGE: Record<number, string> = {
+  401: "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요.",
+  403: "원서를 내려받을 권한이 없습니다.",
+  404: "제출한 원서를 찾을 수 없습니다. 문의처로 연락해 주세요.",
+};
+const APPLICATION_DOCUMENT_FALLBACK_ERROR_MESSAGE = "원서를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
 
 export const MyPage = () => {
   const [openModal, setOpenModal] = useState({
@@ -63,6 +74,28 @@ export const MyPage = () => {
     },
     onError: () => toast.error("회원 탈퇴에 실패했습니다."),
   });
+  // 서명된 URL 은 곧 만료되므로 캐시하지 않고 누를 때마다 새로 받는다.
+  const applicationDocumentMutation = useMutation({
+    mutationFn: getApplicationDocument,
+    onSuccess: ({ downloadUrl }) => {
+      if (openDownloadWindow(downloadUrl)) {
+        return;
+      }
+
+      // 응답을 기다린 뒤의 window.open 은 클릭과 떨어져 있어 브라우저가 팝업으로 막을 수 있다. 그때는 토스트를 눌러 열게 한다.
+      toast.info("팝업이 차단되었습니다. 여기를 누르면 원서가 열립니다.", {
+        autoClose: 15_000,
+        onClick: () => openDownloadWindow(downloadUrl),
+      });
+    },
+    onError: (error: unknown) => {
+      const status = error instanceof HttpError ? error.status : undefined;
+      toast.error(
+        (status !== undefined && APPLICATION_DOCUMENT_ERROR_MESSAGE[status]) ||
+          APPLICATION_DOCUMENT_FALLBACK_ERROR_MESSAGE
+      );
+    },
+  });
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
@@ -88,9 +121,23 @@ export const MyPage = () => {
     window.location.href = `${AUTH_APP_URL.replace(/\/$/, "")}/find-password`;
   };
 
-  const handleDownloadApplication = async () => {
-    const document = await getApplicationDocument();
-    window.open(document.downloadUrl, "_blank");
+  const handleDownloadApplication = () => {
+    if (applicationDocumentMutation.isPending) {
+      return;
+    }
+
+    applicationDocumentMutation.mutate();
+  };
+
+  // 원서 접수 취소는 API 를 연동하지 않고 문의처 안내만 한다.
+  const handleCancelApplication = () => {
+    toast.info(
+      <>
+        원서 취소는 문의처로 연락해 주세요.
+        <br />
+        042-866-8820, 8822
+      </>
+    );
   };
 
   // 합격 결과는 팝업 대신 전용 페이지(/mypage/result)에서 보여준다. 발표 전·오류 안내도 그 페이지가 맡는다.
@@ -116,35 +163,48 @@ export const MyPage = () => {
             <StatusInfo>
               <StatusLabel>지원서 상태 :</StatusLabel>
               <StatusValue isSubmitted={isSubmitted}>{APPLICATION_STATUS_LABEL[applicantStatus]}</StatusValue>
-              {applicantStatus === "COMPLETED" && (
+              {applicantStatus === "SUBMITTED" && (
                 <Text color={colors.gray[400]} fontSize={12}>
-                  *반드시 서류를 출력 후 서명한 뒤 제출하여야 접수가 완료됩니다.
+                  ＊반드시 서류를 출력 후 서명한 뒤 제출하여야 접수가 완료됩니다.
                 </Text>
               )}
             </StatusInfo>
           </StatusBox>
         </ApplicationStatusSection>
-        <Flex width="fit-content" height="fit-content" gap={12} style={{ marginTop: 24 }}>
-          <Btn
-            backgroundColor={colors.orange[800]}
-            color="#FFFFFF"
-            borderColor={colors.orange[800]}
-            hoverBackgroundColor={colors.orange[800]}
-            onClick={() => handleDownloadApplication()}
-            isBlocked={!isSubmitted}
-          >
-            원서 다운로드
-          </Btn>
-          <Btn
-            backgroundColor="#FFFFFF"
-            color={colors.orange[800]}
-            borderColor={colors.orange[800]}
-            hoverBackgroundColor="transparent"
-            onClick={handleCheckResult}
-          >
-            합격 결과 확인
-          </Btn>
-        </Flex>
+        <ButtonGroup>
+          <Flex width="fit-content" height="fit-content" gap={12}>
+            <Btn
+              backgroundColor={colors.orange[800]}
+              color="#FFFFFF"
+              borderColor={colors.orange[800]}
+              hoverBackgroundColor={colors.orange[800]}
+              onClick={() => handleDownloadApplication()}
+              isBlocked={!isSubmitted}
+            >
+              원서 다운로드
+            </Btn>
+            <Btn
+              backgroundColor="#FFFFFF"
+              color={colors.orange[800]}
+              borderColor={colors.orange[800]}
+              hoverBackgroundColor="transparent"
+              onClick={handleCheckResult}
+            >
+              합격 결과 확인
+            </Btn>
+          </Flex>
+          {hasApplication && (
+            <Btn
+              backgroundColor={colors.gray[50]}
+              color={colors.extra.error}
+              borderColor={colors.extra.error}
+              hoverBackgroundColor="transparent"
+              onClick={handleCancelApplication}
+            >
+              원서 접수 취소
+            </Btn>
+          )}
+        </ButtonGroup>
         <SettingsTitle>설정</SettingsTitle>
         <SettingsSection>
           <SettingsRow>
@@ -298,6 +358,15 @@ const SettingsLabel = styled.span`
   ${media.tablet} {
     font-size: 16px;
   }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 `;
 
 const SettingsButtonGroup = styled.div`
