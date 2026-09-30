@@ -18,6 +18,7 @@ export const StatisticsLandingPage = () => {
     competitionData,
     genderData,
     regionData,
+    firstPassQuota,
     isLoading: isStatisticsLoading,
     isError: isStatisticsError,
     refetch: refetchStatistics,
@@ -52,7 +53,11 @@ export const StatisticsLandingPage = () => {
             isLoading={isScheduleLoading}
             isCompetitionLoading={isStatisticsLoading}
           />
-          <CompetitionSection competitionSummary={competitionSummary} isCompetitionLoading={isStatisticsLoading} />
+          <CompetitionSection
+            competitionSummary={competitionSummary}
+            firstPassQuota={firstPassQuota}
+            isCompetitionLoading={isStatisticsLoading}
+          />
           <GenderSection genderItems={genderItems} isGenderLoading={isStatisticsLoading} />
           <RegionSection regionItems={regionItems} isRegionLoading={isStatisticsLoading} />
         </>

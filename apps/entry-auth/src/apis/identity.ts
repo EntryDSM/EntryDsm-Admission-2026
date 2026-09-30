@@ -46,7 +46,7 @@ export interface SignupRequest extends PassInfo {
   password: string;
   birthdate: string;
   signupType: SignupType;
-  is_sensitive_agree: boolean;
+  sensitiveAgree: boolean;
 }
 
 export interface SignupResponse {

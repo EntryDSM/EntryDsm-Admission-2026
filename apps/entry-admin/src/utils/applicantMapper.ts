@@ -2,6 +2,7 @@ import type {
   AdminApplicantDetail,
   AdminApplicantSummary,
   AdmissionType,
+  ApplicantGedScores,
   ApplicantStatus,
   GraduationStatus,
   Region,
@@ -45,6 +46,8 @@ export interface ApplicantDetailView {
   attendanceScore?: number;
   volunteerScore?: number;
   additionalScore?: number;
+  /** 검정고시 과목별 점수. 검정고시 지원자가 점수를 입력했을 때만 있다. */
+  gedScores?: ApplicantGedScores;
   /** 증명사진 파일 ID. 사진 URL 은 `useApplicantPhoto` 가 document 에서 받는다. */
   photoFileId?: string;
   /** 자기소개서·학업계획서 본문. 지원자가 쓴 줄바꿈(`\n`)이 그대로 있다. */
@@ -87,6 +90,7 @@ export const toApplicantDetailView = (dto: AdminApplicantDetail): ApplicantDetai
   attendanceScore: dto.score?.attendanceScore,
   volunteerScore: dto.score?.volunteerScore,
   additionalScore: dto.score?.additionalScore,
+  gedScores: dto.gedScores ?? undefined,
   photoFileId: dto.photoFileId ?? undefined,
   introduction: dto.introduction ?? undefined,
   studyPlan: dto.studyPlan ?? undefined,

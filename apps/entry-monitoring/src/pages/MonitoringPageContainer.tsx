@@ -170,6 +170,11 @@ export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPage
         </PageState>
       )}
       {isLoading && <PageState role="status">모니터링 데이터를 불러오는 중입니다.</PageState>}
+      {monitoringStream.connection === "reconnecting" && (
+        <PageState role="status">
+          실시간 연결이 끊겨 다시 연결하고 있습니다. 연결되기 전까지는 마지막으로 받은 값을 보여줍니다.
+        </PageState>
+      )}
       <MonitoringPage
         data={data}
         serviceHealth={serviceHealthQuery.data}

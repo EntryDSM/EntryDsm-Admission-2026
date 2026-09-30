@@ -1,6 +1,11 @@
 import { Flex } from "@entry/design";
 import { InputContent, usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
+import {
+  ADDRESS_DETAIL_MAX_LENGTH,
+  GUARDIAN_NAME_MAX_LENGTH,
+  GUARDIAN_RELATION_MAX_LENGTH,
+} from "../../utils/inputLimits";
 
 export const GuardianInfo = () => {
   const [datas, setDatas] = usePageData("guardianInfo");
@@ -56,6 +61,7 @@ export const GuardianInfo = () => {
         type="input"
         label="보호자 성명"
         inputType="text"
+        maxLength={GUARDIAN_NAME_MAX_LENGTH}
         placeholder="보호자 성명을 입력해주세요."
         onInputChange={handleInputChange("guardianName")}
         value={datas.guardianName}
@@ -91,6 +97,7 @@ export const GuardianInfo = () => {
               width="240px"
               type="text"
               placeholder="관계를 입력해주세요."
+              maxLength={GUARDIAN_RELATION_MAX_LENGTH}
               value={datas.otherRelationship}
               onChange={handleOtherRelationshipChange}
             />
@@ -106,6 +113,7 @@ export const GuardianInfo = () => {
         handleAddressChange={handleAddressChange}
         handleCodeChange={handleCodeChange}
         handleDetailChange={handleDetailChange}
+        addressDetailMaxLength={ADDRESS_DETAIL_MAX_LENGTH}
       />
     </Flex>
   );

@@ -2,7 +2,7 @@ import { media } from "@entry/design";
 import { useMemo, useState } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex } from "@entry/design";
-import { NoticePinIcon } from "@entry/ui";
+import { NoticePinIcon, PageNav } from "@entry/ui";
 import { ResponsiveTabSection } from "../components/ResponsiveTabSection";
 import { useNavigate } from "react-router";
 import { useGetAllNotice, type NoticeCategory } from "../apis";
@@ -28,11 +28,17 @@ const formatDate = (dateString: string) => dateString.split("T")[0];
 
 export const NoticePage = () => {
   const [activeTab, setActiveTab] = useState<"NOTICE" | "GUIDE">("NOTICE");
+  // 화면의 페이지 번호는 1부터, 백엔드 page 파라미터는 0부터다.
+  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGetAllNotice(CATEGORY_BY_TAB[activeTab]);
+  const { data, isLoading, isError } = useGetAllNotice(CATEGORY_BY_TAB[activeTab], currentPage - 1);
+  const totalPages = data?.totalPages ?? 0;
 
   const handleNoticeClick = (id: number) => navigate(`/notice/${id}`);
-  const handleTabChange = (tab: string) => setActiveTab(tab as "NOTICE" | "GUIDE");
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as "NOTICE" | "GUIDE");
+    setCurrentPage(1);
+  };
 
   const noticeItems = useMemo(() => {
     return (
@@ -89,6 +95,10 @@ export const NoticePage = () => {
             </TableBody>
           </TableContainer>
         </Flex>
+
+        {totalPages > 0 && (
+          <PageNav totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+        )}
       </ContentWrapper>
     </PageContainer>
   );

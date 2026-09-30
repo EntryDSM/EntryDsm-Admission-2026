@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { clearStartedApplicantId, getApplicationStorageKey, getStartedApplicantId, submitApplication } from "../apis";
+import { clearSavedPages } from "../utils/savedPages";
 import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 
 export const SubmitCheck = () => {
@@ -39,6 +40,7 @@ export const SubmitCheck = () => {
 
       await submitApplication();
       const applicantId = getStartedApplicantId();
+      if (applicantId !== null) clearSavedPages(applicantId);
       await clearAllData(applicantId === null ? undefined : getApplicationStorageKey(applicantId));
       clearStartedApplicantId();
       navigate("/submitted");

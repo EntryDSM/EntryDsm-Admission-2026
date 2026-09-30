@@ -3,7 +3,7 @@ import type { Schedule, ScheduleDateTime } from "../apis/schedule";
 /**
  * 백엔드 분해 시각 → 날짜(자정) Date. 브라우저 로컬 시간대 기준으로 만든다.
  * 서버 현재 시각(/time)도 같은 방식으로 변환하므로 일정 시각과의 비교는 시간대와 무관하게 일관된다.
- * 시·분을 버리므로 날짜 단위 기간 판정과 요일 계산에 쓰고, 발표 시각처럼 시점 비교가 필요하면 `toDateTime` 을 쓴다.
+ * 시·분을 버리므로 요일 계산에만 쓰고, 접수 기간·발표 시각처럼 시점 비교가 필요하면 `toDateTime` 을 쓴다.
  */
 export const toDate = (dateTime: ScheduleDateTime) => new Date(dateTime.year, dateTime.month - 1, dateTime.day);
 

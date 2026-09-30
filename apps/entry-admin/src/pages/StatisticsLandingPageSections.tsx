@@ -13,6 +13,7 @@ import {
   ThreeIcon,
   TwoIcon,
 } from "../assets";
+import type { AdmissionType, FirstPassQuotaMetric } from "../apis/types";
 import type { ScheduleDeadline, StatisticsSummary } from "./StatisticsLandingPageHooks";
 
 interface StatisticsPageLayoutProps {
@@ -156,10 +157,16 @@ export const StatCardsGrid = ({
 
 interface CompetitionSectionProps {
   competitionSummary: StatisticsSummary["competitionSummary"];
+  /** 전형 → 1차 선발 인원(`FIRST_PASS_QUOTA`). 없는 전형은 "1차 선발 인원 미등록" 으로 보인다. */
+  firstPassQuota: FirstPassQuotaMetric;
   isCompetitionLoading: boolean;
 }
 
-export const CompetitionSection = ({ competitionSummary, isCompetitionLoading }: CompetitionSectionProps) => {
+export const CompetitionSection = ({
+  competitionSummary,
+  firstPassQuota,
+  isCompetitionLoading,
+}: CompetitionSectionProps) => {
   const typeColors: Record<string, string> = {
     GENERAL: "#1DB954",
     COMMON: "#1DB954",
@@ -191,9 +198,9 @@ export const CompetitionSection = ({ competitionSummary, isCompetitionLoading }:
           </>
         ) : (
           competitionSummary.byType.map((item, index) => {
-            const progressPercentage =
-              competitionSummary.totalApplicants > 0 ? (item.applicants / competitionSummary.totalApplicants) * 100 : 0;
-            const percentage = progressPercentage.toFixed(2);
+            // 지원자 ÷ 1차 선발 인원. 선발 인원보다 많이 지원하면 100% 를 넘으므로 막대만 100% 에서 멈춘다.
+            const quota = firstPassQuota[item.applicationType as AdmissionType];
+            const quotaPercentage = quota ? (item.applicants / quota) * 100 : undefined;
 
             return (
               <ApplicationTypeCard key={index}>
@@ -202,9 +209,16 @@ export const CompetitionSection = ({ competitionSummary, isCompetitionLoading }:
                   <ApplicationTypeCount>{item.applicants}명</ApplicationTypeCount>
                 </ApplicationTypeHeader>
                 <ProgressBarContainer>
-                  <ProgressBar progress={progressPercentage} color={typeColors[item.applicationType] || "#666"} />
+                  <ProgressBar
+                    progress={Math.min(quotaPercentage ?? 0, 100)}
+                    color={typeColors[item.applicationType] || "#666"}
+                  />
                 </ProgressBarContainer>
-                <ApplicationTypePercentage>1차 선발 인원의 {percentage}%</ApplicationTypePercentage>
+                <ApplicationTypePercentage>
+                  {quotaPercentage === undefined
+                    ? "1차 선발 인원 미등록"
+                    : `1차 선발 인원 ${quota}명의 ${quotaPercentage.toFixed(2)}%`}
+                </ApplicationTypePercentage>
               </ApplicationTypeCard>
             );
           })

@@ -32,7 +32,14 @@ export type AccountStatus = "ACTIVE" | "INACTIVE" | "DELETED";
 export type SignupType = "SELF" | "PARENT";
 
 /** identity 도메인의 지원 상태 — admin 도메인 `ApplicantStatus` 와 값 체계가 다르다. */
-export type AccountApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
+export type AccountApplicantStatus =
+  | "NONE"
+  | "DRAFT"
+  | "SUBMITTED"
+  | "ARRIVAL"
+  | "REVIEWING"
+  | "COMPLETED"
+  | "CANCELED";
 
 /** 내 계정 정보 */
 export interface MyAccount {
@@ -113,6 +120,20 @@ export interface ApplicantScore {
   totalScore: number;
 }
 
+/**
+ * 검정고시 과목별 점수(0~100 정수). 백엔드 #334/#335(2026-09-29 develop·스테이징 반영)로 상세 응답에 추가됐다.
+ * 일곱 과목이 늘 함께 오고, 필드명에 `Score` 접미사가 없다(원서 입력 API 의 `koreanScore` 와 다름).
+ */
+export interface ApplicantGedScores {
+  korean: number;
+  society: number;
+  history: number;
+  math: number;
+  science: number;
+  technology: number;
+  english: number;
+}
+
 /** 상세 응답. 목록과 같은 이유로 원서 항목은 nullable 이다. */
 export interface AdminApplicantDetail {
   applicantId: number;
@@ -130,6 +151,8 @@ export interface AdminApplicantDetail {
   status: ApplicantStatus;
   /** 총점이 아직 없으면 null */
   score: ApplicantScore | null;
+  /** 검정고시 점수를 입력한 검정고시 지원자만 있고 그 밖에는 null. #335 가 배포되지 않은 서버(prod)는 필드 자체가 없다. */
+  gedScores?: ApplicantGedScores | null;
   /** ISO datetime — 원서를 제출한 시각 */
   submittedAt: string | null;
   /** ISO datetime — 원서 원본(우편)이 도착한 시각 */
@@ -262,10 +285,12 @@ export interface ExportJob {
  * `GENDER_RATIO` 는 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는
  * 400 으로 거절한다 — `getStatisticsWithOptional` 이 그 경우 핵심 지표만으로 재조회한다.
  * `REGION_STATUS` 는 백엔드 #325 에서 `REGION_DISTRIBUTION` 으로 통합되며 사라졌다(보내면 400).
+ * `FIRST_PASS_QUOTA` 는 백엔드 #324(2026-09-29 develop) 가 추가한 지표라 main(prod) 은 아직 400 으로 거절한다.
  */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
+  | "FIRST_PASS_QUOTA"
   | "REGION_DISTRIBUTION"
   | "TYPE_DISTRIBUTION"
   | "DAILY_TREND"
@@ -308,6 +333,12 @@ export interface ApplicantCountMetric {
 export type CompetitionRateMetric = Partial<Record<AdmissionType, number>>;
 
 /**
+ * 전형별 1차 선발 인원 `{ 전형: 인원 }` (백엔드 #324). 모집 정원 × 1차 배수(기본 1.5)를 올림한 값으로,
+ * 1차 합격자 산출과 같은 계산이다. 모집 정원을 등록하지 않았으면 빈 맵 `{}` 이다.
+ */
+export type FirstPassQuotaMetric = Partial<Record<AdmissionType, number>>;
+
+/**
  * 지역별 분포 (백엔드 #325 `AdminResponseMapper` 확인, 2026-09-29) — 옛 `REGION_STATUS` 구조가 이 이름으로 옮겨 왔다.
  * 홈 "지역별 접수 현황"은 `byRegion`(거주지 시·도)을 표시한다.
  */
@@ -345,6 +376,7 @@ export interface GenderRatioMetric {
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
   COMPETITION_RATE?: CompetitionRateMetric;
+  FIRST_PASS_QUOTA?: FirstPassQuotaMetric;
   REGION_DISTRIBUTION?: RegionDistributionMetric;
   TYPE_DISTRIBUTION?: TypeDistributionMetric;
   DAILY_TREND?: DailyTrendMetric;
