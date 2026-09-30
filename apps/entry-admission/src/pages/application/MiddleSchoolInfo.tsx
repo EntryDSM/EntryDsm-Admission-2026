@@ -26,8 +26,8 @@ export const MiddleSchoolInfo = () => {
   };
 
   useEffect(() => {
-    setDatas({ ...datas, schoolCode: selectedCode, schoolName: selectedName });
-  }, [selectedName, selectedCode]);
+    setDatas({ schoolCode: selectedCode, schoolName: selectedName });
+  }, [selectedName, selectedCode, setDatas]);
 
   return (
     <Flex isColumn={true} width="100%" height="fit-content">

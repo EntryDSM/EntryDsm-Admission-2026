@@ -1,4 +1,4 @@
-import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken";
+import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken.ts";
 import { redactClientLog as redact } from "@entry/utils";
 
 interface ClientLog {
