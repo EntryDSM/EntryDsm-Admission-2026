@@ -36,6 +36,7 @@ const RadioLabel = styled.label<{ $disabled: boolean }>`
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
   opacity: ${({ $disabled }) => ($disabled ? 0.45 : 1)};
   position: relative;
+  white-space: nowrap;
 
   &:has(input:focus-visible) span {
     outline: 2px solid ${colors.orange[800]};
@@ -56,6 +57,7 @@ const Radio = styled.input`
 const RadioIndicator = styled.span<{ isClick: boolean }>`
   width: 28px;
   height: 28px;
+  flex-shrink: 0;
   padding: 0;
   border-radius: 14px;
   border: 3px solid ${({ isClick }) => (isClick ? colors.orange[800] : colors.gray[200])};

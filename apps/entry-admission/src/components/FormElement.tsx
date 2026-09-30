@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { colors, Flex, Text } from "@entry/design";
+import { colors, Flex } from "@entry/design";
 import { isEmptyValue } from "@entry/utils";
 import styled from "@emotion/styled";
 import {
@@ -193,7 +193,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
 
       case "radio":
         return (
-          <Flex width="fit-content" height="fit-content" gap={32}>
+          <Flex width="fit-content" height="fit-content" gapX={32} gapY={16} flexWrap="wrap">
             {props.radioDatas?.map((data, index) => (
               <RadioContent
                 key={`${data}-${index}`}
@@ -244,11 +244,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
             />
             <Flex isColumn={true} gap={10} height="fit-content" width="100%" justifyContent="space-between">
               <ImageContent initialImgUrl={props.imgUrl} onClick={() => setIsModalOpen(true)} />
-              {explanation && (
-                <Text fontSize={16} fontWeight={300} color={colors.gray[400]}>
-                  {explanation}
-                </Text>
-              )}
+              {explanation && <Explanation>{explanation}</Explanation>}
             </Flex>
           </>
         );
@@ -286,7 +282,16 @@ export const FormElement = React.memo<FormElementProps>(props => {
 
   return (
     <FormContainer>
-      <Flex gap={6} alignItems="center" height="fit-content" width="100%" justifyContent="space-between">
+      {/* 설명 문구가 옆에 다 들어가지 않으면 글자를 쪼개지 않고 통째로 다음 줄로 내린다. */}
+      <Flex
+        gapX={32}
+        gapY={12}
+        flexWrap="wrap"
+        alignItems="center"
+        height="fit-content"
+        width="100%"
+        justifyContent="space-between"
+      >
         <Flex
           gap={54}
           justifyContent="flex-start"
@@ -311,11 +316,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
           )}
         </Flex>
 
-        {!isBottomExplanation && explanation && (
-          <Text fontSize={16} fontWeight={300} color={colors.gray[400]}>
-            {explanation}
-          </Text>
-        )}
+        {!isBottomExplanation && explanation && <Explanation>{explanation}</Explanation>}
       </Flex>
     </FormContainer>
   );
@@ -329,6 +330,13 @@ const Label = styled.div`
   white-space: nowrap;
   font-size: 24px;
   font-weight: 600;
+`;
+
+const Explanation = styled.div`
+  font-size: 16px;
+  font-weight: 300;
+  color: ${colors.gray[400]};
+  word-break: keep-all;
 `;
 
 const CheckContainer = styled.div`
