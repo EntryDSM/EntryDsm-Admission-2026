@@ -11,7 +11,7 @@ export const GedScoreLayout = () => {
     },
     {
       path: "/ged/attendance-volunteer",
-      name: "자격증",
+      name: "가산점",
     },
   ];
 
@@ -25,9 +25,6 @@ export const GedScoreLayout = () => {
         <TitleContainer>
           <Text fontSize={32} fontWeight={600}>
             {currentData ? currentData.name : "Error"}
-          </Text>
-          <Text fontSize={16} fontWeight={400} color={colors.gray[400]}>
-            관련 항목이 없는 경우 빈칸으로 기입하세요.
           </Text>
         </TitleContainer>
         <ScorePageNav datas={datas} />
@@ -43,8 +40,8 @@ export const GraduateScoreLayout = () => {
   const datas = [
     { path: "/first-graduate", name: "3학년 2학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     { path: "/second-graduate", name: "3학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
-    { path: "/third-graduate", name: "2학년 2학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
-    { path: "/fourth-graduate", name: "2학년 1학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
+    { path: "/third-graduate", name: "직전학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
+    { path: "/fourth-graduate", name: "직전전학기", explanation: "관련 항목이 없는 경우 ✕ 로 기입하세요." },
     {
       path: "/activity-graduate",
       name: "출결 및 봉사",
