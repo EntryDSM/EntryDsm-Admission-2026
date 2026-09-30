@@ -14,7 +14,8 @@ const getPassResultErrorMessage = (error: unknown) => {
       return "인증 토큰이 올바르지 않습니다. 인증을 다시 진행해 주세요.";
     case "INVALID_PASS":
       return "PASS 인증이 정상적으로 완료되지 않았습니다. 인증을 다시 진행해 주세요.";
-    case "OKCERT_CONNECTION_ERROR":
+    case "PASS_PROVIDER_UNAVAILABLE":
+    case "PASS_PROOF_STORE_UNAVAILABLE":
       return "PASS 인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
     default:
       if (error.status === 400) return "인증 토큰이 올바르지 않습니다. 인증을 다시 진행해 주세요.";
