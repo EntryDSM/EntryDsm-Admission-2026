@@ -1,4 +1,4 @@
-import { createRequestSignal, getCsrfToken } from "@entry/utils";
+import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
 import type { ApiResponse } from "./types";
 
 // HTTP 실패 상태와 서버 응답 본문을 호출 화면까지 전달하는 공통 오류 객체.
@@ -12,6 +12,10 @@ export class HttpError extends Error {
     this.body = body;
   }
 }
+
+// 메시지는 화면 토스트에 그대로 쓰이므로 서버 본문에서 사용자에게 보여줄 한국어 문구를 고른다(@entry/utils getApiErrorMessage).
+const createHttpError = (status: number, body: unknown) =>
+  new HttpError(getApiErrorMessage(status, readApiError(body)), status, body);
 
 interface HttpRequestOptions extends Omit<RequestInit, "body" | "headers" | "method"> {
   // false이면 공개 API 요청으로 처리해 인증 쿠키와 X-XSRF-TOKEN 헤더를 보내지 않습니다.
@@ -74,7 +78,7 @@ const fetchApi = async (
   body: BodyInit | null | undefined,
   options: HttpRequestOptions
 ) => {
-  options = { ...options, signal: createRequestSignal(options.signal) };
+  options = { ...options, signal: createRequestSignal(options.signal, body) };
 
   return fetch(createRequestUrl(path, options), {
     ...createRequestOptions(options),
@@ -112,29 +116,18 @@ const request = async <T>(
   const responseBody = parseResponseBody<T>(responseText);
 
   if (!response.ok) {
-    throw new HttpError("API 요청이 실패했습니다.", response.status, responseBody);
+    throw createHttpError(response.status, responseBody);
   }
 
   if (responseBody && typeof responseBody === "object" && "success" in responseBody && "data" in responseBody) {
     if (!responseBody.success) {
-      throw new HttpError("API 요청이 실패했습니다.", response.status, responseBody);
+      throw createHttpError(response.status, responseBody);
     }
 
     return responseBody.data;
   }
 
   return responseBody as T;
-};
-
-// PDF처럼 JSON이 아닌 바이너리 응답을 Blob으로 반환합니다.
-const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
-  const response = await fetchApi(path, method, body, options);
-
-  if (!response.ok) {
-    throw new HttpError("API 요청이 실패했습니다.", response.status, await response.text());
-  }
-
-  return response.blob();
 };
 
 // 앱의 모든 HTTP 요청에서 사용할 메서드별 진입점입니다.
@@ -151,6 +144,4 @@ export const Http = {
     request<T>(path, "POST", data, options),
   patchFormData: <T>(path: string, data: FormData, options?: HttpRequestOptions) =>
     request<T>(path, "PATCH", data, options),
-  postBlob: (path: string, data: unknown, options?: HttpRequestOptions) =>
-    requestBlob(path, "POST", JSON.stringify(data), options),
 };

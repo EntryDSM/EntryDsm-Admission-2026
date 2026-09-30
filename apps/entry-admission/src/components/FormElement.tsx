@@ -82,6 +82,7 @@ interface AddressProps {
   handleCodeChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddressChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDetailChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  addressDetailMaxLength?: number;
 }
 
 type FormElementProps = BaseFormElementProps &
@@ -272,6 +273,7 @@ export const FormElement = React.memo<FormElementProps>(props => {
             handleCodeChange={props.handleCodeChange}
             handleAddressChange={props.handleAddressChange}
             handleDetailChange={props.handleDetailChange}
+            addressDetailMaxLength={props.addressDetailMaxLength}
           />
         ) : null;
 

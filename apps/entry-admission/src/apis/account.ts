@@ -1,11 +1,12 @@
 import { Http } from "./http";
 
-export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "REVIEWING" | "COMPLETED" | "CANCELED";
+/** ARRIVAL 은 관리자가 원서 원본(우편) 도착을 처리한 상태로, 제출 이후 단계다. */
+export type ApplicantStatus = "NONE" | "DRAFT" | "SUBMITTED" | "ARRIVAL" | "REVIEWING" | "COMPLETED" | "CANCELED";
 
 export interface MyAccount {
   userId: string;
   role: "ADMIN" | "MONITOR" | "STUDENT";
-  status: "ACTIVE" | "DELETED" | "SUSPENDED";
+  status: "ACTIVE" | "INACTIVE" | "DELETED";
   name: string;
   phone: string;
   birthdate: string;

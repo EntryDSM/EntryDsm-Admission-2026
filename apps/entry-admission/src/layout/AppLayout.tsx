@@ -1,5 +1,12 @@
 import styled from "@emotion/styled";
-import { canProceedToNext, GRADUATION_TYPES, type GraduationType, useApplicationData, usePageData } from "@entry/ui";
+import {
+  type ApplicationState,
+  canProceedToNext,
+  GRADUATION_TYPES,
+  type GraduationType,
+  useApplicationData,
+  usePageData,
+} from "@entry/ui";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -23,8 +30,16 @@ import {
   resultGrades,
 } from "../apis";
 import { HttpError } from "../apis/http";
+import { readApiError } from "@entry/utils";
 import { ApplicationNav } from "../components";
 import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
+import {
+  clearSavedPages,
+  fingerprintPageInput,
+  getSavedPageFingerprints,
+  markPageSaved,
+  unmarkPagesSaved,
+} from "../utils/savedPages";
 
 const admissionTypes = {
   일반: "REGULAR",
@@ -90,6 +105,12 @@ const formatBirthdate = (date: (string | number)[]) => {
     throw new Error("생년월일을 확인해 주세요.");
   }
 
+  // 달력에 없는 날(예: 2월 31일)은 Date 가 다음 달로 넘기므로 월·일이 그대로인지로 걸러낸다.
+  const calendarDate = new Date(Number(year), Number(month) - 1, Number(day));
+  if (calendarDate.getMonth() !== Number(month) - 1 || calendarDate.getDate() !== Number(day)) {
+    throw new Error("생년월일이 올바른 날짜가 아닙니다. 다시 선택해 주세요.");
+  }
+
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 };
 
@@ -110,13 +131,127 @@ const getRequiredBoolean = (value: "O" | "X" | null, fieldName: string) => {
   return value === "O";
 };
 
-const isApplicantAccessDeniedError = (error: unknown) => {
-  if (!(error instanceof HttpError) || error.status !== 403 || !error.body || typeof error.body !== "object") {
+// 원서 API 는 로그인한 계정으로 원서를 찾는다. 원서가 없으면(관리자 접수 취소로 삭제됐거나 같은 브라우저에서 다른 계정으로 로그인)
+// application 이 404 APPLICANT_NOT_FOUND 를 준다. (예전 applicantId 경로 시절의 403 APPLICANT_ACCESS_DENIED 는 없어졌다.)
+const isApplicantNotFoundError = (error: unknown) => {
+  if (!(error instanceof HttpError) || error.status !== 404 || !error.body || typeof error.body !== "object") {
     return false;
   }
 
   const body = error.body as { error?: { code?: string } };
-  return body.error?.code === "APPLICANT_ACCESS_DENIED";
+  return body.error?.code === "APPLICANT_NOT_FOUND";
+};
+
+/** 성적 단계. 다시 저장하면 총점도 다시 계산해야 한다. */
+const SCORE_INPUT_ROUTES = [
+  "/first-graduate",
+  "/second-graduate",
+  "/third-graduate",
+  "/fourth-graduate",
+  "/first-prospective-graduate",
+  "/second-prospective-graduate",
+  "/third-prospective-graduate",
+  "/ged/score",
+];
+/** 성적 마지막 단계. 저장하면서 총점을 계산(resultGrades)하므로, 앞의 성적 단계를 다시 저장하면 이 단계도 다시 저장해야 한다. */
+const SCORE_RESULT_ROUTES = ["/activity-graduate", "/activity-prospective-graduate", "/ged/attendance-volunteer"];
+
+/**
+ * 단계 저장이 서버로 보내는 입력값. 저장 기록(utils/savedPages)의 지문을 만들 때 쓰므로 saveCurrentPage 가 읽는 값과 같아야 한다.
+ * 미리보기·제출 확인처럼 저장하는 값이 없는 단계는 null 이다.
+ */
+const getPageSaveInput = (state: ApplicationState, route: string): unknown => {
+  const { typeSelection, specialNotes } = state.applicationClassification;
+
+  switch (route) {
+    case "/application-classification":
+      return state.applicationClassification;
+    case "/applicant-info":
+      return { applicantInfo: state.applicantInfo, specialNotes };
+    case "/guardian-info":
+      return state.guardianInfo;
+    case "/middle-school-info":
+      return state.middleSchoolInfo;
+    case "/personal-statements":
+      return state.personalStatements;
+    case "/statement-of-purpose":
+      return state.statementOfPurpose;
+    case "/first-graduate":
+      return state.firstGraduate;
+    case "/second-graduate":
+      return state.secondGraduate;
+    case "/third-graduate":
+      return state.thirdGraduate;
+    case "/fourth-graduate":
+      return state.fourthGraduate;
+    case "/first-prospective-graduate":
+      return state.firstGraduateProspective;
+    case "/second-prospective-graduate":
+      return state.secondGraduateProspective;
+    case "/third-prospective-graduate":
+      return state.thirdGraduateProspective;
+    case "/ged/score":
+      return state.gedScore;
+    case "/activity-graduate":
+      return { activity: state.activityGraduate, typeSelection };
+    case "/activity-prospective-graduate":
+      return { activity: state.activityGraduateProspective, typeSelection };
+    case "/ged/attendance-volunteer":
+      return { activity: state.attendanceVolunteer, typeSelection };
+    default:
+      return null;
+  }
+};
+
+/** 저장 요청 필드 → 화면 항목 이름. 서버 검증 실패 메시지의 필드명으로 문제 된 칸을 알려줄 때 쓴다. */
+const REQUEST_FIELD_LABELS: Record<string, string> = {
+  name: "지원자 성명",
+  phoneNumber: "지원자 연락처(010-0000-0000 형식)",
+  birthdate: "생년월일",
+  guardianName: "보호자 성명",
+  guardianPhoneNumber: "보호자 연락처(010-0000-0000 형식)",
+  guardianRelation: "지원자와의 관계",
+  "address.zipCode": "우편번호",
+  "address.addressBase": "주소",
+  "address.addressDetail": "상세 주소",
+  schoolCode: "중학교",
+  schoolName: "중학교",
+  studentNumber: "중학교 학번",
+  schoolPhone: "중학교 전화번호",
+  teacherName: "중학교 교사 성명",
+  introduction: "자기소개서",
+  studyPlan: "학업계획서",
+};
+
+/**
+ * 저장 실패 안내 문구.
+ * - 400 INVALID_REQUEST: Spring 검증 원문(영문, 입력값 포함)이라 그대로 보여줄 수 없어 `on field '<필드>'` 로 문제 된 칸만 찾아 알린다.
+ * - 409 DATA_INTEGRITY_VIOLATION: DB 제약 위반으로, 원서 저장에서는 대개 칸 길이 초과다.
+ * - 그 밖에는 HttpError 가 이미 고른 문구(서버 한국어 메시지·코드별·상태별)를 쓴다.
+ */
+const getSaveErrorMessage = (error: unknown) => {
+  if (!(error instanceof HttpError)) {
+    return error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.";
+  }
+
+  const { code, message = "" } = readApiError(error.body);
+  if (code === "INVALID_REQUEST") {
+    const labels = [
+      ...new Set([...message.matchAll(/on field '([\w.]+)'/g)].map(([, field]) => REQUEST_FIELD_LABELS[field])),
+    ].filter(Boolean);
+    if (labels.length > 0) {
+      return `입력한 값을 확인해 주세요: ${labels.join(", ")}`;
+    }
+    if (message.includes("only draft applications can be modified")) {
+      return "이미 제출한 원서는 고칠 수 없습니다.";
+    }
+  }
+
+  if (code === "DATA_INTEGRITY_VIOLATION") {
+    return "저장할 수 없는 값이 있습니다. 너무 길게 입력한 항목이 없는지 확인해 주세요.";
+  }
+
+  return error.message;
 };
 
 export const AppLayout = () => {
@@ -239,11 +374,23 @@ export const AppLayout = () => {
       return;
     }
 
+    // 앞 단계가 비었거나, 고친 뒤 "다음" 으로 저장하지 않았으면 그 단계로 돌려보낸다.
+    // 주소창·뒤로/앞으로 가기로 미리보기·제출에 가면 서버에는 고치기 전 값이 남은 채 제출되기 때문이다.
+    const savedPages = getSavedPageFingerprints(applicantId);
+    const isUnsavedPage = (route: string) => {
+      const saveInput = getPageSaveInput(state, route);
+      return saveInput !== null && savedPages[route] !== fingerprintPageInput(saveInput);
+    };
     const firstIncompleteRoute = routes.find(
-      (route, index) => index < currentIndex && !canProceedToNext(state, route).canProceed
+      (route, index) => index < currentIndex && (!canProceedToNext(state, route).canProceed || isUnsavedPage(route))
     );
 
     if (firstIncompleteRoute) {
+      if (canProceedToNext(state, firstIncompleteRoute).canProceed) {
+        toast.info("저장하지 않은 단계가 있어 이동했습니다. 내용을 확인한 뒤 '다음'을 눌러 저장해 주세요.", {
+          toastId: "unsaved-application-page",
+        });
+      }
       navigate(firstIncompleteRoute, { replace: true });
     }
   }, [applicantId, currentIndex, isStorageLoaded, navigate, routes, state]);
@@ -409,22 +556,24 @@ export const AppLayout = () => {
           const activity =
             currentRoute === "/activity-graduate" ? state.activityGraduate : state.activityGraduateProspective;
           const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
+          const academicRecords = {
+            absence: getRequiredNumber(activity.absence, "미인정 결석"),
+            earlyLeave: getRequiredNumber(activity.earlyLeave, "미인정 조퇴"),
+            tardiness: getRequiredNumber(activity.tardiness, "미인정 지각"),
+            classExit: getRequiredNumber(activity.classExit, "미인정 결과"),
+            volunteer: getRequiredNumber(activity.volunteer, "봉사시간"),
+          };
+          const certificates = {
+            dsmAlgorithmAwarded: getRequiredBoolean(activity.dsmAlgorithm, "DSM 알고리즘 대회 입상 여부"),
+            programmingCertified: isGeneralAdmission
+              ? false
+              : getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
+          };
 
-          await Promise.all([
-            submitAcademicRecords({
-              absence: getRequiredNumber(activity.absence, "미인정 결석"),
-              earlyLeave: getRequiredNumber(activity.earlyLeave, "미인정 조퇴"),
-              tardiness: getRequiredNumber(activity.tardiness, "미인정 지각"),
-              classExit: getRequiredNumber(activity.classExit, "미인정 결과"),
-              volunteer: getRequiredNumber(activity.volunteer, "봉사시간"),
-            }),
-            submitCertificates({
-              dsmAlgorithmAwarded: getRequiredBoolean(activity.dsmAlgorithm, "DSM 알고리즘 대회 입상 여부"),
-              programmingCertified: isGeneralAdmission
-                ? false
-                : getRequiredBoolean(activity.certificate, "프로그래밍 기능사 자격증 여부"),
-            }),
-          ]);
+          // 백엔드는 두 요청 모두 지원자 성적 기록 전체를 읽어 고친 뒤 통째로 저장한다(락 없음).
+          // 동시에 보내면 늦게 끝난 쪽이 먼저 저장된 값을 덮어써 출결이나 자격증이 사라지므로 순서대로 보낸다.
+          await submitAcademicRecords(academicRecords);
+          await submitCertificates(certificates);
           await resultGrades();
           break;
         }
@@ -439,6 +588,8 @@ export const AppLayout = () => {
               ? false
               : getRequiredBoolean(state.attendanceVolunteer.certificate, "프로그래밍 기능사 자격증 여부"),
           });
+          // 제출(submit)은 총점을 계산하지 않으므로, 검정고시 점수와 가산점이 모두 저장된 이 단계에서 총점을 계산한다.
+          await resultGrades();
           break;
         }
         case "/application-preview":
@@ -449,21 +600,30 @@ export const AppLayout = () => {
           return false;
       }
 
+      const saveInput = getPageSaveInput(state, currentRoute);
+      if (saveInput !== null) {
+        markPageSaved(applicantId, currentRoute, fingerprintPageInput(saveInput));
+      }
+      if (SCORE_INPUT_ROUTES.includes(currentRoute)) {
+        unmarkPagesSaved(applicantId, SCORE_RESULT_ROUTES);
+      }
+
       return true;
     } catch (error) {
-      if (isApplicantAccessDeniedError(error)) {
+      if (isApplicantNotFoundError(error)) {
         if (autoSaveTimerRef.current !== null) {
           window.clearTimeout(autoSaveTimerRef.current);
           autoSaveTimerRef.current = null;
         }
         clearStartedApplicantId();
+        clearSavedPages(applicantId);
         await clearAllData(getApplicationStorageKey(applicantId));
-        toast.error("원서 작성 권한이 없어 임시저장 데이터를 초기화했습니다. 다시 접수해 주세요.");
+        toast.error("작성 중인 원서를 찾을 수 없어 임시저장 데이터를 초기화했습니다. 다시 접수해 주세요.");
         navigate("/", { replace: true });
         return false;
       }
 
-      toast.error(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
+      toast.error(getSaveErrorMessage(error));
       return false;
     } finally {
       setIsSaving(false);

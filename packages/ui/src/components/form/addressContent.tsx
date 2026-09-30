@@ -12,6 +12,8 @@ interface IAddressType {
   addressDetailValue: string;
   addressValue: string;
   postalCodeValue: string;
+  /** 상세주소 입력칸 최대 글자 수. 없으면 제한하지 않는다. */
+  addressDetailMaxLength?: number;
 }
 
 export const AddressContent = ({
@@ -21,6 +23,7 @@ export const AddressContent = ({
   handleCodeChange,
   handleAddressChange,
   handleDetailChange,
+  addressDetailMaxLength,
 }: IAddressType) => {
   // const [datas, setDatas] = useState<{ postalCode: string; address: string; addressDetail: string }>({
   //   postalCode: "",
@@ -66,7 +69,12 @@ export const AddressContent = ({
           검색
         </Btn>
       </Flex>
-      <InputContainer placeholder="상세주소" value={addressDetailValue} onChange={handleDetailChange} />
+      <InputContainer
+        placeholder="상세주소"
+        value={addressDetailValue}
+        onChange={handleDetailChange}
+        maxLength={addressDetailMaxLength}
+      />
       {isOpen && (
         <PostCodeModal>
           <DaumPostcode onComplete={handleComplete} autoClose />

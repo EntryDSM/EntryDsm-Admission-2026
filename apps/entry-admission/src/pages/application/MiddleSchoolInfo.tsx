@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Flex } from "@entry/design";
 import { usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
+import { TEACHER_NAME_MAX_LENGTH } from "../../utils/inputLimits";
 
 export const MiddleSchoolInfo = () => {
   const [datas, setDatas] = usePageData("middleSchoolInfo");
@@ -65,6 +66,7 @@ export const MiddleSchoolInfo = () => {
         type="input"
         label="중학교 교사 성명"
         inputType="text"
+        maxLength={TEACHER_NAME_MAX_LENGTH}
         placeholder="중학교 교사 성명을 입력해주세요."
         onInputChange={handleTeacherNameChange}
         value={datas.teacherName}

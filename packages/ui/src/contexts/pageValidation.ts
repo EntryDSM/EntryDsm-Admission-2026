@@ -40,6 +40,29 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
   return missingFields;
 };
 
+// 백엔드(application) 가 지원자·보호자 연락처에 요구하는 형식. 유선·지역번호는 받지 않는다.
+const MOBILE_PHONE_PATTERN = /^010-\d{4}-\d{4}$/;
+// DB 컬럼 applicants.guardian_relation 이 VARCHAR(10) 이다.
+const OTHER_RELATIONSHIP_MAX_LENGTH = 10;
+
+const isInvalidMobilePhone = (value: unknown) => !isEmptyValue(value) && !MOBILE_PHONE_PATTERN.test(String(value));
+
+const validateApplicantInfoPage = (data: unknown) => {
+  const missingFields = createRequiredFieldsValidator([
+    "idPhoto",
+    "applicantName",
+    "applicantNumber",
+    "dateOfBirth",
+    "gender",
+  ])(data);
+
+  if (isInvalidMobilePhone(getObjectFieldValue(data, "applicantNumber"))) {
+    missingFields.push("applicantNumber_invalid");
+  }
+
+  return missingFields;
+};
+
 const validateGuardianInfoPage = (data: unknown) => {
   const missingFields = createRequiredFieldsValidator([
     "guardianName",
@@ -54,8 +77,17 @@ const validateGuardianInfoPage = (data: unknown) => {
   const relationship = getObjectFieldValue(data, "relationship");
   const selectedRelationship = Array.isArray(relationship) ? relationship[0] : undefined;
 
-  if (selectedRelationship === "기타" && isEmptyValue(getObjectFieldValue(data, "otherRelationship"))) {
-    missingFields.push("otherRelationship");
+  if (selectedRelationship === "기타") {
+    const otherRelationship = getObjectFieldValue(data, "otherRelationship");
+    if (isEmptyValue(otherRelationship)) {
+      missingFields.push("otherRelationship");
+    } else if (String(otherRelationship).length > OTHER_RELATIONSHIP_MAX_LENGTH) {
+      missingFields.push("otherRelationship_tooLong");
+    }
+  }
+
+  if (isInvalidMobilePhone(getObjectFieldValue(data, "guardianNumber"))) {
+    missingFields.push("guardianNumber_invalid");
   }
 
   return missingFields;
@@ -66,13 +98,7 @@ const activityFields = ["earlyLeave", "tardiness", "classExit", "absence", "volu
 
 const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/application-classification": validateApplicationClassificationPage,
-  "/applicant-info": createRequiredFieldsValidator([
-    "idPhoto",
-    "applicantName",
-    "applicantNumber",
-    "dateOfBirth",
-    "gender",
-  ]),
+  "/applicant-info": validateApplicantInfoPage,
   "/guardian-info": validateGuardianInfoPage,
   "/middle-school-info": validateMiddleSchoolInfoPage,
   "/personal-statements": createRequiredFieldsValidator(["personalStmt"]),
@@ -161,13 +187,22 @@ export const validatePageData = (state: ApplicationState, route: string) => {
   });
 };
 
+/** 값은 있지만 형식·길이가 틀린 항목의 안내. 빠진 항목보다 먼저 알린다. */
+const invalidFieldMessages: Record<string, string> = {
+  studentId_invalid: "학번은 5자리로 입력해주세요.",
+  applicantNumber_invalid: "지원자 연락처는 010-0000-0000 형식의 휴대전화 번호로 입력해 주세요.",
+  guardianNumber_invalid: "보호자 연락처는 010-0000-0000 형식의 휴대전화 번호로 입력해 주세요.",
+  otherRelationship_tooLong: `지원자와의 관계는 ${OTHER_RELATIONSHIP_MAX_LENGTH}자 이하로 입력해 주세요.`,
+};
+
 export const canProceedToNext = (state: ApplicationState, currentRoute: string) => {
   const { isValid, missingFields } = validatePageData(state, currentRoute);
   const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
   const requiredFields = isGeneralAdmission ? missingFields.filter(field => field !== "certificate") : missingFields;
   if (!isValid && requiredFields.length > 0) {
-    if (requiredFields.includes("studentId_invalid")) {
-      return { canProceed: false, msg: "학번은 5자리로 입력해주세요." };
+    const invalidField = requiredFields.find(field => field in invalidFieldMessages);
+    if (invalidField) {
+      return { canProceed: false, msg: invalidFieldMessages[invalidField] };
     }
 
     const missingFieldsKR = requiredFields.map(field => fieldNameMap[field] || field);
