@@ -70,7 +70,7 @@ export const Router = createBrowserRouter([
                               {
                                 path: "attendance-volunteer",
                                 element: <AttendanceVolunteer />,
-                                handle: { title: "자격증" },
+                                handle: { title: "가산점" },
                               },
                             ],
                           },

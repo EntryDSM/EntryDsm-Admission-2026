@@ -221,7 +221,7 @@ export const Activity = ({ pageKey }: ActivityProps) => {
         </>
       )}
       <Section>
-        <SectionTitle>자격증</SectionTitle>
+        <SectionTitle>가산점</SectionTitle>
         <CertCheckForm
           width="100%"
           compactOnMobile

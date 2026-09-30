@@ -40,13 +40,13 @@ const SCORE_PAGES: Record<CalculationType, Array<{ path: string; name: string }>
   graduated: [
     { path: "/third2", name: "3학년 2학기" },
     { path: "/third1", name: "3학년 1학기" },
-    { path: "/second2", name: "2학년 2학기" },
-    { path: "/second1", name: "2학년 1학기" },
+    { path: "/second2", name: "직전학기" },
+    { path: "/second1", name: "직전전학기" },
     { path: "/activity", name: "출결 및 봉사" },
   ],
   qe: [
     { path: "/score", name: "검정고시 점수" },
-    { path: "/activity", name: "출결 및 봉사" },
+    { path: "/activity", name: "가산점" },
   ],
 };
 
