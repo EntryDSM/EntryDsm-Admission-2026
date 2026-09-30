@@ -1,8 +1,23 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getSentryIgnoreStatuses, reportApiError } from "@entry/observability";
+import { AUTH_APP_URL } from "@entry/ui";
 
 import { HttpError } from "./http";
+
+const isUnauthorized = (error: unknown) => error instanceof HttpError && error.status === 401;
+
+let isRedirectingToLogin = false;
+
+/**
+ * 세션이 만료되면(401) 로그인 페이지로 보낸다. 토스트만 띄우면 30초마다 다시 불러오는 쿼리(그래프·서비스 상태)가
+ * "인증 만료" 토스트를 쌓고, 실시간 수치는 멈춘 값이 그대로 남는다. 여러 쿼리가 한꺼번에 실패해도 한 번만 이동한다.
+ */
+const redirectToLogin = () => {
+  if (isRedirectingToLogin) return;
+  isRedirectingToLogin = true;
+  window.location.replace(AUTH_APP_URL);
+};
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof HttpError) {
@@ -33,6 +48,11 @@ export const queryClient = new QueryClient({
         ignoreStatuses: getSentryIgnoreStatuses(query.meta),
       });
 
+      if (isUnauthorized(error)) {
+        redirectToLogin();
+        return;
+      }
+
       // 자체 에러 화면을 가진 쿼리(예: 접근 가드)는 meta 로 전역 토스트를 끈다.
       if (query.meta?.suppressGlobalErrorToast) {
         return;
@@ -49,6 +69,10 @@ export const queryClient = new QueryClient({
         target: mutation.options.mutationKey,
         ignoreStatuses: getSentryIgnoreStatuses(mutation.options.meta),
       });
+
+      if (isUnauthorized(error)) {
+        redirectToLogin();
+      }
     },
   }),
   defaultOptions: {

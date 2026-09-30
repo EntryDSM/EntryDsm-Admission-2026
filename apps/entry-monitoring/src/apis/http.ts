@@ -1,4 +1,4 @@
-import { getCsrfToken } from "@entry/utils";
+import { getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
@@ -14,11 +14,7 @@ export class HttpError extends Error {
   }
 }
 
-interface ErrorBody {
-  error?: string | { code?: string; message?: string };
-}
-
-interface ApiEnvelope<T> extends ErrorBody {
+interface ApiEnvelope<T> {
   success: boolean;
   data: T | null;
 }
@@ -48,11 +44,12 @@ const request = async <T>(path: string, options: RequestInit = {}, allowEmptyRes
       throw new HttpError(response.status, "응답 JSON 형식이 올바르지 않습니다.");
     }
   }
-  const error = (body as ErrorBody | null)?.error;
-  const errorInfo = typeof error === "string" ? { message: error } : error;
+  // 게이트웨이(`{ error: "코드" }`)·서비스(`{ error: { code, message } }`) 에러를 모두 읽는다. 본문이 없어도
+  // HTTP/2 에서 빈 statusText 대신 상태별 한국어 문구를 쓴다.
+  const errorInfo = readApiError(body);
 
   if (!response.ok) {
-    throw new HttpError(response.status, errorInfo?.message ?? response.statusText, errorInfo?.code);
+    throw new HttpError(response.status, getApiErrorMessage(response.status, errorInfo), errorInfo.code);
   }
 
   if (allowEmptyResponse && response.status === 204) {
@@ -67,7 +64,7 @@ const request = async <T>(path: string, options: RequestInit = {}, allowEmptyRes
     const envelope = body as ApiEnvelope<T>;
 
     if (!envelope.success || (envelope.data === null && !allowEmptyResponse)) {
-      throw new HttpError(response.status, errorInfo?.message ?? "응답 데이터가 없습니다.", errorInfo?.code);
+      throw new HttpError(response.status, errorInfo.message ?? "응답 데이터가 없습니다.", errorInfo.code);
     }
 
     return envelope.data as T;
