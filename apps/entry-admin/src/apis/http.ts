@@ -1,4 +1,4 @@
-import { createRequestSignal, getCsrfToken } from "@entry/utils";
+import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
 
 /** HTTP 에러. status/code 를 담아 상위(토스트 등)에서 분기할 수 있게 한다. */
@@ -14,25 +14,30 @@ export class HttpError extends Error {
   }
 }
 
-interface ErrorBody {
-  error?: { code?: string; message?: string };
-}
-
 const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
 
 const isJsonResponse = (response: Response) =>
   response.headers.get("content-type")?.includes("application/json") ?? false;
 
-/** 실패 응답을 `HttpError` 로 바꾼다. 에러 봉투(`{ error: { code, message } }`)가 JSON 으로 오면 그 내용을 쓴다. */
+/** 에러 본문으로 `HttpError` 를 만든다. 메시지는 토스트에 그대로 쓰이므로 비지 않은 한국어 문구로 고른다. */
+const createHttpError = (status: number, body: unknown) => {
+  const errorInfo = readApiError(body);
+  return new HttpError(status, getApiErrorMessage(status, errorInfo), errorInfo.code);
+};
+
+/**
+ * 실패 응답을 `HttpError` 로 바꾼다. 서비스마다 에러 본문 모양이 달라(`readApiError`) 한 모양만 읽으면
+ * 게이트웨이(`{ error: "CSRF_INVALID" }`)·notification(최상위 `message`) 에러가 빈 메시지가 된다.
+ * HTTP/2 는 `statusText` 가 비어 있어 폴백으로도 쓸 수 없다.
+ */
 const toHttpError = async (response: Response) => {
   const body = isJsonResponse(response) ? await response.json().catch(() => null) : null;
-  const errorInfo = (body as ErrorBody | null)?.error;
-  return new HttpError(response.status, errorInfo?.message ?? response.statusText, errorInfo?.code);
+  return createHttpError(response.status, body);
 };
 
 /** 인증 쿠키·CSRF 헤더·타임아웃 신호를 붙여 요청을 보내고 원본 `Response` 를 돌려준다. 상태 코드 판단은 호출자가 한다. */
 const send = async (path: string, options: RequestInit = {}): Promise<Response> => {
-  const signal = createRequestSignal(options.signal);
+  const signal = createRequestSignal(options.signal, options.body);
   const headers = new Headers(options.headers);
   // body 없는 GET 이 preflight 없이 나가도록, 본문이 있을 때만 Content-Type 을 붙인다(entry-user 와 동일).
   // FormData 는 브라우저가 multipart boundary 를 포함한 Content-Type 을 직접 붙이므로 지정하지 않는다.
@@ -71,8 +76,7 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   // 봉투 없이 내려오면 본문을 그대로 반환한다.
   if (body && typeof body === "object" && "success" in body && "data" in body) {
     if (!body.success) {
-      const errorInfo = (body as ErrorBody).error;
-      throw new HttpError(response.status, errorInfo?.message ?? "API 요청이 실패했습니다.", errorInfo?.code);
+      throw createHttpError(response.status, body);
     }
     return (body as { data: T }).data;
   }
