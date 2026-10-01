@@ -1,10 +1,13 @@
 import { RouterProvider } from "react-router";
 import { Router } from "./Router";
 import { GlobalStyle } from "@entry/design";
+import { useSessionMonitoring } from "@entry/hooks";
 import { ToastContainer } from "react-toastify";
 import { NoticeModal } from "./components";
 
 export default function App() {
+  useSessionMonitoring({ service: "IDENTITY", apiBaseUrl: import.meta.env.VITE_API_BASE_URL });
+
   return (
     <>
       <RouterProvider router={Router} />

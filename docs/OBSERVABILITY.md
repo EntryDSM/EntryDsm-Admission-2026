@@ -48,7 +48,8 @@
 - admin·monitoring 의 전역 토스트(`meta.suppressGlobalErrorToast`)는 화면 처리만 끄고 **보고는 항상** 한다.
 - 정상 흐름인 상태 코드는 쿼리/뮤테이션에 `meta: { sentryIgnoreStatuses: [401] }` 를 붙여 **그 코드만** 제외한다(5xx·네트워크 오류는 계속 보고). 4개 앱의 queryClient 가 모두 이 meta 를 인식하며, 현재는 entry-user 의 `/accounts/me` 조회 3곳(AppLayout·Main·MyPage)이 비로그인 방문자의 401 을 제외한다.
 - 브라우저 확장 프로그램 URL(`chrome-extension://` 등)에서 난 오류는 `denyUrls` 로 버린다. `Script error.`·`ResizeObserver loop` 류는 SDK 기본 필터가 이미 버린다.
-- admission 의 인하우스 수집기(`@entry/hooks` `useSessionMonitoring` → 백엔드 `/api/monitor/v11/collect/client-log`)는 **그대로 병행**한다. 같은 window 오류·console 로그가 양쪽에 남는 것은 의도된 상태이며 통합은 추후 과제(9절).
+- user·auth·admission 의 인하우스 수집기(`@entry/hooks` `useSessionMonitoring` → 백엔드 `/api/monitor/v11/collect/client-log`)는 **그대로 병행**한다. 같은 window 오류·console 로그가 양쪽에 남는 것은 의도된 상태이며 통합은 추후 과제(9절).
+- 세션 수집(`/api/monitor/v11/collect/session`)은 user → `IDENTITY`, auth → `AUTH`, admission → `APPLICATION`으로 연결한다. user·admission은 `VITE_API_BASE_URL`, auth는 `VITE_IDENTITY_API_URL`을 사용하므로 각 origin에서 모니터링 수집 경로도 제공해야 한다. 대시보드의 서비스별 접속 수는 이 분류를 따른다.
 
 ## 3. 개인정보 처리
 
