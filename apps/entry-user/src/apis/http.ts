@@ -1,4 +1,4 @@
-import { createRequestSignal, getCsrfToken } from "@entry/utils";
+import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
 import type { ApiResponse } from "./types";
 
 export class HttpError extends Error {
@@ -11,6 +11,9 @@ export class HttpError extends Error {
     this.body = body;
   }
 }
+
+const createHttpError = (status: number, body: unknown) =>
+  new HttpError(getApiErrorMessage(status, readApiError(body)), status, body);
 
 interface HttpRequestOptions extends Omit<RequestInit, "body" | "headers" | "method"> {
   auth?: boolean;
@@ -89,12 +92,12 @@ const request = async <T>(
   const responseBody = parseResponseBody<T>(responseText);
 
   if (!response.ok) {
-    throw new HttpError("API 요청이 실패했습니다.", response.status, responseBody);
+    throw createHttpError(response.status, responseBody);
   }
 
   if (responseBody && typeof responseBody === "object" && "success" in responseBody && "data" in responseBody) {
     if (!responseBody.success) {
-      throw new HttpError("API 요청이 실패했습니다.", response.status, responseBody);
+      throw createHttpError(response.status, responseBody);
     }
 
     return responseBody.data;
@@ -114,7 +117,7 @@ const requestBlob = async (path: string, method: string, body?: BodyInit | null,
   });
 
   if (!response.ok) {
-    throw new HttpError("API 요청이 실패했습니다.", response.status, await response.text());
+    throw createHttpError(response.status, parseResponseBody(await response.text()));
   }
 
   return response.blob();
