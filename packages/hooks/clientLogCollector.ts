@@ -38,20 +38,20 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
       if (!disposed) buffer = [...entries, ...buffer].slice(0, 100);
     };
     try {
-      // 로그인 쿠키가 실린 요청은 게이트웨이가 CSRF 더블서브밋을 검사하므로 토큰을 붙여 보냅니다.
-      // 페이지 이탈(beacon) 경로는 재발급 왕복이 불가능하므로 캐시된 토큰만 쓰고, 없으면 sendBeacon 으로 보냅니다.
+      // 모니터링 요청은 CSRF 토큰을 붙여 보냅니다.
+      // 페이지 이탈 경로는 재발급 왕복이 불가능하므로 캐시된 토큰만 사용합니다.
       const token = beacon ? getCachedCsrfToken() : await ensureCsrfToken(apiBaseUrl);
-      const response = beacon
-        ? await sendMonitoringKeepalive(endpoint, body, token)
-        : await fetch(endpoint, {
-            method: "POST",
-            headers: token
-              ? { "Content-Type": "application/json", "X-XSRF-TOKEN": token }
-              : { "Content-Type": "application/json" },
-            credentials: "include",
-            body,
-          });
-      if (!response) return;
+      if (!token) {
+        retry();
+        return;
+      }
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+        credentials: "include",
+        body,
+        keepalive: beacon,
+      });
       if (response.status === 403) {
         invalidateCsrfToken();
         retry();
@@ -62,7 +62,9 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
       sending--;
     }
   };
-  const flush = (beacon = false, reservedBytes = 0) => {
+  const flush = (beacon = false) => {
+    // 토큰이 없으면 전송하지 않고 로그를 버퍼에 남깁니다.
+    if (beacon && !getCachedCsrfToken()) return;
     const currentSessionId = getSessionId();
     if ((!currentSessionId && !buffer[0]?.sessionId) || (!beacon && sending)) return;
     // Bind before asynchronous sends so retries cannot move logs into a new session.
