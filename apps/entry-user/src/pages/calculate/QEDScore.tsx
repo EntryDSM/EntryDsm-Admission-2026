@@ -10,6 +10,7 @@ const SUBJECTS = [
   { key: "technology", title: "기술 가정", text: "기술 가정 성적을 입력하세요" },
   { key: "math", title: "수학", text: "수학 성적을 입력하세요" },
   { key: "english", title: "영어", text: "영어 성적을 입력하세요" },
+  { key: "history", title: "역사", text: "역사 성적을 입력하세요" },
 ] as const;
 
 export const QEDScore = () => {

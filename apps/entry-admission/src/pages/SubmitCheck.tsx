@@ -5,13 +5,22 @@ import { ApplicationPreview } from "./applicationCheck/index";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import { clearStartedApplicantId, getApplicationStorageKey, getStartedApplicantId, submitApplication } from "../apis";
+import {
+  clearPendingCleanupApplicantId,
+  clearStartedApplicantId,
+  getApplicationStorageKey,
+  getPendingCleanupApplicantId,
+  getStartedApplicantId,
+  setPendingCleanupApplicantId,
+  submitApplication,
+} from "../apis";
 import { clearSavedPages } from "../utils/savedPages";
 import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
 
 export const SubmitCheck = () => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmit, setHasSubmit] = useState(() => getPendingCleanupApplicantId() !== null);
   const navigate = useNavigate();
   const { clearAllData } = useApplicationData();
   const verifyApplicationPeriod = useVerifyApplicationPeriod();
@@ -26,12 +35,39 @@ export const SubmitCheck = () => {
     navigate("/application-preview");
   };
 
+  const handleDraftCleanup = async () => {
+    const applicantId = getPendingCleanupApplicantId() ?? getStartedApplicantId();
+
+    if (applicantId !== null) {
+      clearSavedPages(applicantId);
+    }
+
+    await clearAllData(applicantId === null ? undefined : getApplicationStorageKey(applicantId));
+    clearStartedApplicantId();
+    clearPendingCleanupApplicantId();
+    navigate("/submitted");
+  };
+
   const handleSubmit = async () => {
     if (isSubmitBlocked) {
       return;
     }
 
     setIsSubmitting(true);
+
+    // 서버 제출 성공 후에는 기간과 관계없이 임시저장 정리만 재시도한다.
+    if (hasSubmit) {
+      try {
+        await handleDraftCleanup();
+      } catch {
+        toast.warn("원서는 제출됐지만 임시저장 정리에 실패했습니다. 다시 시도해 주세요.");
+      } finally {
+        setIsSubmitting(false);
+      }
+
+      return;
+    }
+
     try {
       // 최종 제출 직전에도 서버 시각 기준 접수 기간을 확인한다. 마감됐으면 제출하지 않고 가드가 유저 앱으로 보낸다.
       if (!(await verifyApplicationPeriod())) {
@@ -40,12 +76,19 @@ export const SubmitCheck = () => {
 
       await submitApplication();
       const applicantId = getStartedApplicantId();
-      if (applicantId !== null) clearSavedPages(applicantId);
-      await clearAllData(applicantId === null ? undefined : getApplicationStorageKey(applicantId));
-      clearStartedApplicantId();
-      navigate("/submitted");
+      if (applicantId !== null) {
+        setPendingCleanupApplicantId(applicantId);
+      }
+      setHasSubmit(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "원서 제출 중 오류가 발생했습니다.");
+      return;
+    }
+
+    try {
+      await handleDraftCleanup();
+    } catch {
+      toast.warn("원서는 제출됐지만 임시저장 정리에 실패했습니다. 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +134,7 @@ export const SubmitCheck = () => {
                 hoverBackgroundColor={colors.orange[100]}
                 isBlocked={isSubmitBlocked}
               >
-                {isSubmitting ? "제출 중" : "제출"}
+                {isSubmitting ? "처리 중" : hasSubmit ? "정리 다시 시도" : "제출"}
               </SubmitButton>
             </ButtonRow>
           </Flex>

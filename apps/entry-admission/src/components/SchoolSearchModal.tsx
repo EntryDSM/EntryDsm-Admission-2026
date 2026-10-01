@@ -76,7 +76,7 @@ export const SchoolSearchModal = ({
     }
     const schools = result.data?.schools ?? [];
 
-    setDatas(schools.filter(school => school.name.includes(searchValue.trim())));
+    setDatas(schools);
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

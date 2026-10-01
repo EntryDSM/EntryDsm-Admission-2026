@@ -14,6 +14,9 @@ interface IPhotoUploadModalProps {
   progressPercentage?: number; // 0 ~ 100
 }
 
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
+const ALLOWED_IMAGE_EXTENSIONS = /\.(jpe?g|png)$/i;
+
 export const PhotoUploadModal = ({
   isOpen,
   setIsOpen,
@@ -72,16 +75,21 @@ export const PhotoUploadModal = ({
       return;
     }
 
-    const validTypes = ["image/jpeg", "image/png"];
     const maxSizeMB = 5;
 
-    if (!validTypes.includes(file.type)) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type) || !ALLOWED_IMAGE_EXTENSIONS.test(file.name)) {
       alert("JPG 또는 PNG 형식의 이미지 파일만 업로드할 수 있습니다.");
+      if (imgRef.current) {
+        imgRef.current.value = "";
+      }
       return;
     }
 
     if (file.size > maxSizeMB * 1024 * 1024) {
       alert("파일 크기는 5MB 이하로 업로드해주세요.");
+      if (imgRef.current) {
+        imgRef.current.value = "";
+      }
       return;
     }
 
