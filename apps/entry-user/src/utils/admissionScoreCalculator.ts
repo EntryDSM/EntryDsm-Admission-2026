@@ -93,10 +93,9 @@ const calculateAttendanceScore = (activity: Activity) => {
 
 const calculateVolunteerScore = (activity: Activity) => Math.min(15, toNonNegativeNumber(activity.volunteerHours));
 
-const calculateAdditionalScore = (activity: Activity, admissionType: AdmissionType, recordType: SchoolRecordType) => {
+const calculateAdditionalScore = (activity: Activity, admissionType: AdmissionType) => {
   const algorithmScore = activity.dsmAlgorithm === "O" ? 3 : 0;
-  const certificateScore =
-    activity.infoProcessing === "O" && (recordType === "qe" || admissionType !== "COMMON") ? 6 : 0;
+  const certificateScore = activity.infoProcessing === "O" && admissionType !== "COMMON" ? 6 : 0;
 
   return algorithmScore + certificateScore;
 };
@@ -114,8 +113,8 @@ const getQeCourseMultiplier = (admissionType: AdmissionType) => (admissionType =
 
 const getMaximumScore = (recordType: SchoolRecordType, admissionType: AdmissionType) => {
   if (recordType === "qe") {
-    // 검정고시는 전형별 교과 만점에 알고리즘 대회(3점)와 자격증(6점)을 더한 값입니다.
-    return ADMISSION_TYPE_MAX_SCORE_GED[admissionType] + 9;
+    // 검정고시 일반전형에는 알고리즘 대회만, 특별전형에는 자격증까지 가산한다.
+    return ADMISSION_TYPE_MAX_SCORE_GED[admissionType] + (admissionType === "COMMON" ? 3 : 9);
   }
 
   return admissionType === "COMMON" ? 173 : 119;
@@ -133,7 +132,7 @@ export const calculateAdmissionScores = (
   return (["COMMON", "MEISTER", "SOCIAL"] as const).map(admissionType => {
     const multiplier = recordType === "qe" ? getQeCourseMultiplier(admissionType) : getCourseMultiplier(admissionType);
     const courseScore = roundToThirdDecimal(rawCourseScore * multiplier);
-    const additionalScore = calculateAdditionalScore(activity, admissionType, recordType);
+    const additionalScore = calculateAdditionalScore(activity, admissionType);
     const maxScore = getMaximumScore(recordType, admissionType);
 
     return {

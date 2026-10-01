@@ -26,6 +26,7 @@ interface IQEScoreType {
   social: string;
   science: string;
   technology: string;
+  history: string;
   math: string;
   english: string;
 }
@@ -145,6 +146,7 @@ export const initialState: CalculationState = {
     social: "",
     science: "",
     technology: "",
+    history: "",
     math: "",
     english: "",
   },

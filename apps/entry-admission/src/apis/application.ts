@@ -24,6 +24,8 @@ import type {
 const APPLICATIONS_ENDPOINT = "/api/application/v11/applicants";
 // 작성 중인 원서를 식별하는 applicantId를 브라우저 탭 재진입 후에도 유지합니다.
 const STARTED_APPLICANT_ID_KEY = "entry-application-started-applicant-id";
+// 제출 성공 후 정리하지 못한 브라우저 임시저장을 식별합니다.
+const PENDING_CLEANUP_APPLICANT_ID_KEY = "entry-application-pending-cleanup-applicant-id";
 
 // SSR 환경에서 localStorage 접근을 막기 위한 브라우저 실행 여부입니다.
 const isBrowser = typeof window !== "undefined";
@@ -57,6 +59,32 @@ export const clearStartedApplicantId = () => {
   }
 
   window.localStorage.removeItem(STARTED_APPLICANT_ID_KEY);
+};
+
+export const getPendingCleanupApplicantId = () => {
+  if (!isBrowser) {
+    return null;
+  }
+
+  const savedApplicantId = window.localStorage.getItem(PENDING_CLEANUP_APPLICANT_ID_KEY);
+  const applicantId = Number(savedApplicantId);
+  return Number.isInteger(applicantId) && applicantId > 0 ? applicantId : null;
+};
+
+export const setPendingCleanupApplicantId = (applicantId: number) => {
+  if (!isBrowser) {
+    return;
+  }
+
+  window.localStorage.setItem(PENDING_CLEANUP_APPLICANT_ID_KEY, String(applicantId));
+};
+
+export const clearPendingCleanupApplicantId = () => {
+  if (!isBrowser) {
+    return;
+  }
+
+  window.localStorage.removeItem(PENDING_CLEANUP_APPLICANT_ID_KEY);
 };
 
 // IndexedDB에서 원서별 임시저장 데이터를 분리하는 고유 키입니다.

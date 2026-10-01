@@ -1,6 +1,7 @@
 import { colors, media } from "@entry/design";
 import { Btn, EntryLogo, USER_APP_URL } from "@entry/ui";
 import styled from "@emotion/styled";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { useGetAllSchedule, useStartApplication } from "../apis";
@@ -31,6 +32,7 @@ export const Landing = () => {
   const applicationSchedule = findApplicationSchedule(schedules);
   const startDate = formatScheduleDate(applicationSchedule?.startAt);
   const endDate = formatScheduleDate(applicationSchedule?.endAt);
+  const [isStart, setIsStart] = useState(false);
   // 일정을 아직 받지 못했거나 등록되지 않았으면 날짜 대신 일반 문구로 안내한다.
   const submissionPeriod = startDate && endDate ? `${startDate} ~ ${endDate}까지` : "원서 접수 기간 내에";
 
@@ -41,7 +43,7 @@ export const Landing = () => {
       if (!(await verifyApplicationPeriod())) {
         return;
       }
-
+      setIsStart(true);
       await startApplication();
       navigate("/application-classification");
     } catch (error) {
@@ -49,6 +51,8 @@ export const Landing = () => {
       if (error instanceof HttpError && error.status === 409) {
         toast.error("이미 제출한 원서가 있습니다. 마이페이지에서 원서 상태를 확인해 주세요.");
       }
+    } finally {
+      setIsStart(false);
     }
   };
 
@@ -194,8 +198,8 @@ export const Landing = () => {
       </NoticeSection>
 
       <ButtonArea>
-        <Btn width="100%" onClick={() => void handleStartApplication()}>
-          접수하기
+        <Btn width="100%" onClick={() => void handleStartApplication()} isBlocked={isStart}>
+          {isStart ? "접수 중..." : "접수하기"}
         </Btn>
       </ButtonArea>
     </Container>
