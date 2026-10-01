@@ -40,10 +40,10 @@ export const Landing = () => {
   const handleStartApplication = async () => {
     try {
       // 접수 시작 직전에 서버 시각 기준 접수 기간을 다시 확인한다. 마감됐으면 가드가 유저 앱으로 보낸다.
+      setIsStart(true);
       if (!(await verifyApplicationPeriod())) {
         return;
       }
-      setIsStart(true);
       await startApplication();
       navigate("/application-classification");
     } catch (error) {

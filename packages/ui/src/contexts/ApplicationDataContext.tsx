@@ -433,20 +433,25 @@ export const ApplicationDataProvider: React.FC<{
     setLoadedStorageKey(storageKey);
   }, []);
 
-  const clearAllData = useCallback(async (storageKey?: string) => {
-    // 먼저 로드 완료 표시를 해제해 빈 초기 state가 기존 원서 키로 자동 저장되지 않게 합니다.
-    setLoadedStorageKey(null);
-    dispatch({ type: "CLEAR_ALL_DATA" });
+  const clearAllData = useCallback(
+    async (storageKey?: string) => {
+      const storageKeyToDelete = storageKey ?? loadedStorageKey;
 
-    if (storageKey) {
-      try {
-        // 메모리 초기화와 별개로 브라우저 IndexedDB의 해당 원서 임시저장본도 삭제합니다.
-        await deleteFromIndexedDB(storageKey);
-      } catch (error) {
-        console.error("원서 임시저장 데이터 삭제 실패:", error);
+      // 먼저 로드 완료 표시를 해제해 빈 초기 state가 기존 원서 키로 자동 저장되지 않게 합니다.
+      setLoadedStorageKey(null);
+      dispatch({ type: "CLEAR_ALL_DATA" });
+
+      if (storageKeyToDelete) {
+        try {
+          // 메모리 초기화와 별개로 브라우저 IndexedDB의 해당 원서 임시저장본도 삭제합니다.
+          await deleteFromIndexedDB(storageKeyToDelete);
+        } catch (error) {
+          console.error("원서 임시저장 데이터 삭제 실패:", error);
+        }
       }
-    }
-  }, []);
+    },
+    [loadedStorageKey]
+  );
 
   const value: ApplicationContextType = {
     state,
