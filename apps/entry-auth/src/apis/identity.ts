@@ -1,4 +1,4 @@
-import { resolveRequiredUrl } from "@entry/utils";
+import { getApiErrorMessage, readApiError, resolveRequiredUrl } from "@entry/utils";
 import { reportApiError } from "@entry/observability";
 
 const API_BASE_URL = resolveRequiredUrl(
@@ -76,18 +76,9 @@ export class IdentityApiError extends Error {
   }
 }
 
-const getErrorDetails = (body: unknown) => {
-  if (!body || typeof body !== "object") return {};
-
-  const error = (body as { error?: unknown }).error;
-  if (typeof error === "string") return { message: error };
-  if (!error || typeof error !== "object") return {};
-
-  const detail = error as { code?: unknown; message?: unknown };
-  return {
-    code: typeof detail.code === "string" ? detail.code : undefined,
-    message: typeof detail.message === "string" ? detail.message : undefined,
-  };
+const createIdentityApiError = (status: number, body: unknown) => {
+  const errorInfo = readApiError(body);
+  return new IdentityApiError(status, getApiErrorMessage(status, errorInfo), errorInfo.code);
 };
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
@@ -109,15 +100,13 @@ const requestOrThrow = async <T>(path: string, init?: RequestInit): Promise<T> =
   const body = contentType.includes("application/json") ? await response.json() : await response.text();
 
   if (!response.ok) {
-    const { code, message } = getErrorDetails(body);
-    throw new IdentityApiError(response.status, message ?? `요청에 실패했습니다. (${response.status})`, code);
+    throw createIdentityApiError(response.status, body);
   }
 
   if (body && typeof body === "object" && "success" in body) {
     const envelope = body as ApiEnvelope<T>;
     if (!envelope.success) {
-      const { code, message } = getErrorDetails(envelope);
-      throw new IdentityApiError(response.status, message ?? "요청에 실패했습니다.", code);
+      throw createIdentityApiError(response.status, envelope);
     }
     return envelope.data;
   }
