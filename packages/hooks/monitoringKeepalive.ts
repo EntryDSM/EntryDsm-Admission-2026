@@ -4,30 +4,23 @@ let pendingBytes = 0;
 
 export const availableMonitoringKeepaliveBytes = () => MAX_KEEPALIVE_BYTES - pendingBytes;
 
-export const sendMonitoringKeepalive = async (endpoint: string, body: string, token: string | null) => {
+export const sendMonitoringKeepalive = async (endpoint: string, body: string, token: string) => {
+  if (!token) throw new Error("Monitoring CSRF token unavailable");
   const blob = new Blob([body], { type: "application/json" });
   if (blob.size > availableMonitoringKeepaliveBytes()) {
     throw new Error("Monitoring keepalive budget exceeded");
   }
 
   pendingBytes += blob.size;
-  let beaconAccepted = false;
   try {
-    if (!token && navigator.sendBeacon?.(endpoint, blob)) {
-      // Beacon은 완료를 알 수 없으므로 문서가 살아 있는 동안 예산을 보수적으로 유지합니다.
-      beaconAccepted = true;
-      return null;
-    }
     return await fetch(endpoint, {
       method: "POST",
-      headers: token
-        ? { "Content-Type": "application/json", "X-XSRF-TOKEN": token }
-        : { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
       credentials: "include",
       body,
       keepalive: true,
     });
   } finally {
-    if (!beaconAccepted) pendingBytes -= blob.size;
+    pendingBytes -= blob.size;
   }
 };

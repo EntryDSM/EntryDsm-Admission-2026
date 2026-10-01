@@ -45,13 +45,14 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
         retry();
         return;
       }
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
-        credentials: "include",
-        body,
-        keepalive: beacon,
-      });
+      const response = beacon
+        ? await sendMonitoringKeepalive(endpoint, body, token)
+        : await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+            credentials: "include",
+            body,
+          });
       if (response.status === 403) {
         invalidateCsrfToken();
         retry();
@@ -62,7 +63,7 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
       sending--;
     }
   };
-  const flush = (beacon = false) => {
+  const flush = (beacon = false, reservedBytes = 0) => {
     // 토큰이 없으면 전송하지 않고 로그를 버퍼에 남깁니다.
     if (beacon && !getCachedCsrfToken()) return;
     const currentSessionId = getSessionId();

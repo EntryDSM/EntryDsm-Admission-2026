@@ -108,17 +108,13 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
         service,
         pageUrl: getPageUrl(),
       });
+    const sendLeave = (leavingSessionId: string) => {
+      const payload = createLeavePayload(leavingSessionId);
       // 이탈 시 토큰 발급 왕복은 보장할 수 없고 sendBeacon은 CSRF 헤더를 붙일 수 없습니다.
       const token = getCachedCsrfToken();
       if (!token) return;
 
-      void fetch(endpoint, {
-        method: "POST",
-        headers: createHeaders(token),
-        credentials: "include",
-        keepalive: true,
-        body: payload,
-      }).catch(() => undefined);
+      void sendMonitoringKeepalive(endpoint, payload, token).catch(() => undefined);
     };
 
     const leave = () => {
