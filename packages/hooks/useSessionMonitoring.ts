@@ -37,29 +37,30 @@ const getEndpoint = (apiBaseUrl: string) => `${apiBaseUrl.replace(/\/$/, "")}/ap
 
 const getPageUrl = () => window.location.pathname;
 
-const createHeaders = (token: string | null): HeadersInit =>
-  token ? { "Content-Type": "application/json", "X-XSRF-TOKEN": token } : { "Content-Type": "application/json" };
+const createHeaders = (token: string): HeadersInit => ({
+  "Content-Type": "application/json",
+  "X-XSRF-TOKEN": token,
+});
 
 const postSessionEvent = async (
   endpoint: string,
   apiBaseUrl: string,
   event: SessionEvent,
   service: MonitoringService,
-  sessionId?: string,
-  keepalive = false
+  sessionId?: string
 ) => {
   const body = JSON.stringify({ event, sessionId, service, pageUrl: getPageUrl() });
-  const send = (token: string | null) =>
+  const send = (token: string) =>
     fetch(endpoint, {
       method: "POST",
       headers: createHeaders(token),
       credentials: "include",
-      keepalive,
       body,
     });
 
-  // 로그인 쿠키가 실린 요청은 게이트웨이가 CSRF 더블서브밋을 검사하므로 GET 이 아닌 요청에는 항상 토큰을 붙입니다.
+  // 세션 시작 전에 CSRF 토큰을 확보하고, 이탈 시에도 캐시된 토큰을 사용합니다.
   const token = await ensureCsrfToken(apiBaseUrl);
+  if (!token) throw new Error("Session monitoring CSRF token unavailable");
   let response = await send(token);
 
   if (response.status === 403 && token) {
@@ -106,25 +107,17 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
         service,
         pageUrl: getPageUrl(),
       });
-      // sendBeacon 은 헤더를 싣지 못해 로그인 상태에선 게이트웨이 CSRF 검사(403)에 걸립니다.
-      // 캐시된 토큰이 있으면 keepalive fetch 로 X-XSRF-TOKEN 을 실어 보내고, 없을 때만 beacon 으로 보냅니다.
+      // 이탈 시 토큰 발급 왕복은 보장할 수 없고 sendBeacon은 CSRF 헤더를 붙일 수 없습니다.
       const token = getCachedCsrfToken();
-      if (token) {
-        void fetch(endpoint, {
-          method: "POST",
-          headers: createHeaders(token),
-          credentials: "include",
-          keepalive: true,
-          body: payload,
-        }).catch(() => undefined);
-        return;
-      }
+      if (!token) return;
 
-      const sent = navigator.sendBeacon?.(endpoint, new Blob([payload], { type: "application/json" })) ?? false;
-
-      if (!sent) {
-        void postSessionEvent(endpoint, apiBaseUrl, "LEAVE", service, leavingSessionId, true).catch(() => undefined);
-      }
+      void fetch(endpoint, {
+        method: "POST",
+        headers: createHeaders(token),
+        credentials: "include",
+        keepalive: true,
+        body: payload,
+      }).catch(() => undefined);
     };
 
     const leave = () => {
