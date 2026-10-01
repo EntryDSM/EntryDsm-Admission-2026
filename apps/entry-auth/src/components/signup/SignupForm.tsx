@@ -47,7 +47,9 @@ const getSignupErrorMessage = (error: unknown) => {
 
 export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) => {
   const navigate = useNavigate();
-  const [birthdate, setBirthdate] = useState("");
+  // 가입은 PASS 인증 결과(전화번호·이름·생년월일)와 모두 일치해야 통과하므로, PASS 생년월일이 있으면 그대로 쓰고 수정을 막는다.
+  const isBirthdateFromPass = passInfo.birthdate !== null;
+  const [birthdate, setBirthdate] = useState(passInfo.birthdate ?? "");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,6 +100,7 @@ export const SignupForm = ({ passInfo, signupType, consents }: SignupFormProps) 
         value={birthdate}
         placeholder="2009-03-27"
         maxLength={10}
+        isDisabled={isBirthdateFromPass}
         onChange={(event: ChangeEvent<HTMLInputElement>) => {
           const digits = event.target.value.replace(/\D/g, "").slice(0, 8);
           setBirthdate([digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join("-"));
