@@ -60,6 +60,7 @@ export const MiddleSchoolInfo = () => {
         placeholder="중학교 전화번호를 입력해주세요."
         onInputChange={handleSchoolPhoneChange}
         value={datas.schoolPhone}
+        explanation="＊지역번호를 포함해 입력해주세요. (예: 042-123-4567)"
       />
       <FormElement
         width="300px"

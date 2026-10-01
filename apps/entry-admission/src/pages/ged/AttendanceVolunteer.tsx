@@ -27,7 +27,12 @@ export const AttendanceVolunteer = () => {
         가산점
       </Text>
       <Flex isColumn={true} width="100%" height="fit-content" gap={0} justifyContent="center">
-        <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
+        <CertCheckForm
+          onChange={dsmAlgorithmChange}
+          title="DSM 알고리즘 대회 입상"
+          helperText="＊본교에서 운영한 전국 알고리즘 경진대회입니다."
+          value={safeData.dsmAlgorithm}
+        />
         {!isGeneralAdmission && (
           <CertCheckForm
             onChange={certificateChange}
