@@ -1,5 +1,6 @@
 import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken.ts";
 import { redactClientLog as redact } from "@entry/utils";
+import { availableMonitoringKeepaliveBytes, sendMonitoringKeepalive } from "./monitoringKeepalive.ts";
 
 interface ClientLog {
   level: "ERROR" | "WARN";
@@ -40,16 +41,17 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
       // 로그인 쿠키가 실린 요청은 게이트웨이가 CSRF 더블서브밋을 검사하므로 토큰을 붙여 보냅니다.
       // 페이지 이탈(beacon) 경로는 재발급 왕복이 불가능하므로 캐시된 토큰만 쓰고, 없으면 sendBeacon 으로 보냅니다.
       const token = beacon ? getCachedCsrfToken() : await ensureCsrfToken(apiBaseUrl);
-      if (beacon && !token && navigator.sendBeacon?.(endpoint, new Blob([body], { type: "application/json" }))) return;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: token
-          ? { "Content-Type": "application/json", "X-XSRF-TOKEN": token }
-          : { "Content-Type": "application/json" },
-        credentials: "include",
-        body,
-        keepalive: beacon,
-      });
+      const response = beacon
+        ? await sendMonitoringKeepalive(endpoint, body, token)
+        : await fetch(endpoint, {
+            method: "POST",
+            headers: token
+              ? { "Content-Type": "application/json", "X-XSRF-TOKEN": token }
+              : { "Content-Type": "application/json" },
+            credentials: "include",
+            body,
+          });
+      if (!response) return;
       if (response.status === 403) {
         invalidateCsrfToken();
         retry();
@@ -60,7 +62,7 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
       sending--;
     }
   };
-  const flush = (beacon = false) => {
+  const flush = (beacon = false, reservedBytes = 0) => {
     const currentSessionId = getSessionId();
     if ((!currentSessionId && !buffer[0]?.sessionId) || (!beacon && sending)) return;
     // Bind before asynchronous sends so retries cannot move logs into a new session.
@@ -75,7 +77,7 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
         const candidate = buffer[0]!;
         if (
           new Blob([JSON.stringify({ sessionId, logs: [...entries, candidate].map(entry => entry.log) })]).size >
-          60 * 1024
+          (beacon ? availableMonitoringKeepaliveBytes() - reservedBytes : 60 * 1024)
         )
           break;
         entries.push(buffer.shift()!);
@@ -87,12 +89,13 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
   const record = (source: ClientLog["source"], values: unknown[], level: ClientLog["level"] = "ERROR") => {
     if (disposed) return;
     const error = values.find(value => value instanceof Error) as Error | undefined;
+    const message = values.map(describe).join(" ").slice(0, 500);
     buffer.push({
       sessionId: getSessionId(),
       log: {
         level,
         source,
-        message: values.map(describe).join(" ").slice(0, 500),
+        message: message.trim() ? message : "(empty)",
         stack: error?.stack ? redact(error.stack).split("\n").slice(1).join("\n").slice(0, 2000) : undefined,
         pageUrl: redact(window.location.pathname)
           .replace(/\/[^/]*\d[^/]*/g, "/[REDACTED]")
@@ -120,8 +123,8 @@ export const startClientLogCollector = (apiBaseUrl: string, getSessionId: () => 
   window.addEventListener("unhandledrejection", onRejection);
   const timer = setInterval(() => void flush(), 5000);
   return {
-    flush: () => {
-      void flush(true);
+    flush: (reservedBytes = 0) => {
+      void flush(true, reservedBytes);
     },
     dispose: () => {
       disposed = true;

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { readApiError } from "@entry/utils";
 import { startClientLogCollector } from "./clientLogCollector";
 import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken";
+import { sendMonitoringKeepalive } from "./monitoringKeepalive";
 
 export type MonitoringService = "IDENTITY" | "AUTH" | "APPLICATION";
 
@@ -45,8 +46,7 @@ const postSessionEvent = async (
   apiBaseUrl: string,
   event: SessionEvent,
   service: MonitoringService,
-  sessionId?: string,
-  keepalive = false
+  sessionId?: string
 ) => {
   const body = JSON.stringify({ event, sessionId, service, pageUrl: getPageUrl() });
   const send = (token: string | null) =>
@@ -54,7 +54,6 @@ const postSessionEvent = async (
       method: "POST",
       headers: createHeaders(token),
       credentials: "include",
-      keepalive,
       body,
     });
 
@@ -99,32 +98,19 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
       startTimer = undefined;
     };
 
-    const sendLeave = (leavingSessionId: string) => {
-      const payload = JSON.stringify({
+    const createLeavePayload = (leavingSessionId: string) =>
+      JSON.stringify({
         event: "LEAVE",
         sessionId: leavingSessionId,
         service,
         pageUrl: getPageUrl(),
       });
+    const sendLeave = (leavingSessionId: string) => {
+      const payload = createLeavePayload(leavingSessionId);
       // sendBeacon 은 헤더를 싣지 못해 로그인 상태에선 게이트웨이 CSRF 검사(403)에 걸립니다.
       // 캐시된 토큰이 있으면 keepalive fetch 로 X-XSRF-TOKEN 을 실어 보내고, 없을 때만 beacon 으로 보냅니다.
       const token = getCachedCsrfToken();
-      if (token) {
-        void fetch(endpoint, {
-          method: "POST",
-          headers: createHeaders(token),
-          credentials: "include",
-          keepalive: true,
-          body: payload,
-        }).catch(() => undefined);
-        return;
-      }
-
-      const sent = navigator.sendBeacon?.(endpoint, new Blob([payload], { type: "application/json" })) ?? false;
-
-      if (!sent) {
-        void postSessionEvent(endpoint, apiBaseUrl, "LEAVE", service, leavingSessionId, true).catch(() => undefined);
-      }
+      void sendMonitoringKeepalive(endpoint, payload, token).catch(() => undefined);
     };
 
     const leave = () => {
@@ -132,8 +118,9 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
       stopStartTimer();
       if (!sessionId) return;
 
-      clientLogs.flush();
       const leavingSessionId = sessionId;
+      // LEAVE 본문 크기를 제외한 예산으로만 로그를 보냅니다.
+      clientLogs.flush(new Blob([createLeavePayload(leavingSessionId)]).size);
       sessionId = null;
       sendLeave(leavingSessionId);
     };
