@@ -129,7 +129,12 @@ export const ActivityGraduate = ({ pageKey }: ActivityPagePropsType) => {
           가산점
         </Text>
         <Flex isColumn={true} width="100%" gap={0} height="fit-content">
-          <CertCheckForm onChange={dsmAlgorithmChange} title="DSM 알고리즘 대회 입상" value={safeData.dsmAlgorithm} />
+          <CertCheckForm
+            onChange={dsmAlgorithmChange}
+            title="DSM 알고리즘 대회 입상"
+            helperText="＊본교에서 운영한 전국 알고리즘 경진대회입니다."
+            value={safeData.dsmAlgorithm}
+          />
           {!isGeneralAdmission && (
             <CertCheckForm onChange={certificateChange} title="프로그래밍 기능사 자격증" value={safeData.certificate} />
           )}

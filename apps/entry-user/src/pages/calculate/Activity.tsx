@@ -226,6 +226,7 @@ export const Activity = ({ pageKey }: ActivityProps) => {
           width="100%"
           compactOnMobile
           title="DSM 알고리즘 대회 입상"
+          helperText="＊본교에서 운영한 전국 알고리즘 경진대회입니다."
           value={safeActivityData.dsmAlgorithm}
           onChange={handleDsmAlgorithmChange}
         />
