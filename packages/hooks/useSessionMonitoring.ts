@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { readApiError } from "@entry/utils";
 import { startClientLogCollector } from "./clientLogCollector";
 import { ensureCsrfToken, getCachedCsrfToken, invalidateCsrfToken } from "./csrfToken";
 
@@ -20,6 +21,17 @@ interface SessionResponse {
 type SessionEvent = "ENTER" | "HEARTBEAT" | "LEAVE";
 
 const DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 15;
+
+class SessionMonitoringError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(status: number, code?: string) {
+    super(`Session monitoring request failed with status ${status}`);
+    this.status = status;
+    this.code = code;
+  }
+}
 
 const getEndpoint = (apiBaseUrl: string) => `${apiBaseUrl.replace(/\/$/, "")}/api/monitor/v11/collect/session`;
 
@@ -59,7 +71,8 @@ const postSessionEvent = async (
   }
 
   if (!response.ok) {
-    throw new Error(`Session monitoring request failed with status ${response.status}`);
+    const body: unknown = await response.json().catch(() => null);
+    throw new SessionMonitoringError(response.status, readApiError(body).code);
   }
 
   return response;
@@ -79,6 +92,11 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
     const stopHeartbeat = () => {
       if (heartbeatTimer) clearInterval(heartbeatTimer);
       heartbeatTimer = undefined;
+    };
+
+    const stopStartTimer = () => {
+      if (startTimer !== undefined) clearTimeout(startTimer);
+      startTimer = undefined;
     };
 
     const sendLeave = (leavingSessionId: string) => {
@@ -111,6 +129,7 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
 
     const leave = () => {
       stopHeartbeat();
+      stopStartTimer();
       if (!sessionId) return;
 
       clientLogs.flush();
@@ -121,10 +140,23 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
 
     const heartbeat = async () => {
       if (!sessionId || isPageHidden || isDisposed) return;
+      const heartbeatSessionId = sessionId;
 
       try {
-        await postSessionEvent(endpoint, apiBaseUrl, "HEARTBEAT", service, sessionId);
-      } catch {
+        await postSessionEvent(endpoint, apiBaseUrl, "HEARTBEAT", service, heartbeatSessionId);
+      } catch (error) {
+        if (
+          error instanceof SessionMonitoringError &&
+          error.status === 404 &&
+          error.code === "SESSION_NOT_FOUND" &&
+          sessionId === heartbeatSessionId &&
+          !isPageHidden &&
+          !isDisposed
+        ) {
+          stopHeartbeat();
+          sessionId = null;
+          await enter();
+        }
         // Monitoring must never interrupt the user flow. The next heartbeat retries automatically.
       }
     };
@@ -132,6 +164,7 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
     const enter = async () => {
       if (sessionId || isStarting || isPageHidden || isDisposed) return;
 
+      stopStartTimer();
       isStarting = true;
       try {
         const response = await postSessionEvent(endpoint, apiBaseUrl, "ENTER", service);
@@ -155,6 +188,9 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
         // Session metrics are best-effort and should not surface errors in the product UI.
       } finally {
         isStarting = false;
+        if (!sessionId && !isPageHidden && !isDisposed) {
+          startTimer = setTimeout(() => void enter(), DEFAULT_HEARTBEAT_INTERVAL_SECONDS * 1_000);
+        }
       }
     };
 
@@ -183,7 +219,6 @@ export const useSessionMonitoring = ({ service, apiBaseUrl = "" }: UseSessionMon
 
     return () => {
       isDisposed = true;
-      if (startTimer) clearTimeout(startTimer);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("pageshow", handlePageShow);
