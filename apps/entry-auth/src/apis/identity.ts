@@ -1,4 +1,4 @@
-import { resolveRequiredUrl } from "@entry/utils";
+import { getApiErrorMessage, readApiError, resolveRequiredUrl } from "@entry/utils";
 import { reportApiError } from "@entry/observability";
 
 const API_BASE_URL = resolveRequiredUrl(
@@ -16,6 +16,8 @@ interface ApiEnvelope<T> {
 export interface PassInfo {
   phone: string;
   name: string;
+  // PASS 인증 결과의 생년월일(YYYY-MM-DD)입니다. 응답에 없거나 형식이 다르면 null 이라 가입 화면에서 직접 입력받습니다.
+  birthdate: string | null;
 }
 
 export interface LoginRequest {
@@ -74,18 +76,9 @@ export class IdentityApiError extends Error {
   }
 }
 
-const getErrorDetails = (body: unknown) => {
-  if (!body || typeof body !== "object") return {};
-
-  const error = (body as { error?: unknown }).error;
-  if (typeof error === "string") return { message: error };
-  if (!error || typeof error !== "object") return {};
-
-  const detail = error as { code?: unknown; message?: unknown };
-  return {
-    code: typeof detail.code === "string" ? detail.code : undefined,
-    message: typeof detail.message === "string" ? detail.message : undefined,
-  };
+const createIdentityApiError = (status: number, body: unknown) => {
+  const errorInfo = readApiError(body);
+  return new IdentityApiError(status, getApiErrorMessage(status, errorInfo), errorInfo.code);
 };
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
@@ -107,15 +100,13 @@ const requestOrThrow = async <T>(path: string, init?: RequestInit): Promise<T> =
   const body = contentType.includes("application/json") ? await response.json() : await response.text();
 
   if (!response.ok) {
-    const { code, message } = getErrorDetails(body);
-    throw new IdentityApiError(response.status, message ?? `요청에 실패했습니다. (${response.status})`, code);
+    throw createIdentityApiError(response.status, body);
   }
 
   if (body && typeof body === "object" && "success" in body) {
     const envelope = body as ApiEnvelope<T>;
     if (!envelope.success) {
-      const { code, message } = getErrorDetails(envelope);
-      throw new IdentityApiError(response.status, message ?? "요청에 실패했습니다.", code);
+      throw createIdentityApiError(response.status, envelope);
     }
     return envelope.data;
   }
@@ -134,12 +125,14 @@ export const createPassPopup = async (redirectUrl: string) => {
 };
 
 export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
-  const data = await request<{ name?: unknown; phoneNumber?: unknown; phone?: unknown } | null>(
+  const data = await request<{ name?: unknown; phoneNumber?: unknown; phone?: unknown; birthdate?: unknown } | null>(
     `/api/identity/v11/auth/pass/info?mdl_tkn=${encodeURIComponent(modelToken)}`
   );
   const phoneNumber = typeof data?.phoneNumber === "string" ? data.phoneNumber.replace(/\D/g, "") : "";
   const phone = phoneNumber || (typeof data?.phone === "string" ? data.phone.replace(/\D/g, "") : "");
   const name = typeof data?.name === "string" ? data.name.trim() : "";
+  const birthdate =
+    typeof data?.birthdate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.birthdate) ? data.birthdate : null;
 
   if (!name || !/^01\d{8,9}$/.test(phone)) {
     throw new IdentityApiError(
@@ -149,7 +142,7 @@ export const getPassInfo = async (modelToken: string): Promise<PassInfo> => {
     );
   }
 
-  return { name, phone };
+  return { name, phone, birthdate };
 };
 
 export const getCsrfToken = async (): Promise<CsrfResponse> => {

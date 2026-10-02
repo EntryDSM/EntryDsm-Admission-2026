@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 
-import { colors, media, Text } from "@entry/design";
+import { colors, media } from "@entry/design";
 import { Check } from "../../assets/icons/Check";
 import { OActivate, ONoActivate, XActivate, XNoActivate } from "../../assets/icons/OXIcons";
 
@@ -31,16 +31,15 @@ export const CertCheckForm: React.FC<ICertCheckFormType> = ({
   return (
     <Container width={width}>
       <ContentRow $compactOnMobile={compactOnMobile}>
-        <LeftSection $compactOnMobile={compactOnMobile}>
+        <LeftSection $compactOnMobile={compactOnMobile} $hasHelperText={!!helperText}>
           <CheckMark hasValue={!!value}>
             <Check />
           </CheckMark>
-          <Title $compactOnMobile={compactOnMobile}>{title}</Title>
-          {helperText && (
-            <Text fontSize={12} color={colors.gray[400]}>
-              {helperText}
-            </Text>
-          )}
+          {/* 설명 문구가 제목 옆에 다 들어가지 않으면 글자를 쪼개지 않고 통째로 다음 줄로 내린다. */}
+          <TitleGroup>
+            <Title $compactOnMobile={compactOnMobile}>{title}</Title>
+            {helperText && <HelperText>{helperText}</HelperText>}
+          </TitleGroup>
         </LeftSection>
         <BtnWrapper $compactOnMobile={compactOnMobile}>
           <IconBtn $compactOnMobile={compactOnMobile} onClick={() => onChange("O")} aria-label={`${title} O 선택`}>
@@ -75,13 +74,14 @@ const ContentRow = styled.div<{ $compactOnMobile: boolean }>`
   }
 `;
 
-const LeftSection = styled.div<{ $compactOnMobile: boolean }>`
+const LeftSection = styled.div<{ $compactOnMobile: boolean; $hasHelperText: boolean }>`
   display: flex;
   align-items: center;
   gap: 24px;
 
   min-width: 0;
-  flex: ${({ $compactOnMobile }) => ($compactOnMobile ? "1" : "none")};
+  /* 설명 문구가 있으면 버튼 자리를 남기도록 줄어들어 문구가 다음 줄로 내려갈 수 있게 한다. */
+  flex: ${({ $compactOnMobile, $hasHelperText }) => ($compactOnMobile ? "1" : $hasHelperText ? "0 1 auto" : "none")};
 
   ${media.tablet} {
     gap: 12px;
@@ -89,6 +89,30 @@ const LeftSection = styled.div<{ $compactOnMobile: boolean }>`
 
   ${media.medium} {
     gap: ${({ $compactOnMobile }) => ($compactOnMobile ? "6px" : "12px")};
+  }
+`;
+
+const TitleGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 4px;
+  min-width: 0;
+
+  ${media.tablet} {
+    column-gap: 12px;
+  }
+`;
+
+const HelperText = styled.span`
+  font-size: 16px;
+  font-weight: 300;
+  color: ${colors.gray[400]};
+  word-break: keep-all;
+
+  ${media.medium} {
+    font-size: 11px;
   }
 `;
 
