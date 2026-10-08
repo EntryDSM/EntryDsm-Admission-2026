@@ -13,7 +13,7 @@ export const ApplicationLayout = () => {
     ["/personal-statements", "자기소개서"],
     ["/statement-of-purpose", "학업계획서"],
     ["/application-classification", "지원자 유형 구분"],
-    ["/application-preview", ""],
+    ["/application-preview", "원서 미리보기"],
   ]);
 
   const title = titleMap.get(pathname);

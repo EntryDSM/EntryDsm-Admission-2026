@@ -28,7 +28,6 @@ export const ApplicationPreview = () => {
         </ApplicationLoadingContainer>
       ) : (
         <PdfViewport>
-          {/* 브라우저 PDF 뷰어의 상단 툴바(다운로드·인쇄 등)를 숨긴다. Chrome·Edge 만 따르고 Firefox·Safari 는 무시한다. */}
           <PdfFrame title="원서 미리보기" src={`${documentUrl}#toolbar=0`} />
         </PdfViewport>
       )}
