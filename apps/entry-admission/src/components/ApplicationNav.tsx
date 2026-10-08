@@ -30,12 +30,15 @@ export const ApplicationNav = ({
 }: IApplicationNavType) => {
   const isGraduationTypeSelected = Boolean(graduationType && graduationType.trim());
   const isLastPage = currentPage >= totalPage;
+  const isPreviewPage = currentPage === totalPage - 1;
   // 현재 페이지의 필수 입력이 모두 채워졌는지 렌더링마다 확인해 다음 버튼의 활성 여부를 정한다.
   const canProceed = validateCurrentPage?.(currentPage).canProceed ?? true;
   // 마지막 페이지(제출 확인)에서는 기존처럼 항상 비활성이고, 저장 중이거나 필수 입력이 비어 있으면 비활성화한다.
   const isNextBlocked = isLastPage || isSaving || !canProceed;
   const nextLabel = (() => {
     if (isLastPage && isGraduationTypeSelected) return "제출";
+    // 원서 미리보기 다음 단계는 최종 제출 확인 화면이므로 버튼 목적을 명확히 표시한다.
+    if (isPreviewPage && isGraduationTypeSelected) return "제출";
     if (isSaving) return "저장 중";
     return "다음";
   })();
