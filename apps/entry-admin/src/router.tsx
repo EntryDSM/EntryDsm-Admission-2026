@@ -4,7 +4,6 @@ import { DocumentTitleOutlet, ErrorPage } from "@entry/ui";
 import { AppLayout } from "./layout";
 import { RequireAdmin, UnderConstructionRedirect } from "./components";
 import {
-  AdmissionsQuota,
   AdmissionsSchedule,
   ApplicantsList,
   NoticeList,
@@ -61,9 +60,9 @@ export const Router = createBrowserRouter([
                 handle: { title: "공지사항 수정" },
               },
               {
+                // 준비 중 — 페이지(AdmissionsQuota)는 유지하되 라우트만 임시 차단한다.
                 path: "admissions-quota",
-                element: <AdmissionsQuota />,
-                handle: { title: "정원 수정" },
+                element: <UnderConstructionRedirect pageName="정원 수정" />,
               },
             ],
           },
