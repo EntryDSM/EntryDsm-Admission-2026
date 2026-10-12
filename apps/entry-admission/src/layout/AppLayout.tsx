@@ -630,7 +630,7 @@ export const AppLayout = () => {
     }
   };
 
-  const shouldRemoveTopPadding = currentPath.includes("/submit-check");
+  const shouldRemoveTopPadding = currentPath.includes("/application-preview") || currentPath.includes("/submit-check");
 
   if (hasStorageLoadError) {
     return (
