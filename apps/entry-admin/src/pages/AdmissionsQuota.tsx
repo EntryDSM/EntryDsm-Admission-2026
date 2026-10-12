@@ -9,7 +9,6 @@ import { InputSection } from "../components";
 import { useAdmissionQuota, useUpdateAdmissionQuota } from "../hooks";
 import { getAdmissionQuotaTotal, parseQuotaInput, QUOTA_ADMISSION_TYPES, toAdmissionQuotaMap } from "../utils";
 
-/** 전형 이름. 요약 카드는 "○○ 전형", 입력칸은 "○○전형" 으로 조합한다. */
 const ADMISSION_TYPE_NAMES: Record<AdmissionType, string> = {
   GENERAL: "일반",
   MEISTER: "마이스터",
@@ -21,23 +20,21 @@ export const AdmissionsQuota = () => {
   const { quota, isLoading, isError, isSuccess, refetch } = useAdmissionQuota();
   const { updateAdmissionQuota, isUpdating } = useUpdateAdmissionQuota();
 
-  // 조회가 성공했는데 등록된 정원이 없으면(null) 0 으로 채운 입력칸을 띄워 바로 등록하게 한다.
+  // 등록된 정원이 없으면 0 으로 채운 입력칸으로 바로 등록하게 한다.
   const isRegisterMode = isSuccess && quota === null;
 
-  // 조회 결과를 로컬 편집 상태로 복사해 저장 전까지 서버 캐시와 분리한다 (AdmissionsSchedule 과 같은 패턴).
+  // 저장 전까지는 서버 값과 분리된 편집 상태를 쓴다.
   const [quotas, setQuotas] = useState<AdmissionQuotaMap>(() => toAdmissionQuotaMap(quota));
-  // 편집 중(dirty)에는 백그라운드 refetch 가 로컬 편집을 덮어쓰지 않게 동기화를 건너뛴다.
+  // 편집 중에는 재조회가 입력을 덮지 않게 동기화하지 않는다.
   const [isDirty, setIsDirty] = useState(false);
-  // 마지막으로 동기화한 조회 결과 참조. 새 조회로 참조가 바뀌면 다시 동기화한다.
   const [syncedQuota, setSyncedQuota] = useState(quota);
 
-  // effect 대신 렌더 중 상태 조정(React 권장 패턴): 편집 중이 아니고 조회 결과가 바뀌었을 때만 동기화.
+  // 편집 중이 아니고 조회 결과가 바뀌었을 때만 동기화한다.
   if (!isDirty && quota !== syncedQuota) {
     setSyncedQuota(quota);
     setQuotas(toAdmissionQuotaMap(quota));
   }
 
-  // 전형 한 칸의 onChange handler
   const handleChange = useCallback(
     (admissionType: AdmissionType) => (e: ChangeEvent<HTMLInputElement>) => {
       const value = parseQuotaInput(e.target.value);
@@ -47,7 +44,6 @@ export const AdmissionsQuota = () => {
     []
   );
 
-  // 입력값이 바뀔 때마다 총 인원을 다시 계산한다.
   const total = useMemo(() => getAdmissionQuotaTotal(quotas), [quotas]);
 
   const summaryItems = [
@@ -59,14 +55,14 @@ export const AdmissionsQuota = () => {
     { key: "total", label: "총 인원", value: total },
   ];
 
-  // 총 인원 0 명은 서버가 받아 주긴 하지만 실수일 수밖에 없으므로(등록 모드의 초기값), 한 칸이라도 입력하기 전에는 저장을 막는다.
+  // 총 인원 0 명은 실수로 보고 저장을 막는다.
   const isSaveBlocked = isLoading || isUpdating || total === 0;
 
   const handleSaveClick = () => {
     if (isSaveBlocked) {
       return;
     }
-    // 저장이 성공/실패로 끝나면 dirty 를 해제해 서버 최신값과 다시 동기화되게 한다.
+    // 저장이 끝나면 다시 서버 값과 동기화한다.
     updateAdmissionQuota(quotas, { onSettled: () => setIsDirty(false) });
   };
 

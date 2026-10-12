@@ -3,19 +3,19 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
 interface IApplicantActionMenuType {
-  /** 원서 접수 기간이라 접수 취소를 할 수 있는지. 아니면 취소 항목을 막고 이유를 보여 준다. */
+  /** 접수 기간이라 접수 취소를 할 수 있는지. 아니면 취소 항목을 막는다. */
   isCancelAvailable: boolean;
   onCorrect: () => void;
   onCancel: () => void;
 }
 
-/** 메뉴가 화면 아래로 넘치면 버튼 위로 펼친다. 화면 가장자리와는 이만큼 띄운다. */
+/** 메뉴가 화면 아래로 넘치면 위로 펼친다. 화면 끝과 띄울 간격 */
 const VIEWPORT_MARGIN = 8;
 
 const getMenuItems = (menu: HTMLElement) => Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
 
 /**
- * 지원자 목록 마지막 열의 "원서 정정" 버튼. 누르면 원서 정정과 원서 접수 취소를 고르는 메뉴가 열린다.
+ * 지원자 목록 마지막 열의 "원서 정정" 버튼과 메뉴(원서 정정·원서 접수 취소).
  * 행을 누르면 상세 모달이 열리므로 이 안의 클릭은 행으로 올려 보내지 않는다.
  */
 export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: IApplicantActionMenuType) => {
@@ -25,7 +25,7 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
-  // 바깥(같은 행의 다른 칸, 다른 지원자의 버튼 포함)을 누르면 닫는다.
+  // 바깥을 누르면 닫는다.
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -43,7 +43,7 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
     };
   }, [isOpen]);
 
-  // 열리면 그리기 전에 펼칠 방향을 정하고(마지막 행 근처에서는 위로), 첫 항목에 포커스한다.
+  // 그리기 전에 펼칠 방향을 정하고 첫 항목에 포커스한다.
   useLayoutEffect(() => {
     const menu = menuRef.current;
     const trigger = triggerRef.current;
@@ -100,7 +100,7 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
         closeMenu(true);
         break;
       case "Tab":
-        // 메뉴가 사라지기 전에 버튼으로 포커스를 돌려, Tab 이 버튼 다음 칸으로 자연스럽게 넘어가게 한다.
+        // 버튼으로 포커스를 돌려 Tab 이 버튼 다음 칸으로 넘어가게 한다.
         closeMenu(true);
         break;
     }
@@ -111,7 +111,7 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
     onCorrect();
   };
 
-  // 접수 기간이 아니면 항목은 남겨 두고(이유를 읽을 수 있게) 누르기만 막는다.
+  // 접수 기간이 아니면 항목은 보이되 누르기만 막는다.
   const handleCancelClick = () => {
     if (!isCancelAvailable) {
       return;
@@ -142,7 +142,6 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
         <Menu ref={menuRef} id={menuId} role="menu" aria-label="원서 정정 메뉴" onKeyDown={handleMenuKeyDown}>
           <MenuItem type="button" role="menuitem" onClick={handleCorrectClick}>
             <MenuItemTitle $tone="default">원서 정정</MenuItemTitle>
-            <MenuItemDescription>제출된 원서의 내용을 고칩니다.</MenuItemDescription>
           </MenuItem>
           <MenuDivider role="separator" />
           <MenuItem
@@ -153,9 +152,6 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
             onClick={handleCancelClick}
           >
             <MenuItemTitle $tone={isCancelAvailable ? "danger" : "disabled"}>원서 접수 취소</MenuItemTitle>
-            <MenuItemDescription>
-              {isCancelAvailable ? "원서를 삭제하며 되돌릴 수 없습니다." : "원서 접수 기간에만 취소할 수 있습니다."}
-            </MenuItemDescription>
           </MenuItem>
         </Menu>
       )}
@@ -169,7 +165,7 @@ const Container = styled.div`
   max-width: 100%;
 `;
 
-// 기존 지원자별 버튼(2차 합격자 등록)과 같은 크기·색을 쓰고, 메뉴가 열린다는 표시로 화살표를 붙인다.
+// 2차 합격자 등록 버튼과 같은 모양에, 메뉴가 열린다는 화살표를 붙인다.
 const Trigger = styled.button`
   height: 37px;
   max-width: 100%;
@@ -263,14 +259,6 @@ const MenuItemTitle = styled.span<{ $tone: keyof typeof MENU_ITEM_TITLE_COLORS }
   color: ${({ $tone }) => MENU_ITEM_TITLE_COLORS[$tone]};
   font-size: 15px;
   font-weight: 600;
-`;
-
-const MenuItemDescription = styled.span`
-  color: ${colors.gray[400]};
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.4;
-  word-break: keep-all;
 `;
 
 const MenuItem = styled.button<{ $isDanger?: boolean }>`

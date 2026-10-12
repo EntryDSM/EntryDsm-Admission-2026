@@ -1,37 +1,25 @@
-/**
- * 관리자(admin) 도메인 API 타입 정의.
- * 백엔드 명세(`/api/v11/admin/...`)의 응답/요청 형태를 그대로 따른다.
- */
-
 /* ─────────────────────────── 공통 Enum ─────────────────────────── */
 
-/** 지원 지역 */
 export type Region = "DAEJEON" | "NATIONWIDE";
 
-/** 전형 구분 */
 export type AdmissionType = "GENERAL" | "MEISTER" | "SOCIAL";
 
-/** 학력 구분 */
 export type GraduationStatus = "EXPECTED" | "GRADUATED" | "GED";
 
-/**
- * 지원자 전형 상태 (백엔드 `ApplicantStatus` enum, 2026-09-21 확인).
- * 정상 흐름은 `PENDING` → 1차 결과 → 최종 결과 순으로만 진행한다.
- */
+/** 전형 상태. `PENDING` → 1차 결과 → 최종 결과 순으로만 진행한다. */
 export type ApplicantStatus = "PENDING" | "FIRST_PASS" | "FIRST_FAIL" | "FINAL_PASS" | "FINAL_FAIL";
 
 /* ───────────── 내 계정 조회 (GET /api/identity/v11/accounts/me) ───────────── */
 
-/** 계정 권한. ADMIN 만 어드민 페이지에 접근할 수 있다. */
+/** ADMIN 만 어드민 페이지에 접근할 수 있다. */
 export type AccountRole = "ADMIN" | "MONITOR" | "STUDENT";
 
-/** 계정 상태 (identity swagger enum, 2026-09-21 확인) */
 export type AccountStatus = "ACTIVE" | "INACTIVE" | "DELETED";
 
-/** 가입 유형 (본인/보호자 명의) */
+/** 본인/보호자 명의 가입 */
 export type SignupType = "SELF" | "PARENT";
 
-/** identity 도메인의 지원 상태 — admin 도메인 `ApplicantStatus` 와 값 체계가 다르다. */
+/** identity 의 지원 상태. admin 의 {@link ApplicantStatus} 와 값 체계가 다르다. */
 export type AccountApplicantStatus =
   | "NONE"
   | "DRAFT"
@@ -41,44 +29,39 @@ export type AccountApplicantStatus =
   | "COMPLETED"
   | "CANCELED";
 
-/** 내 계정 정보 */
 export interface MyAccount {
   userId: string;
   role: AccountRole;
   status: AccountStatus;
   name: string;
   phone: string;
-  /** ISO date (예: `2009-03-27`) */
   birthdate: string;
   signupType: SignupType;
   applicantStatus: AccountApplicantStatus;
-  /** ISO datetime */
   createdAt: string;
-  /** ISO datetime */
   updatedAt: string;
 }
 
 /* ─────────────────────── 목록 조회 (GET /applicants) ─────────────────────── */
 
 export type GetApplicantsParams = {
-  /** 이름 또는 수험번호 부분 일치 검색 */
+  /** 이름 또는 수험번호 부분 일치 */
   keyword?: string;
   regions?: Region[];
   admissionTypes?: AdmissionType[];
   graduationStatuses?: GraduationStatus[];
-  /** 원서 원본(우편) 도착 여부 (이전 이름 `isSubmitted`) */
+  /** 원서 원본(우편) 도착 여부 */
   isArrived?: boolean;
   statuses?: ApplicantStatus[];
-  /** 1-indexed, 기본 1 */
+  /** 1부터 시작 */
   page?: number;
   /** 기본 10, 최대 100 */
   size?: number;
 };
 
 /**
- * 목록 응답의 단일 지원자 요약.
- * 별도 접수 번호는 없고 `applicantId` 가 접수 순서를 겸한다(화면 표기는 `formatReceiptNumber` 참고).
- * 이름·지역·전형·학력은 제출된 원서에도 비어 있을 수 있어 nullable 이다.
+ * 별도 접수 번호는 없고 `applicantId` 가 접수 순서를 겸한다.
+ * 원서 항목은 제출된 원서에도 비어 있을 수 있어 nullable 이다.
  */
 export interface AdminApplicantSummary {
   applicantId: number;
@@ -92,10 +75,9 @@ export interface AdminApplicantSummary {
   status: ApplicantStatus;
 }
 
-/** admin 도메인 공통 규약의 목록 응답 형식 */
 export interface AdminPageResponse<T> {
   items: T[];
-  /** 1-indexed */
+  /** 1부터 시작 */
   page: number;
   size: number;
   totalElements: number;
@@ -106,12 +88,7 @@ export type GetApplicantsResponse = AdminPageResponse<AdminApplicantSummary>;
 
 /* ───────────────────── 상세 조회 (GET /applicants/{id}) ───────────────────── */
 
-/**
- * application 이 산출한 점수. `totalScore` 는 항상 있고, 세부 항목(교과·출결·봉사·가산점)은
- * 백엔드 #263(feat/260-admin-applicant-detail)이 배포된 뒤에만 내려오므로 옵셔널이다(배포 전 응답은 `totalScore` 만).
- * 세부 항목은 application `ScoreCalculator.calculateBreakdown` 결과(소수 셋째 자리 반올림)이고,
- * `totalScore` 는 전형별 상한(일반 173·특별 119)으로 잘린 저장값이라 항목 합과 다를 수 있다.
- */
+/** 세부 항목은 없을 수 있다. `totalScore` 는 전형별 상한(일반 173·특별 119)으로 잘린 값이라 항목 합과 다를 수 있다. */
 export interface ApplicantScore {
   subjectScore?: number;
   attendanceScore?: number;
@@ -120,10 +97,7 @@ export interface ApplicantScore {
   totalScore: number;
 }
 
-/**
- * 검정고시 과목별 점수(0~100 정수). 백엔드 #334/#335(2026-09-29 develop·스테이징 반영)로 상세 응답에 추가됐다.
- * 일곱 과목이 늘 함께 오고, 필드명에 `Score` 접미사가 없다(원서 입력 API 의 `koreanScore` 와 다름).
- */
+/** 검정고시 과목별 점수(0~100). 원서 입력 API 와 달리 필드명에 `Score` 가 붙지 않는다. */
 export interface ApplicantGedScores {
   korean: number;
   society: number;
@@ -134,11 +108,10 @@ export interface ApplicantGedScores {
   english: number;
 }
 
-/** 상세 응답. 목록과 같은 이유로 원서 항목은 nullable 이다. */
 export interface AdminApplicantDetail {
   applicantId: number;
   name: string | null;
-  /** ISO date (예: `2010-03-15`) */
+  /** `YYYY-MM-DD` */
   birthDate: string | null;
   phoneNumber: string | null;
   region: Region | null;
@@ -151,61 +124,45 @@ export interface AdminApplicantDetail {
   status: ApplicantStatus;
   /** 총점이 아직 없으면 null */
   score: ApplicantScore | null;
-  /** 검정고시 점수를 입력한 검정고시 지원자만 있고 그 밖에는 null. #335 가 배포되지 않은 서버(prod)는 필드 자체가 없다. */
+  /** 검정고시 지원자만 있다(응답에 없을 수 있다). */
   gedScores?: ApplicantGedScores | null;
-  /** ISO datetime — 원서를 제출한 시각 */
   submittedAt: string | null;
-  /** ISO datetime — 원서 원본(우편)이 도착한 시각 */
   arrivedAt: string | null;
-  /** ISO datetime */
   updatedAt: string | null;
-  /**
-   * 증명사진 파일 ID(`photo_…`). 사진 자체는 document `GET /api/document/v11/photos/{photoFileId}` 가
-   * 서명 URL 로 준다({@link DocumentFile}). 올리지 않았으면 null. (백엔드 #252, 2026-09-21)
-   */
+  /** 증명사진 파일 ID. 사진은 document 파일 조회로 서명 URL 을 받아 연다. */
   photoFileId: string | null;
-  /** 자기소개서. 지원자가 쓴 줄바꿈(`\n`)이 그대로 있다. 쓰지 않았으면 null */
+  /** 지원자가 쓴 줄바꿈(`\n`)이 그대로 있다. */
   introduction: string | null;
-  /** 학업계획서. `introduction` 과 같다 */
   studyPlan: string | null;
 }
 
 /* ───────────── 1차 합격자 일괄 산출 (POST /screenings/first/results) ───────────── */
 
-/** 일괄 산출 결과 집계 */
 export interface ScreeningResult {
-  /** true 면 상태를 변경하지 않고 산출 결과만 반환한 것(검토용) */
+  /** true 면 상태를 바꾸지 않고 산출 결과만 돌려준 것 */
   dryRun: boolean;
   passCount: number;
   failCount: number;
   excludedCount: number;
-  /** ISO datetime */
   processedAt: string;
 }
 
 /* ───── 2차(최종) 합격자 개별 등록 (POST /screenings/final/results/{applicantId}) ───── */
 
-/** 개별 등록 결과. 등록한 지원자는 FINAL_PASS 가 되며, 명세상 `status` 는 전형 상태 enum 전체를 쓴다. */
 export interface FinalScreeningResult {
   applicantId: number;
   status: ApplicantStatus;
-  /** ISO datetime */
   processedAt: string;
 }
 
 /* ───────── 원서 정정 (PATCH /applicants/{applicantId}/application) ───────── */
 
-/**
- * 정정 요청의 졸업 구분. 조회 응답의 {@link GraduationStatus}(`EXPECTED`)와 달리 application 원서 enum 을 그대로 받는다.
- * 정정 API 는 `admissionType` 의 `GENERAL`·`region` 의 `NATIONWIDE` 만 원서 값으로 바꿔 주고 졸업 구분은 바꿔 주지 않아,
- * `EXPECTED` 를 보내면 400 이다.
- */
+/** 조회 응답의 {@link GraduationStatus} 와 달리 졸업 예정은 `PROSPECTIVE` 로 보내야 한다. */
 export type CorrectionGraduationType = "PROSPECTIVE" | "GRADUATED" | "GED";
 
-/** 특기 사항. 국가유공자·특례입학 대상자는 일반 전형으로만 지원한다(지원자 원서 작성 화면 기준). */
+/** 특기 사항. 국가유공자·특례입학 대상자는 일반 전형만 지원할 수 있다. */
 export type SpecialAdmissionType = "NONE" | "NATIONAL_MERIT" | "SPECIAL_ADMISSION";
 
-/** 원서 성적의 학기. 원서 작성 화면은 2학년 1학기부터 받는다(졸업 예정 3개·졸업 4개 학기). */
 export type SchoolSemester =
   | "FIRST_GRADE_FIRST_SEMESTER"
   | "FIRST_GRADE_SECOND_SEMESTER"
@@ -214,10 +171,9 @@ export type SchoolSemester =
   | "THIRD_GRADE_FIRST_SEMESTER"
   | "THIRD_GRADE_SECOND_SEMESTER";
 
-/** 교과 성취도. `X` 는 미이수(자유학기 등)로 그 과목을 평균에서 뺀다. */
+/** `X` 는 미이수(자유학기 등)로 평균에서 빠진다. */
 export type SubjectGrade = "A" | "B" | "C" | "D" | "E" | "X";
 
-/** 한 학기의 과목별 성취도 */
 export interface SubjectGradesCorrection {
   korean: SubjectGrade;
   society: SubjectGrade;
@@ -228,13 +184,11 @@ export interface SubjectGradesCorrection {
   english: SubjectGrade;
 }
 
-/** 검정고시 과목별 점수(0~100 정수). 일곱 과목 모두 필요하다. */
 export type GedScoresCorrection = Record<keyof SubjectGradesCorrection, number>;
 
 /**
- * 성적 정정은 일부만 보낼 수 없고 출결·봉사·가산점·교과(또는 검정고시) 성적 전체로 교체한다.
- * 검정고시 지원자는 `subjectGrades` 를 비우고 `gedScores` 를, 그 밖에는 `gedScores` 없이 `subjectGrades` 를 보낸다.
- * 졸업 예정자는 3학년 2학기를 보낼 수 없고, 3학년 1학기를 전 과목 X 로 둘 수 없다.
+ * 성적은 일부만 보낼 수 없고 전체를 교체한다.
+ * 검정고시는 `subjectGrades` 를 비우고 `gedScores` 를, 그 밖에는 `subjectGrades` 만 보낸다.
  */
 export interface AcademicRecordCorrection {
   /** 미인정 결석(일) */
@@ -245,26 +199,19 @@ export interface AcademicRecordCorrection {
   earlyLeaveCount: number;
   /** 미인정 결과(회) */
   classAbsenceCount: number;
-  /** 봉사 시간 */
   volunteerTime: number;
-  /** DSM 알고리즘 대회 입상 */
   dsmAlgorithmAwarded: boolean;
-  /** 프로그래밍 기능사 자격증(특별전형만 가산점) */
   programmingCertified: boolean;
   subjectGrades: Partial<Record<SchoolSemester, SubjectGradesCorrection>>;
   gedScores: GedScoresCorrection | null;
 }
 
-/**
- * 바꿀 항목. 보내지 않은(또는 null 인) 항목은 그대로 둔다.
- * 서버는 `photoFileId`·`phoneNumber`·`school` 도 받지만 화면에서는 보내지 않는다 — 사진은 관리자에게 업로드 권한이 없고,
- * 연락처는 지원자 계정 번호와 같아야 하며, 중학교는 관리자 계정으로 학교 검색 API 를 쓸 수 없어 학교 코드를 알 수 없다.
- */
+/** 보낸 항목만 바뀌고 나머지는 그대로다. */
 export interface ApplicationFormChanges {
   admissionType?: AdmissionType;
   region?: Region;
   graduationType?: CorrectionGraduationType;
-  /** `YYYY-MM`. 검정고시는 보내지 않는다. 졸업 예정자는 2026~2027년만 된다. */
+  /** `YYYY-MM`. 검정고시는 보내지 않는다. */
   graduationDate?: string;
   specialAdmissionType?: SpecialAdmissionType;
   name?: string;
@@ -275,7 +222,6 @@ export interface ApplicationFormChanges {
   /** `010-0000-0000` */
   guardianPhoneNumber?: string;
   guardianGender?: Gender;
-  /** 지원자와의 관계(부·모 또는 직접 입력, 10자 이하) */
   guardianRelation?: string;
   zipCode?: string;
   addressBase?: string;
@@ -285,121 +231,84 @@ export interface ApplicationFormChanges {
   academicRecord?: AcademicRecordCorrection;
 }
 
-/**
- * 원서 정정 요청 본문. `reason` 은 필수(500자 이하)이며 정정 기록에 암호화해 남는다(기록 조회 API 는 없다).
- * 원서 버전은 보내지 않는다 — 서버가 잠금으로 동시 정정을 막고 저장할 때 버전을 올린다.
- */
+/** `reason` 은 필수(500자 이하)다. */
 export interface CorrectApplicationPayload {
   reason: string;
   changes: ApplicationFormChanges;
 }
 
 /**
- * 정정 결과(200). 전형·졸업 구분·성적이 바뀌면 서버가 총점을 다시 계산하고, 발급된 수험번호는 그대로 둔다.
- * 원서가 제출·도착 상태가 아니거나 전형 결과(1차 산출 등)가 있으면 409 `INVALID_STATUS_TRANSITION`,
- * 항목 검증에 실패하거나 실제로 바뀐 항목이 없으면 어느 항목인지 알려주지 않고 400 `INVALID_APPLICATION_CORRECTION` 이다.
- * (백엔드 #386 `ApplicationCorrectionService`)
+ * 전형·졸업 구분·성적이 바뀌면 서버가 총점을 다시 계산한다.
+ * 전형 결과가 이미 있으면 409, 항목이 잘못됐거나 바뀐 항목이 없으면 400 이다(어느 항목인지는 알려주지 않는다).
  */
 export interface ApplicationCorrectionResult {
   applicantId: number;
-  /** 정정 후 원서 버전 */
   version: number;
 }
 
 /* ───────────── 모집 정원 (GET/PUT /admission-quotas) ───────────── */
 
-/**
- * 전형 → 정원(명). 일반/마이스터/사회통합 세 전형이 모두 0 이상으로 채워져야 한다(지역 구분 없음, 2026-09-27 API 변경).
- * 최종 합격자 산출과 경쟁률(COMPETITION_RATE)의 기준이다.
- */
+/** 전형별 정원. 세 전형 모두 0 이상이어야 한다. */
 export type AdmissionQuotaMap = Record<AdmissionType, number>;
 
-/**
- * 조회·수정 응답. 전형별 정원이 최상위 키로 평면 배치되고 수정 정보가 따라온다.
- * 등록된 정원이 없으면 조회는 404(ADMISSION_QUOTA_NOT_FOUND)를 준다.
- */
+/** 등록된 정원이 없으면 조회가 404 를 준다. */
 export interface AdmissionQuota extends AdmissionQuotaMap {
-  /** ISO datetime */
   updatedAt: string;
-  /** 마지막 수정자 — 게이트웨이가 인증 쿠키로 채운 `X-User-Id`(계정 userId) */
   updatedBy: string;
 }
 
-/**
- * 전체 교체 요청 본문 `{ GENERAL, MEISTER, SOCIAL }` (PUT /api/v11/admin/admission-quotas → 200, 저장된 {@link AdmissionQuota}).
- * swagger 의 필수 헤더 `X-User-Id` 는 게이트웨이가 인증 쿠키로 주입하므로(클라이언트가 보낸 값은 지운다) 본문만 보낸다.
- */
+/** 수정자 헤더는 게이트웨이가 붙이므로 본문만 보낸다. */
 export type UpdateAdmissionQuotaPayload = AdmissionQuotaMap;
 
 /* ───────────── 수험번호 일괄 발급 (POST /examinee-numbers/issue) ───────────── */
 
-/** 일괄 발급 결과 집계. 명세 예시 기준 `issuedCount + skippedCount === totalTargets`. */
 export interface ExamineeNumberIssueResult {
-  /** 이번 요청으로 새로 발급된 지원자 수 */
   issuedCount: number;
-  /** 발급하지 않고 건너뛴 지원자 수 (이미 발급된 경우 등 — 건너뛴 사유는 명세 미기재) */
+  /** 이미 발급된 지원자 등 건너뛴 수 */
   skippedCount: number;
-  /** 발급 대상 지원자 전체 수 */
   totalTargets: number;
 }
 
 /* ───── 내보내기 잡 (POST /exports → 202, GET /exports/{exportJobId}) ───── */
 
 /**
- * 내보내기 산출물 종류. 관리자 파일 출력은 전부 `POST /exports` 에 `{ type }` 만 보내 접수하는 비동기 잡으로 통일됐다(백엔드 #293).
- * 대상 조건(`filter`)은 받지 않는다 — 수험표는 서버가 1차 합격자 전체를 고르고, 나머지는 전체 지원자가 대상이다.
- *
- * - `ADMISSION_TICKET`: 1차 합격자 수험표 묶음(1차 합격자, XLSX 한 파일). 1차 합격자가 없으면 접수가 409 로 거절된다.
- * - `FIRST_PASS`: 1차 합격자 명단(1차 합격자, XLSX)
- * - `ADMISSION_FILE`: 전형 자료(전체 지원자, XLSX)
- * - `APPLICATION_CHECKLIST`: 지원자 점검표(전형 자료와 같은 전체 지원자, XLSX)
- * - `ESSAYS`: 자기소개서·학업계획서 PDF 묶음(전체 지원자 중 PDF 가 있는 항목, ZIP)
+ * 파일 출력은 모두 `{ type }` 만 보내 접수하는 비동기 잡이다.
+ * - `ADMISSION_TICKET`: 1차 합격자 수험표(XLSX). 1차 합격자가 없으면 접수가 409 로 거절된다.
+ * - `FIRST_PASS`: 1차 합격자 명단(XLSX)
+ * - `ADMISSION_FILE`: 전형 자료(XLSX)
+ * - `APPLICATION_CHECKLIST`: 지원자 점검표(XLSX)
+ * - `ESSAYS`: 자기소개서·학업계획서 PDF 묶음
  */
 export type ExportType = "ADMISSION_TICKET" | "FIRST_PASS" | "ADMISSION_FILE" | "APPLICATION_CHECKLIST" | "ESSAYS";
 
-/** 내보내기 잡 상태. `COMPLETED` 일 때만 `downloadUrl` 이 내려온다. */
+/** `COMPLETED` 일 때만 `downloadUrl` 이 있다. */
 export type ExportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface CreateExportPayload {
   type: ExportType;
 }
 
-/**
- * 잡 접수 응답 (202 Accepted). 실제 생성은 서버가 비동기로 진행한다.
- * 수험표(`ADMISSION_TICKET`)는 1차 합격자가 없으면 접수 자체가 409 `ADMISSION_TICKET_NO_TARGET` 로 실패한다.
- */
 export interface CreateExportResult {
   exportJobId: string;
   status: ExportStatus;
 }
 
-/** 잡 조회 응답. 완료 시 서명된 `downloadUrl`(기본 15분 유효)이 내려온다. */
+/** 완료되면 서명된 `downloadUrl`(15분 유효)이 내려온다. */
 export interface ExportJob {
   exportJobId: string;
   type: ExportType;
   status: ExportStatus;
-  /** 대상/처리 건수. 백엔드 #266 이후 응답에 있고, 그 전 배포(prod)에는 없을 수 있어 optional. */
   totalCount?: number;
   processedCount?: number;
   downloadUrl: string | null;
-  /** ISO datetime — downloadUrl 만료 시각 */
   expiresAt: string | null;
-  /** ISO datetime */
   createdAt: string;
-  /** ISO datetime */
   completedAt: string | null;
 }
 
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */
 
-/**
- * 요청 가능한 메트릭 — 백엔드 `StatisticsMetric` enum 과 동일해야 한다.
- * 이 외 값이 하나라도 섞이면 바인딩 실패로 요청 전체가 400 이 난다(2026-09-11 백엔드 확인).
- * `GENDER_RATIO` 는 백엔드 #264(feat/137-admin-statistics)가 추가한 지표라 배포 전 서버는
- * 400 으로 거절한다 — `getStatisticsWithOptional` 이 그 경우 핵심 지표만으로 재조회한다.
- * `REGION_STATUS` 는 백엔드 #325 에서 `REGION_DISTRIBUTION` 으로 통합되며 사라졌다(보내면 400).
- * `FIRST_PASS_QUOTA` 는 백엔드 #324(2026-09-29 develop) 가 추가한 지표라 main(prod) 은 아직 400 으로 거절한다.
- */
+/** 서버가 모르는 지표가 하나라도 섞이면 요청 전체가 400 이다. */
 export type StatisticsMetric =
   | "APPLICANT_COUNT"
   | "COMPETITION_RATE"
@@ -409,13 +318,9 @@ export type StatisticsMetric =
   | "DAILY_TREND"
   | "GENDER_RATIO";
 
-/** 성별 (백엔드 `Gender` enum) */
 export type Gender = "MALE" | "FEMALE";
 
-/**
- * 거주지 시·도 (백엔드 `ResidenceRegion` enum, #264). 원서의 기본 주소에서 시·도 명칭을 찾아 매기고,
- * 주소가 없거나 알아볼 수 없으면 `ETC` 로 집계한다.
- */
+/** 기본 주소에서 시·도를 찾아 매기고, 찾지 못하면 `ETC` 로 집계한다. */
 export type ResidenceRegion =
   | "SEOUL"
   | "BUSAN"
@@ -436,56 +341,38 @@ export type ResidenceRegion =
   | "JEJU"
   | "ETC";
 
-/** 지원자 수 (명세 확정) */
 export interface ApplicantCountMetric {
   total: number;
   byType: Partial<Record<AdmissionType, number>>;
 }
 
-/** 전형별 경쟁률 (명세 확정) */
 export type CompetitionRateMetric = Partial<Record<AdmissionType, number>>;
 
-/**
- * 전형별 1차 선발 인원 `{ 전형: 인원 }` (백엔드 #324). 모집 정원 × 1차 배수(기본 1.5)를 올림한 값으로,
- * 1차 합격자 산출과 같은 계산이다. 모집 정원을 등록하지 않았으면 빈 맵 `{}` 이다.
- */
+/** 전형별 1차 선발 인원(모집 정원 × 1차 배수, 올림). 정원을 등록하지 않았으면 빈 맵이다. */
 export type FirstPassQuotaMetric = Partial<Record<AdmissionType, number>>;
 
-/**
- * 지역별 분포 (백엔드 #325 `AdminResponseMapper` 확인, 2026-09-29) — 옛 `REGION_STATUS` 구조가 이 이름으로 옮겨 왔다.
- * 홈 "지역별 접수 현황"은 `byRegion`(거주지 시·도)을 표시한다.
- */
 export interface RegionDistributionMetric {
   total: number;
-  /** 모집 범위 — 관내(대전, `LOCAL`)/전국(`NATIONWIDE`). 지역이 빈 원서는 빠진다 */
+  /** 모집 범위별 수(관내 `LOCAL`·전국 `NATIONWIDE`) */
   byScope: Partial<Record<"LOCAL" | "NATIONWIDE", number>>;
-  /** 거주지 시·도 → 수. 집계된 시·도만 담기며, 주소에서 정식 시·도 명칭을 못 찾으면 `ETC` */
+  /** 거주지 시·도별 수. 집계된 시·도만 담긴다. */
   byRegion: Partial<Record<ResidenceRegion, number>>;
 }
 
-/** 전형별 분포 `{ 전형: 수 }` (백엔드 응답 매퍼 확인) */
 export type TypeDistributionMetric = Partial<Record<AdmissionType, number>>;
 
-/** 일자별 추이 `[{ date: YYYY-MM-DD, count }]` — 원서 제출일 기준 (백엔드 응답 매퍼 확인) */
+/** 원서 제출일 기준 일자별 수 */
 export type DailyTrendMetric = { date: string; count: number }[];
 
-/**
- * 지원 성비 (백엔드 #264 `AdminResponseMapper` 확인). 성별이 빈 원서는 `byGender`/`byType` 에서 빠지고 `total` 에는 든다.
- */
 export interface GenderRatioMetric {
   total: number;
   byGender: Partial<Record<Gender, number>>;
-  /** 남학생 비율 (0~1, 소수 셋째 자리 반올림). 지원자가 없으면 0 */
+  /** 남학생 비율(0~1). 지원자가 없으면 0 */
   maleRatio: number;
-  /** 전형별 성별 수. 전형이나 성별이 빈 원서는 빠진다 */
   byType: Partial<Record<AdmissionType, Partial<Record<Gender, number>>>>;
 }
 
-/**
- * 응답의 `metrics` 맵. 요청한 메트릭만 담겨 오므로 전부 옵셔널이다.
- * `GENDER_RATIO` 는 백엔드 #264 배포 전에는 요청할 수 없어 빠져 올 수 있으며(핵심 지표 재조회 폴백),
- * 매퍼는 없어도 안전하게 동작한다(성비 카드는 빈 값).
- */
+/** 요청한 지표만 담겨 온다. */
 export interface StatisticsMetrics {
   APPLICANT_COUNT?: ApplicantCountMetric;
   COMPETITION_RATE?: CompetitionRateMetric;
@@ -497,34 +384,27 @@ export interface StatisticsMetrics {
 }
 
 export interface GetStatisticsResponse {
-  /** ISO datetime */
   generatedAt: string;
   metrics: StatisticsMetrics;
 }
 
 /* ───────────── 파일 조회 (GET /api/document/v11/photos/{photoId}) ───────────── */
 
-/**
- * document 도메인의 파일 응답(configuration `FileResponse`). `downloadUrl` 은 서명 URL 이라 `expiresIn` 초 동안만 유효하다.
- * 증명사진(PHOTO)은 본인과 ADMIN 만 받을 수 있다(백엔드 `FileCategory` 권한표). 봉투는 admin 과 같은 `{ success, data }`.
- */
+/** `downloadUrl` 은 `expiresIn` 초 동안만 유효한 서명 URL 이다. */
 export interface DocumentFile {
-  /** 공개 ID (`photo_…`, `attachment_…`). 지원자 ID 로 찾는 원서·수험표 PDF 는 공개 ID 가 없어 null */
+  /** 공개 ID. 원서·수험표 PDF 처럼 지원자 ID 로 찾는 파일은 null */
   id: string | null;
   fileName: string;
-  /** bytes */
   size: number;
   downloadUrl: string;
-  /** `downloadUrl` 유효 시간(초) */
   expiresIn: number;
 }
 
 /* ───────────────── 전형 일정 (GET/PATCH /schedules) ───────────────── */
 
-/** 요일 (백엔드 표기) */
 export type DayOfWeek = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
 
-/** 일정의 시각. 백엔드는 연·월·일·요일·시·분·초로 분해해 주고받는다. */
+/** 서버는 시각을 연·월·일·요일·시·분·초로 나눠 주고받는다. */
 export interface ScheduleDateTime {
   year: number;
   month: number;
@@ -535,7 +415,6 @@ export interface ScheduleDateTime {
   second: number;
 }
 
-/** 단일 전형 일정 (조회 응답 항목) */
 export interface AdminSchedule {
   scheduleId: number;
   title: string;
@@ -544,9 +423,8 @@ export interface AdminSchedule {
 }
 
 /**
- * 일정 요청 항목. 등록은 `POST /schedules`(항목 하나씩, 201), 수정은 `PATCH /schedules/bulk`(배열)에 쓴다.
- * bulk 수정은 title 로 기존 일정을 찾아 시각만 바꾸고 없는 title 은 404 로 거절하므로,
- * 신규 일정은 반드시 POST 로 만든다(2026-09-21 백엔드 ScheduleService 확인).
+ * 새 일정은 `POST /schedules` 로 하나씩 만들고, 기존 일정은 `PATCH /schedules/bulk` 로 바꾼다.
+ * bulk 는 title 로 일정을 찾아 없으면 404 다.
  */
 export interface UpdateScheduleItem {
   title: string;
@@ -554,34 +432,27 @@ export interface UpdateScheduleItem {
   endAt: ScheduleDateTime;
 }
 
-/** 서버 현재 시각 (`GET /api/schedule/v11/time` 응답 data). 원서 접수 기간 판정은 브라우저 시계 대신 이 값을 기준으로 한다. */
+/** 원서 접수 기간 판정은 브라우저 시계가 아니라 이 서버 시각을 기준으로 한다. */
 export interface CurrentTimeResponse {
   currentTime: ScheduleDateTime;
 }
 
 /* ───────────── 공지사항 (GET /notifications/..., POST /admin/notices) ───────────── */
 
-/**
- * 공지 분류 (백엔드 `NoticeCategory` 저장값, 2026-09-21 확인). admin 등록/수정 요청의 `division` 과
- * notification 목록 조회의 `category` 파라미터가 같은 값을 쓴다. 서버는 한글 이름(입학 공지사항/예비 신입생 안내)과
- * Notion 명세의 영문 이름(Admissions Notice/Prospective Students Notice)도 같은 값으로 받아 준다.
- */
+/** 공지 분류. 등록·수정의 `division` 과 목록 조회의 `category` 가 같은 값을 쓴다. */
 export type NoticeDivision = "ADMISSION_NOTICE" | "PROSPECTIVE_STUDENT";
 
-/** notification 도메인 목록 조회 파라미터 (`page` 0-indexed 기본 0, `size` 기본 10 — swagger 확인). */
 export type PageParams = {
-  /** 0-indexed */
+  /** 0부터 시작 */
   page?: number;
   size?: number;
 };
 
-/** 공지 목록은 `category` 파라미터로 분류를 거른다(값은 {@link NoticeDivision}). */
 export type GetNoticesParams = PageParams & { category?: NoticeDivision };
 
-/** notification 도메인 목록 응답 공통 형태 */
 export interface PageResponse<T> {
   content: T[];
-  /** 0-indexed */
+  /** 0부터 시작 */
   page: number;
   size: number;
   totalElements: number;
@@ -589,15 +460,11 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
-/**
- * 목록 응답의 단일 공지 요약.
- * 분류(`division`)·고정 여부(`isPinned`)는 조회 API 가 돌려주지 않는다(2026-09-21 확인) — 내려올 경우만 대비해 optional 로 둔다.
- */
+/** 조회 API 는 분류·고정 여부를 돌려주지 않아 optional 이다. */
 export interface NoticeSummary {
   noticeId: number;
   title: string;
   author: string;
-  /** ISO datetime */
   createdAt: string;
   division?: string;
   isPinned?: boolean;
@@ -605,35 +472,28 @@ export interface NoticeSummary {
 
 export type GetNoticesResponse = PageResponse<NoticeSummary>;
 
-/** 상세 응답. `division`/`isPinned` 는 목록과 같은 이유로 optional. */
 export interface NoticeDetail {
   noticeId: number;
   title: string;
   content: string;
   author: string;
   viewCount: number;
-  /** ISO datetime */
   createdAt: string;
-  /** ISO datetime */
   updatedAt: string;
   division?: string;
   isPinned?: boolean;
 }
 
-/** 공지 등록 요청 (POST /api/v11/admin/notices → 201, 응답 `{ noticeId, title, isPinned, createdAt }`) */
 export interface CreateNoticePayload {
   title: string;
   division: NoticeDivision;
   content: string;
   isPinned: boolean;
-  /** document 첨부 업로드(`POST /api/document/v11/attachments`)가 돌려준 공개 ID(`attachment_…`) 목록. 첨부가 없으면 생략한다. */
+  /** 첨부 업로드가 돌려준 ID 목록 */
   attachmentIds?: string[];
 }
 
-/**
- * 공지 수정 요청 (PATCH /api/v11/admin/notices/{noticeId} → 204).
- * 보낸 필드만 바뀌고 없거나 null 인 필드는 유지된다. `attachmentIds` 는 보내면 목록 전체가 교체된다(빈 배열 = 첨부 제거).
- */
+/** 보낸 필드만 바뀐다. `attachmentIds` 를 보내면 첨부 목록 전체가 바뀐다(빈 배열이면 모두 삭제). */
 export interface UpdateNoticePayload {
   title?: string;
   content?: string;

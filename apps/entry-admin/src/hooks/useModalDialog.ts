@@ -10,10 +10,9 @@ const FOCUSABLE_SELECTOR = [
 ].join(", ");
 
 /**
- * 화면을 덮는 대화상자(옆에서 열리는 패널)의 공통 동작. 마운트돼 있는 동안을 열린 상태로 본다.
- * - 뒤 페이지 스크롤을 막고, 닫히면 원래 스크롤 위치로 돌려놓는다(지원자 상세 모달과 같은 방식).
- * - Esc 로 닫기를 요청한다. 닫을지는 `onRequestClose` 가 정한다(작성 중이면 확인 등).
- * - Tab 포커스가 대화상자 밖으로 나가지 않게 한다 — 반환한 핸들러를 대화상자 루트의 onKeyDown 에 붙인다.
+ * 화면을 덮는 패널의 공통 동작(마운트돼 있는 동안 열린 것으로 본다).
+ * 뒤 페이지 스크롤을 막고, Esc 로 닫기를 요청하며, Tab 포커스를 패널 안에 가둔다.
+ * 반환한 핸들러는 패널 루트의 onKeyDown 에 붙인다.
  */
 export const useModalDialog = (contentRef: RefObject<HTMLElement | null>, onRequestClose: () => void) => {
   useEffect(() => {

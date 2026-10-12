@@ -18,16 +18,13 @@ type IApplicationComponentType = {
   educationalStatus?: string;
   isDaejeon?: boolean;
   isArrived?: boolean;
-  /** 마지막 열 버튼의 역할. 1차 합격자 산출 전에는 "원서 정정"(정정·접수 취소 메뉴), 산출 결과를 받으면 "2차 합격자 등록". */
   actionMode: ApplicantActionMode;
-  /** 원서 접수 기간이라 원서 정정 메뉴에서 접수 취소를 할 수 있는지 */
+  /** 접수 기간이라 접수 취소를 할 수 있는지 */
   isCancelAvailable?: boolean;
   onClick: () => void;
-  /** "2차 합격자 등록" 버튼 클릭 */
   onRegisterClick?: () => void;
-  /** 원서 정정 메뉴의 "원서 정정" */
   onCorrectClick?: () => void;
-  /** 원서 정정 메뉴의 "원서 접수 취소" */
+  /** 원서 접수 취소 */
   onCancelClick?: () => void;
   onArrivalClick?: () => void;
 };
@@ -127,7 +124,7 @@ const CheckboxCell = styled(Cell)`
   padding: 0;
 `;
 
-// 원서 정정 메뉴가 칸 밖(아래 행 위)으로 펼쳐지므로 잘라내지 않는다.
+// 원서 정정 메뉴가 칸 밖으로 펼쳐져 잘라내지 않는다.
 const ActionCell = styled(Cell)`
   padding: 0;
   overflow: visible;

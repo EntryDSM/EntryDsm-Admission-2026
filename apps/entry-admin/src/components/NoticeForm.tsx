@@ -43,7 +43,7 @@ export const NoticeForm = ({
       }));
     };
 
-  // 서버(document)가 거절할 형식·크기는 올리기 전에 걸러 안내하고, 통과한 파일만 목록에 넣는다.
+  // 서버가 거절할 형식·크기는 올리기 전에 걸러 안내한다.
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     const errors = files.map(getNoticeAttachmentError).filter((error): error is string => error !== null);

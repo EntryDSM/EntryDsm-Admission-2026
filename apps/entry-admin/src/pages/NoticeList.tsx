@@ -23,9 +23,8 @@ export const NoticeList = () => {
 
   const activeCategory = getNoticeDivision(activeTab);
 
-  // 목록 응답의 page 는 0 부터 시작하므로, UI 의 1-based 페이지를 변환해 보낸다.
-  // 공지 탭 분리는 notification 목록 조회의 `category` 파라미터로 서버에 전적으로 위임한다(2026-09-21 swagger 확인).
-  // 서버 페이지네이션 위에 클라이언트 필터를 얹으면 페이지 수가 깨지므로 보조 분류는 하지 않는다.
+  // 공지 목록 page 는 0 부터라 화면 페이지에서 1 을 뺀다.
+  // 탭 분류는 서버의 category 필터로만 한다(화면에서 거르면 페이지 수가 깨진다).
   const pageParams = { page: currentPage - 1, size: ITEMS_PER_PAGE };
   const { notices, totalPages, isLoading } = useNotices({ ...pageParams, category: activeCategory });
 

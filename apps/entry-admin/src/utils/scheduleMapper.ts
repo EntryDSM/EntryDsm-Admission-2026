@@ -1,9 +1,6 @@
 import type { AdminSchedule, DayOfWeek, ScheduleDateTime, UpdateScheduleItem } from "../apis/types";
 
-/**
- * 전형 일정 수정 화면(DropDownSection)이 사용하는 뷰 모델. 시각은 `YYYY-MM-DDTHH:mm` 문자열로 다룬다.
- * `scheduleId` 가 null 이면 아직 서버에 없는 신규(등록 대기) 일정이다.
- */
+/** 일정 화면용 모델. 시각은 `YYYY-MM-DDTHH:mm` 문자열이고, `scheduleId` 가 null 이면 아직 등록 전인 일정이다. */
 export interface ScheduleFieldView {
   scheduleId: number | null;
   title: string;
@@ -13,14 +10,13 @@ export interface ScheduleFieldView {
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
-/** ScheduleDateTime → DropDownSection 이 파싱하는 `YYYY-MM-DDTHH:mm` 문자열 */
 export const toDateTimeInput = (dateTime: ScheduleDateTime): string =>
   `${dateTime.year}-${pad(dateTime.month)}-${pad(dateTime.day)}T${pad(dateTime.hour)}:${pad(dateTime.minute)}`;
 
-/** `getDay()`(0=일) 인덱스 → 백엔드 요일 코드 */
+/** `getDay()`(0=일요일) 순서 */
 const DAY_OF_WEEK: DayOfWeek[] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-/** `YYYY-MM-DDTHH:mm` 문자열 → 백엔드 ScheduleDateTime (초는 0, 요일은 날짜로 계산) */
+/** 초는 0 으로, 요일은 날짜로 계산해 채운다. */
 export const toScheduleDateTime = (value: string): ScheduleDateTime => {
   const [date = "", time = ""] = value.split("T");
   const [year = 0, month = 0, day = 0] = date.split("-").map(Number);
@@ -30,11 +26,7 @@ export const toScheduleDateTime = (value: string): ScheduleDateTime => {
   return { year, month, day, dayOfWeek, hour, minute, second: 0 };
 };
 
-/**
- * 전형 일정의 표준 명칭과 표시 순서. 등록 모드 기본 일정 생성과 조회 결과 정렬에 함께 쓴다.
- * title 은 홈 화면 매핑 규칙(APPLICATION_KEYWORDS·ANNOUNCEMENT_RULES)과 맞물리는 표준 명칭이라,
- * 이대로 등록하면 홈(통계) 화면 일정 슬롯에도 그대로 매핑된다. 목록에 없는 title 은 이 뒤에 응답 순서대로 붙는다.
- */
+/** 일정 표준 명칭과 표시 순서. 기본 일정 생성과 정렬에 쓰며, 홈 화면 일정 매핑이 이 명칭을 기준으로 한다. */
 const SCHEDULE_TITLE_ORDER = ["원서 접수", "1차 합격 발표", "면접", "최종 합격 발표"];
 
 const scheduleOrderOf = (title: string) => {
@@ -42,7 +34,6 @@ const scheduleOrderOf = (title: string) => {
   return index === -1 ? SCHEDULE_TITLE_ORDER.length : index;
 };
 
-/** 조회 응답 → 화면 뷰 모델 배열. 응답 순서와 무관하게 SCHEDULE_TITLE_ORDER 순으로 정렬한다. */
 export const toScheduleFields = (schedules: AdminSchedule[]): ScheduleFieldView[] =>
   [...schedules]
     .sort((a, b) => scheduleOrderOf(a.title) - scheduleOrderOf(b.title))
@@ -53,18 +44,16 @@ export const toScheduleFields = (schedules: AdminSchedule[]): ScheduleFieldView[
       end: toDateTimeInput(schedule.endAt),
     }));
 
-/** 화면 뷰 모델 한 행 → 등록(POST)/일괄 수정(PATCH bulk) 공용 요청 항목. scheduleId 없이 title·시각만 보낸다. */
 export const toScheduleRequestItem = (field: ScheduleFieldView): UpdateScheduleItem => ({
   title: field.title,
   startAt: toScheduleDateTime(field.start),
   endAt: toScheduleDateTime(field.end),
 });
 
-/** 화면 뷰 모델 → 일괄 수정 요청 본문 */
 export const toUpdateSchedulePayload = (fields: ScheduleFieldView[]): UpdateScheduleItem[] =>
   fields.map(toScheduleRequestItem);
 
-/** 조회 결과가 비어 있을 때(등록된 일정 없음) 등록 화면에 띄울 기본 일정 목록. */
+/** 등록된 일정이 없을 때 띄울 기본 일정 */
 export const createDefaultScheduleFields = (): ScheduleFieldView[] =>
   SCHEDULE_TITLE_ORDER.map(title => ({
     scheduleId: null,
@@ -75,7 +64,6 @@ export const createDefaultScheduleFields = (): ScheduleFieldView[] =>
 
 /* ─────────────── 홈(통계) 화면용 일정 매핑 ─────────────── */
 
-/** 홈 화면 useScheduleDeadline 이 조회하는 일정 타입 코드 */
 export type ScheduleDeadlineType =
   | "START_DATE"
   | "END_DATE"
@@ -83,16 +71,11 @@ export type ScheduleDeadlineType =
   | "INTERVIEW"
   | "SECOND_ANNOUNCEMENT";
 
-/** useScheduleDeadline 이 받는 `{ type, date }[]` 형태 (ScheduleData 와 구조 호환) */
 export interface ScheduleDeadlineData {
   schedules: { type: ScheduleDeadlineType; date: string }[];
 }
 
-/**
- * 백엔드 일정 title → 홈 화면 타입 코드 매핑 규칙.
- * 명세에 title↔의미 대응이 없어 title 키워드로 추정한다. 백엔드 title 이 다르면 이 상수들만 고치면 되고,
- * 매칭 실패한 슬롯은 홈 화면에서 잘못된 값 대신 placeholder(`--/--`)로 표시된다.
- */
+/** 일정 title 의 키워드로 홈 화면 일정 종류를 정한다. 맞는 일정이 없으면 홈 화면은 `--/--` 로 표시한다. */
 const APPLICATION_KEYWORDS = ["원서", "접수", "지원"];
 const ANNOUNCEMENT_RULES: { type: ScheduleDeadlineType; keywords: string[] }[] = [
   { type: "FIRST_ANNOUNCEMENT", keywords: ["1차"] },
@@ -102,11 +85,7 @@ const ANNOUNCEMENT_RULES: { type: ScheduleDeadlineType; keywords: string[] }[] =
 
 const includesAny = (title: string, keywords: string[]) => keywords.some(keyword => title.includes(keyword));
 
-/**
- * 조회 뷰 모델 → 홈 화면 일정 데이터.
- * '원서 접수' 성격의 일정은 시작/종료를 각각 START_DATE/END_DATE 로,
- * 발표·면접 일정은 시작 시각을 해당 타입으로 매핑한다.
- */
+/** 원서 접수 일정은 시작·종료를, 발표·면접 일정은 시작 시각을 쓴다. */
 export const toScheduleDeadlineData = (fields: ScheduleFieldView[]): ScheduleDeadlineData => {
   const result: ScheduleDeadlineData["schedules"] = [];
 

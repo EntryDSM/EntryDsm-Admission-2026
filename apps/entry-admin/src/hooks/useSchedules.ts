@@ -3,14 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { adminQueryKeys, getSchedules } from "../apis";
 import { toScheduleFields, type ScheduleFieldView } from "../utils";
 
-// 로딩/에러 시 매 렌더마다 새 배열이 생기지 않도록 고정 참조를 공유한다.
-// (AdmissionsSchedule 의 useEffect([schedules]) 가 불필요하게 재실행되는 것을 방지)
+// 로딩·에러 때 같은 빈 배열을 돌려줘 화면의 effect 가 다시 돌지 않게 한다.
 const EMPTY_SCHEDULES: ScheduleFieldView[] = [];
 
-/**
- * 전형 일정 조회 훅.
- * 응답 DTO 를 수정 화면이 바로 쓰는 뷰 모델(시각 문자열)로 변환해 돌려준다.
- */
 export const useSchedules = () => {
   const query = useQuery({
     queryKey: adminQueryKeys.schedules,
@@ -22,7 +17,7 @@ export const useSchedules = () => {
     schedules: query.data ?? EMPTY_SCHEDULES,
     isLoading: query.isLoading,
     isError: query.isError,
-    /** 조회가 성공했는지. 로딩 중의 빈 배열과 "성공했지만 등록된 일정이 없음"([]) 을 구분할 때 쓴다. */
+    /** 로딩 중과 "등록된 일정 없음"을 구분할 때 쓴다. */
     isSuccess: query.isSuccess,
     refetch: query.refetch,
   };
