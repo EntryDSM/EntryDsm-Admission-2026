@@ -1,4 +1,10 @@
-import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
+import {
+  createRequestSignal,
+  fetchWithAuthRefresh,
+  getApiErrorMessage,
+  getCsrfToken,
+  readApiError,
+} from "@entry/utils";
 import type { ApiResponse } from "./types";
 
 // HTTP 실패 상태와 서버 응답 본문을 호출 화면까지 전달하는 공통 오류 객체.
@@ -70,8 +76,7 @@ const createRequestOptions = (options: HttpRequestOptions): RequestInit => {
 const createRequestUrl = (path: string, options: HttpRequestOptions) =>
   `${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`;
 
-// HttpOnly 인증 쿠키는 브라우저가 싣습니다. 401 은 토큰 재발급 없이 그대로 HttpError 로 올려 보내고,
-// 로그인 페이지 이동은 RequireAuth 가드가 담당합니다 (entry-user·entry-admin 클라이언트와 같은 흐름).
+// HttpOnly 인증 쿠키가 만료돼 401 이면 refreshToken 을 호출하고 원래 요청을 한 번 재시도합니다.
 const fetchApi = async (
   path: string,
   method: string,
@@ -80,14 +85,19 @@ const fetchApi = async (
 ) => {
   options = { ...options, signal: createRequestSignal(options.signal, body) };
 
-  return fetch(createRequestUrl(path, options), {
-    ...createRequestOptions(options),
-    method,
-    body,
-    headers: await createHeaders(method, body, options),
-    credentials: options.auth === false ? "omit" : "include",
-    signal: options.signal,
-  });
+  return fetchWithAuthRefresh(
+    import.meta.env.VITE_API_BASE_URL,
+    async () =>
+      fetch(createRequestUrl(path, options), {
+        ...createRequestOptions(options),
+        method,
+        body,
+        headers: await createHeaders(method, body, options),
+        credentials: options.auth === false ? "omit" : "include",
+        signal: options.signal,
+      }),
+    options.auth !== false
+  );
 };
 
 // 프록시나 서버 장애로 JSON이 아닌 오류 본문이 와도 HTTP 상태와 본문을 함께 보존합니다.

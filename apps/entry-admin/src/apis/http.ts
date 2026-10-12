@@ -1,4 +1,10 @@
-import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
+import {
+  createRequestSignal,
+  fetchWithAuthRefresh,
+  getApiErrorMessage,
+  getCsrfToken,
+  readApiError,
+} from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
 
 export class HttpError extends Error {
@@ -32,28 +38,34 @@ const toHttpError = async (response: Response) => {
 /** 인증 쿠키·CSRF 헤더·타임아웃을 붙여 요청한다. */
 const send = async (path: string, options: RequestInit = {}): Promise<Response> => {
   const signal = createRequestSignal(options.signal, options.body);
-  const headers = new Headers(options.headers);
-  // 본문 없는 GET 은 preflight 가 생기지 않게 Content-Type 을 붙이지 않는다. FormData 는 브라우저가 붙인다.
-  if (
-    options.body !== undefined &&
-    options.body !== null &&
-    !(options.body instanceof FormData) &&
-    !headers.has("Content-Type")
-  ) {
-    headers.set("Content-Type", "application/json");
-  }
+  return fetchWithAuthRefresh(
+    API_BASE_URL,
+    async () => {
+      const headers = new Headers(options.headers);
+      // 본문 없는 GET 은 preflight 가 생기지 않게 Content-Type 을 붙이지 않는다. FormData 는 브라우저가 붙인다.
+      if (
+        options.body !== undefined &&
+        options.body !== null &&
+        !(options.body instanceof FormData) &&
+        !headers.has("Content-Type")
+      ) {
+        headers.set("Content-Type", "application/json");
+      }
 
-  // 변경 요청에는 CSRF 토큰을 붙인다.
-  if (!SAFE_METHODS.includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
-    headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, signal));
-  }
+      // 변경 요청에는 CSRF 토큰을 붙인다.
+      if (!SAFE_METHODS.includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
+        headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, signal));
+      }
 
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    signal,
-    credentials: "include",
-    headers,
-  });
+      return fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        signal,
+        credentials: "include",
+        headers,
+      });
+    },
+    options.credentials !== "omit"
+  );
 };
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
