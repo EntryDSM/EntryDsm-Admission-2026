@@ -193,6 +193,119 @@ export interface FinalScreeningResult {
   processedAt: string;
 }
 
+/* ───────── 원서 정정 (PATCH /applicants/{applicantId}/application) ───────── */
+
+/**
+ * 정정 요청의 졸업 구분. 조회 응답의 {@link GraduationStatus}(`EXPECTED`)와 달리 application 원서 enum 을 그대로 받는다.
+ * 정정 API 는 `admissionType` 의 `GENERAL`·`region` 의 `NATIONWIDE` 만 원서 값으로 바꿔 주고 졸업 구분은 바꿔 주지 않아,
+ * `EXPECTED` 를 보내면 400 이다.
+ */
+export type CorrectionGraduationType = "PROSPECTIVE" | "GRADUATED" | "GED";
+
+/** 특기 사항. 국가유공자·특례입학 대상자는 일반 전형으로만 지원한다(지원자 원서 작성 화면 기준). */
+export type SpecialAdmissionType = "NONE" | "NATIONAL_MERIT" | "SPECIAL_ADMISSION";
+
+/** 원서 성적의 학기. 원서 작성 화면은 2학년 1학기부터 받는다(졸업 예정 3개·졸업 4개 학기). */
+export type SchoolSemester =
+  | "FIRST_GRADE_FIRST_SEMESTER"
+  | "FIRST_GRADE_SECOND_SEMESTER"
+  | "SECOND_GRADE_FIRST_SEMESTER"
+  | "SECOND_GRADE_SECOND_SEMESTER"
+  | "THIRD_GRADE_FIRST_SEMESTER"
+  | "THIRD_GRADE_SECOND_SEMESTER";
+
+/** 교과 성취도. `X` 는 미이수(자유학기 등)로 그 과목을 평균에서 뺀다. */
+export type SubjectGrade = "A" | "B" | "C" | "D" | "E" | "X";
+
+/** 한 학기의 과목별 성취도 */
+export interface SubjectGradesCorrection {
+  korean: SubjectGrade;
+  society: SubjectGrade;
+  history: SubjectGrade;
+  math: SubjectGrade;
+  science: SubjectGrade;
+  technology: SubjectGrade;
+  english: SubjectGrade;
+}
+
+/** 검정고시 과목별 점수(0~100 정수). 일곱 과목 모두 필요하다. */
+export type GedScoresCorrection = Record<keyof SubjectGradesCorrection, number>;
+
+/**
+ * 성적 정정은 일부만 보낼 수 없고 출결·봉사·가산점·교과(또는 검정고시) 성적 전체로 교체한다.
+ * 검정고시 지원자는 `subjectGrades` 를 비우고 `gedScores` 를, 그 밖에는 `gedScores` 없이 `subjectGrades` 를 보낸다.
+ * 졸업 예정자는 3학년 2학기를 보낼 수 없고, 3학년 1학기를 전 과목 X 로 둘 수 없다.
+ */
+export interface AcademicRecordCorrection {
+  /** 미인정 결석(일) */
+  absentCount: number;
+  /** 미인정 지각(회) */
+  lateCount: number;
+  /** 미인정 조퇴(회) */
+  earlyLeaveCount: number;
+  /** 미인정 결과(회) */
+  classAbsenceCount: number;
+  /** 봉사 시간 */
+  volunteerTime: number;
+  /** DSM 알고리즘 대회 입상 */
+  dsmAlgorithmAwarded: boolean;
+  /** 프로그래밍 기능사 자격증(특별전형만 가산점) */
+  programmingCertified: boolean;
+  subjectGrades: Partial<Record<SchoolSemester, SubjectGradesCorrection>>;
+  gedScores: GedScoresCorrection | null;
+}
+
+/**
+ * 바꿀 항목. 보내지 않은(또는 null 인) 항목은 그대로 둔다.
+ * 서버는 `photoFileId`·`phoneNumber`·`school` 도 받지만 화면에서는 보내지 않는다 — 사진은 관리자에게 업로드 권한이 없고,
+ * 연락처는 지원자 계정 번호와 같아야 하며, 중학교는 관리자 계정으로 학교 검색 API 를 쓸 수 없어 학교 코드를 알 수 없다.
+ */
+export interface ApplicationFormChanges {
+  admissionType?: AdmissionType;
+  region?: Region;
+  graduationType?: CorrectionGraduationType;
+  /** `YYYY-MM`. 검정고시는 보내지 않는다. 졸업 예정자는 2026~2027년만 된다. */
+  graduationDate?: string;
+  specialAdmissionType?: SpecialAdmissionType;
+  name?: string;
+  /** `YYYY-MM-DD` */
+  birthdate?: string;
+  gender?: Gender;
+  guardianName?: string;
+  /** `010-0000-0000` */
+  guardianPhoneNumber?: string;
+  guardianGender?: Gender;
+  /** 지원자와의 관계(부·모 또는 직접 입력, 10자 이하) */
+  guardianRelation?: string;
+  zipCode?: string;
+  addressBase?: string;
+  addressDetail?: string;
+  introduction?: string;
+  studyPlan?: string;
+  academicRecord?: AcademicRecordCorrection;
+}
+
+/**
+ * 원서 정정 요청 본문. `reason` 은 필수(500자 이하)이며 정정 기록에 암호화해 남는다(기록 조회 API 는 없다).
+ * 원서 버전은 보내지 않는다 — 서버가 잠금으로 동시 정정을 막고 저장할 때 버전을 올린다.
+ */
+export interface CorrectApplicationPayload {
+  reason: string;
+  changes: ApplicationFormChanges;
+}
+
+/**
+ * 정정 결과(200). 전형·졸업 구분·성적이 바뀌면 서버가 총점을 다시 계산하고, 발급된 수험번호는 그대로 둔다.
+ * 원서가 제출·도착 상태가 아니거나 전형 결과(1차 산출 등)가 있으면 409 `INVALID_STATUS_TRANSITION`,
+ * 항목 검증에 실패하거나 실제로 바뀐 항목이 없으면 어느 항목인지 알려주지 않고 400 `INVALID_APPLICATION_CORRECTION` 이다.
+ * (백엔드 #386 `ApplicationCorrectionService`)
+ */
+export interface ApplicationCorrectionResult {
+  applicantId: number;
+  /** 정정 후 원서 버전 */
+  version: number;
+}
+
 /* ───────────── 모집 정원 (GET/PUT /admission-quotas) ───────────── */
 
 /**

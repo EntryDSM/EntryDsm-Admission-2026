@@ -70,14 +70,27 @@ export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
 export const getArrivalStatusLabel = (isArrived?: boolean) => (isArrived ? "원서 도착" : "-");
 
 /**
- * 지원자 목록 마지막 열 버튼의 역할. 원서 접수 기간에는 접수 취소(원서 삭제), 접수가 끝나면 2차(최종) 합격자 등록.
- * 열 제목과 버튼 문구가 같은 값을 쓰도록 한 곳에서 정한다.
+ * 지원자 목록 마지막 열 버튼의 역할. 1차 합격자 산출 전(심사 대기)에는 원서 정정 메뉴(정정·접수 취소),
+ * 산출 결과를 받으면 2차(최종) 합격자 등록. 열 제목과 버튼 문구가 같은 값을 쓰도록 한 곳에서 정한다.
  */
-export type ApplicantActionMode = "cancel" | "register";
+export type ApplicantActionMode = "correct" | "register";
 
 const APPLICANT_ACTION_LABELS: Record<ApplicantActionMode, string> = {
-  cancel: "접수 취소",
+  correct: "원서 정정",
   register: "2차 합격자 등록",
 };
 
 export const getApplicantActionLabel = (mode: ApplicantActionMode) => APPLICANT_ACTION_LABELS[mode];
+
+/**
+ * 지원자별 버튼 역할. 백엔드 원서 정정과 같은 기준으로, 전형 결과가 없는(심사 대기) 지원자만 정정·접수 취소 대상이다.
+ * 1차 산출에서 빠진 지원자(원서 미도착·수험번호 미발급 등)는 산출 뒤에도 심사 대기로 남아 계속 정정할 수 있다.
+ */
+export const getApplicantActionMode = (status: string): ApplicantActionMode =>
+  status === "PENDING" ? "correct" : "register";
+
+/** 마지막 열 제목. 보이는 지원자의 역할이 모두 같으면 그 이름을, 섞여 있으면 "관리" 를 쓴다. */
+export const getApplicantActionHeader = (modes: ApplicantActionMode[]) => {
+  const [firstMode = "correct"] = modes;
+  return modes.every(mode => mode === firstMode) ? getApplicantActionLabel(firstMode) : "관리";
+};

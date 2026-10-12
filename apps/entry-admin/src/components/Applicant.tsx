@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
+import { ApplicantActionMenu } from "./ApplicantActionMenu";
 import {
   type ApplicantActionMode,
   getApplicantActionLabel,
@@ -17,11 +18,17 @@ type IApplicationComponentType = {
   educationalStatus?: string;
   isDaejeon?: boolean;
   isArrived?: boolean;
-  /** 마지막 열 버튼의 역할. 원서 접수 기간에는 "접수 취소", 접수가 끝나면 "2차 합격자 등록". */
+  /** 마지막 열 버튼의 역할. 1차 합격자 산출 전에는 "원서 정정"(정정·접수 취소 메뉴), 산출 결과를 받으면 "2차 합격자 등록". */
   actionMode: ApplicantActionMode;
+  /** 원서 접수 기간이라 원서 정정 메뉴에서 접수 취소를 할 수 있는지 */
+  isCancelAvailable?: boolean;
   onClick: () => void;
-  /** 마지막 열 버튼 클릭. 역할(actionMode)에 따라 접수 취소 또는 2차 합격자 등록을 시작한다. */
-  onActionClick?: () => void;
+  /** "2차 합격자 등록" 버튼 클릭 */
+  onRegisterClick?: () => void;
+  /** 원서 정정 메뉴의 "원서 정정" */
+  onCorrectClick?: () => void;
+  /** 원서 정정 메뉴의 "원서 접수 취소" */
+  onCancelClick?: () => void;
   onArrivalClick?: () => void;
 };
 
@@ -34,16 +41,19 @@ export const Applicant = ({
   isDaejeon,
   isArrived,
   actionMode,
+  isCancelAvailable = false,
   onClick,
-  onActionClick,
+  onRegisterClick,
+  onCorrectClick,
+  onCancelClick,
   onArrivalClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
   const statusLabel = getArrivalStatusLabel(isArrived);
 
-  const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleRegisterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    onActionClick?.();
+    onRegisterClick?.();
   };
 
   const handleArrivalClick = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -64,9 +74,17 @@ export const Applicant = ({
       </CheckboxCell>
       <Cell role="cell">{statusLabel}</Cell>
       <ActionCell role="cell">
-        <ActionButton type="button" actionMode={actionMode} onClick={handleActionClick}>
-          {getApplicantActionLabel(actionMode)}
-        </ActionButton>
+        {actionMode === "correct" ? (
+          <ApplicantActionMenu
+            isCancelAvailable={isCancelAvailable}
+            onCorrect={() => onCorrectClick?.()}
+            onCancel={() => onCancelClick?.()}
+          />
+        ) : (
+          <ActionButton type="button" onClick={handleRegisterClick}>
+            {getApplicantActionLabel(actionMode)}
+          </ActionButton>
+        )}
       </ActionCell>
     </Container>
   );
@@ -109,8 +127,10 @@ const CheckboxCell = styled(Cell)`
   padding: 0;
 `;
 
+// 원서 정정 메뉴가 칸 밖(아래 행 위)으로 펼쳐지므로 잘라내지 않는다.
 const ActionCell = styled(Cell)`
   padding: 0;
+  overflow: visible;
 `;
 
 const StyledCheckbox = styled.input`
@@ -126,13 +146,12 @@ const StyledCheckbox = styled.input`
   }
 `;
 
-/** 접수 취소는 되돌릴 수 없는 삭제라 경고색으로, 2차 합격자 등록은 기존 초록색으로 구분한다. */
-const ActionButton = styled.button<{ actionMode: ApplicantActionMode }>`
+const ActionButton = styled.button`
   height: 37px;
   max-width: 100%;
   padding: 8px 12px;
   border-radius: 8px;
-  background-color: ${({ actionMode }) => (actionMode === "cancel" ? colors.extra.error : colors.green[400])};
+  background-color: ${colors.green[400]};
   color: ${colors.gray[50]};
   font-size: 18px;
   font-weight: 500;
@@ -142,8 +161,7 @@ const ActionButton = styled.button<{ actionMode: ApplicantActionMode }>`
   cursor: pointer;
 
   &:hover {
-    ${({ actionMode }) =>
-      actionMode === "cancel" ? "filter: brightness(0.92);" : `background-color: ${colors.green[500]};`}
+    background-color: ${colors.green[500]};
   }
 
   @media (max-width: 768px) {

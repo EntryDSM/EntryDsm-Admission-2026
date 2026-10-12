@@ -6,6 +6,8 @@ export * from "./DownloadButton";
 export * from "./Applicant";
 export * from "./Pagination";
 export * from "./ApplicantDetailModal";
+export * from "./ApplicantActionMenu";
+export * from "./ApplicationCorrectionModal";
 export * from "./RequireAdmin";
 export * from "./UnderConstructionRedirect";
 export * from "./DropDownSection";

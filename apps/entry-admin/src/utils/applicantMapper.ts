@@ -30,7 +30,10 @@ export interface ApplicantDetailView {
   /** 접수번호 표기 (`applicantId` 네 자리, 예: `0001`) */
   receiptCode: string;
   name?: string;
+  /** 화면 표기용 생년월일 (예: `2010.03.15`) */
   birthDay?: string;
+  /** 원본 생년월일 ISO date (예: `2010-03-15`). 원서 정정 입력칸의 초깃값으로 쓴다. */
+  birthDate?: string;
   phoneNumber?: string;
   region?: Region;
   isDaejeon?: boolean;
@@ -76,6 +79,7 @@ export const toApplicantDetailView = (dto: AdminApplicantDetail): ApplicantDetai
   receiptCode: formatReceiptNumber(dto.applicantId),
   name: dto.name ?? undefined,
   birthDay: formatDotDate(dto.birthDate ?? undefined),
+  birthDate: dto.birthDate ?? undefined,
   phoneNumber: dto.phoneNumber ?? undefined,
   region: dto.region ?? undefined,
   isDaejeon: toIsDaejeon(dto.region),
