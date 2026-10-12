@@ -1,7 +1,6 @@
 import { colors, Flex } from "@entry/design";
 import styled from "@emotion/styled";
 import { PreviousBtn } from "@entry/ui";
-import { toast } from "react-toastify";
 
 interface IApplicationNavType {
   totalPage: number;
@@ -17,6 +16,7 @@ interface IApplicationNavType {
     message?: string;
   };
 }
+//TODO: 나중에 오류 토스트로 표시하기
 export const ApplicationNav = ({
   totalPage,
   currentStep,
@@ -31,8 +31,10 @@ export const ApplicationNav = ({
   const isGraduationTypeSelected = Boolean(graduationType && graduationType.trim());
   const isLastPage = currentPage >= totalPage;
   const isPreviewPage = currentPage === totalPage - 1;
-  // 필수 입력이 비어 있어도 버튼은 누를 수 있게 두고, 클릭 시 안내 토스트를 표시한다.
-  const isNextBlocked = isLastPage || isSaving;
+  // 현재 페이지의 필수 입력이 모두 채워졌는지 렌더링마다 확인해 다음 버튼의 활성 여부를 정한다.
+  const canProceed = validateCurrentPage?.(currentPage).canProceed ?? true;
+  // 마지막 페이지(제출 확인)에서는 기존처럼 항상 비활성이고, 저장 중이거나 필수 입력이 비어 있으면 비활성화한다.
+  const isNextBlocked = isLastPage || isSaving || !canProceed;
   const nextLabel = (() => {
     if (isLastPage && isGraduationTypeSelected) return "제출";
     // 원서 미리보기 다음 단계는 최종 제출 확인 화면이므로 버튼 목적을 명확히 표시한다.
@@ -50,10 +52,7 @@ export const ApplicationNav = ({
     if (currentPage >= totalPage) return;
 
     const validationResult = validateCurrentPage?.(currentPage);
-    if (validationResult && !validationResult.canProceed) {
-      toast.error("입력이 완료되지 않았습니다.");
-      return;
-    }
+    if (validationResult && !validationResult.canProceed) return;
 
     const shouldProceed = (await onNext?.()) ?? true;
     if (shouldProceed) {
