@@ -19,10 +19,11 @@ import {
   useUpdateApplicantArrival,
   useVerifyApplicationPeriod,
 } from "../hooks";
-import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel } from "../utils";
+import { type ApplicantListItem, getApplicantActionHeader, getApplicantActionMode } from "../utils";
 import {
   Applicant,
   ApplicantDetailModal,
+  ApplicationCorrectionModal,
   CheckBox,
   DownloadButton,
   FindApplicantInput,
@@ -52,7 +53,7 @@ const EDUCATION_OPTIONS = [
   { key: "exam", label: "검정고시" },
 ] as const;
 
-/** 마지막 열(지원자별 버튼) 제목은 원서 접수 기간에 따라 "접수 취소" ↔ "2차 합격자 등록" 으로 바뀌므로 렌더 시점에 붙인다. */
+/** 마지막 열(지원자별 버튼) 제목은 보이는 지원자의 상태에 따라 "원서 정정" ↔ "2차 합격자 등록" 으로 바뀌므로 렌더 시점에 붙인다. */
 const APPLICANT_TABLE_FIXED_HEADERS = [
   "접수 번호",
   "이름",
@@ -135,10 +136,17 @@ export const ApplicantsList = () => {
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
 
-  // 원서 접수 기간에는 지원자별 버튼이 "접수 취소", 접수가 끝나면(또는 기간 판정에 실패하면) 기존대로 "2차 합격자 등록" 이 된다.
-  const { periodStatus, isCheckingPeriod } = useApplicationPeriod();
-  const applicantActionMode: ApplicantActionMode = periodStatus === "open" ? "cancel" : "register";
-  const tableHeaders = [...APPLICANT_TABLE_FIXED_HEADERS, getApplicantActionLabel(applicantActionMode)];
+  // 1차 합격자 산출 전(심사 대기)인 지원자는 "원서 정정" 버튼(정정·접수 취소 메뉴), 산출 결과를 받은 지원자는 "2차 합격자 등록" 버튼이다.
+  // 접수 취소는 지금처럼 원서 접수 기간에만 메뉴에서 고를 수 있다(기간이 아니거나 판정에 실패하면 막힌다).
+  const { periodStatus } = useApplicationPeriod();
+  const isCancelAvailable = periodStatus === "open";
+  const tableHeaders = [
+    ...APPLICANT_TABLE_FIXED_HEADERS,
+    getApplicantActionHeader(applicants.map(applicant => getApplicantActionMode(applicant.status))),
+  ];
+
+  const [correctionTarget, setCorrectionTarget] = useState<ApplicantListItem | null>(null);
+  const handleCorrectionClose = useCallback(() => setCorrectionTarget(null), []);
 
   const [cancelTarget, setCancelTarget] = useState<ApplicantListItem | null>(null);
   const [isVerifyingPeriod, setIsVerifyingPeriod] = useState(false);
@@ -250,7 +258,12 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "접수 취소" 버튼 → 되돌릴 수 없는 삭제라 confirm 대신 "확인했습니다" 를 입력받는 모달(원서 최종 제출과 같은 방식)을 연다.
+  // 원서 정정 메뉴의 "원서 정정" → 정정 패널을 연다.
+  const handleCorrectClick = (applicant: ApplicantListItem) => {
+    setCorrectionTarget(applicant);
+  };
+
+  // 원서 정정 메뉴의 "원서 접수 취소" → 되돌릴 수 없는 삭제라 confirm 대신 "확인했습니다" 를 입력받는 모달(원서 최종 제출과 같은 방식)을 연다.
   const handleCancelClick = (applicant: ApplicantListItem) => {
     if (isCancelInProgress) {
       return;
@@ -293,16 +306,6 @@ export const ApplicantsList = () => {
     }
 
     setCancelTarget(null);
-  };
-
-  // 지원자별 버튼은 접수 기간에 따라 역할이 바뀐다(접수 취소 ↔ 2차 합격자 등록).
-  const handleActionClick = (applicant: ApplicantListItem) => {
-    if (applicantActionMode === "cancel") {
-      handleCancelClick(applicant);
-      return;
-    }
-
-    handleRegisterClick(applicant);
   };
 
   const cancelModalContent = cancelTarget
@@ -448,7 +451,7 @@ export const ApplicantsList = () => {
         </ApplicantsTitle>
 
         <ApplicantsAllList role="rowgroup">
-          {isLoading || isCheckingPeriod ? (
+          {isLoading ? (
             <LoadingContent role="row">
               <LoadingMessage role="cell" aria-colspan={tableHeaders.length}>
                 지원자 조회 데이터 기다리는 중...
@@ -471,9 +474,12 @@ export const ApplicantsList = () => {
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
-                actionMode={applicantActionMode}
+                actionMode={getApplicantActionMode(applicant.status)}
+                isCancelAvailable={isCancelAvailable}
                 onClick={() => handleApplicantClick(applicant)}
-                onActionClick={() => handleActionClick(applicant)}
+                onRegisterClick={() => handleRegisterClick(applicant)}
+                onCorrectClick={() => handleCorrectClick(applicant)}
+                onCancelClick={() => handleCancelClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))
@@ -483,6 +489,15 @@ export const ApplicantsList = () => {
 
       {selectedApplicant && (
         <ApplicantDetailModal applicantId={selectedApplicant.applicantId} isOpen={isOpen} onClose={close} />
+      )}
+
+      {correctionTarget && (
+        <ApplicationCorrectionModal
+          key={correctionTarget.applicantId}
+          applicantId={correctionTarget.applicantId}
+          applicantName={correctionTarget.applicantName}
+          onClose={handleCorrectionClose}
+        />
       )}
 
       <CancelModal

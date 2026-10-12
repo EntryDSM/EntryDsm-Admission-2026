@@ -1,6 +1,12 @@
 import { buildQueryString } from "../utils/queryString";
 import { http } from "./http";
-import type { AdminApplicantDetail, GetApplicantsParams, GetApplicantsResponse } from "./types";
+import type {
+  AdminApplicantDetail,
+  ApplicationCorrectionResult,
+  CorrectApplicationPayload,
+  GetApplicantsParams,
+  GetApplicantsResponse,
+} from "./types";
 
 const APPLICANTS_ENDPOINT = "/api/v11/admin/applicants";
 
@@ -30,3 +36,11 @@ export const updateApplicantArrival = (applicantId: number, isArrived: boolean) 
  * (백엔드 `ApplicantController.delete` → `ApplicantService.delete` → application `ApplicationCommandService.deleteApplicant`)
  */
 export const deleteApplicant = (applicantId: number) => http.delete<void>(`${APPLICANTS_ENDPOINT}/${applicantId}`);
+
+/**
+ * 제출(도착)된 원서 정정 (200). 1차 합격자 산출 전, 전형 결과가 없는 원서만 고칠 수 있다.
+ * 보낸 항목만 바꾸며 상태·조건·에러 코드는 {@link ApplicationCorrectionResult} 참고.
+ * (백엔드 #386 `ApplicationCorrectionController` → application `ApplicationCorrectionService`)
+ */
+export const correctApplication = (applicantId: number, payload: CorrectApplicationPayload) =>
+  http.patch<ApplicationCorrectionResult>(`${APPLICANTS_ENDPOINT}/${applicantId}/application`, payload);
