@@ -1,12 +1,8 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
-/**
- * 원서 정정 화면(모달·묶음)이 함께 쓰는 입력칸·카드 스타일.
- * 컴포넌트 파일에서 내보내면 Fast Refresh 규칙에 걸려 noticeFormModel 처럼 따로 둔다.
- */
+/** 원서 정정 화면이 함께 쓰는 스타일. 컴포넌트 파일에서 내보내면 Fast Refresh 규칙에 걸려 따로 둔다. */
 
-/** 입력칸 포커스 테두리(관리자 화면 초록색) */
 export const focusRing = `
   border-color: ${colors.green[400]};
   box-shadow: 0 0 0 3px rgba(74, 199, 118, 0.18);
@@ -46,7 +42,6 @@ export const CardTitle = styled.h3`
   font-weight: 600;
 `;
 
-// 한국어 문장은 어절 단위로 줄을 바꿔 "입력해 주 / 세요" 처럼 끊기지 않게 한다.
 export const CardDescription = styled.p`
   color: ${colors.gray[400]};
   font-size: 14px;

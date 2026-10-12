@@ -3,17 +3,12 @@ import { toast } from "react-toastify";
 
 import { adminQueryKeys, HttpError, updateApplicantArrival } from "../apis";
 
-/** 도착 표시 대상. `isArrived: false` 는 도착 취소다. */
+/** `isArrived: false` 는 도착 취소다. */
 export interface UpdateApplicantArrivalTarget {
   applicantId: number;
   isArrived: boolean;
 }
 
-/**
- * 원서 도착 표시/취소 훅.
- * 뮤테이션 에러는 QueryCache(쿼리 전용) 에서 잡히지 않으므로 여기서 직접 토스트한다.
- * 성공 시 지원자 목록/상세 캐시를 무효화해 최신 값으로 갱신한다.
- */
 export const useUpdateApplicantArrival = () => {
   const queryClient = useQueryClient();
 

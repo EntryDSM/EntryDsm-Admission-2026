@@ -1,13 +1,9 @@
 import { toast } from "react-toastify";
 
-/** 서명된 다운로드 URL 을 새 창으로 연다. 브라우저가 팝업으로 막으면 null 을 돌려준다. */
+/** 팝업이 막히면 null 을 돌려준다. */
 export const openDownloadWindow = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
-/**
- * 파일 생성이 끝난 뒤 다운로드를 열고 토스트로 알린다.
- * 서버 응답을 기다린 뒤의 window.open 은 사용자 클릭과 떨어져 있어 브라우저가 팝업으로 막을 수 있으므로,
- * 토스트를 클릭해도 같은 링크가 열리게 한다.
- */
+/** 응답을 기다린 뒤 여는 창은 팝업으로 막힐 수 있어, 토스트를 눌러도 같은 링크가 열리게 한다. */
 export const notifyDownloadReady = (label: string, url: string) => {
   const opened = openDownloadWindow(url);
 

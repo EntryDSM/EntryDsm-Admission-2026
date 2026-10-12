@@ -157,7 +157,7 @@ export const StatCardsGrid = ({
 
 interface CompetitionSectionProps {
   competitionSummary: StatisticsSummary["competitionSummary"];
-  /** 전형 → 1차 선발 인원(`FIRST_PASS_QUOTA`). 없는 전형은 "1차 선발 인원 미등록" 으로 보인다. */
+  /** 없는 전형은 "1차 선발 인원 미등록" 으로 보인다. */
   firstPassQuota: FirstPassQuotaMetric;
   isCompetitionLoading: boolean;
 }
@@ -198,7 +198,7 @@ export const CompetitionSection = ({
           </>
         ) : (
           competitionSummary.byType.map((item, index) => {
-            // 지원자 ÷ 1차 선발 인원. 선발 인원보다 많이 지원하면 100% 를 넘으므로 막대만 100% 에서 멈춘다.
+            // 지원자 ÷ 1차 선발 인원. 100% 를 넘으면 막대만 100% 에서 멈춘다.
             const quota = firstPassQuota[item.applicationType as AdmissionType];
             const quotaPercentage = quota ? (item.applicants / quota) * 100 : undefined;
 

@@ -14,18 +14,15 @@ import type {
 import type { ApplicantDetailView } from "./applicantMapper";
 
 /**
- * 원서 정정 화면의 상태·검증·요청 본문 생성.
- * 정정 API 는 보낸 항목만 바꾸고 검증에 실패하면 어느 항목인지 알려주지 않으므로(400 `INVALID_APPLICATION_CORRECTION`),
- * 서버 규칙(백엔드 #386 `ApplicationCorrectionService`·`ApplicationFormEditor`)을 화면에서 먼저 확인한다.
- * 길이 제한은 서버보다 좁은 지원자 원서 작성 화면(entry-admission `inputLimits`)에 맞춰, 정정한 원서도 같은 조건을 지키게 한다.
+ * 원서 정정 화면의 상태·검증·요청 본문.
+ * 서버는 검증에 실패해도 어느 항목인지 알려주지 않아(400) 서버 규칙을 화면에서 먼저 확인한다.
+ * 길이 제한은 지원자 원서 작성 화면에 맞춘다.
  */
 
 export const CORRECTION_LIMITS = {
   name: 20,
   guardianName: 20,
-  /** DB 컬럼 `applicants.guardian_relation` VARCHAR(10) */
   guardianRelation: 10,
-  /** 암호화 컬럼 길이 때문에 지원자 화면도 100자로 막는다 */
   addressDetail: 100,
   essay: 1600,
   reason: 500,
@@ -33,7 +30,7 @@ export const CORRECTION_LIMITS = {
 
 export type CorrectionSubject = keyof SubjectGradesCorrection;
 
-/** 학기별 교과 성적 과목. 지원자 원서 작성 화면(학기별 성적)과 같은 순서다. */
+/** 지원자 원서 작성 화면(학기별 성적)과 같은 순서 */
 export const CORRECTION_SUBJECTS: ReadonlyArray<{ key: CorrectionSubject; label: string }> = [
   { key: "korean", label: "국어" },
   { key: "society", label: "사회" },
@@ -44,7 +41,7 @@ export const CORRECTION_SUBJECTS: ReadonlyArray<{ key: CorrectionSubject; label:
   { key: "english", label: "영어" },
 ];
 
-/** 검정고시 과목. 지원자 원서 작성 화면(검정고시 성적)·상세 모달과 같은 순서다. */
+/** 지원자 원서 작성 화면(검정고시 성적)과 같은 순서 */
 export const CORRECTION_GED_SUBJECTS: ReadonlyArray<{ key: CorrectionSubject; label: string }> = [
   { key: "korean", label: "국어" },
   { key: "society", label: "사회" },
@@ -70,20 +67,18 @@ const CORRECTION_SEMESTERS: ReadonlyArray<{ key: CorrectionSemester; label: stri
   { key: "THIRD_GRADE_SECOND_SEMESTER", label: "3학년 2학기" },
 ];
 
-/** 졸업 구분별로 원서에 넣는 학기. 졸업 예정자는 3학년 2학기가 없다(서버도 거절한다). */
+/** 졸업 예정자는 3학년 2학기가 없다. */
 export const getCorrectionSemesters = (graduationType: CorrectionGraduationType | "") =>
   graduationType === "PROSPECTIVE" ? CORRECTION_SEMESTERS.slice(0, 3) : CORRECTION_SEMESTERS;
 
-/** 성취도 선택지. `X` 는 미이수(자유학기 등)다. */
 export const SUBJECT_GRADES: readonly SubjectGrade[] = ["A", "B", "C", "D", "E", "X"];
 
-/** 졸업 예정 연월로 받는 연도. 서버(`APPLICATION_GRADUATION_DATE_OUT_OF_RANGE`)·지원자 화면과 같다. */
+/** 서버가 받는 졸업 예정 연도 */
 const PROSPECTIVE_GRADUATION_YEARS = [2027, 2026];
 
-/** 졸업 연도 선택지는 지원자 원서 작성 화면과 같은 범위(2030년부터 81년)다. */
+/** 지원자 원서 작성 화면과 같은 범위 */
 const GRADUATED_YEARS = Array.from({ length: 81 }, (_, index) => 2030 - index);
 
-/** 졸업 구분별 졸업 연도 선택지(최근 연도부터) */
 export const getGraduationYearOptions = (graduationType: CorrectionGraduationType | "") =>
   graduationType === "PROSPECTIVE" ? PROSPECTIVE_GRADUATION_YEARS : GRADUATED_YEARS;
 
@@ -91,34 +86,30 @@ export const GRADUATION_MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) =>
 
 export type GuardianRelationChoice = "부" | "모" | "기타";
 
-/** 성적 입력칸. 숫자 칸은 입력 중 빈 값을 다루려고 문자열로 둔다. */
+/** 숫자 칸은 입력 중 빈 값을 다루려고 문자열로 둔다. */
 export interface AcademicRecordFormValues {
   absentCount: string;
   lateCount: string;
   earlyLeaveCount: string;
   classAbsenceCount: string;
   volunteerTime: string;
-  /** 고르기 전에는 null — 성적 전체를 교체하므로 있음/없음을 반드시 고르게 한다 */
+  /** 고르기 전에는 null. 성적 전체를 교체하므로 있음/없음을 반드시 고르게 한다. */
   dsmAlgorithmAwarded: boolean | null;
   programmingCertified: boolean | null;
   subjectGrades: Record<CorrectionSemester, Record<CorrectionSubject, SubjectGrade | "">>;
   gedScores: Record<CorrectionSubject, string>;
 }
 
-/**
- * 정정 입력칸 값. 빈 문자열은 "바꾸지 않음" 이다.
- * 상세 조회에 있는 항목은 현재 값으로 채워 바뀐 것만 보내고, 조회에 없는 항목은 비워 두었다가 입력한 것만 보낸다.
- */
+/** 빈 문자열은 "바꾸지 않음" 이다. 상세 조회에 있는 항목만 현재 값으로 채운다. */
 export interface CorrectionFormValues {
   admissionType: AdmissionType | "";
   region: Region | "";
   graduationType: CorrectionGraduationType | "";
-  /** 졸업(예정) 연도·월 선택값. 둘 다 고르면 `YYYY-MM` 으로 보낸다. */
+  /** 연도와 월을 모두 고르면 `YYYY-MM` 으로 보낸다. */
   graduationYear: string;
   graduationMonth: string;
   specialAdmissionType: SpecialAdmissionType | "";
   name: string;
-  /** `YYYY-MM-DD` (date 입력칸 값) */
   birthdate: string;
   gender: Gender | "";
   guardianName: string;
@@ -127,19 +118,18 @@ export interface CorrectionFormValues {
   guardianRelation: GuardianRelationChoice | "";
   /** 관계가 "기타" 일 때 직접 입력한 값 */
   guardianRelationOther: string;
-  /** 우편번호·기본 주소는 주소 검색으로만 함께 채운다 */
+  /** 우편번호·기본 주소는 주소 검색으로만 채운다. */
   zipCode: string;
   addressBase: string;
   addressDetail: string;
   introduction: string;
   studyPlan: string;
-  /** 성적을 다시 입력할지. 졸업 구분을 바꾸면 끌 수 없다. */
+  /** 졸업 구분을 바꾸면 끌 수 없다. */
   isAcademicRecordEnabled: boolean;
   academicRecord: AcademicRecordFormValues;
   reason: string;
 }
 
-/** 조회 응답 학력 구분 → 정정 요청 졸업 구분 */
 const GRADUATION_TYPE_BY_STATUS: Record<GraduationStatus, CorrectionGraduationType> = {
   EXPECTED: "PROSPECTIVE",
   GRADUATED: "GRADUATED",
@@ -163,7 +153,6 @@ const createEmptyAcademicRecord = (): AcademicRecordFormValues => ({
   gedScores: createSubjectValues(""),
 });
 
-/** 상세 조회 응답 → 정정 입력칸 초깃값 */
 export const toCorrectionFormValues = (detail: ApplicantDetailView): CorrectionFormValues => ({
   admissionType: detail.applicationType ?? "",
   region: detail.region ?? "",
@@ -189,7 +178,6 @@ export const toCorrectionFormValues = (detail: ApplicantDetailView): CorrectionF
   reason: "",
 });
 
-/** 화면 묶음. 묶음마다 "변경됨" 표시와 되돌리기를 한다. */
 export type CorrectionSection = "type" | "personal" | "guardian" | "introduction" | "studyPlan" | "academicRecord";
 
 const SECTION_FIELDS: Record<CorrectionSection, ReadonlyArray<keyof CorrectionFormValues>> = {
@@ -210,7 +198,6 @@ const SECTION_FIELDS: Record<CorrectionSection, ReadonlyArray<keyof CorrectionFo
   academicRecord: ["isAcademicRecordEnabled", "academicRecord"],
 };
 
-/** 한 묶음의 입력칸만 초깃값으로 되돌린다. */
 export const resetCorrectionSection = (
   values: CorrectionFormValues,
   initial: CorrectionFormValues,
@@ -220,7 +207,6 @@ export const resetCorrectionSection = (
   ...Object.fromEntries(SECTION_FIELDS[section].map(field => [field, initial[field]])),
 });
 
-/** 바뀐 항목. 화면 순서대로 정정 확인·요약 문구에 쓴다. */
 export type CorrectionChangeKey =
   | "admissionType"
   | "region"
@@ -271,7 +257,6 @@ const SECTION_CHANGES: Record<CorrectionSection, ReadonlyArray<CorrectionChangeK
   academicRecord: ["academicRecord"],
 };
 
-/** 묶음 안에 바뀐 항목이 있는지("변경됨" 표시) */
 export const hasCorrectionSectionChanges = (
   changedKeys: ReadonlySet<CorrectionChangeKey>,
   section: CorrectionSection
@@ -300,25 +285,23 @@ export type CorrectionErrors = Partial<Record<CorrectionErrorKey, string>>;
 
 export interface CorrectionDraft {
   changes: ApplicationFormChanges;
-  /** 바뀐 항목(화면 순서) */
   changedKeys: CorrectionChangeKey[];
-  /** 남아 있는 입력 오류. 하나라도 있으면 정정을 보내지 않는다. */
+  /** 하나라도 있으면 정정을 보내지 않는다. */
   errors: CorrectionErrors;
-  /** 졸업 구분을 바꿔 성적을 함께 다시 입력해야 하는지 */
+  /** 졸업 구분을 바꿔 성적을 함께 보내야 하는지 */
   requiresAcademicRecord: boolean;
   /** 서버가 총점을 다시 계산하는 정정인지(전형·졸업 구분·성적) */
   recalculatesScore: boolean;
 }
 
 const PHONE_NUMBER_PATTERN = /^010-\d{4}-\d{4}$/;
-/** 출결 횟수·봉사 시간. 입력칸이 숫자만 받고 세 자리로 막는다. */
 const COUNT_PATTERN = /^\d{1,3}$/;
 
 const isCount = (value: string) => COUNT_PATTERN.test(value);
 
 const isGedScore = (value: string) => COUNT_PATTERN.test(value) && Number(value) <= 100;
 
-/** `YYYY-MM-DD` 가 달력에 있는 날인지. 2월 31일처럼 넘치는 날은 Date 가 다음 달로 넘기므로 월·일이 그대로인지로 거른다. */
+/** 2월 31일처럼 달력에 없는 날을 거른다. */
 const isCalendarDate = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) {
@@ -330,7 +313,7 @@ const isCalendarDate = (value: string) => {
   return year >= 1900 && date.getMonth() === month - 1 && date.getDate() === day;
 };
 
-/** 숫자만 남겨 `010-0000-0000` 꼴로 하이픈을 넣는다(최대 11자리). */
+/** 숫자만 남겨 `010-0000-0000` 꼴로 하이픈을 넣는다. */
 export const formatPhoneNumberInput = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
 
@@ -345,7 +328,7 @@ export const formatPhoneNumberInput = (value: string) => {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 };
 
-/** 출결·봉사·검정고시 점수 입력칸: 숫자만 세 자리까지 */
+/** 숫자만 세 자리까지 */
 export const sanitizeCountInput = (value: string) => value.replace(/\D/g, "").slice(0, 3);
 
 /** 정정 후의 졸업 구분. 바꾸지 않았으면 현재 값이다. */
@@ -382,7 +365,7 @@ const toAcademicRecordCorrection = (
   };
 };
 
-/** 입력칸 값 → 정정 요청 본문의 `changes`·바뀐 항목·남은 오류 */
+/** 입력값으로 요청 본문의 `changes`, 바뀐 항목, 남은 오류를 만든다. */
 export const buildCorrectionDraft = (values: CorrectionFormValues, initial: CorrectionFormValues): CorrectionDraft => {
   const changes: ApplicationFormChanges = {};
   const changedKeys: CorrectionChangeKey[] = [];
@@ -404,7 +387,7 @@ export const buildCorrectionDraft = (values: CorrectionFormValues, initial: Corr
     changes.graduationType = values.graduationType;
     changedKeys.push("graduationType");
 
-    // 검정고시에는 중학교 정보가 없어, 졸업(예정)으로 바꾸려면 서버가 중학교 정보를 함께 요구한다(화면에서는 넣을 수 없다).
+    // 검정고시 → 졸업(예정)은 중학교 정보가 필요해 이 화면에서 할 수 없다.
     if (initial.graduationType === "GED") {
       errors.graduationType = "검정고시 지원자는 중학교 정보가 없어 이 화면에서 졸업(예정)으로 바꿀 수 없습니다.";
     }
@@ -412,7 +395,7 @@ export const buildCorrectionDraft = (values: CorrectionFormValues, initial: Corr
 
   const graduationType = getEffectiveGraduationType(values, initial);
 
-  // 검정고시는 졸업 연월이 없다. 졸업 구분을 바꾸면 옛 연월이 새 구분과 맞지 않으므로 새로 받는다.
+  // 검정고시는 졸업 연월이 없다. 졸업 구분을 바꾸면 연월도 새로 받는다.
   if (graduationType !== "GED") {
     const { graduationYear, graduationMonth } = values;
 
@@ -526,7 +509,7 @@ export const buildCorrectionDraft = (values: CorrectionFormValues, initial: Corr
     errors.addressDetail = "주소를 바꾸면 상세 주소도 입력해 주세요.";
   }
 
-  /* ── 자기소개서·학업계획서: 지원자가 쓴 줄바꿈을 살리려고 값을 다듬지 않고 그대로 비교·전송한다 ── */
+  /* ── 자기소개서·학업계획서: 줄바꿈을 살리려고 다듬지 않고 보낸다 ── */
   const essays = [
     { key: "introduction", label: "자기소개서" },
     { key: "studyPlan", label: "학업계획서" },
@@ -599,8 +582,8 @@ export const buildCorrectionDraft = (values: CorrectionFormValues, initial: Corr
 };
 
 /**
- * 고르는 순간 결과가 정해지는 칩·선택 항목의 오류는 곧바로 보인다(오류 → 이 오류를 띄우는 바뀐 항목).
- * 글자를 입력하는 칸의 오류는 칸을 벗어난 뒤(touched)에, 성적·사유처럼 처음부터 비어 있는 칸은 저장을 누른 뒤에 보인다.
+ * 칩·선택 항목의 오류는 고르는 즉시 보인다(오류 → 이 오류를 띄우는 바뀐 항목).
+ * 글자 칸은 칸을 벗어난 뒤에, 성적·사유처럼 처음부터 비어 있는 칸은 저장을 누른 뒤에 보인다.
  */
 const IMMEDIATE_ERROR_TRIGGERS: Partial<Record<CorrectionErrorKey, ReadonlyArray<CorrectionChangeKey>>> = {
   graduationType: ["graduationType"],
@@ -609,7 +592,6 @@ const IMMEDIATE_ERROR_TRIGGERS: Partial<Record<CorrectionErrorKey, ReadonlyArray
   addressDetail: ["address"],
 };
 
-/** 지금 화면에 보여 줄 오류만 고른다. */
 export const getVisibleCorrectionErrors = (
   draft: CorrectionDraft,
   touched: ReadonlySet<CorrectionErrorKey>,

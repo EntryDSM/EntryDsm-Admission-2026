@@ -105,7 +105,7 @@ export const CorrectionTypeSection = ({
   const isGedApplicant = initial.graduationType === "GED";
   const isGraduationTypeChanged = changedKeys.has("graduationType");
 
-  // 검정고시 지원자는 중학교 정보가 없어 졸업(예정)으로 바꿀 수 없다(정정 API 가 중학교 정보를 함께 요구한다).
+  // 검정고시 지원자는 중학교 정보가 없어 졸업(예정)으로 바꿀 수 없다.
   const graduationTypeOptions: ReadonlyArray<IChoiceOption<CorrectionGraduationType>> = [
     { value: "PROSPECTIVE", label: "졸업 예정", isDisabled: isGedApplicant },
     { value: "GRADUATED", label: "졸업", isDisabled: isGedApplicant },
@@ -117,7 +117,7 @@ export const CorrectionTypeSection = ({
       return;
     }
 
-    // 검정고시는 졸업 연월이 없고, 졸업 예정은 2026·2027년만 고를 수 있어 맞지 않는 연도는 비운다.
+    // 새 졸업 구분에 맞지 않는 졸업 연월은 비운다.
     const keepsYear =
       nextGraduationType !== "GED" &&
       getGraduationYearOptions(nextGraduationType).includes(Number(values.graduationYear));
@@ -321,7 +321,7 @@ export const CorrectionGuardianSection = ({
   const id = useId();
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
-  // 도로명 주소가 없는 경우(일부 지번 주소)만 지번 주소를 기본 주소로 쓴다.
+  // 도로명 주소가 없을 때만 지번 주소를 쓴다.
   const handleAddressComplete = (address: Address) => {
     onChange({ zipCode: address.zonecode, addressBase: address.roadAddress || address.address });
     setIsSearchingAddress(false);

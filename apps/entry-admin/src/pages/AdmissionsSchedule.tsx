@@ -11,16 +11,12 @@ type EditablePart = "start" | "end";
 
 interface ScheduleRowProps {
   field: ScheduleFieldView;
-  /** 신규(등록) 행은 scheduleId 가 null 이라 행 식별은 배열 index 로 한다. */
+  /** 새 일정은 scheduleId 가 null 이라 행은 index 로 구분한다. */
   index: number;
   onChange: (index: number, part: EditablePart, value: string) => void;
 }
 
-/**
- * 일정 한 건(시작/종료)을 렌더하는 memoized 행.
- * `field` 참조가 그대로면(=다른 행만 편집됨) 리렌더를 건너뛴다.
- * 보호자의 `onChange` 는 안정적이라 행 내부 핸들러도 `index` 기준으로 안정적으로 유지된다.
- */
+/** 일정 한 건의 행. 다른 행만 바뀌면 다시 그리지 않는다. */
 const ScheduleRow = memo(({ field, index, onChange }: ScheduleRowProps) => {
   const handleStartChange = useCallback((value: string) => onChange(index, "start", value), [onChange, index]);
   const handleEndChange = useCallback((value: string) => onChange(index, "end", value), [onChange, index]);
@@ -43,22 +39,19 @@ export const AdmissionsSchedule = () => {
   const { schedules, isLoading, isError, isSuccess, refetch } = useSchedules();
   const { updateSchedules, isUpdating } = useUpdateSchedules();
 
-  // 조회가 성공했는데 목록이 비어 있으면(등록된 일정 없음) 조회 결과 대신 기본 일정을 띄워 바로 등록하게 한다.
+  // 등록된 일정이 없으면 기본 일정을 띄워 바로 등록하게 한다.
   const isRegisterMode = isSuccess && schedules.length === 0;
 
-  // 조회 결과를 로컬 편집 상태로 복사해 저장 전까지 서버 캐시와 분리한다.
-  // 다른 화면(홈 통계)이 같은 키로 먼저 조회해 빈 목록이 캐시된 채 마운트하면, 첫 렌더부터
-  // schedules === syncedSchedules 라 아래 동기화가 한 번도 걸리지 않는다(빈 결과는 structural sharing
-  // 으로 참조도 안 바뀜). 그래서 초기값 계산 시점에 등록 모드면 기본 일정을 바로 시드한다.
+  // 저장 전까지는 서버 값과 분리된 편집 상태를 쓴다.
+  // 빈 목록이 이미 캐시돼 있으면 아래 동기화가 걸리지 않아, 처음부터 기본 일정을 넣는다.
   const [fields, setFields] = useState<ScheduleFieldView[]>(() =>
     isRegisterMode ? createDefaultScheduleFields() : schedules
   );
-  // 편집 중(dirty)에는 백그라운드 refetch 가 로컬 편집을 덮어쓰지 않게 동기화를 건너뛴다.
+  // 편집 중에는 재조회가 입력을 덮지 않게 동기화하지 않는다.
   const [isDirty, setIsDirty] = useState(false);
-  // 마지막으로 동기화한 조회 결과 참조. 새 조회로 참조가 바뀌면 다시 동기화한다.
   const [syncedSchedules, setSyncedSchedules] = useState(schedules);
 
-  // effect 대신 렌더 중 상태 조정(React 권장 패턴): 편집 중이 아니고 조회 결과가 바뀌었을 때만 동기화.
+  // 편집 중이 아니고 조회 결과가 바뀌었을 때만 동기화한다.
   if (!isDirty && schedules !== syncedSchedules) {
     setSyncedSchedules(schedules);
     setFields(isRegisterMode ? createDefaultScheduleFields() : schedules);
@@ -69,7 +62,7 @@ export const AdmissionsSchedule = () => {
     setFields(prev => prev.map((field, fieldIndex) => (fieldIndex === index ? { ...field, [part]: value } : field)));
   }, []);
 
-  // 등록 모드의 초기값은 빈 문자열이라, 모든 행의 시각이 입력되기 전에는 저장을 막는다.
+  // 모든 일정의 시각을 입력하기 전에는 저장을 막는다.
   const hasIncompleteField = fields.some(field => !field.start || !field.end);
   const isSaveBlocked = isLoading || isUpdating || fields.length === 0 || hasIncompleteField;
 
@@ -77,7 +70,7 @@ export const AdmissionsSchedule = () => {
     if (isSaveBlocked) {
       return;
     }
-    // 저장이 성공/실패로 끝나면 dirty 를 해제해 서버 최신값과 다시 동기화되게 한다.
+    // 저장이 끝나면 다시 서버 값과 동기화한다.
     updateSchedules(fields, { onSettled: () => setIsDirty(false) });
   };
 

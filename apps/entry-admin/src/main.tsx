@@ -1,4 +1,4 @@
-// Sentry 초기화. 다른 모듈보다 먼저 평가되도록 가장 먼저 import 한다.
+// Sentry 를 다른 모듈보다 먼저 초기화하도록 가장 먼저 import 한다.
 import "./instrument";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -8,7 +8,7 @@ import { reactErrorHandler } from "@entry/observability";
 import { queryClient } from "./apis";
 import { App } from "./App";
 
-// React 19 오류 훅: 에러 바운더리(react-router 기본 errorElement 포함)가 잡은 렌더 오류도 Sentry 로 보낸다.
+// 에러 바운더리가 잡은 렌더 오류도 Sentry 로 보낸다.
 const root = createRoot(document.getElementById("root") as HTMLElement, {
   onCaughtError: reactErrorHandler(),
   onUncaughtError: reactErrorHandler(),

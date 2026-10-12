@@ -10,12 +10,9 @@ import { adminQueryKeys, HttpError } from "../apis";
 import { useMyAccount } from "../hooks";
 
 /**
- * 어드민 접근 가드 라우트. 내 계정 조회(GET /api/identity/v11/accounts/me)로 권한을 확인해
- * `role === "ADMIN"` 일 때만 하위 페이지를 렌더링한다.
- * - 미인증(401): 로그인(auth 앱)으로 보낸다.
- * - ADMIN 이 아닌 권한: 접근 거부 화면을 띄운다.
- * - 네트워크 등 그 외 실패: 페이지를 막고(fail-closed) 재시도 화면을 띄운다.
- * 라우트 이동마다 캐시를 무효화하고, 확인이 끝날 때까지 페이지를 렌더링하지 않는다.
+ * 접근 가드. 내 계정의 role 이 ADMIN 일 때만 하위 페이지를 그린다.
+ * 401 이면 로그인으로 보내고, 다른 권한은 403, 그 밖의 실패는 재시도 화면을 보인다.
+ * 라우트를 옮길 때마다 다시 확인한다.
  */
 export const RequireAdmin = () => {
   const { pathname } = useLocation();
@@ -23,10 +20,10 @@ export const RequireAdmin = () => {
   const previousPathname = useRef(pathname);
   const { account, accountError, isCheckingAccount, refetchAccount } = useMyAccount();
 
-  // 로그인 사용자의 내부 userId 만 Sentry user.id 로 붙인다 (docs/OBSERVABILITY.md 5절).
+  // Sentry 에는 내부 userId 만 붙인다.
   useSentryUser(account?.userId);
 
-  // 첫 마운트는 쿼리 자체가 조회하므로, 실제로 경로가 바뀌었을 때만 다시 확인한다.
+  // 첫 마운트는 쿼리가 조회하므로 경로가 바뀔 때만 다시 확인한다.
   useEffect(() => {
     if (previousPathname.current === pathname) {
       return;
@@ -63,7 +60,6 @@ export const RequireAdmin = () => {
     );
   }
 
-  // ADMIN 이 아닌 계정은 공용 403 페이지를 띄운다 (홈 버튼은 유저 앱으로 이동).
   if (account?.role !== "ADMIN") {
     return <ErrorPage status={403} />;
   }

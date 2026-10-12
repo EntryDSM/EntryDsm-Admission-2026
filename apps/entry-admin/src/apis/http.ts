@@ -1,7 +1,6 @@
 import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
 import { API_BASE_URL } from "../utils/env";
 
-/** HTTP 에러. status/code 를 담아 상위(토스트 등)에서 분기할 수 있게 한다. */
 export class HttpError extends Error {
   status: number;
   code?: string;
@@ -19,28 +18,22 @@ const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
 const isJsonResponse = (response: Response) =>
   response.headers.get("content-type")?.includes("application/json") ?? false;
 
-/** 에러 본문으로 `HttpError` 를 만든다. 메시지는 토스트에 그대로 쓰이므로 비지 않은 한국어 문구로 고른다. */
+/** 서비스마다 에러 본문 모양이 달라 `readApiError` 로 읽는다. 메시지는 토스트에 그대로 쓰인다. */
 const createHttpError = (status: number, body: unknown) => {
   const errorInfo = readApiError(body);
   return new HttpError(status, getApiErrorMessage(status, errorInfo), errorInfo.code);
 };
 
-/**
- * 실패 응답을 `HttpError` 로 바꾼다. 서비스마다 에러 본문 모양이 달라(`readApiError`) 한 모양만 읽으면
- * 게이트웨이(`{ error: "CSRF_INVALID" }`)·notification(최상위 `message`) 에러가 빈 메시지가 된다.
- * HTTP/2 는 `statusText` 가 비어 있어 폴백으로도 쓸 수 없다.
- */
 const toHttpError = async (response: Response) => {
   const body = isJsonResponse(response) ? await response.json().catch(() => null) : null;
   return createHttpError(response.status, body);
 };
 
-/** 인증 쿠키·CSRF 헤더·타임아웃 신호를 붙여 요청을 보내고 원본 `Response` 를 돌려준다. 상태 코드 판단은 호출자가 한다. */
+/** 인증 쿠키·CSRF 헤더·타임아웃을 붙여 요청한다. */
 const send = async (path: string, options: RequestInit = {}): Promise<Response> => {
   const signal = createRequestSignal(options.signal, options.body);
   const headers = new Headers(options.headers);
-  // body 없는 GET 이 preflight 없이 나가도록, 본문이 있을 때만 Content-Type 을 붙인다(entry-user 와 동일).
-  // FormData 는 브라우저가 multipart boundary 를 포함한 Content-Type 을 직접 붙이므로 지정하지 않는다.
+  // 본문 없는 GET 은 preflight 가 생기지 않게 Content-Type 을 붙이지 않는다. FormData 는 브라우저가 붙인다.
   if (
     options.body !== undefined &&
     options.body !== null &&
@@ -50,7 +43,7 @@ const send = async (path: string, options: RequestInit = {}): Promise<Response> 
     headers.set("Content-Type", "application/json");
   }
 
-  // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함한다.
+  // 변경 요청에는 CSRF 토큰을 붙인다.
   if (!SAFE_METHODS.includes((options.method ?? "GET").toUpperCase()) && !headers.has("X-XSRF-TOKEN")) {
     headers.set("X-XSRF-TOKEN", await getCsrfToken(API_BASE_URL, signal));
   }
@@ -72,8 +65,7 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 
   const body = isJsonResponse(response) ? await response.json().catch(() => null) : null;
 
-  // API 공통 규약의 `{ success, data }` 봉투를 쓰면 data 만 벗겨내고,
-  // 봉투 없이 내려오면 본문을 그대로 반환한다.
+  // `{ success, data }` 봉투면 data 만 꺼내고, 봉투가 없으면 본문을 그대로 돌려준다.
   if (body && typeof body === "object" && "success" in body && "data" in body) {
     if (!body.success) {
       throw createHttpError(response.status, body);
@@ -97,7 +89,6 @@ export const http = {
   put: <T>(path: string, payload?: unknown, options?: RequestInit) =>
     request<T>(path, { ...options, method: "PUT", body: payload === undefined ? undefined : JSON.stringify(payload) }),
   delete: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: "DELETE" }),
-  /** multipart 업로드(파일 첨부). 인증 쿠키·CSRF 헤더는 JSON 요청과 같이 붙고, Content-Type 만 브라우저에 맡긴다. */
   postFormData: <T>(path: string, formData: FormData, options?: RequestInit) =>
     request<T>(path, { ...options, method: "POST", body: formData }),
 };

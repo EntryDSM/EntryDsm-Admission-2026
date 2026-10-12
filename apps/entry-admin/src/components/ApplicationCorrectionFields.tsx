@@ -23,22 +23,18 @@ import {
   TextInput,
 } from "./applicationCorrectionStyles";
 
-/**
- * 원서 정정 묶음(섹션)이 함께 쓰는 조각: 묶음 카드, 라벨이 붙은 입력 줄, 칩 선택, 숫자 칸.
- */
-
-/** 원서 정정 묶음 공통 props. 입력칸 값은 정정 모달이 갖고, 묶음은 그리기와 변경 요청만 맡는다. */
+/** 입력값은 정정 모달이 갖고, 묶음은 그리기와 변경 요청만 맡는다. */
 export interface ICorrectionSectionProps {
   values: CorrectionFormValues;
-  /** 원서의 현재 값(정정 전). "현재" 표시와 되돌리기에 쓴다. */
+  /** 정정 전 값("현재" 표시와 되돌리기에 쓴다) */
   initial: CorrectionFormValues;
-  /** 지금 보여 줄 오류 */
+  /** 지금 보여 줄 오류만 */
   errors: CorrectionErrors;
   changedKeys: ReadonlySet<CorrectionChangeKey>;
-  /** 저장을 눌러 비어 있는 필수 칸(성적 등)까지 표시할지 */
+  /** 저장을 눌러 빈 필수 칸까지 표시할지 */
   showAllErrors: boolean;
   onChange: (patch: Partial<CorrectionFormValues>) => void;
-  /** 글자 입력칸을 벗어나면 그 칸의 오류를 보이기 시작한다 */
+  /** 글자 칸을 벗어나면 그 칸의 오류를 보이기 시작한다 */
   onTouch: (key: CorrectionErrorKey) => void;
   onReset: (section: CorrectionSection) => void;
 }
@@ -57,7 +53,6 @@ interface ISectionCardType {
   children: ReactNode;
 }
 
-/** 묶음 카드. 바뀐 항목이 있으면 "변경됨" 과 되돌리기를 보여 준다. */
 export const SectionCard = ({ title, description, isChanged, onReset, children }: ISectionCardType) => {
   const titleId = useId();
 
@@ -82,7 +77,7 @@ export const SectionCard = ({ title, description, isChanged, onReset, children }
 
 interface IFieldType {
   label: string;
-  /** 입력칸 하나면 그 id(라벨 클릭으로 포커스), 칩 묶음이면 비우고 `labelId` 로 묶음 이름을 단다 */
+  /** 입력칸이면 그 id 를, 칩 묶음이면 비우고 `labelId` 를 쓴다. */
   htmlFor?: string;
   labelId?: string;
   isChanged?: boolean;
@@ -92,7 +87,6 @@ interface IFieldType {
   children: ReactNode;
 }
 
-/** 라벨(왼쪽)과 입력(오른쪽) 한 줄. 오류가 있으면 도움말 대신 오류를 보여 준다. */
 export const Field = ({ label, htmlFor, labelId, isChanged, isRequired, helper, error, children }: IFieldType) => (
   <FieldRow>
     <FieldLabel as={htmlFor ? "label" : "span"} htmlFor={htmlFor} id={labelId}>
@@ -112,13 +106,13 @@ interface IChoiceChipsType<T extends string> {
   labelledBy: string;
   options: ReadonlyArray<IChoiceOption<T>>;
   value: T;
-  /** 원서에 저장된 현재 값. 그 선택지에 "현재" 를 붙인다. */
+  /** 이 값의 선택지에 "현재" 를 붙인다. */
   currentValue?: T;
   isInvalid?: boolean;
   onChange: (value: T) => void;
 }
 
-/** 라디오 버튼을 칩 모양으로 그린다. 화살표 키 이동 등 키보드 동작은 기본 라디오 그대로다. */
+/** 칩 모양 라디오 묶음. 키보드 동작은 기본 라디오 그대로다. */
 export const ChoiceChips = <T extends string>({
   name,
   labelledBy,
@@ -159,7 +153,6 @@ interface ICountInputType {
   onChange: (value: string) => void;
 }
 
-/** 숫자만 세 자리까지 받는 칸(출결·봉사·검정고시 점수). 단위를 칸 안 오른쪽에 붙인다. */
 export const CountInput = ({ id, label, suffix, value, isInvalid, onChange }: ICountInputType) => (
   <CountField>
     <CountLabel htmlFor={id}>{label}</CountLabel>
@@ -296,7 +289,7 @@ const Chip = styled.label<{ $isSelected: boolean; $isDisabled: boolean }>`
   }
 `;
 
-// 화면에서는 숨기고 키보드·보조기기에는 라디오 버튼으로 남긴다.
+// 보이지 않게 숨기되 키보드·보조기기에는 라디오로 남긴다.
 const ChipInput = styled.input`
   position: absolute;
   width: 1px;

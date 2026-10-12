@@ -5,7 +5,7 @@ import { DownloadIcon, SpinnerIcon } from "../assets";
 
 interface IDownloadButtonType {
   label: string;
-  /** 파일을 만드는 중이면 true. 버튼 폭이 바뀌지 않게 문구는 그대로 두고 아이콘과 색으로 진행 상태를 보여준다. */
+  /** 생성 중이면 true. 버튼 폭이 바뀌지 않게 문구 대신 아이콘과 색으로 보여 준다. */
   isPending?: boolean;
   onClick: () => void;
 }

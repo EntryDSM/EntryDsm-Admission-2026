@@ -22,7 +22,7 @@ import {
 } from "./ApplicationCorrectionFields";
 import { FieldError, FieldHelper, Select } from "./applicationCorrectionStyles";
 
-/** 가산점 있음/없음. 고르기 전(빈 값)에는 어느 칩도 선택되지 않는다. */
+/** 빈 값은 아직 고르지 않은 것 */
 type BonusChoice = "" | "true" | "false";
 
 const BONUS_OPTIONS: ReadonlyArray<IChoiceOption<BonusChoice>> = [
@@ -40,14 +40,11 @@ const ATTENDANCE_FIELDS = [
 ] as const;
 
 interface ICorrectionAcademicRecordSectionType extends ICorrectionSectionProps {
-  /** 졸업 구분을 바꿔 성적을 함께 보내야 하는지. 이때는 다시 입력을 끌 수 없다. */
+  /** 졸업 구분을 바꿔 성적을 꼭 보내야 하는지(이때는 끌 수 없다) */
   isRequired: boolean;
 }
 
-/**
- * 성적 묶음. 정정 API 가 성적을 일부만 받지 않아, 켜면 출결·봉사·가산점·교과(또는 검정고시) 성적을 처음부터 모두 받는다.
- * 교과 성적 학기는 정정 후 졸업 구분을 따른다(졸업 예정 3개·졸업 4개 학기).
- */
+/** 성적은 일부만 고칠 수 없어, 켜면 성적 전체를 다시 입력받는다. 학기는 정정 후 졸업 구분을 따른다. */
 export const CorrectionAcademicRecordSection = ({
   isRequired,
   values,
@@ -72,7 +69,7 @@ export const CorrectionAcademicRecordSection = ({
       subjectGrades: { ...record.subjectGrades, [semester]: { ...record.subjectGrades[semester], [subject]: grade } },
     });
 
-  // 열 머리의 "일괄" 로 한 학기의 모든 과목을 같은 성적으로 채운다(자유학기처럼 전부 X 인 학기 등).
+  // "일괄" 로 한 학기의 모든 과목을 같은 성적으로 채운다.
   const fillSemester = (semester: CorrectionSemester, grade: SubjectGrade | "") =>
     updateRecord({
       subjectGrades: {
@@ -416,7 +413,6 @@ const GradeHeaderCell = styled.div<{ $isSubject?: boolean }>`
   text-align: ${({ $isSubject }) => ($isSubject ? "left" : "center")};
 `;
 
-// 행 요소는 표의 열 배치를 그대로 따르도록 상자를 만들지 않는다.
 const GradeRow = styled.div`
   display: contents;
 `;

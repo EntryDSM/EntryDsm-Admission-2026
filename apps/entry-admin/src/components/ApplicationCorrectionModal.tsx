@@ -31,18 +31,17 @@ import {
 
 interface IApplicationCorrectionModalType {
   applicantId: number;
-  /** 상세를 받기 전 머리말과 결과 토스트에 쓴다. */
+  /** 상세를 받기 전에 머리말과 토스트에 쓴다. */
   applicantName?: string;
   onClose: () => void;
 }
 
 interface ICorrectionFormState {
-  /** 정정 전 원서 값. 연 뒤 받은 최신 상세로 한 번 정하고, 이후 재조회가 입력을 덮지 않게 고정한다. */
+  /** 정정 전 값. 처음 받은 최신 상세로 한 번 정해, 재조회가 입력을 덮지 않게 한다. */
   initial: CorrectionFormValues;
   values: CorrectionFormValues;
 }
 
-/** 첫 오류 칸을 화면 가운데로 데려와 포커스한다. 칩 묶음이면 그 안의 첫 라디오에 포커스한다. */
 const focusFirstInvalidField = (container: HTMLElement | null) => {
   const invalidElement = container?.querySelector<HTMLElement>('[aria-invalid="true"]');
   if (!invalidElement) {
@@ -57,8 +56,7 @@ const focusFirstInvalidField = (container: HTMLElement | null) => {
 };
 
 /**
- * 원서 정정 패널(오른쪽에서 열린다). 마운트돼 있는 동안 열려 있다.
- * 상세 조회에 있는 항목은 현재 값으로 채워 바뀐 것만, 조회에 없는 항목은 입력한 것만 정정 API 로 보낸다.
+ * 원서 정정 패널. 상세 조회에 있는 항목은 바뀐 것만, 없는 항목은 입력한 것만 보낸다.
  * 작성 중에 닫으려 하면 확인을 받고, 저장 요청 중에는 닫히지 않는다.
  */
 export const ApplicationCorrectionModal = ({
@@ -66,7 +64,7 @@ export const ApplicationCorrectionModal = ({
   applicantName,
   onClose,
 }: IApplicationCorrectionModalType) => {
-  // 목록을 연 뒤 원서가 바뀌었거나 1차 산출이 돌았을 수 있어, 캐시가 있어도 열 때마다 최신 원서를 다시 받는다.
+  // 그사이 원서가 바뀌었을 수 있어 열 때마다 최신 원서를 받는다.
   const { detail, isFetching, isError, refetch } = useApplicantDetail(applicantId, true, {
     alwaysRefetchOnMount: true,
   });
@@ -80,7 +78,7 @@ export const ApplicationCorrectionModal = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
-  // 다시 받은 최신 원서로 한 번만 채운다(렌더 중 상태 조정 — AdmissionsQuota 와 같은 패턴).
+  // 최신 원서를 받으면 한 번만 입력칸을 채운다.
   if (form === null && detail && !isFetching) {
     const initial = toCorrectionFormValues(detail);
     setForm({ initial, values: initial });
@@ -91,7 +89,7 @@ export const ApplicationCorrectionModal = ({
   const visibleErrors = draft ? getVisibleCorrectionErrors(draft, touched, showAllErrors) : {};
   const changedCount = draft?.changedKeys.length ?? 0;
   const isDirty = changedCount > 0 || (form?.values.reason.trim() ?? "") !== "";
-  // 방금 받은 상세로 정정 대상인지 다시 확인한다(서버도 같은 기준으로 409 를 준다).
+  // 그사이 전형 결과가 나왔으면 정정할 수 없다(서버도 409 를 준다).
   const isCorrectable = detail?.status === "PENDING";
   const displayName = detail?.name || applicantName || "지원자";
 
@@ -109,7 +107,7 @@ export const ApplicationCorrectionModal = ({
 
   const handleDialogKeyDown = useModalDialog(contentRef, requestClose);
 
-  // 저장을 눌렀는데 오류가 남아 있으면 첫 오류 칸으로 데려간다(오류 표시가 그려진 뒤).
+  // 저장했는데 오류가 남아 있으면 첫 오류 칸으로 이동한다.
   useEffect(() => {
     if (submitAttempt > 0) {
       focusFirstInvalidField(contentRef.current);
@@ -149,7 +147,7 @@ export const ApplicationCorrectionModal = ({
       return;
     }
 
-    // 결과는 훅이 토스트한다. 성공하면 패널을 닫고, 실패하면 입력을 그대로 두어 고쳐서 다시 보낼 수 있게 한다.
+    // 실패하면 입력을 그대로 두어 고쳐서 다시 보낼 수 있다.
     correctApplication(
       {
         applicantId,
@@ -282,7 +280,6 @@ export const ApplicationCorrectionModal = ({
   );
 };
 
-// 지원자 상세 모달과 같은 오른쪽 패널·애니메이션을 쓰되, 입력칸이 많아 폭을 조금 더 넉넉히 잡는다.
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
@@ -548,7 +545,6 @@ const FooterActions = styled.div`
   }
 `;
 
-// 패널 하단 막대에 맞게 기본 Btn(48px·18px)보다 한 단계 작게 잡는다.
 const FooterButton = styled(Btn)`
   height: 44px;
   padding: 0 20px;
