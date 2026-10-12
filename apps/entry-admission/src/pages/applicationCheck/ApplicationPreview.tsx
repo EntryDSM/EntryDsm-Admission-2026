@@ -40,7 +40,6 @@ const Container = styled.div`
   flex-direction: column;
   gap: 60px;
   width: 100%;
-  padding: 40px 0;
 `;
 
 const PdfViewport = styled.div`
