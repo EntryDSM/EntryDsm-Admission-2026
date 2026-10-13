@@ -2,5 +2,6 @@ export * from "./validation.ts";
 export * from "./env.ts";
 
 export * from "./csrf.ts";
+export * from "./authSession.ts";
 export * from "./apiError.ts";
 export * from "./redactClientLog.ts";

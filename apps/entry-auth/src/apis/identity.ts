@@ -180,16 +180,6 @@ export const login = async (payload: LoginRequest) => {
   });
 };
 
-export const refreshToken = async () => {
-  const { token } = await getCsrfToken();
-
-  return request<null>("/api/identity/v11/auth/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
-    body: JSON.stringify({}),
-  });
-};
-
 export const resetPassword = async (payload: PasswordResetRequest) => {
   const { token } = await getCsrfToken();
 
