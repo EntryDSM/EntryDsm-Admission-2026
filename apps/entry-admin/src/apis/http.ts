@@ -37,10 +37,11 @@ const toHttpError = async (response: Response) => {
 
 /** 인증 쿠키·CSRF 헤더·타임아웃을 붙여 요청한다. */
 const send = async (path: string, options: RequestInit = {}): Promise<Response> => {
-  const signal = createRequestSignal(options.signal, options.body);
   return fetchWithAuthRefresh(
     API_BASE_URL,
     async () => {
+      // 시도마다 새 시간 제한을 적용하고, 호출자가 전달한 취소 신호는 유지합니다.
+      const signal = createRequestSignal(options.signal, options.body);
       const headers = new Headers(options.headers);
       // 본문 없는 GET 은 preflight 가 생기지 않게 Content-Type 을 붙이지 않는다. FormData 는 브라우저가 붙인다.
       if (

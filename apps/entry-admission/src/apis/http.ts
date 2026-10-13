@@ -83,19 +83,21 @@ const fetchApi = async (
   body: BodyInit | null | undefined,
   options: HttpRequestOptions
 ) => {
-  options = { ...options, signal: createRequestSignal(options.signal, body) };
-
   return fetchWithAuthRefresh(
     import.meta.env.VITE_API_BASE_URL,
-    async () =>
-      fetch(createRequestUrl(path, options), {
-        ...createRequestOptions(options),
+    async () => {
+      // 시도마다 새 시간 제한을 적용하고, 호출자가 전달한 취소 신호는 유지합니다.
+      const signal = createRequestSignal(options.signal, body);
+      const attemptOptions = { ...options, signal };
+      return fetch(createRequestUrl(path, options), {
+        ...createRequestOptions(attemptOptions),
         method,
         body,
-        headers: await createHeaders(method, body, options),
+        headers: await createHeaders(method, body, attemptOptions),
         credentials: options.auth === false ? "omit" : "include",
-        signal: options.signal,
-      }),
+        signal,
+      });
+    },
     options.auth !== false
   );
 };
