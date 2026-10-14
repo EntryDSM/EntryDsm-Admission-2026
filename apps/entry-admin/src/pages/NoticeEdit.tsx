@@ -2,15 +2,22 @@ import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn } from "@entry/ui";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 
 import type { NoticeDetail } from "../apis";
 import { useNoticeDetail, useUpdateNotice } from "../hooks";
-import { getNewAttachmentFiles, toNoticeFormValue, toUpdateNoticePayload } from "../utils";
+import { getNewAttachmentFiles, type NoticeType, toNoticeFormValue, toUpdateNoticePayload } from "../utils";
 import { INITIAL_NOTICE_FORM_VALUE, NoticeForm, type NoticeAttachment, type NoticeFormValue } from "../components";
+
+/** 목록에서 넘겨받은 탭 분류. 주소로 바로 들어오면 없다. */
+const getListCategory = (state: unknown): NoticeType | undefined => {
+  const category = (state as { category?: unknown } | null)?.category;
+  return category === "NOTICE" || category === "GUIDE" ? category : undefined;
+};
 
 export const NoticeEdit = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
 
   const noticeId = id && !Number.isNaN(Number(id)) ? Number(id) : undefined;
@@ -38,8 +45,7 @@ export const NoticeEdit = () => {
     );
   }
 
-  // 조회 실패 시 빈 수정 폼이 노출되지 않도록 에러 상태로 분기한다.
-  // 단, 캐시 데이터가 있는 백그라운드 refetch 실패는 폼(작성 중 내용)을 유지한다.
+  // 조회에 실패하면 빈 폼 대신 에러를 보이되, 이미 받은 데이터가 있으면 폼을 유지한다.
   if (isError && !notice) {
     return (
       <Container>
@@ -57,22 +63,26 @@ export const NoticeEdit = () => {
     );
   }
 
-  // 상세 조회가 끝난 뒤에 폼을 마운트해 응답을 초기값으로 주입한다. (key 로 공지가 바뀌면 재마운트)
-  return <NoticeEditForm key={noticeId} noticeId={noticeId} notice={notice} />;
+  // 상세를 받은 뒤 폼을 그려 초기값으로 쓴다(공지가 바뀌면 key 로 다시 그린다).
+  return (
+    <NoticeEditForm key={noticeId} noticeId={noticeId} notice={notice} listCategory={getListCategory(location.state)} />
+  );
 };
 
 type NoticeEditFormProps = {
   noticeId: number;
   notice?: NoticeDetail;
+  listCategory?: NoticeType;
 };
 
-const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
+const NoticeEditForm = ({ noticeId, notice, listCategory }: NoticeEditFormProps) => {
   const navigate = useNavigate();
   const { updateNotice, isUpdating } = useUpdateNotice(noticeId);
-  const [formData, setFormData] = useState<NoticeFormValue>(() =>
-    notice ? toNoticeFormValue(notice) : { ...INITIAL_NOTICE_FORM_VALUE }
+  const [initialFormData] = useState<NoticeFormValue>(() =>
+    notice ? toNoticeFormValue(notice, listCategory) : { ...INITIAL_NOTICE_FORM_VALUE }
   );
-  // 상세 조회 API(notification) 가 기존 첨부 목록을 내려주지 않아, 여기서는 새로 올릴 파일만 다룬다.
+  const [formData, setFormData] = useState<NoticeFormValue>(initialFormData);
+  // 상세 조회가 기존 첨부 목록을 주지 않아 새로 올릴 파일만 다룬다.
   const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
 
   const handleSubmit = () => {
@@ -88,9 +98,9 @@ const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
       return;
     }
 
-    // 새 파일이 있으면 수정 훅이 document 에 올린 뒤 attachmentIds 로 함께 보낸다(기존 첨부는 전부 새 파일로 교체).
+    // 새 파일을 올리면 기존 첨부는 모두 새 파일로 바뀐다.
     updateNotice(
-      { payload: toUpdateNoticePayload(formData), files: getNewAttachmentFiles(attachments) },
+      { payload: toUpdateNoticePayload(formData, initialFormData), files: getNewAttachmentFiles(attachments) },
       { onSuccess: () => navigate("/notice") }
     );
   };

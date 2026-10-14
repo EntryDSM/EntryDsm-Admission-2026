@@ -8,4 +8,5 @@ export * from "./scheduleMapper";
 export * from "./applicationPeriod";
 export * from "./noticeMapper";
 export * from "./admissionQuotaMapper";
+export * from "./applicationCorrection";
 export * from "./download";

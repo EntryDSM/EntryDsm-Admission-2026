@@ -28,7 +28,6 @@ export const NoticeCreate = () => {
       return;
     }
 
-    // 첨부파일은 등록 훅이 document 에 먼저 올리고, 받은 공개 ID 를 attachmentIds 로 함께 보낸다.
     createNotice(
       { payload: toCreateNoticePayload(formData), files: getNewAttachmentFiles(attachments) },
       { onSuccess: () => navigate("/notice") }

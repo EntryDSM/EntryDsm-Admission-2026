@@ -71,6 +71,7 @@ export const SubmitCheck = () => {
     try {
       // 최종 제출 직전에도 서버 시각 기준 접수 기간을 확인한다. 마감됐으면 제출하지 않고 가드가 유저 앱으로 보낸다.
       if (!(await verifyApplicationPeriod())) {
+        setIsSubmitting(false);
         return;
       }
 
@@ -82,6 +83,7 @@ export const SubmitCheck = () => {
       setHasSubmit(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "원서 제출 중 오류가 발생했습니다.");
+      setIsSubmitting(false);
       return;
     }
 

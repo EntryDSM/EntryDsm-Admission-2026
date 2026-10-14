@@ -17,12 +17,14 @@ import {
   useIssueExamineeNumbers,
   useRegisterFinalResult,
   useUpdateApplicantArrival,
+  useUpdateFirstPass,
   useVerifyApplicationPeriod,
 } from "../hooks";
-import { type ApplicantActionMode, type ApplicantListItem, getApplicantActionLabel } from "../utils";
+import { type ApplicantListItem, getApplicantActionHeader, getApplicantActionMode } from "../utils";
 import {
   Applicant,
   ApplicantDetailModal,
+  ApplicationCorrectionModal,
   CheckBox,
   DownloadButton,
   FindApplicantInput,
@@ -52,7 +54,7 @@ const EDUCATION_OPTIONS = [
   { key: "exam", label: "검정고시" },
 ] as const;
 
-/** 마지막 열(지원자별 버튼) 제목은 원서 접수 기간에 따라 "접수 취소" ↔ "2차 합격자 등록" 으로 바뀌므로 렌더 시점에 붙인다. */
+/** 마지막 열 제목은 보이는 지원자에 따라 달라 렌더할 때 붙인다. */
 const APPLICANT_TABLE_FIXED_HEADERS = [
   "접수 번호",
   "이름",
@@ -69,7 +71,7 @@ type AdmissionKey = (typeof ADMISSION_OPTIONS)[number]["key"];
 type StatusKey = (typeof STATUS_OPTIONS)[number]["key"];
 type EducationKey = (typeof EDUCATION_OPTIONS)[number]["key"];
 
-// 필터 체크박스 키 → 백엔드 enum 파라미터 매핑
+// 필터 체크박스 → 조회 파라미터
 const REGION_PARAM: Record<RegionKey, Region> = { daejeon: "DAEJEON", nationwide: "NATIONWIDE" };
 const ADMISSION_PARAM: Record<AdmissionKey, AdmissionType> = {
   general: "GENERAL",
@@ -82,7 +84,6 @@ const EDUCATION_PARAM: Record<EducationKey, GraduationStatus> = {
   exam: "GED",
 };
 
-/** `{ key: boolean }` 필터 상태에서 체크된 키만 뽑아낸다. */
 const getSelectedKeys = <K extends string>(record: Record<K, boolean>) =>
   (Object.entries(record) as [K, boolean][]).filter(([, isChecked]) => isChecked).map(([key]) => key);
 
@@ -123,8 +124,7 @@ export const ApplicantsList = () => {
   const { applicants, pageInfo, isLoading } = useApplicants(queryParams);
   const totalPage = Math.max(1, pageInfo?.totalPages ?? 1);
 
-  // 마지막 페이지의 마지막 지원자를 접수 취소하거나(다른 관리자가 지운 경우 포함) 페이지 수가 줄면
-  // 빈 페이지에 남지 않도록 마지막 페이지로 당긴다.
+  // 접수 취소 등으로 페이지 수가 줄면 마지막 페이지로 당긴다.
   useEffect(() => {
     if (pageInfo && currentPage > totalPage) {
       setCurrentPage(totalPage);
@@ -134,11 +134,22 @@ export const ApplicantsList = () => {
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
+  const { updateFirstPass, isUpdatingFirstPass } = useUpdateFirstPass();
 
-  // 원서 접수 기간에는 지원자별 버튼이 "접수 취소", 접수가 끝나면(또는 기간 판정에 실패하면) 기존대로 "2차 합격자 등록" 이 된다.
-  const { periodStatus, isCheckingPeriod } = useApplicationPeriod();
-  const applicantActionMode: ApplicantActionMode = periodStatus === "open" ? "cancel" : "register";
-  const tableHeaders = [...APPLICANT_TABLE_FIXED_HEADERS, getApplicantActionLabel(applicantActionMode)];
+  // 심사 대기 지원자는 "원서 정정" 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소, 발표 뒤에는 "2차 합격자 등록" 버튼이다.
+  // 접수 취소는 원서 접수 기간에만 고를 수 있다.
+  const { periodStatus, firstAnnouncementStatus } = useApplicationPeriod();
+  const isCancelAvailable = periodStatus === "open";
+  const isBeforeFirstAnnouncement = firstAnnouncementStatus === "before";
+  const tableHeaders = [
+    ...APPLICANT_TABLE_FIXED_HEADERS,
+    getApplicantActionHeader(
+      applicants.map(applicant => getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement))
+    ),
+  ];
+
+  const [correctionTarget, setCorrectionTarget] = useState<ApplicantListItem | null>(null);
+  const handleCorrectionClose = useCallback(() => setCorrectionTarget(null), []);
 
   const [cancelTarget, setCancelTarget] = useState<ApplicantListItem | null>(null);
   const [isVerifyingPeriod, setIsVerifyingPeriod] = useState(false);
@@ -164,7 +175,6 @@ export const ApplicantsList = () => {
 
   const { issueExamineeNumbers, isIssuingExamineeNumbers } = useIssueExamineeNumbers();
 
-  // "수험번호 발급" → 발급 대상 전체에 수험번호를 일괄 발급한다. 이미 발급된 지원자는 서버가 건너뛴다.
   const handleIssueExamineeNumbersClick = () => {
     if (isIssuingExamineeNumbers) {
       return;
@@ -175,10 +185,8 @@ export const ApplicantsList = () => {
     }
   };
 
-  // 출력물 5종은 전부 POST /exports 에 type 만 보내 접수하는 비동기 잡이다(백엔드 #293). 대상 조건은 받지 않아 화면의 검색어·필터와
-  // 무관하게 수험표는 1차 합격자 전체, 나머지는 전체 지원자가 대상이며, 완료되면 서명된 다운로드 링크를 연다.
+  // 파일 다운로드는 모두 서버의 비동기 잡이다. 검색어·필터와 무관하게 수험표는 1차 합격자, 나머지는 전체 지원자가 대상이다.
 
-  // "점검표" → 지원자 점검표 엑셀(APPLICATION_CHECKLIST)
   const handleChecklistClick = () => {
     if (isDownloadingChecklist) {
       return;
@@ -187,7 +195,6 @@ export const ApplicantsList = () => {
     downloadChecklist();
   };
 
-  // "수험표" → 1차 합격자 수험표 묶음 엑셀(ADMISSION_TICKET). 1차 합격자가 없으면 서버가 접수하지 않고 409 로 알려준다.
   const handleAdmissionTicketsClick = () => {
     if (isDownloadingAdmissionTickets) {
       return;
@@ -196,7 +203,6 @@ export const ApplicantsList = () => {
     downloadAdmissionTickets();
   };
 
-  // "전형 자료" → 전형 자료 엑셀(ADMISSION_FILE)
   const handleAdmissionFileClick = () => {
     if (isDownloadingAdmissionFile) {
       return;
@@ -205,7 +211,6 @@ export const ApplicantsList = () => {
     downloadAdmissionFile();
   };
 
-  // "1차 합격 명단" → 1차 합격자 명단 엑셀(FIRST_PASS)
   const handleFirstPassListClick = () => {
     if (isDownloadingFirstPassList) {
       return;
@@ -214,7 +219,6 @@ export const ApplicantsList = () => {
     downloadFirstPassList();
   };
 
-  // "자기소개서·학업계획서" → 지원자별 서식 3 PDF 묶음 ZIP(ESSAYS). 미작성 항목은 서버가 뺀다.
   const handleEssaysClick = () => {
     if (isDownloadingEssays) {
       return;
@@ -223,14 +227,12 @@ export const ApplicantsList = () => {
     downloadEssays();
   };
 
-  // 지원자 데이터를 바꾸는 전형 처리 액션 모음. `isPending` 이 true 인 동안은 버튼을 흐리게 막아 진행 상태를 보여준다.
-  // 문구에 "중..." 을 붙이면 버튼이 넓어져, 폭이 빠듯한 화면에서 파일 다운로드 묶음이 다음 줄로 밀렸다 돌아온다.
+  // 진행 중에도 문구를 바꾸지 않는다(버튼 폭이 바뀌면 다운로드 버튼들이 줄바꿈된다).
   const processActions = [
     { label: "수험번호 발급", onClick: handleIssueExamineeNumbersClick, isPending: isIssuingExamineeNumbers },
     { label: "1차 합격자 산출", onClick: handleFirstScreeningClick, isPending: isRunningFirstScreening },
   ];
 
-  // 파일 다운로드 액션 모음. 진행 상태는 DownloadButton 이 문구를 바꾸지 않고 아이콘과 색으로 보여준다.
   const downloadActions = [
     { label: "점검표", onClick: handleChecklistClick, isPending: isDownloadingChecklist },
     { label: "전형 자료", onClick: handleAdmissionFileClick, isPending: isDownloadingAdmissionFile },
@@ -239,7 +241,6 @@ export const ApplicantsList = () => {
     { label: "수험표", onClick: handleAdmissionTicketsClick, isPending: isDownloadingAdmissionTickets },
   ];
 
-  // "2차 합격자 등록" 버튼 → 개별 등록 API 로 최종 합격 처리한다. 등록하지 않은 지원자는 최종 불합격 처리된다.
   const handleRegisterClick = (applicant: ApplicantListItem) => {
     if (isRegisteringFinalResult) {
       return;
@@ -250,7 +251,26 @@ export const ApplicantsList = () => {
     }
   };
 
-  // "접수 취소" 버튼 → 되돌릴 수 없는 삭제라 confirm 대신 "확인했습니다" 를 입력받는 모달(원서 최종 제출과 같은 방식)을 연다.
+  const handleFirstPassClick = (applicant: ApplicantListItem, isFirstPass: boolean) => {
+    if (isUpdatingFirstPass) {
+      return;
+    }
+
+    const name = applicant.applicantName || "해당";
+    const message = isFirstPass
+      ? `${name} 지원자를 1차 합격자로 등록하시겠습니까?`
+      : `${name} 지원자의 1차 합격을 취소하시겠습니까?\n취소한 지원자는 1차 불합격이 되어 발표 때 자동 선발에서도 빠지며, 발표 전까지 다시 등록할 수 있습니다.`;
+
+    if (confirm(message)) {
+      updateFirstPass({ applicantId: applicant.applicantId, applicantName: applicant.applicantName, isFirstPass });
+    }
+  };
+
+  const handleCorrectClick = (applicant: ApplicantListItem) => {
+    setCorrectionTarget(applicant);
+  };
+
+  // 되돌릴 수 없는 삭제라 "확인했습니다" 를 입력받는 모달을 연다.
   const handleCancelClick = (applicant: ApplicantListItem) => {
     if (isCancelInProgress) {
       return;
@@ -259,8 +279,7 @@ export const ApplicantsList = () => {
     setCancelTarget(applicant);
   };
 
-  // 모달에서 "확인했습니다" 를 입력하고 접수 취소를 누르면, 서버 시각으로 접수 기간을 다시 확인한 뒤 삭제한다.
-  // 접수 기간이 아니거나 확인에 실패하면 삭제하지 않고 모달을 닫는다(안내는 useVerifyApplicationPeriod 가 토스트).
+  // 삭제 직전에 서버 시각으로 접수 기간을 다시 확인하고, 기간이 아니면 삭제하지 않고 모달을 닫는다.
   const handleCancelConfirm = async () => {
     if (!cancelTarget || isCancelInProgress) {
       return;
@@ -279,30 +298,20 @@ export const ApplicantsList = () => {
       return;
     }
 
-    // 결과(성공·실패)는 훅이 토스트하므로 요청이 끝나면 모달을 닫는다. 실패 시 다시 시도하려면 "확인했습니다" 부터 다시 입력한다.
+    // 결과는 훅이 토스트하고, 요청이 끝나면 모달을 닫는다.
     cancelApplication(
       { applicantId: cancelTarget.applicantId, applicantName: cancelTarget.applicantName },
       { onSettled: () => setCancelTarget(null) }
     );
   };
 
-  // 요청이 진행 중일 때는 배경 클릭·이전 버튼으로 모달이 닫히지 않게 한다.
+  // 요청 중에는 모달이 닫히지 않게 한다.
   const handleCancelModalClose = () => {
     if (isCancelInProgress) {
       return;
     }
 
     setCancelTarget(null);
-  };
-
-  // 지원자별 버튼은 접수 기간에 따라 역할이 바뀐다(접수 취소 ↔ 2차 합격자 등록).
-  const handleActionClick = (applicant: ApplicantListItem) => {
-    if (applicantActionMode === "cancel") {
-      handleCancelClick(applicant);
-      return;
-    }
-
-    handleRegisterClick(applicant);
   };
 
   const cancelModalContent = cancelTarget
@@ -314,7 +323,7 @@ export const ApplicantsList = () => {
       return;
     }
 
-    // 백엔드가 도착 취소(isArrived: false)를 지원하므로 체크박스로 도착 ↔ 취소를 토글한다.
+    // 체크박스로 도착 처리와 도착 취소를 토글한다.
     const nextArrived = !applicant.isArrived;
     const message = nextArrived
       ? `${applicant.applicantName} 지원자의 원서를 도착 처리하시겠습니까?`
@@ -448,7 +457,7 @@ export const ApplicantsList = () => {
         </ApplicantsTitle>
 
         <ApplicantsAllList role="rowgroup">
-          {isLoading || isCheckingPeriod ? (
+          {isLoading ? (
             <LoadingContent role="row">
               <LoadingMessage role="cell" aria-colspan={tableHeaders.length}>
                 지원자 조회 데이터 기다리는 중...
@@ -471,9 +480,15 @@ export const ApplicantsList = () => {
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
-                actionMode={applicantActionMode}
+                status={applicant.status}
+                actionMode={getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement)}
+                isCancelAvailable={isCancelAvailable}
+                isFirstPassSelectable={isBeforeFirstAnnouncement}
                 onClick={() => handleApplicantClick(applicant)}
-                onActionClick={() => handleActionClick(applicant)}
+                onRegisterClick={() => handleRegisterClick(applicant)}
+                onCorrectClick={() => handleCorrectClick(applicant)}
+                onFirstPassClick={isFirstPass => handleFirstPassClick(applicant, isFirstPass)}
+                onCancelClick={() => handleCancelClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />
             ))
@@ -483,6 +498,15 @@ export const ApplicantsList = () => {
 
       {selectedApplicant && (
         <ApplicantDetailModal applicantId={selectedApplicant.applicantId} isOpen={isOpen} onClose={close} />
+      )}
+
+      {correctionTarget && (
+        <ApplicationCorrectionModal
+          key={correctionTarget.applicantId}
+          applicantId={correctionTarget.applicantId}
+          applicantName={correctionTarget.applicantName}
+          onClose={handleCorrectionClose}
+        />
       )}
 
       <CancelModal
@@ -519,8 +543,7 @@ const SearchSection = styled.div`
   justify-content: center;
 `;
 
-// 버튼·필터는 표보다 좌우로 최대 36px 씩 안쪽에 둔다(1440px 화면에서 폭 1168px).
-// 화면이 좁아지면 안쪽 여백부터 줄여, 버튼이 한 줄에 놓이는 폭 1168px 을 되도록 지킨다.
+// 버튼·필터는 표보다 좌우로 최대 36px 안쪽에 두고, 화면이 좁아지면 이 여백부터 줄인다.
 const Toolbar = styled.section`
   width: 100%;
   max-width: 1540px;

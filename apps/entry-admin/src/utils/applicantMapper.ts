@@ -9,10 +9,9 @@ import type {
 } from "../apis/types";
 import { formatDotDate, formatReceiptNumber } from "./format";
 
-/** 목록 화면(Applicant 컴포넌트)이 사용하는 뷰 모델. 원서에 비어 있을 수 있는 항목은 optional 이다. */
 export interface ApplicantListItem {
   applicantId: number;
-  /** 접수번호 표기 (`applicantId` 네 자리, 예: `0001`) */
+  /** 접수번호 표기(예: `0001`) */
   receiptCode: string;
   applicantName?: string;
   region?: Region;
@@ -24,13 +23,15 @@ export interface ApplicantListItem {
   status: ApplicantStatus;
 }
 
-/** 상세 모달이 사용하는 뷰 모델 (API 가 제공하지 않는 필드는 optional) */
 export interface ApplicantDetailView {
   applicantId: number;
-  /** 접수번호 표기 (`applicantId` 네 자리, 예: `0001`) */
+  /** 접수번호 표기(예: `0001`) */
   receiptCode: string;
   name?: string;
+  /** 표시용(예: `2010.03.15`) */
   birthDay?: string;
+  /** `YYYY-MM-DD`. 원서 정정 입력칸의 초깃값으로 쓴다. */
+  birthDate?: string;
   phoneNumber?: string;
   region?: Region;
   isDaejeon?: boolean;
@@ -41,21 +42,17 @@ export interface ApplicantDetailView {
   isArrived: boolean;
   status: ApplicantStatus;
   totalScore?: number;
-  /** 교과·출결·봉사·가산점. 백엔드 #263 배포 전 응답에는 없어 비어 있다(화면은 `-`). */
   subjectScore?: number;
   attendanceScore?: number;
   volunteerScore?: number;
   additionalScore?: number;
-  /** 검정고시 과목별 점수. 검정고시 지원자가 점수를 입력했을 때만 있다. */
   gedScores?: ApplicantGedScores;
-  /** 증명사진 파일 ID. 사진 URL 은 `useApplicantPhoto` 가 document 에서 받는다. */
   photoFileId?: string;
-  /** 자기소개서·학업계획서 본문. 지원자가 쓴 줄바꿈(`\n`)이 그대로 있다. */
   introduction?: string;
   studyPlan?: string;
 }
 
-/** 지역이 비어 있으면 대전/전국을 판단할 수 없으므로 undefined 로 둔다(화면은 `-` 표기). */
+/** 지역이 비어 있으면 대전/전국을 알 수 없어 undefined 다(화면은 `-`). */
 const toIsDaejeon = (region: Region | null) => (region ? region === "DAEJEON" : undefined);
 
 export const toApplicantListItem = (dto: AdminApplicantSummary): ApplicantListItem => ({
@@ -76,6 +73,7 @@ export const toApplicantDetailView = (dto: AdminApplicantDetail): ApplicantDetai
   receiptCode: formatReceiptNumber(dto.applicantId),
   name: dto.name ?? undefined,
   birthDay: formatDotDate(dto.birthDate ?? undefined),
+  birthDate: dto.birthDate ?? undefined,
   phoneNumber: dto.phoneNumber ?? undefined,
   region: dto.region ?? undefined,
   isDaejeon: toIsDaejeon(dto.region),

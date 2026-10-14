@@ -21,19 +21,18 @@ const getErrorMessage = (error: unknown) => {
   return "네트워크 오류가 발생했습니다.";
 };
 
-/** 앱 전역 QueryClient. 쿼리 에러는 이곳에서 일괄 토스트 처리하고, 쿼리·뮤테이션 에러는 모두 Sentry 로 보고한다. */
+/** 쿼리 에러는 여기서 토스트하고, 쿼리·뮤테이션 에러는 모두 Sentry 로 보고한다. */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      // 토스트 여부와 무관하게 보고한다 (4xx 는 warning 레벨 — docs/OBSERVABILITY.md 3절).
-      // 정상 흐름인 상태 코드는 쿼리의 meta.sentryIgnoreStatuses 로 제외한다.
+      // 정상 흐름인 상태 코드는 meta.sentryIgnoreStatuses 로 보고에서 뺀다.
       reportApiError(error, {
         source: "query",
         target: query.queryKey,
         ignoreStatuses: getSentryIgnoreStatuses(query.meta),
       });
 
-      // 자체 에러 화면을 가진 쿼리(예: 접근 가드)는 meta 로 전역 토스트를 끈다.
+      // 자체 에러 화면이 있는 쿼리(접근 가드 등)는 전역 토스트를 끈다.
       if (query.meta?.suppressGlobalErrorToast) {
         return;
       }
@@ -42,7 +41,7 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
-    // 뮤테이션의 화면 처리는 각 훅이 직접 하므로(관례) 여기서는 보고만 한다.
+    // 뮤테이션 에러 토스트는 각 훅이 띄운다.
     onError: (error, _variables, _context, mutation) => {
       reportApiError(error, {
         source: "mutation",

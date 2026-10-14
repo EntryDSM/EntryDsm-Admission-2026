@@ -3,11 +3,6 @@ import { toast } from "react-toastify";
 
 import { adminQueryKeys, HttpError, issueExamineeNumbers, type ExamineeNumberIssueResult } from "../apis";
 
-/**
- * 수험번호 일괄 발급 훅.
- * 성공 시 발급/건너뜀 집계를 토스트로 알리고, 목록·상세의 `examineeNumber` 가 바뀌므로 지원자 캐시를 무효화한다.
- * 뮤테이션 에러는 QueryCache(쿼리 전용) 에서 잡히지 않으므로 여기서 직접 토스트한다.
- */
 export const useIssueExamineeNumbers = () => {
   const queryClient = useQueryClient();
 

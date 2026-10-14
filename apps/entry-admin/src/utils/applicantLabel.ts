@@ -1,8 +1,4 @@
-/**
- * 백엔드 enum → 한국어 라벨 매핑.
- * 백엔드 명세 값(GENERAL/EXPECTED/…)과 기존 프론트 mock 값(COMMON/PROSPECTIVE_GRADUATE/…)을
- * 모두 지원해, 매퍼를 거치지 않은 값이 들어와도 안전하게 표시된다.
- */
+/** 서버 enum → 한국어 라벨. 예전 mock 값(COMMON 등)도 표시할 수 있게 함께 둔다. */
 
 const withLabel = (labels: Record<string, string>) => (value?: string) => (value ? (labels[value] ?? value) : "-");
 
@@ -23,10 +19,10 @@ const EDUCATIONAL_STATUS_LABELS: Record<string, string> = {
 };
 
 const REGION_LABELS: Record<string, string> = {
-  // 모집 범위(Region)
+  // 모집 범위
   DAEJEON: "대전",
   NATIONWIDE: "전국",
-  // 통계 REGION_DISTRIBUTION.byRegion 의 거주지 시·도 코드(백엔드 ResidenceRegion, 17개 + 기타)
+  // 통계의 거주지 시·도
   SEOUL: "서울",
   BUSAN: "부산",
   DAEGU: "대구",
@@ -51,7 +47,7 @@ const GENDER_LABELS: Record<string, string> = {
   FEMALE: "여자",
 };
 
-// 백엔드 `ApplicantStatus.label`(엑셀 등 대외 문서 표기)과 같은 문구를 쓴다.
+// 서버가 만드는 문서(엑셀 등)와 같은 문구를 쓴다.
 const APPLICANT_STATUS_LABELS: Record<string, string> = {
   PENDING: "심사 대기",
   FIRST_PASS: "1차 합격",
@@ -66,18 +62,46 @@ export const getRegionLabel = withLabel(REGION_LABELS);
 export const getGenderLabel = withLabel(GENDER_LABELS);
 export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
 
-/** 원서 원본(우편) 도착 여부 → 지원자 목록·상세 모달의 "상태" 표기. 두 화면이 같은 문구를 쓰도록 한 곳에서 정한다. */
-export const getArrivalStatusLabel = (isArrived?: boolean) => (isArrived ? "원서 도착" : "-");
+export const getArrivalStatusLabel = (isArrived?: boolean) =>
+  isArrived === undefined ? "-" : isArrived ? "도착" : "미도착";
 
 /**
- * 지원자 목록 마지막 열 버튼의 역할. 원서 접수 기간에는 접수 취소(원서 삭제), 접수가 끝나면 2차(최종) 합격자 등록.
- * 열 제목과 버튼 문구가 같은 값을 쓰도록 한 곳에서 정한다.
+ * 지원자 목록 마지막 열 버튼. 심사 대기는 원서 정정 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소,
+ * 발표 뒤에는 2차 합격자 등록이다.
  */
-export type ApplicantActionMode = "cancel" | "register";
+export type ApplicantActionMode = "correct" | "firstPassSelect" | "firstPassCancel" | "register";
 
 const APPLICANT_ACTION_LABELS: Record<ApplicantActionMode, string> = {
-  cancel: "접수 취소",
+  correct: "원서 정정",
+  firstPassSelect: "1차 합격자 등록",
+  firstPassCancel: "1차 합격 취소",
   register: "2차 합격자 등록",
 };
 
 export const getApplicantActionLabel = (mode: ApplicantActionMode) => APPLICANT_ACTION_LABELS[mode];
+
+/**
+ * 전형 결과가 없는(심사 대기) 지원자만 정정·접수 취소 대상이다. 1차 산출에서 빠진 지원자도 발표 전까지 심사 대기로 남는다.
+ * 1차 합격을 취소한 지원자는 1차 불합격이 되고, 발표 전까지 다시 등록할 수 있다.
+ */
+export const getApplicantActionMode = (status: string, isBeforeFirstAnnouncement: boolean): ApplicantActionMode => {
+  if (status === "PENDING") {
+    return "correct";
+  }
+
+  if (isBeforeFirstAnnouncement && status === "FIRST_PASS") {
+    return "firstPassCancel";
+  }
+
+  if (isBeforeFirstAnnouncement && status === "FIRST_FAIL") {
+    return "firstPassSelect";
+  }
+
+  return "register";
+};
+
+/** 보이는 지원자의 버튼이 모두 같으면 그 이름을, 섞여 있으면 "관리" 를 열 제목으로 쓴다. */
+export const getApplicantActionHeader = (modes: ApplicantActionMode[]) => {
+  const [firstMode = "correct"] = modes;
+  return modes.every(mode => mode === firstMode) ? getApplicantActionLabel(firstMode) : "관리";
+};

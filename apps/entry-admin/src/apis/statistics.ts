@@ -4,7 +4,6 @@ import type { GetStatisticsResponse, StatisticsMetric } from "./types";
 
 const STATISTICS_ENDPOINT = "/api/v11/admin/statistics";
 
-/** 지원 현황 통계 조회. `metrics` 는 필수 파라미터다. */
 export const getStatistics = (metrics: StatisticsMetric[]) => {
   const queryString = buildQueryString({ metrics });
   return http.get<GetStatisticsResponse>(`${STATISTICS_ENDPOINT}${queryString}`);
@@ -13,11 +12,8 @@ export const getStatistics = (metrics: StatisticsMetric[]) => {
 const isBadRequest = (error: unknown) => error instanceof HttpError && error.status === 400;
 
 /**
- * 핵심 지표와 함께, 서버가 아직 지원하지 않을 수 있는 확장 지표도 한 번에 요청한다.
- * 백엔드는 모르는 `metrics` 값이 하나라도 섞이면 바인딩 실패로 요청 전체를 400 으로 거절하므로(2026-09-11 확인),
- * 400 이면 핵심 지표를 다시 받고 확장 지표는 하나씩 따로 물어 받은 것만 합친다.
- * 서버마다 아는 확장 지표가 달라서다(예: prod 는 `GENDER_RATIO` 는 알지만 #324 `FIRST_PASS_QUOTA` 는 모른다).
- * 그 외 에러는 그대로 던진다(전역 토스트·Sentry 보고 대상).
+ * 핵심 지표와 선택 지표를 함께 요청한다. 서버가 모르는 지표가 섞이면 요청 전체가 400 이라,
+ * 400 이면 핵심 지표를 다시 받고 선택 지표는 하나씩 따로 받아 받은 것만 합친다.
  */
 export const getStatisticsWithOptional = async (metrics: StatisticsMetric[], optionalMetrics: StatisticsMetric[]) => {
   if (optionalMetrics.length === 0) {

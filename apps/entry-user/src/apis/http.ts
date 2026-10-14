@@ -1,4 +1,10 @@
-import { createRequestSignal, getApiErrorMessage, getCsrfToken, readApiError } from "@entry/utils";
+import {
+  createRequestSignal,
+  fetchWithAuthRefresh,
+  getApiErrorMessage,
+  getCsrfToken,
+  readApiError,
+} from "@entry/utils";
 import type { ApiResponse } from "./types";
 
 export class HttpError extends Error {
@@ -78,15 +84,24 @@ const request = async <T>(
   body?: BodyInit | null,
   options: HttpRequestOptions = {}
 ): Promise<T> => {
-  options = { ...options, signal: createRequestSignal(options.signal, body) };
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
-    ...createRequestOptions(options),
-    method,
-    body,
-    headers: await createHeaders(method, body, options),
-    // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함합니다.
-    credentials: options.auth === false ? "omit" : "include",
-  });
+  const response = await fetchWithAuthRefresh(
+    import.meta.env.VITE_API_BASE_URL,
+    async () => {
+      // 시도마다 새 시간 제한을 적용하고, 호출자가 전달한 취소 신호는 유지합니다.
+      const signal = createRequestSignal(options.signal, body);
+      const attemptOptions = { ...options, signal };
+      return fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
+        ...createRequestOptions(attemptOptions),
+        method,
+        body,
+        headers: await createHeaders(method, body, attemptOptions),
+        // HttpOnly 인증 쿠키는 JavaScript가 읽지 않고 브라우저가 요청에 포함합니다.
+        credentials: options.auth === false ? "omit" : "include",
+        signal,
+      });
+    },
+    options.auth !== false
+  );
 
   const responseText = await response.text();
   const responseBody = parseResponseBody<T>(responseText);
@@ -107,14 +122,23 @@ const request = async <T>(
 };
 
 const requestBlob = async (path: string, method: string, body?: BodyInit | null, options: HttpRequestOptions = {}) => {
-  options = { ...options, signal: createRequestSignal(options.signal, body) };
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
-    ...createRequestOptions(options),
-    method,
-    body,
-    headers: await createHeaders(method, body, options),
-    credentials: options.auth === false ? "omit" : "include",
-  });
+  const response = await fetchWithAuthRefresh(
+    import.meta.env.VITE_API_BASE_URL,
+    async () => {
+      // 시도마다 새 시간 제한을 적용하고, 호출자가 전달한 취소 신호는 유지합니다.
+      const signal = createRequestSignal(options.signal, body);
+      const attemptOptions = { ...options, signal };
+      return fetch(`${import.meta.env.VITE_API_BASE_URL}${createPath(path, options.params)}`, {
+        ...createRequestOptions(attemptOptions),
+        method,
+        body,
+        headers: await createHeaders(method, body, attemptOptions),
+        credentials: options.auth === false ? "omit" : "include",
+        signal,
+      });
+    },
+    options.auth !== false
+  );
 
   if (!response.ok) {
     throw createHttpError(response.status, parseResponseBody(await response.text()));

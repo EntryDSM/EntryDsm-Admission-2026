@@ -3,10 +3,10 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn } from "@entry/ui";
 
-import type { ApplicantGedScores } from "../apis/types";
 import { useApplicantDetail, useApplicantDocumentDownloads, useApplicantPhoto } from "../hooks";
 import { cancel } from "../assets";
 import {
+  getApplicantStatusLabel,
   getApplicationTypeLabel,
   getArrivalStatusLabel,
   getEducationalStatusLabel,
@@ -28,10 +28,7 @@ interface IApplicantDetailModalType {
   onClose: () => void;
 }
 
-/**
- * 전형별 1차 전형 총점 상한 (백엔드 application `ScoreCalculator` 의 REGULAR/SPECIAL_FIRST_SCREENING_MAX_SCORE).
- * 교과·출결·봉사 만점(일반 170·특별 110)에 가산점을 더한 값으로, 상세 응답의 `totalScore` 는 이 값으로 잘려 내려온다.
- */
+/** 전형별 총점 상한(교과·출결·봉사 만점 + 가산점). 상세 응답의 `totalScore` 도 이 값으로 잘려 온다. */
 const getMaxScore = (applicationType?: string) => {
   if (applicationType === "GENERAL" || applicationType === "COMMON") {
     return 173;
@@ -44,19 +41,7 @@ const getMaxScore = (applicationType?: string) => {
   return "-";
 };
 
-/** 점수 항목 표기. 값이 없으면(총점 미산출이거나 백엔드 #263 배포 전) `-`. */
 const formatScore = (score?: number) => score ?? "-";
-
-/** 검정고시 과목. 지원자 원서 입력 화면(검정고시 성적)과 같은 순서·이름이다. */
-const GED_SUBJECTS: ReadonlyArray<readonly [keyof ApplicantGedScores, string]> = [
-  ["korean", "국어"],
-  ["society", "사회"],
-  ["history", "역사"],
-  ["science", "과학"],
-  ["technology", "기술·가정"],
-  ["math", "수학"],
-  ["english", "영어"],
-];
 
 export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplicantDetailModalType) => {
   const { detail, isLoading } = useApplicantDetail(applicantId, isOpen);
@@ -67,9 +52,9 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
     downloadAdmissionTicket,
     isDownloadingAdmissionTicket,
   } = useApplicantDocumentDownloads();
-  // 상세를 아직 못 받았으면 서류를 만들 지원자가 확정되지 않은 것이므로 출력 버튼을 막는다.
+  // 상세를 받기 전에는 출력 버튼을 막는다.
   const canDownloadDocuments = applicantId !== undefined && !isLoading;
-  // 서명 URL 을 받았는데 이미지가 깨지면(만료·삭제) 그 URL 만 placeholder 로 돌린다. 새 URL 을 받으면 다시 시도한다.
+  // 사진 URL 이 깨지면(만료 등) 그 URL 만 placeholder 로 바꾸고, 새 URL 을 받으면 다시 시도한다.
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string>();
   const scrollPositionRef = useRef(0);
   const modalContentRef = useRef<HTMLDivElement>(null);
@@ -148,7 +133,7 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
     }
   };
 
-  // 자기소개서·학업계획서는 지원자가 쓴 줄바꿈(\n)이 그대로 오므로 <br /> 로 살린다. 비어 있으면 null → 안내 문구.
+  // 지원자가 쓴 줄바꿈을 <br /> 로 살린다. 비어 있으면 null 이라 안내 문구를 보인다.
   const formatTextWithLineBreaks = (text?: string): ReactNode => {
     if (!text) {
       return null;
@@ -165,7 +150,7 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
 
   const regionLabel = getRegionLabel(detail?.region);
   const maxScore = getMaxScore(detail?.applicationType);
-  // 재조회 중에는 캐시된(만료됐을 수 있는) 옛 URL 을 그리지 않고 placeholder 를 보여, 헛된 403 요청과 깜빡임을 막는다.
+  // 재조회 중에는 만료됐을 수 있는 옛 URL 대신 placeholder 를 보인다.
   const displayedPhotoUrl = photoUrl && !isPhotoFetching && photoUrl !== brokenPhotoUrl ? photoUrl : undefined;
 
   if (!isOpen) {
@@ -286,6 +271,11 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
 
             <InfoRow>
               <InfoLabel>상태</InfoLabel>
+              <InfoValue>{getApplicantStatusLabel(detail?.status)}</InfoValue>
+            </InfoRow>
+
+            <InfoRow>
+              <InfoLabel>원서 도착</InfoLabel>
               <InfoValue>{getArrivalStatusLabel(detail?.isArrived)}</InfoValue>
             </InfoRow>
           </ApplicantInfo>
@@ -315,20 +305,6 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
             <ScoreRow>총점: {formatScore(detail?.totalScore)}</ScoreRow>
           </SectionContent>
         </ModalSection>
-
-        {/* 검정고시 지원자는 학기 성적 대신 과목 점수를 본다. 점수를 아직 넣지 않았거나 서버가 주지 않으면 과목마다 `-` 다. */}
-        {detail?.educationalStatus === "GED" && (
-          <ModalSection>
-            <SectionTitle>검정고시 점수</SectionTitle>
-            <SectionContent>
-              {GED_SUBJECTS.map(([key, label]) => (
-                <ScoreRow key={key}>
-                  {label}: {formatScore(detail.gedScores?.[key])}
-                </ScoreRow>
-              ))}
-            </SectionContent>
-          </ModalSection>
-        )}
       </ModalContent>
     </ModalOverlay>
   );
@@ -470,7 +446,6 @@ const ApplicantPhoto = styled.img`
   object-fit: cover;
 `;
 
-// 사진과 출력 버튼은 한 덩어리로 보이도록 접수·수험번호 묶음과의 간격(24px)보다 좁게 붙인다.
 const ApplicantImageGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -594,7 +569,6 @@ const DocumentActions = styled.div`
   gap: 8px;
 `;
 
-// 사진 폭(200px)을 둘이 나눠 쓰는 작은 버튼이라 기본 Btn(48px·18px·좌우 24px)보다 한 단계 작게 잡는다.
 const DocumentButton = styled(Btn)`
   flex: 1;
   min-width: 0;

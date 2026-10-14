@@ -4,8 +4,8 @@ import styled from "@emotion/styled";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
-import { useGetAllSchedule, useStartApplication } from "../apis";
-import type { ScheduleDateTime } from "../apis";
+import { getApplicationStatus, useGetAllSchedule, useStartApplication } from "../apis";
+import type { ApplicantStatus, ScheduleDateTime } from "../apis";
 import { HttpError } from "../apis/http";
 import { LinkIcon } from "../assets";
 import { useVerifyApplicationPeriod } from "../hooks/useApplicationPeriod";
@@ -14,6 +14,11 @@ import { findApplicationSchedule } from "../utils/schedule";
 // 전형 요강 PDF 는 entry-user 의 public 폴더에서 서빙되므로 사용자 앱 도메인으로 연결한다.
 const GUIDELINE_FILE_NAME = "2027학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형 요강.pdf";
 const GUIDELINE_URL = `${USER_APP_URL}/${encodeURIComponent(GUIDELINE_FILE_NAME)}`;
+
+const PRECAUTION_FILE_NAME = "2027학년도 신입생 원서 접수 시 유의사항.hwpx";
+const PRECAUTION_URL = `${USER_APP_URL}/${encodeURIComponent(PRECAUTION_FILE_NAME)}`;
+
+const SUBMITTED_APPLICATION_MESSAGE = "이미 제출한 원서가 있습니다. 마이페이지에서 원서 상태를 확인해 주세요.";
 
 const formatScheduleDate = (date: ScheduleDateTime | undefined) => {
   if (!date) return null;
@@ -44,12 +49,30 @@ export const Landing = () => {
       if (!(await verifyApplicationPeriod())) {
         return;
       }
+
+      // 시작 요청은 제출 이후 상태의 원서도 그대로 돌려주므로, 원서가 없거나 작성 중일 때만 진행한다.
+      let applicantStatus: ApplicantStatus;
+      try {
+        ({ applicantStatus } = await getApplicationStatus());
+      } catch {
+        toast.error("원서 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+      if (applicantStatus === "CANCELED") {
+        toast.error("취소된 원서가 있어 새로 작성할 수 없습니다. 문의처로 연락해 주세요.");
+        return;
+      }
+      if (applicantStatus !== "NONE" && applicantStatus !== "DRAFT") {
+        toast.error(SUBMITTED_APPLICATION_MESSAGE);
+        return;
+      }
+
       await startApplication();
       navigate("/application-classification");
     } catch (error) {
       // useStartApplication의 onError에서 사용자에게 실패 안내를 표시합니다.
       if (error instanceof HttpError && error.status === 409) {
-        toast.error("이미 제출한 원서가 있습니다. 마이페이지에서 원서 상태를 확인해 주세요.");
+        toast.error(SUBMITTED_APPLICATION_MESSAGE);
       }
     } finally {
       setIsStart(false);
@@ -71,9 +94,16 @@ export const Landing = () => {
         <BulletList>
           <li>절차를 읽고 원서와 성적을 작성해 주시면 원서 접수가 완료됩니다.</li>
         </BulletList>
+        <BulletList>
+          <li>반드시 원서 접수 유의사항을 다운로드 하여 읽고 진행해 주세요.</li>
+        </BulletList>
         <GuidelineLink href={GUIDELINE_URL} target="_blank" rel="noopener noreferrer">
           <LinkIcon />
           입학 전형 요강 다운로드
+        </GuidelineLink>
+        <GuidelineLink href={PRECAUTION_URL} target="_blank" rel="noopener noreferrer">
+          <LinkIcon />
+          원서 접수 유의 사항 다운로드
         </GuidelineLink>
       </Section>
 

@@ -60,7 +60,7 @@ export const InfoSection = ({ subtitle }: InfoSectionProps) => {
             <NoticeState>등록된 입학 공지사항이 없습니다.</NoticeState>
           ) : (
             noticeItems.map(notice => (
-              <NoticeCard key={notice.noticeId} to={`/notice/${notice.noticeId}`}>
+              <NoticeCard key={notice.noticeId} to={`/notice/${notice.noticeId}`} state={{ type: "NOTICE" }}>
                 <NoticeContent>
                   <NoticeInfo>
                     <NoticeTitle>{notice.title}</NoticeTitle>

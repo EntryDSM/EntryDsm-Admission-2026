@@ -203,29 +203,8 @@ const getPageSaveInput = (state: ApplicationState, route: string): unknown => {
   }
 };
 
-/** 저장 요청 필드 → 화면 항목 이름. 서버 검증 실패 메시지의 필드명으로 문제 된 칸을 알려줄 때 쓴다. */
-const REQUEST_FIELD_LABELS: Record<string, string> = {
-  name: "지원자 성명",
-  phoneNumber: "지원자 연락처(010-0000-0000 형식)",
-  birthdate: "생년월일",
-  guardianName: "보호자 성명",
-  guardianPhoneNumber: "보호자 연락처(010-0000-0000 형식)",
-  guardianRelation: "지원자와의 관계",
-  "address.zipCode": "우편번호",
-  "address.addressBase": "주소",
-  "address.addressDetail": "상세 주소",
-  schoolCode: "중학교",
-  schoolName: "중학교",
-  studentNumber: "중학교 학번",
-  schoolPhone: "중학교 전화번호",
-  teacherName: "중학교 교사 성명",
-  introduction: "자기소개서",
-  studyPlan: "학업계획서",
-};
-
 /**
  * 저장 실패 안내 문구.
- * - 400 INVALID_REQUEST: Spring 검증 원문(영문, 입력값 포함)이라 그대로 보여줄 수 없어 `on field '<필드>'` 로 문제 된 칸만 찾아 알린다.
  * - 409 DATA_INTEGRITY_VIOLATION: DB 제약 위반으로, 원서 저장에서는 대개 칸 길이 초과다.
  * - 그 밖에는 HttpError 가 이미 고른 문구(서버 한국어 메시지·코드별·상태별)를 쓴다.
  */
@@ -234,20 +213,7 @@ const getSaveErrorMessage = (error: unknown) => {
     return error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.";
   }
 
-  const { code, message = "" } = readApiError(error.body);
-  if (code === "INVALID_REQUEST") {
-    const labels = [
-      ...new Set([...message.matchAll(/on field '([\w.]+)'/g)].map(([, field]) => REQUEST_FIELD_LABELS[field])),
-    ].filter(Boolean);
-    if (labels.length > 0) {
-      return `입력한 값을 확인해 주세요: ${labels.join(", ")}`;
-    }
-    if (message.includes("only draft applications can be modified")) {
-      return "이미 제출한 원서는 고칠 수 없습니다.";
-    }
-  }
-
-  if (code === "DATA_INTEGRITY_VIOLATION") {
+  if (readApiError(error.body).code === "DATA_INTEGRITY_VIOLATION") {
     return "저장할 수 없는 값이 있습니다. 너무 길게 입력한 항목이 없는지 확인해 주세요.";
   }
 

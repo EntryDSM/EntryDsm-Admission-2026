@@ -34,7 +34,7 @@ export const NoticePage = () => {
   const { data, isLoading, isError } = useGetAllNotice(CATEGORY_BY_TAB[activeTab], currentPage - 1);
   const totalPages = data?.totalPages ?? 0;
 
-  const handleNoticeClick = (id: number) => navigate(`/notice/${id}`);
+  const handleNoticeClick = (id: number) => navigate(`/notice/${id}`, { state: { type: activeTab } });
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as "NOTICE" | "GUIDE");
     setCurrentPage(1);

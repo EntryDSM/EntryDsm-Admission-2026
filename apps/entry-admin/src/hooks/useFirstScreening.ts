@@ -3,10 +3,6 @@ import { toast } from "react-toastify";
 
 import { adminQueryKeys, HttpError, runFirstScreening, type ScreeningResult } from "../apis";
 
-/**
- * 1차(서류) 합격자 일괄 산출 훅.
- * 성공 시 산출 집계를 토스트로 알리고, 지원자 상태가 일괄 변경되므로 목록/상세 캐시를 무효화한다.
- */
 export const useFirstScreening = () => {
   const queryClient = useQueryClient();
 
