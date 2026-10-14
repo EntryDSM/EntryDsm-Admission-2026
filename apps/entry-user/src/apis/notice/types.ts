@@ -5,7 +5,6 @@ export interface NoticeSummary {
   title: string;
   author: string;
   createdAt: string;
-  division?: "Admissions Notice" | "Prospective Students Notice";
   isPinned?: boolean;
 }
 

@@ -1,5 +1,5 @@
 import { media } from "@entry/design";
-import { useParams, useNavigate } from "react-router";
+import { useLocation, useParams, useNavigate } from "react-router";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { DownloadIcon, usePageTitle } from "@entry/ui";
@@ -7,22 +7,27 @@ import { useGetDetailNotice } from "../apis";
 
 interface NoticeDetail {
   id: number;
-  type: "GUIDE" | "NOTICE";
   title: string;
   createdAt: string;
   content: string;
   attachments?: Array<{ name: string; url: string }>;
 }
 
+/** 상세 응답에 분류가 없어 목록에서 넘겨받은 분류를 쓴다. 주소로 바로 들어오면 없다. */
+const getListType = (state: unknown) => {
+  const type = (state as { type?: unknown } | null)?.type;
+  return type === "NOTICE" || type === "GUIDE" ? type : undefined;
+};
+
 export const NoticeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const listType = getListType(useLocation().state);
 
   const { data, isLoading, error } = useGetDetailNotice(id);
   const noticeDetail: NoticeDetail | undefined = data
     ? {
         id: data.noticeId,
-        type: data.division === "Prospective Students Notice" ? "GUIDE" : "NOTICE",
         title: data.title,
         content: data.content,
         createdAt: data.createdAt.split("T")[0],
@@ -58,8 +63,8 @@ export const NoticeDetailPage = () => {
     );
   }
 
-  // noticeDetail이 없거나 필수 데이터가 없을 때 처리
-  if (!noticeDetail || !noticeDetail.type) {
+  // noticeDetail이 없을 때 처리
+  if (!noticeDetail) {
     return (
       <PageContainer>
         <ContentWrapper>
@@ -72,7 +77,7 @@ export const NoticeDetailPage = () => {
   return (
     <PageContainer>
       <ContentWrapper>
-        <CategoryText>{noticeDetail.type === "NOTICE" ? "입학 공지사항" : "예비 신입생 안내"}</CategoryText>
+        {listType && <CategoryText>{listType === "NOTICE" ? "입학 공지사항" : "예비 신입생 안내"}</CategoryText>}
 
         <TitleSection>
           <Title>{noticeDetail.title}</Title>
