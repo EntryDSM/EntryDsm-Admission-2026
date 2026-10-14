@@ -21,9 +21,13 @@ type IApplicationComponentType = {
   actionMode: ApplicantActionMode;
   /** 접수 기간이라 접수 취소를 할 수 있는지 */
   isCancelAvailable?: boolean;
+  /** 1차 합격 발표 전이라 원서 정정 메뉴에서 1차 합격자로 등록할 수 있는지 */
+  isFirstPassSelectable?: boolean;
   onClick: () => void;
   onRegisterClick?: () => void;
   onCorrectClick?: () => void;
+  /** 1차 합격자 등록(true)·1차 합격 취소(false) */
+  onFirstPassClick?: (isFirstPass: boolean) => void;
   /** 원서 접수 취소 */
   onCancelClick?: () => void;
   onArrivalClick?: () => void;
@@ -39,18 +43,24 @@ export const Applicant = ({
   isArrived,
   actionMode,
   isCancelAvailable = false,
+  isFirstPassSelectable = false,
   onClick,
   onRegisterClick,
   onCorrectClick,
+  onFirstPassClick,
   onCancelClick,
   onArrivalClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
   const statusLabel = getArrivalStatusLabel(isArrived);
 
-  const handleRegisterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    onRegisterClick?.();
+    if (actionMode === "register") {
+      onRegisterClick?.();
+    } else {
+      onFirstPassClick?.(actionMode === "firstPassSelect");
+    }
   };
 
   const handleArrivalClick = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -74,11 +84,13 @@ export const Applicant = ({
         {actionMode === "correct" ? (
           <ApplicantActionMenu
             isCancelAvailable={isCancelAvailable}
+            isFirstPassSelectable={isFirstPassSelectable}
             onCorrect={() => onCorrectClick?.()}
+            onSelectFirstPass={() => onFirstPassClick?.(true)}
             onCancel={() => onCancelClick?.()}
           />
         ) : (
-          <ActionButton type="button" onClick={handleRegisterClick}>
+          <ActionButton type="button" $isSecondary={actionMode === "firstPassCancel"} onClick={handleActionClick}>
             {getApplicantActionLabel(actionMode)}
           </ActionButton>
         )}
@@ -143,13 +155,15 @@ const StyledCheckbox = styled.input`
   }
 `;
 
-const ActionButton = styled.button`
+// 1차 합격 취소는 테두리 버튼으로 구분한다. 테두리는 버튼 크기가 바뀌지 않게 그림자로 그린다.
+const ActionButton = styled.button<{ $isSecondary: boolean }>`
   height: 37px;
   max-width: 100%;
   padding: 8px 12px;
   border-radius: 8px;
-  background-color: ${colors.green[400]};
-  color: ${colors.gray[50]};
+  background-color: ${({ $isSecondary }) => ($isSecondary ? colors.extra.realWhite : colors.green[400])};
+  box-shadow: ${({ $isSecondary }) => ($isSecondary ? `inset 0 0 0 1px ${colors.gray[300]}` : "none")};
+  color: ${({ $isSecondary }) => ($isSecondary ? colors.gray[500] : colors.gray[50])};
   font-size: 18px;
   font-weight: 500;
   overflow: hidden;
@@ -158,7 +172,7 @@ const ActionButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background-color: ${colors.green[500]};
+    background-color: ${({ $isSecondary }) => ($isSecondary ? colors.gray[100] : colors.green[500])};
   }
 
   @media (max-width: 768px) {

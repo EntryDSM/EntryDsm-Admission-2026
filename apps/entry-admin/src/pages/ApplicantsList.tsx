@@ -17,6 +17,7 @@ import {
   useIssueExamineeNumbers,
   useRegisterFinalResult,
   useUpdateApplicantArrival,
+  useUpdateFirstPass,
   useVerifyApplicationPeriod,
 } from "../hooks";
 import { type ApplicantListItem, getApplicantActionHeader, getApplicantActionMode } from "../utils";
@@ -133,14 +134,18 @@ export const ApplicantsList = () => {
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
+  const { updateFirstPass, isUpdatingFirstPass } = useUpdateFirstPass();
 
-  // 심사 대기 지원자는 "원서 정정" 메뉴, 전형 결과가 나온 지원자는 "2차 합격자 등록" 버튼이다.
+  // 심사 대기 지원자는 "원서 정정" 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소, 발표 뒤에는 "2차 합격자 등록" 버튼이다.
   // 접수 취소는 원서 접수 기간에만 고를 수 있다.
-  const { periodStatus } = useApplicationPeriod();
+  const { periodStatus, firstAnnouncementStatus } = useApplicationPeriod();
   const isCancelAvailable = periodStatus === "open";
+  const isBeforeFirstAnnouncement = firstAnnouncementStatus === "before";
   const tableHeaders = [
     ...APPLICANT_TABLE_FIXED_HEADERS,
-    getApplicantActionHeader(applicants.map(applicant => getApplicantActionMode(applicant.status))),
+    getApplicantActionHeader(
+      applicants.map(applicant => getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement))
+    ),
   ];
 
   const [correctionTarget, setCorrectionTarget] = useState<ApplicantListItem | null>(null);
@@ -243,6 +248,21 @@ export const ApplicantsList = () => {
 
     if (confirm(`${applicant.applicantName} 지원자를 최종 합격자로 등록하시겠습니까?`)) {
       registerFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
+    }
+  };
+
+  const handleFirstPassClick = (applicant: ApplicantListItem, isFirstPass: boolean) => {
+    if (isUpdatingFirstPass) {
+      return;
+    }
+
+    const name = applicant.applicantName || "해당";
+    const message = isFirstPass
+      ? `${name} 지원자를 1차 합격자로 등록하시겠습니까?`
+      : `${name} 지원자의 1차 합격을 취소하시겠습니까?\n취소한 지원자는 1차 불합격이 되어 발표 때 자동 선발에서도 빠지며, 발표 전까지 다시 등록할 수 있습니다.`;
+
+    if (confirm(message)) {
+      updateFirstPass({ applicantId: applicant.applicantId, applicantName: applicant.applicantName, isFirstPass });
     }
   };
 
@@ -460,11 +480,13 @@ export const ApplicantsList = () => {
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
-                actionMode={getApplicantActionMode(applicant.status)}
+                actionMode={getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement)}
                 isCancelAvailable={isCancelAvailable}
+                isFirstPassSelectable={isBeforeFirstAnnouncement}
                 onClick={() => handleApplicantClick(applicant)}
                 onRegisterClick={() => handleRegisterClick(applicant)}
                 onCorrectClick={() => handleCorrectClick(applicant)}
+                onFirstPassClick={isFirstPass => handleFirstPassClick(applicant, isFirstPass)}
                 onCancelClick={() => handleCancelClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />

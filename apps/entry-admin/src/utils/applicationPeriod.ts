@@ -28,3 +28,23 @@ export const getApplicationPeriodStatus = (
   const endAt = toDate(applicationSchedule.endAt).getTime();
   return startAt <= now && now <= endAt ? "open" : "closed";
 };
+
+export const FIRST_ANNOUNCEMENT_SCHEDULE_TITLE = "1차 합격 발표";
+
+/**
+ * 1차 합격자 개별 등록·취소는 발표 시작 전(before)에만, 2차 합격자 등록은 발표 뒤(after)에만 된다.
+ * 발표 일정이 없으면 서버가 둘 다 거절한다.
+ */
+export type FirstAnnouncementStatus = "before" | "after" | "unscheduled";
+
+export const getFirstAnnouncementStatus = (
+  schedules: AdminSchedule[],
+  serverTime: ScheduleDateTime
+): FirstAnnouncementStatus => {
+  const announcement = schedules.find(schedule => schedule.title === FIRST_ANNOUNCEMENT_SCHEDULE_TITLE);
+  if (!announcement) {
+    return "unscheduled";
+  }
+
+  return toDate(serverTime).getTime() < toDate(announcement.startAt).getTime() ? "before" : "after";
+};

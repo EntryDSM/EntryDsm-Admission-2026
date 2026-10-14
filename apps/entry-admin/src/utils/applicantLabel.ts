@@ -64,19 +64,40 @@ export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
 
 export const getArrivalStatusLabel = (isArrived?: boolean) => (isArrived ? "원서 도착" : "-");
 
-/** 지원자 목록 마지막 열 버튼. 1차 산출 전에는 원서 정정 메뉴, 결과가 나오면 2차 합격자 등록이다. */
-export type ApplicantActionMode = "correct" | "register";
+/**
+ * 지원자 목록 마지막 열 버튼. 심사 대기는 원서 정정 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소,
+ * 발표 뒤에는 2차 합격자 등록이다.
+ */
+export type ApplicantActionMode = "correct" | "firstPassSelect" | "firstPassCancel" | "register";
 
 const APPLICANT_ACTION_LABELS: Record<ApplicantActionMode, string> = {
   correct: "원서 정정",
+  firstPassSelect: "1차 합격자 등록",
+  firstPassCancel: "1차 합격 취소",
   register: "2차 합격자 등록",
 };
 
 export const getApplicantActionLabel = (mode: ApplicantActionMode) => APPLICANT_ACTION_LABELS[mode];
 
-/** 전형 결과가 없는(심사 대기) 지원자만 정정·접수 취소 대상이다. 1차 산출에서 빠진 지원자도 심사 대기로 남는다. */
-export const getApplicantActionMode = (status: string): ApplicantActionMode =>
-  status === "PENDING" ? "correct" : "register";
+/**
+ * 전형 결과가 없는(심사 대기) 지원자만 정정·접수 취소 대상이다. 1차 산출에서 빠진 지원자도 발표 전까지 심사 대기로 남는다.
+ * 1차 합격을 취소한 지원자는 1차 불합격이 되고, 발표 전까지 다시 등록할 수 있다.
+ */
+export const getApplicantActionMode = (status: string, isBeforeFirstAnnouncement: boolean): ApplicantActionMode => {
+  if (status === "PENDING") {
+    return "correct";
+  }
+
+  if (isBeforeFirstAnnouncement && status === "FIRST_PASS") {
+    return "firstPassCancel";
+  }
+
+  if (isBeforeFirstAnnouncement && status === "FIRST_FAIL") {
+    return "firstPassSelect";
+  }
+
+  return "register";
+};
 
 /** 보이는 지원자의 버튼이 모두 같으면 그 이름을, 섞여 있으면 "관리" 를 열 제목으로 쓴다. */
 export const getApplicantActionHeader = (modes: ApplicantActionMode[]) => {

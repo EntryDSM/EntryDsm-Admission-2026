@@ -16,6 +16,7 @@ export * from "./useUpdateNotice";
 export * from "./useDeleteNotice";
 export * from "./useUpdateApplicantArrival";
 export * from "./useFirstScreening";
+export * from "./useUpdateFirstPass";
 export * from "./useRegisterFinalResult";
 export * from "./useCancelApplication";
 export * from "./useApplicationEditableFields";
