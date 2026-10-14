@@ -3,7 +3,6 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn } from "@entry/ui";
 
-import type { ApplicantGedScores } from "../apis/types";
 import { useApplicantDetail, useApplicantDocumentDownloads, useApplicantPhoto } from "../hooks";
 import { cancel } from "../assets";
 import {
@@ -42,17 +41,6 @@ const getMaxScore = (applicationType?: string) => {
 };
 
 const formatScore = (score?: number) => score ?? "-";
-
-/** 지원자 원서 작성 화면(검정고시 성적)과 같은 순서 */
-const GED_SUBJECTS: ReadonlyArray<readonly [keyof ApplicantGedScores, string]> = [
-  ["korean", "국어"],
-  ["society", "사회"],
-  ["history", "역사"],
-  ["science", "과학"],
-  ["technology", "기술·가정"],
-  ["math", "수학"],
-  ["english", "영어"],
-];
 
 export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplicantDetailModalType) => {
   const { detail, isLoading } = useApplicantDetail(applicantId, isOpen);
@@ -311,20 +299,6 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
             <ScoreRow>총점: {formatScore(detail?.totalScore)}</ScoreRow>
           </SectionContent>
         </ModalSection>
-
-        {/* 검정고시 지원자는 과목 점수를 본다. 점수가 없으면 `-` 다. */}
-        {detail?.educationalStatus === "GED" && (
-          <ModalSection>
-            <SectionTitle>검정고시 점수</SectionTitle>
-            <SectionContent>
-              {GED_SUBJECTS.map(([key, label]) => (
-                <ScoreRow key={key}>
-                  {label}: {formatScore(detail.gedScores?.[key])}
-                </ScoreRow>
-              ))}
-            </SectionContent>
-          </ModalSection>
-        )}
       </ModalContent>
     </ModalOverlay>
   );
