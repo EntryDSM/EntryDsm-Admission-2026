@@ -12,7 +12,7 @@ import type { PassInfo } from "../apis";
 export const FindPasswordPage = () => {
   const navigate = useNavigate();
 
-  const { currentStep, handleNextStep } = useStepFlow(1, 2);
+  const { currentStep, handleNextStep, goToStep } = useStepFlow(1, 2);
   const [passInfo, setPassInfo] = useState<PassInfo | null>(null);
 
   const handleVerified = (verifiedPassInfo: PassInfo) => {
@@ -20,12 +20,19 @@ export const FindPasswordPage = () => {
     handleNextStep();
   };
 
+  const handleVerificationExpired = () => {
+    setPassInfo(null);
+    goToStep(1);
+  };
+
   const renderContent = () => {
     switch (currentStep) {
       case 1:
         return <SelectUser onVerified={handleVerified} />;
       case 2:
-        return passInfo ? <ChangePassword passInfo={passInfo} /> : null;
+        return passInfo ? (
+          <ChangePassword passInfo={passInfo} onVerificationExpired={handleVerificationExpired} />
+        ) : null;
       default:
         return null;
     }

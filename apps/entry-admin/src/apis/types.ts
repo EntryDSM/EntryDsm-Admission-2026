@@ -335,6 +335,10 @@ export interface ExportJob {
   expiresAt: string | null;
   createdAt: string;
   completedAt: string | null;
+  /** 실패 사유. 사용자에게 그대로 보여줄 수 있는 한국어 설명이다. */
+  failureMessage?: string | null;
+  /** 원서별 검증·누락으로 실패한 대상 수 */
+  failedCount?: number;
 }
 
 /* ───────────────────── 통계 조회 (GET /statistics) ───────────────────── */

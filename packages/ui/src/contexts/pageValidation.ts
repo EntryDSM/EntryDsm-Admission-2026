@@ -20,6 +20,9 @@ const validateApplicationClassificationPage = (data: unknown) => {
   return missingFields;
 };
 
+// 백엔드와 같은 규칙: 학년(1~3)·반(01~99)·번호(01~99) 5자리
+export const isValidStudentNumber = (value: unknown) => /^[1-3](?!00)\d{2}(?!00)\d{2}$/.test(String(value));
+
 const validateMiddleSchoolInfoPage = (data: unknown) => {
   const missingFields: string[] = [];
 
@@ -30,11 +33,8 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
   });
 
   const studentId = getObjectFieldValue(data, "studentId");
-  if (studentId !== null && studentId !== undefined) {
-    const studentIdStr = String(studentId);
-    if (!/^\d{5}$/.test(studentIdStr)) {
-      missingFields.push("studentId_invalid");
-    }
+  if (studentId !== null && studentId !== undefined && !isValidStudentNumber(studentId)) {
+    missingFields.push("studentId_invalid");
   }
 
   return missingFields;
@@ -189,7 +189,7 @@ export const validatePageData = (state: ApplicationState, route: string) => {
 
 /** 값은 있지만 형식·길이가 틀린 항목의 안내. 빠진 항목보다 먼저 알린다. */
 const invalidFieldMessages: Record<string, string> = {
-  studentId_invalid: "학번은 5자리로 입력해주세요.",
+  studentId_invalid: "학번은 학년(1~3)·반·번호를 이어 5자리로 입력해주세요. (예: 30112)",
   applicantNumber_invalid: "지원자 연락처는 010-0000-0000 형식의 휴대전화 번호로 입력해 주세요.",
   guardianNumber_invalid: "보호자 연락처는 010-0000-0000 형식의 휴대전화 번호로 입력해 주세요.",
   otherRelationship_tooLong: `지원자와의 관계는 ${OTHER_RELATIONSHIP_MAX_LENGTH}자 이하로 입력해 주세요.`,

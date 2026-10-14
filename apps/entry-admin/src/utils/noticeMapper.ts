@@ -95,9 +95,10 @@ export const toNoticeListItem = (dto: NoticeSummary): NoticeListItem => ({
   createdAt: dto.createdAt,
 });
 
-export const toNoticeFormValue = (dto: NoticeDetail): NoticeFormValue => ({
+/** 상세 응답에 분류가 없어 목록 탭에서 넘겨받은 `category` 를 먼저 쓴다. */
+export const toNoticeFormValue = (dto: NoticeDetail, category?: NoticeType): NoticeFormValue => ({
   title: dto.title,
-  category: toNoticeType(dto.division),
+  category: category ?? toNoticeType(dto.division),
   content: dto.content,
   isPinned: dto.isPinned ?? false,
 });
@@ -110,10 +111,13 @@ export const toCreateNoticePayload = (form: NoticeFormValue): CreateNoticePayloa
   isPinned: form.isPinned,
 });
 
-/** `attachmentIds` 는 보내면 첨부 목록 전체가 바뀌어, 새 파일이 있을 때만 수정 훅이 붙인다. */
-export const toUpdateNoticePayload = (form: NoticeFormValue): UpdateNoticePayload => ({
+/**
+ * 분류·상단 고정은 상세 응답에 없어 폼 초기값이 실제와 다를 수 있으므로, 바꾼 경우에만 보내 서버 값을 지킨다.
+ * `attachmentIds` 는 보내면 첨부 목록 전체가 바뀌어, 새 파일이 있을 때만 수정 훅이 붙인다.
+ */
+export const toUpdateNoticePayload = (form: NoticeFormValue, initial: NoticeFormValue): UpdateNoticePayload => ({
   title: form.title.trim(),
-  division: DIVISION_BY_TYPE[form.category],
+  division: form.category === initial.category ? undefined : DIVISION_BY_TYPE[form.category],
   content: form.content,
-  isPinned: form.isPinned,
+  isPinned: form.isPinned === initial.isPinned ? undefined : form.isPinned,
 });

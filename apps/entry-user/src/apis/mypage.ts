@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { Http } from "./http";
 import type { AdmissionType, ApplicationRegion } from "./types";
 
@@ -46,28 +47,19 @@ export interface ApplicationResult {
   announcedAt: string | null;
 }
 
-export interface ResetPasswordRequest {
-  loginId: string;
-  name: string;
-  birthdate: string;
-  newPassword: string;
-}
-
-export interface CancelApplicationRequest {
-  email: string;
-  password: string;
-}
-
-export interface ApplicationDownload {
-  fileName: string;
-  downloadUrl: string;
-  expiresIn: number;
-}
-
 const accountPath = "/api/identity/v11/accounts/me";
 const applicationPath = "/api/identity/v11/applications";
 
 export const getMyAccount = () => Http.get<MyAccount>(accountPath);
+
+/** 헤더·메인·마이페이지가 같은 캐시를 쓰도록 계정 조회 옵션을 한 곳에 둔다. */
+export const myAccountQueryOptions = queryOptions({
+  queryKey: ["my-account"],
+  queryFn: getMyAccount,
+  retry: false,
+  // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
+  meta: { sentryIgnoreStatuses: [401] },
+});
 
 export const getApplicationStatus = () => Http.get<ApplicationStatus>(`${applicationPath}/status`);
 
@@ -76,13 +68,7 @@ export const getApplicationResult = () => Http.get<ApplicationResult>(`${applica
 // The API specification defines an empty request body for account deletion.
 export const deleteMyAccount = () => Http.delete<null>(accountPath);
 
-export const resetPassword = (payload: ResetPasswordRequest) =>
-  Http.patch<null>("/api/identity/v11/auth/password-reset", payload);
-
 export const logout = () => Http.post<null>("/api/identity/v11/auth/logout", {});
-
-export const cancelApplication = (payload: CancelApplicationRequest) =>
-  Http.patch<null>(`${applicationPath}/cancellation`, payload);
 
 // 원서 문서 파일 조회에 사용하는 API 경로입니다.
 const APPLICATION_DOCUMENT_ENDPOINT = "/api/document/v11/applications";
@@ -94,7 +80,7 @@ export interface GetApplicationDocumentResponse {
   expiresIn: number;
 }
 
-// 파일 자체가 아닌 존재 여부와 저장소 key/fileName 메타데이터만 조회합니다.
+// 제출한 원서 PDF 를 내려받을 서명된 URL 을 조회합니다.
 export const getApplicationDocument = () =>
   Http.get<GetApplicationDocumentResponse>(`${APPLICATION_DOCUMENT_ENDPOINT}`);
 

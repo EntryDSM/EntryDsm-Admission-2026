@@ -36,7 +36,7 @@ export interface MonitoringStreamLog {
   pageUrl?: string;
   browser?: string;
   os?: string;
-  count: number;
+  count?: number;
   occurredAt: string;
 }
 

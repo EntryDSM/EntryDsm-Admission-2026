@@ -11,6 +11,8 @@ import { isPasswordWithinByteLimit, PASSWORD_MAX_UTF8_BYTES, PASSWORD_TOO_LONG_M
 
 interface ChangePasswordProps {
   passInfo: PassInfo;
+  /** PASS 인증을 다시 받아야 할 때 호출한다. */
+  onVerificationExpired: () => void;
 }
 
 const getPasswordResetErrorMessage = (error: unknown) => {
@@ -36,9 +38,11 @@ const getPasswordResetErrorMessage = (error: unknown) => {
   }
 };
 
-export const ChangePassword = ({ passInfo }: ChangePasswordProps) => {
+export const ChangePassword = ({ passInfo, onVerificationExpired }: ChangePasswordProps) => {
   const navigate = useNavigate();
-  const [birthdate, setBirthdate] = useState("");
+  // 본인 확인은 PASS 인증 결과(전화번호·이름·생년월일)와 모두 일치해야 통과하므로, PASS 생년월일이 있으면 그대로 쓰고 수정을 막는다.
+  const isBirthdateFromPass = passInfo.birthdate !== null;
+  const [birthdate, setBirthdate] = useState(passInfo.birthdate ?? "");
   const [password, setPassword] = useState("");
   const [passwordCheck, setPasswordCheck] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,6 +72,12 @@ export const ChangePassword = ({ passInfo }: ChangePasswordProps) => {
       toast.success("비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.");
       navigate("/", { replace: true });
     } catch (error) {
+      // PASS 인증을 쓴 뒤에 나는 오류라 같은 인증으로는 다시 보낼 수 없다.
+      if (error instanceof IdentityApiError && (error.status === 404 || error.status === 409)) {
+        toast.error(`${getPasswordResetErrorMessage(error)} PASS 인증을 다시 진행해 주세요.`);
+        onVerificationExpired();
+        return;
+      }
       setSubmitError(getPasswordResetErrorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -83,6 +93,7 @@ export const ChangePassword = ({ passInfo }: ChangePasswordProps) => {
         value={birthdate}
         placeholder="2009-03-27"
         maxLength={10}
+        isDisabled={isBirthdateFromPass}
         onChange={event => {
           const digits = event.target.value.replace(/\D/g, "").slice(0, 8);
           setBirthdate([digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join("-"));
