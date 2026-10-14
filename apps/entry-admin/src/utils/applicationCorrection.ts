@@ -1,6 +1,7 @@
 import type {
   AcademicRecordCorrection,
   AdmissionType,
+  ApplicationCorrectionField,
   ApplicationFormChanges,
   CorrectionGraduationType,
   Gender,
@@ -180,33 +181,6 @@ export const toCorrectionFormValues = (detail: ApplicantDetailView): CorrectionF
 
 export type CorrectionSection = "type" | "personal" | "guardian" | "introduction" | "studyPlan" | "academicRecord";
 
-const SECTION_FIELDS: Record<CorrectionSection, ReadonlyArray<keyof CorrectionFormValues>> = {
-  type: ["admissionType", "region", "graduationType", "graduationYear", "graduationMonth", "specialAdmissionType"],
-  personal: ["name", "birthdate", "gender"],
-  guardian: [
-    "guardianName",
-    "guardianPhoneNumber",
-    "guardianGender",
-    "guardianRelation",
-    "guardianRelationOther",
-    "zipCode",
-    "addressBase",
-    "addressDetail",
-  ],
-  introduction: ["introduction"],
-  studyPlan: ["studyPlan"],
-  academicRecord: ["isAcademicRecordEnabled", "academicRecord"],
-};
-
-export const resetCorrectionSection = (
-  values: CorrectionFormValues,
-  initial: CorrectionFormValues,
-  section: CorrectionSection
-): CorrectionFormValues => ({
-  ...values,
-  ...Object.fromEntries(SECTION_FIELDS[section].map(field => [field, initial[field]])),
-});
-
 export type CorrectionChangeKey =
   | "admissionType"
   | "region"
@@ -261,6 +235,60 @@ export const hasCorrectionSectionChanges = (
   changedKeys: ReadonlySet<CorrectionChangeKey>,
   section: CorrectionSection
 ) => SECTION_CHANGES[section].some(key => changedKeys.has(key));
+
+/** 정정 항목의 입력칸(`inputs`)과 서버 항목 이름(`fields`). `fields` 에는 바꿀 때 함께 보내야 하는 항목까지 넣는다. */
+const CHANGE_FIELDS: Record<
+  CorrectionChangeKey,
+  { inputs: ReadonlyArray<keyof CorrectionFormValues>; fields: ReadonlyArray<ApplicationCorrectionField> }
+> = {
+  admissionType: { inputs: ["admissionType"], fields: ["admissionType"] },
+  region: { inputs: ["region"], fields: ["region"] },
+  graduationType: { inputs: ["graduationType"], fields: ["graduationType", "graduationDate", "academicRecord"] },
+  graduationDate: { inputs: ["graduationYear", "graduationMonth"], fields: ["graduationDate"] },
+  specialAdmissionType: { inputs: ["specialAdmissionType"], fields: ["specialAdmissionType"] },
+  name: { inputs: ["name"], fields: ["name"] },
+  birthdate: { inputs: ["birthdate"], fields: ["birthdate"] },
+  gender: { inputs: ["gender"], fields: ["gender"] },
+  guardianName: { inputs: ["guardianName"], fields: ["guardianName"] },
+  guardianPhoneNumber: { inputs: ["guardianPhoneNumber"], fields: ["guardianPhoneNumber"] },
+  guardianGender: { inputs: ["guardianGender"], fields: ["guardianGender"] },
+  guardianRelation: { inputs: ["guardianRelation", "guardianRelationOther"], fields: ["guardianRelation"] },
+  address: { inputs: ["zipCode", "addressBase"], fields: ["zipCode", "addressBase", "addressDetail"] },
+  addressDetail: { inputs: ["addressDetail"], fields: ["addressDetail"] },
+  introduction: { inputs: ["introduction"], fields: ["introduction"] },
+  studyPlan: { inputs: ["studyPlan"], fields: ["studyPlan"] },
+  academicRecord: { inputs: ["isAcademicRecordEnabled", "academicRecord"], fields: ["academicRecord"] },
+};
+
+const CHANGE_KEYS = Object.keys(CHANGE_FIELDS) as CorrectionChangeKey[];
+
+/** 서버가 정정할 수 있다고 알려 준 항목으로 이 화면에서 고칠 수 있는 항목을 정한다. */
+export const getEditableCorrectionKeys = (
+  fields: readonly ApplicationCorrectionField[]
+): ReadonlySet<CorrectionChangeKey> => {
+  const editableFields = new Set(fields);
+  return new Set(CHANGE_KEYS.filter(key => CHANGE_FIELDS[key].fields.every(field => editableFields.has(field))));
+};
+
+export const isCorrectionSectionEditable = (
+  editableKeys: ReadonlySet<CorrectionChangeKey>,
+  section: CorrectionSection
+) => SECTION_CHANGES[section].some(key => editableKeys.has(key));
+
+const restoreInputs = (
+  values: CorrectionFormValues,
+  initial: CorrectionFormValues,
+  keys: ReadonlyArray<CorrectionChangeKey>
+): CorrectionFormValues => ({
+  ...values,
+  ...Object.fromEntries(keys.flatMap(key => CHANGE_FIELDS[key].inputs).map(input => [input, initial[input]])),
+});
+
+export const resetCorrectionSection = (
+  values: CorrectionFormValues,
+  initial: CorrectionFormValues,
+  section: CorrectionSection
+) => restoreInputs(values, initial, SECTION_CHANGES[section]);
 
 export type CorrectionErrorKey =
   | "graduationType"
@@ -365,8 +393,14 @@ const toAcademicRecordCorrection = (
   };
 };
 
-/** 입력값으로 요청 본문의 `changes`, 바뀐 항목, 남은 오류를 만든다. */
-export const buildCorrectionDraft = (values: CorrectionFormValues, initial: CorrectionFormValues): CorrectionDraft => {
+/** 입력값으로 요청 본문의 `changes`, 바뀐 항목, 남은 오류를 만든다. 고칠 수 없는 항목은 입력이 있어도 보내지 않는다. */
+export const buildCorrectionDraft = (
+  input: CorrectionFormValues,
+  initial: CorrectionFormValues,
+  editableKeys: ReadonlySet<CorrectionChangeKey>
+): CorrectionDraft => {
+  const uneditableKeys = CHANGE_KEYS.filter(key => !editableKeys.has(key));
+  const values = restoreInputs(input, initial, uneditableKeys);
   const changes: ApplicationFormChanges = {};
   const changedKeys: CorrectionChangeKey[] = [];
   const errors: CorrectionErrors = {};

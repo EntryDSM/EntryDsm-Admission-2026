@@ -18,6 +18,7 @@ export * from "./useUpdateApplicantArrival";
 export * from "./useFirstScreening";
 export * from "./useRegisterFinalResult";
 export * from "./useCancelApplication";
+export * from "./useApplicationEditableFields";
 export * from "./useCorrectApplication";
 export * from "./useModalDialog";
 export * from "./useIssueExamineeNumbers";
