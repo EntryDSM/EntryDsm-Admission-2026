@@ -11,8 +11,8 @@ import {
   deleteMyAccount,
   getApplicationDocument,
   getApplicationStatus,
-  getMyAccount,
   logout,
+  myAccountQueryOptions,
 } from "../apis/mypage";
 import { HttpError } from "../apis/http";
 import { openDownloadWindow } from "../utils/download";
@@ -55,15 +55,12 @@ export const MyPage = () => {
 
   const navigate = useNavigate();
 
-  const { data: userInfo } = useQuery({
-    queryKey: ["my-account"],
-    queryFn: getMyAccount,
-    // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
-    meta: { sentryIgnoreStatuses: [401] },
-  });
+  const { data: userInfo } = useQuery(myAccountQueryOptions);
   const { data: applicationStatus } = useQuery({
     queryKey: ["application-status"],
     queryFn: getApplicationStatus,
+    retry: false,
+    meta: { sentryIgnoreStatuses: [401] },
   });
   const deleteAccountMutation = useMutation({
     mutationFn: deleteMyAccount,

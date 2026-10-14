@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { Http } from "./http";
 import type { AdmissionType, ApplicationRegion } from "./types";
 
@@ -68,6 +69,15 @@ const accountPath = "/api/identity/v11/accounts/me";
 const applicationPath = "/api/identity/v11/applications";
 
 export const getMyAccount = () => Http.get<MyAccount>(accountPath);
+
+/** 헤더·메인·마이페이지가 같은 캐시를 쓰도록 계정 조회 옵션을 한 곳에 둔다. */
+export const myAccountQueryOptions = queryOptions({
+  queryKey: ["my-account"],
+  queryFn: getMyAccount,
+  retry: false,
+  // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
+  meta: { sentryIgnoreStatuses: [401] },
+});
 
 export const getApplicationStatus = () => Http.get<ApplicationStatus>(`${applicationPath}/status`);
 

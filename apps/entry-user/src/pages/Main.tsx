@@ -7,7 +7,7 @@ import { AUTH_APP_URL } from "@entry/ui";
 import { ApplicationTimeline, FaqSection, InfoSection } from "../components";
 import { school } from "../assets";
 import { getSchedules, getServerTime } from "../apis/schedule";
-import { getMyAccount } from "../apis/mypage";
+import { myAccountQueryOptions } from "../apis/mypage";
 import { ADMISSION_APP_URL } from "../utils/env";
 import { APPLICATION_SCHEDULE_TITLE, hasFirstAnnouncementStarted, toDateTime } from "../utils/schedule";
 
@@ -22,13 +22,7 @@ export const Main = () => {
     queryFn: getServerTime,
     refetchInterval: 30_000,
   });
-  const { isSuccess: isLoggedIn, isPending: isCheckingLogin } = useQuery({
-    queryKey: ["my-account"],
-    queryFn: getMyAccount,
-    retry: false,
-    // 비로그인 방문자의 401 은 정상 흐름이라 Sentry 에 보내지 않는다 (docs/OBSERVABILITY.md 2절).
-    meta: { sentryIgnoreStatuses: [401] },
-  });
+  const { isSuccess: isLoggedIn, isPending: isCheckingLogin } = useQuery(myAccountQueryOptions);
   const applicationSchedule = schedules?.find(schedule => schedule.title === APPLICATION_SCHEDULE_TITLE);
   // 백엔드(ApplicationPeriodGuard)처럼 시·분·초까지, 시작·끝 시각을 포함해 비교한다. 날짜만 비교하면 마감일 마감 시각 이후에도 접수 중으로 보인다.
   const currentServerTime = serverTime ? toDateTime(serverTime) : null;
