@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import { Flex } from "@entry/design";
-import { usePageData } from "@entry/ui";
+import { isValidStudentNumber, usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
 import { TEACHER_NAME_MAX_LENGTH } from "../../utils/inputLimits";
 
@@ -48,7 +48,7 @@ export const MiddleSchoolInfo = () => {
         placeholder="중학교 학번을 입력해주세요."
         onInputChange={handleStudentIdChange}
         value={datas.studentId}
-        isComplete={/^\d{5}$/.test(String(datas.studentId ?? ""))}
+        isComplete={isValidStudentNumber(datas.studentId ?? "")}
         explanation="5자리 숫자 형식으로 입력해주세요. (예: 3학년 1반 12번인 경우 30112)"
         maxLength={5}
       />
