@@ -1,1 +1,1 @@
-export { deleteMyAccount, getMyAccount, logout, resetPassword } from "./mypage";
+export { deleteMyAccount, getMyAccount, logout } from "./mypage";

@@ -40,9 +40,6 @@ const APPLICATION_DOCUMENT_FALLBACK_ERROR_MESSAGE = "원서를 불러오지 못�
 export const MyPage = () => {
   const [openModal, setOpenModal] = useState({
     delete: false,
-    cancelApplication: false,
-    cancelCredentials: false,
-    download: false,
   });
 
   const openModalHandler = useCallback((modalName: keyof typeof openModal) => {
