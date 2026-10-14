@@ -57,12 +57,15 @@ const formatClientLog = ({ level, message, source, pageUrl, browser, os, count }
 const formatServerLog = ({ service, status, method, path, code, message, count }: ServerLogItem) =>
   `[${service}/${status}] ${method} ${path} · ${code} · ${message} · ${count}회`;
 
+// 실시간 클라이언트 로그는 횟수를 주지 않는다.
+const formatCount = (count?: number) => (count === undefined ? "" : ` · ${count}회`);
+
 const formatStreamLog = (log: MonitoringStreamLog) => {
   if (log.kind === "SERVER") {
-    return `[${log.service ?? "SERVER"}/${log.status ?? log.level}] ${log.method ?? ""} ${log.path ?? ""} · ${log.code ?? log.message ?? "서버 오류"} · ${log.count}회`;
+    return `[${log.service ?? "SERVER"}/${log.status ?? log.level}] ${log.method ?? ""} ${log.path ?? ""} · ${log.code ?? log.message ?? "서버 오류"}${formatCount(log.count)}`;
   }
 
-  return `[${log.level}] ${log.message ?? log.code ?? "클라이언트 오류"} · ${log.source ?? log.pageUrl ?? "CLIENT"} · ${log.count}회`;
+  return `[${log.level}] ${log.message ?? log.code ?? "클라이언트 오류"} · ${log.source ?? log.pageUrl ?? "CLIENT"}${formatCount(log.count)}`;
 };
 
 export const MonitoringPageContainer = ({ onReload, onDownload }: MonitoringPageContainerProps) => {
