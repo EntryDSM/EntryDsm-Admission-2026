@@ -5,8 +5,8 @@ import { ApplicantActionMenu } from "./ApplicantActionMenu";
 import {
   type ApplicantActionMode,
   getApplicantActionLabel,
+  getApplicantStatusLabel,
   getApplicationTypeLabel,
-  getArrivalStatusLabel,
   getEducationalStatusLabel,
 } from "./applicantLabelModel";
 
@@ -18,6 +18,7 @@ type IApplicationComponentType = {
   educationalStatus?: string;
   isDaejeon?: boolean;
   isArrived?: boolean;
+  status?: string;
   actionMode: ApplicantActionMode;
   /** 접수 기간이라 접수 취소를 할 수 있는지 */
   isCancelAvailable?: boolean;
@@ -41,6 +42,7 @@ export const Applicant = ({
   educationalStatus,
   isDaejeon,
   isArrived,
+  status,
   actionMode,
   isCancelAvailable = false,
   isFirstPassSelectable = false,
@@ -52,7 +54,7 @@ export const Applicant = ({
   onArrivalClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
-  const statusLabel = getArrivalStatusLabel(isArrived);
+  const statusLabel = getApplicantStatusLabel(status);
 
   const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();

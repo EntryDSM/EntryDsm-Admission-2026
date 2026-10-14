@@ -6,6 +6,7 @@ import { Btn } from "@entry/ui";
 import { useApplicantDetail, useApplicantDocumentDownloads, useApplicantPhoto } from "../hooks";
 import { cancel } from "../assets";
 import {
+  getApplicantStatusLabel,
   getApplicationTypeLabel,
   getArrivalStatusLabel,
   getEducationalStatusLabel,
@@ -270,6 +271,11 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
 
             <InfoRow>
               <InfoLabel>상태</InfoLabel>
+              <InfoValue>{getApplicantStatusLabel(detail?.status)}</InfoValue>
+            </InfoRow>
+
+            <InfoRow>
+              <InfoLabel>원서 도착</InfoLabel>
               <InfoValue>{getArrivalStatusLabel(detail?.isArrived)}</InfoValue>
             </InfoRow>
           </ApplicantInfo>

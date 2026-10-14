@@ -480,6 +480,7 @@ export const ApplicantsList = () => {
                 educationalStatus={applicant.educationalStatus}
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
+                status={applicant.status}
                 actionMode={getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement)}
                 isCancelAvailable={isCancelAvailable}
                 isFirstPassSelectable={isBeforeFirstAnnouncement}

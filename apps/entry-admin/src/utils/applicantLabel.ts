@@ -62,7 +62,8 @@ export const getRegionLabel = withLabel(REGION_LABELS);
 export const getGenderLabel = withLabel(GENDER_LABELS);
 export const getApplicantStatusLabel = withLabel(APPLICANT_STATUS_LABELS);
 
-export const getArrivalStatusLabel = (isArrived?: boolean) => (isArrived ? "원서 도착" : "-");
+export const getArrivalStatusLabel = (isArrived?: boolean) =>
+  isArrived === undefined ? "-" : isArrived ? "도착" : "미도착";
 
 /**
  * 지원자 목록 마지막 열 버튼. 심사 대기는 원서 정정 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소,
