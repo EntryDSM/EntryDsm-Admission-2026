@@ -15,6 +15,9 @@ import { findApplicationSchedule } from "../utils/schedule";
 const GUIDELINE_FILE_NAME = "2027학년도 대덕소프트웨어마이스터고등학교 신입생 입학전형 요강.pdf";
 const GUIDELINE_URL = `${USER_APP_URL}/${encodeURIComponent(GUIDELINE_FILE_NAME)}`;
 
+const PRECAUTION_FILE_NAME = "2027학년도 신입생 원서 접수 시 유의사항.hwpx";
+const PRECAUTION_URL = `${USER_APP_URL}/${encodeURIComponent(PRECAUTION_FILE_NAME)}`;
+
 const formatScheduleDate = (date: ScheduleDateTime | undefined) => {
   if (!date) return null;
 
@@ -71,9 +74,16 @@ export const Landing = () => {
         <BulletList>
           <li>절차를 읽고 원서와 성적을 작성해 주시면 원서 접수가 완료됩니다.</li>
         </BulletList>
+        <BulletList>
+          <li>반드시 원서 접수 유의사항을 다운로드 하여 읽고 진행해 주세요.</li>
+        </BulletList>
         <GuidelineLink href={GUIDELINE_URL} target="_blank" rel="noopener noreferrer">
           <LinkIcon />
           입학 전형 요강 다운로드
+        </GuidelineLink>
+        <GuidelineLink href={PRECAUTION_URL} target="_blank" rel="noopener noreferrer">
+          <LinkIcon />
+          원서 접수 유의 사항 다운로드
         </GuidelineLink>
       </Section>
 
