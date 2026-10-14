@@ -2,15 +2,22 @@ import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { colors, Flex, Text } from "@entry/design";
 import { Btn } from "@entry/ui";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 
 import type { NoticeDetail } from "../apis";
 import { useNoticeDetail, useUpdateNotice } from "../hooks";
-import { getNewAttachmentFiles, toNoticeFormValue, toUpdateNoticePayload } from "../utils";
+import { getNewAttachmentFiles, type NoticeType, toNoticeFormValue, toUpdateNoticePayload } from "../utils";
 import { INITIAL_NOTICE_FORM_VALUE, NoticeForm, type NoticeAttachment, type NoticeFormValue } from "../components";
+
+/** 목록에서 넘겨받은 탭 분류. 주소로 바로 들어오면 없다. */
+const getListCategory = (state: unknown): NoticeType | undefined => {
+  const category = (state as { category?: unknown } | null)?.category;
+  return category === "NOTICE" || category === "GUIDE" ? category : undefined;
+};
 
 export const NoticeEdit = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
 
   const noticeId = id && !Number.isNaN(Number(id)) ? Number(id) : undefined;
@@ -57,20 +64,24 @@ export const NoticeEdit = () => {
   }
 
   // 상세를 받은 뒤 폼을 그려 초기값으로 쓴다(공지가 바뀌면 key 로 다시 그린다).
-  return <NoticeEditForm key={noticeId} noticeId={noticeId} notice={notice} />;
+  return (
+    <NoticeEditForm key={noticeId} noticeId={noticeId} notice={notice} listCategory={getListCategory(location.state)} />
+  );
 };
 
 type NoticeEditFormProps = {
   noticeId: number;
   notice?: NoticeDetail;
+  listCategory?: NoticeType;
 };
 
-const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
+const NoticeEditForm = ({ noticeId, notice, listCategory }: NoticeEditFormProps) => {
   const navigate = useNavigate();
   const { updateNotice, isUpdating } = useUpdateNotice(noticeId);
-  const [formData, setFormData] = useState<NoticeFormValue>(() =>
-    notice ? toNoticeFormValue(notice) : { ...INITIAL_NOTICE_FORM_VALUE }
+  const [initialFormData] = useState<NoticeFormValue>(() =>
+    notice ? toNoticeFormValue(notice, listCategory) : { ...INITIAL_NOTICE_FORM_VALUE }
   );
+  const [formData, setFormData] = useState<NoticeFormValue>(initialFormData);
   // 상세 조회가 기존 첨부 목록을 주지 않아 새로 올릴 파일만 다룬다.
   const [attachments, setAttachments] = useState<NoticeAttachment[]>([]);
 
@@ -89,7 +100,7 @@ const NoticeEditForm = ({ noticeId, notice }: NoticeEditFormProps) => {
 
     // 새 파일을 올리면 기존 첨부는 모두 새 파일로 바뀐다.
     updateNotice(
-      { payload: toUpdateNoticePayload(formData), files: getNewAttachmentFiles(attachments) },
+      { payload: toUpdateNoticePayload(formData, initialFormData), files: getNewAttachmentFiles(attachments) },
       { onSuccess: () => navigate("/notice") }
     );
   };

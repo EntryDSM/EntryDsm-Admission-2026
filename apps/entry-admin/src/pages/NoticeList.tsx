@@ -41,7 +41,7 @@ export const NoticeList = () => {
   };
 
   const handleEditClick = (id: number) => {
-    navigate(`/notice/edit/${id}`);
+    navigate(`/notice/edit/${id}`, { state: { category: activeTab } });
   };
 
   const handleDeleteClick = (noticeId: number) => {
