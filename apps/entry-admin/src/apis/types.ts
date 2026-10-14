@@ -155,7 +155,38 @@ export interface FinalScreeningResult {
   processedAt: string;
 }
 
-/* ───────── 원서 정정 (PATCH /applicants/{applicantId}/application) ───────── */
+/* ───────── 원서 정정 (GET·PATCH /applicants/{applicantId}/application) ───────── */
+
+/** 정정 요청 `changes` 의 항목 이름 */
+export type ApplicationCorrectionField =
+  | "admissionType"
+  | "region"
+  | "graduationType"
+  | "graduationDate"
+  | "photoFileId"
+  | "name"
+  | "phoneNumber"
+  | "gender"
+  | "birthdate"
+  | "specialAdmissionType"
+  | "guardianName"
+  | "guardianPhoneNumber"
+  | "guardianGender"
+  | "guardianRelation"
+  | "zipCode"
+  | "addressBase"
+  | "addressDetail"
+  | "introduction"
+  | "studyPlan"
+  | "school"
+  | "academicRecord";
+
+/** 정정할 수 없으면 `fields` 가 비고 `reason` 에 이유가 온다. */
+export interface EditableApplicationFields {
+  editable: boolean;
+  fields: ApplicationCorrectionField[];
+  reason: string | null;
+}
 
 /** 조회 응답의 {@link GraduationStatus} 와 달리 졸업 예정은 `PROSPECTIVE` 로 보내야 한다. */
 export type CorrectionGraduationType = "PROSPECTIVE" | "GRADUATED" | "GED";

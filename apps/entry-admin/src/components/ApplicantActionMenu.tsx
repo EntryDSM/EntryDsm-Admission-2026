@@ -5,7 +5,10 @@ import { colors } from "@entry/design";
 interface IApplicantActionMenuType {
   /** 접수 기간이라 접수 취소를 할 수 있는지. 아니면 취소 항목을 막는다. */
   isCancelAvailable: boolean;
+  /** 1차 합격 발표 전이라 1차 합격자로 등록할 수 있는지. 아니면 등록 항목을 숨긴다. */
+  isFirstPassSelectable: boolean;
   onCorrect: () => void;
+  onSelectFirstPass: () => void;
   onCancel: () => void;
 }
 
@@ -15,10 +18,16 @@ const VIEWPORT_MARGIN = 8;
 const getMenuItems = (menu: HTMLElement) => Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
 
 /**
- * 지원자 목록 마지막 열의 "원서 정정" 버튼과 메뉴(원서 정정·원서 접수 취소).
+ * 지원자 목록 마지막 열의 "원서 정정" 버튼과 메뉴(원서 정정·1차 합격자 등록·원서 접수 취소).
  * 행을 누르면 상세 모달이 열리므로 이 안의 클릭은 행으로 올려 보내지 않는다.
  */
-export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: IApplicantActionMenuType) => {
+export const ApplicantActionMenu = ({
+  isCancelAvailable,
+  isFirstPassSelectable,
+  onCorrect,
+  onSelectFirstPass,
+  onCancel,
+}: IApplicantActionMenuType) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -111,6 +120,11 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
     onCorrect();
   };
 
+  const handleSelectFirstPassClick = () => {
+    closeMenu(false);
+    onSelectFirstPass();
+  };
+
   // 접수 기간이 아니면 항목은 보이되 누르기만 막는다.
   const handleCancelClick = () => {
     if (!isCancelAvailable) {
@@ -143,6 +157,11 @@ export const ApplicantActionMenu = ({ isCancelAvailable, onCorrect, onCancel }: 
           <MenuItem type="button" role="menuitem" onClick={handleCorrectClick}>
             <MenuItemTitle $tone="default">원서 정정</MenuItemTitle>
           </MenuItem>
+          {isFirstPassSelectable && (
+            <MenuItem type="button" role="menuitem" onClick={handleSelectFirstPassClick}>
+              <MenuItemTitle $tone="default">1차 합격자 등록</MenuItemTitle>
+            </MenuItem>
+          )}
           <MenuDivider role="separator" />
           <MenuItem
             type="button"

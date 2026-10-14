@@ -8,13 +8,14 @@ export const adminQueryKeys = {
     all: ["admin", "applicants"] as const,
     list: (params: GetApplicantsParams) => ["admin", "applicants", "list", params] as const,
     detail: (applicantId: number) => ["admin", "applicants", "detail", applicantId] as const,
+    editableFields: (applicantId: number) => ["admin", "applicants", "editable-fields", applicantId] as const,
   },
   statistics: {
     all: ["admin", "statistics"] as const,
     byMetrics: (metrics: StatisticsMetric[]) => ["admin", "statistics", metrics] as const,
   },
   schedules: ["admin", "schedules"] as const,
-  /** 원서 접수 기간 판정(일정 + 서버 시각) */
+  /** 원서 접수 기간·1차 합격 발표 전후 판정(일정 + 서버 시각) */
   applicationPeriod: ["admin", "application-period"] as const,
   documents: {
     photo: (photoFileId: string) => ["admin", "documents", "photo", photoFileId] as const,
