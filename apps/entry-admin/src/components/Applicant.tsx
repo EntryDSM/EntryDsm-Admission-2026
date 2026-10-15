@@ -29,6 +29,8 @@ type IApplicationComponentType = {
   onCorrectClick?: () => void;
   /** 1차 합격자 등록(true)·1차 합격 취소(false) */
   onFirstPassClick?: (isFirstPass: boolean) => void;
+  /** 2차 합격 취소 */
+  onFinalPassCancelClick?: () => void;
   /** 원서 접수 취소 */
   onCancelClick?: () => void;
   onArrivalClick?: () => void;
@@ -50,6 +52,7 @@ export const Applicant = ({
   onRegisterClick,
   onCorrectClick,
   onFirstPassClick,
+  onFinalPassCancelClick,
   onCancelClick,
   onArrivalClick,
 }: IApplicationComponentType) => {
@@ -60,6 +63,8 @@ export const Applicant = ({
     event.stopPropagation();
     if (actionMode === "register") {
       onRegisterClick?.();
+    } else if (actionMode === "finalPassCancel") {
+      onFinalPassCancelClick?.();
     } else {
       onFirstPassClick?.(actionMode === "firstPassSelect");
     }
@@ -92,7 +97,11 @@ export const Applicant = ({
             onCancel={() => onCancelClick?.()}
           />
         ) : (
-          <ActionButton type="button" $isSecondary={actionMode === "firstPassCancel"} onClick={handleActionClick}>
+          <ActionButton
+            type="button"
+            $isSecondary={actionMode === "firstPassCancel" || actionMode === "finalPassCancel"}
+            onClick={handleActionClick}
+          >
             {getApplicantActionLabel(actionMode)}
           </ActionButton>
         )}
@@ -157,7 +166,7 @@ const StyledCheckbox = styled.input`
   }
 `;
 
-// 1차 합격 취소는 테두리 버튼으로 구분한다. 테두리는 버튼 크기가 바뀌지 않게 그림자로 그린다.
+// 합격 취소는 테두리 버튼으로 구분한다. 테두리는 버튼 크기가 바뀌지 않게 그림자로 그린다.
 const ActionButton = styled.button<{ $isSecondary: boolean }>`
   height: 37px;
   max-width: 100%;
