@@ -220,20 +220,18 @@ export interface GedScoreFormValues {
   kor: number;
   soc: number;
   eng: number;
-  his: number;
   math: number;
   sci: number;
-  tech: number;
+  tech: number | null;
 }
 
 export interface SubmitGedScoresRequest {
   koreanScore: number;
   societyScore: number;
   englishScore: number;
-  historyScore: number;
   mathScore: number;
   scienceScore: number;
-  technologyScore: number;
+  technologyScore: number | null;
 }
 
 export interface SubmitGedScoresVariables {

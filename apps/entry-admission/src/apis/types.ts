@@ -61,20 +61,20 @@ export interface GedScoreFormValues {
   kor: number;
   soc: number;
   eng: number;
-  his: number;
   math: number;
   sci: number;
-  tech: number;
+  /** 선택 과목. 응시하지 않았으면 null */
+  tech: number | null;
 }
 
 export interface SubmitGedScoresRequest {
   koreanScore: number;
   societyScore: number;
   englishScore: number;
-  historyScore: number;
   mathScore: number;
   scienceScore: number;
-  technologyScore: number;
+  /** null 이면 미응시(0점과 다르다) */
+  technologyScore: number | null;
 }
 
 export interface SubmitGedScoresVariables {

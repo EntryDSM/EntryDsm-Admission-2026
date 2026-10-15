@@ -54,7 +54,10 @@ const calculateSemesterScore = (grades: SemesterGrades, maximumScore: number) =>
 
 const calculateCourseScore = (state: CalculationState, recordType: SchoolRecordType) => {
   if (recordType === "qe") {
-    const scores = Object.values(state.qeScore)
+    // 저장된 계산 기록에 예전 역사 점수가 남아 있을 수 있어 과목을 직접 고른다. 비어 있는 기술·가정은 평균에서 뺀다.
+    const { korean, social, science, technology, math, english } = state.qeScore;
+    const scores = [korean, social, science, technology, math, english]
+      .filter(value => value !== "" && value !== null)
       .map(value => Number(value))
       .filter(score => Number.isFinite(score));
 

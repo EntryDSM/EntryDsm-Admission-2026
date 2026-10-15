@@ -50,7 +50,6 @@ interface statementOfPurposeType {
 interface IGedScoreType {
   kor: number | null;
   soc: number | null;
-  his: number | null;
   sci: number | null;
   math: number | null;
   tech: number | null;
@@ -153,7 +152,6 @@ const initialState: ApplicationState = {
   gedScore: {
     kor: null,
     soc: null,
-    his: null,
     sci: null,
     math: null,
     tech: null,

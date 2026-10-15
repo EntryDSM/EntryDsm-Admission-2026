@@ -94,6 +94,8 @@ const validateGuardianInfoPage = (data: unknown) => {
 };
 
 const scoreFields = ["kor", "soc", "his", "math", "sci", "tech", "eng"];
+// 검정고시는 역사가 없고 기술·가정은 선택 과목이다.
+const gedScoreFields = ["kor", "soc", "math", "sci", "eng"];
 const activityFields = ["earlyLeave", "tardiness", "classExit", "absence", "volunteer", "dsmAlgorithm", "certificate"];
 
 const pageValidations: Record<string, (data: unknown) => string[]> = {
@@ -112,7 +114,7 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/second-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/third-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/activity-prospective-graduate": createRequiredFieldsValidator(activityFields),
-  "/ged/score": createRequiredFieldsValidator(scoreFields),
+  "/ged/score": createRequiredFieldsValidator(gedScoreFields),
   "/ged/attendance-volunteer": createRequiredFieldsValidator(["dsmAlgorithm", "certificate"]),
 };
 
