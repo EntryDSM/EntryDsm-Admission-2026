@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 
 import { Flex } from "@entry/design";
-import { isValidStudentNumber, usePageData } from "@entry/ui";
+import { GRADUATION_TYPES, isValidStudentNumber, usePageData } from "@entry/ui";
 import { FormElement } from "../../components";
 import { TEACHER_NAME_MAX_LENGTH } from "../../utils/inputLimits";
 
 export const MiddleSchoolInfo = () => {
   const [datas, setDatas] = usePageData("middleSchoolInfo");
+  const [classification] = usePageData("applicationClassification");
+  const isGraduated = classification.graduationType === GRADUATION_TYPES[2];
 
   const [selectedName, setSelectedName] = useState<string | null>(datas.schoolName || null);
   const [selectedCode, setSelectedCode] = useState<string | null>(datas.schoolCode || null);
@@ -52,26 +54,30 @@ export const MiddleSchoolInfo = () => {
         explanation="5자리 숫자 형식으로 입력해주세요. (예: 3학년 1반 12번인 경우 30112)"
         maxLength={5}
       />
-      <FormElement
-        width="300px"
-        type="input"
-        inputType="phone"
-        label="중학교 전화번호"
-        placeholder="중학교 전화번호를 입력해주세요."
-        onInputChange={handleSchoolPhoneChange}
-        value={datas.schoolPhone}
-        explanation="＊지역번호를 포함해 입력해주세요. (예: 042-123-4567)"
-      />
-      <FormElement
-        width="300px"
-        type="input"
-        label="중학교 교사 성명"
-        inputType="text"
-        maxLength={TEACHER_NAME_MAX_LENGTH}
-        placeholder="중학교 교사 성명을 입력해주세요."
-        onInputChange={handleTeacherNameChange}
-        value={datas.teacherName}
-      />
+      {!isGraduated && (
+        <>
+          <FormElement
+            width="300px"
+            type="input"
+            inputType="phone"
+            label="중학교 전화번호"
+            placeholder="중학교 전화번호를 입력해주세요."
+            onInputChange={handleSchoolPhoneChange}
+            value={datas.schoolPhone}
+            explanation="＊지역번호를 포함해 입력해주세요. (예: 042-123-4567)"
+          />
+          <FormElement
+            width="300px"
+            type="input"
+            label="중학교 교사 성명"
+            inputType="text"
+            maxLength={TEACHER_NAME_MAX_LENGTH}
+            placeholder="중학교 교사 성명을 입력해주세요."
+            onInputChange={handleTeacherNameChange}
+            value={datas.teacherName}
+          />
+        </>
+      )}
     </Flex>
   );
 };
