@@ -4,9 +4,8 @@ import { AttendanceForm, usePageData } from "@entry/ui";
 const SUBJECTS = [
   { key: "kor", title: "국어", text: "국어 성적을 입력하세요" },
   { key: "soc", title: "사회", text: "사회 성적을 입력하세요" },
-  { key: "his", title: "역사", text: "역사 성적을 입력하세요" },
   { key: "sci", title: "과학", text: "과학 성적을 입력하세요" },
-  { key: "tech", title: "기술 가정", text: "기술 가정 성적을 입력하세요" },
+  { key: "tech", title: "기술 가정(선택)", text: "응시하지 않았다면 비워 두세요" },
   { key: "math", title: "수학", text: "수학 성적을 입력하세요" },
   { key: "eng", title: "영어", text: "영어 성적을 입력하세요" },
 ] as const;

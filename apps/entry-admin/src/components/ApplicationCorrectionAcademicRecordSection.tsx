@@ -172,17 +172,17 @@ export const CorrectionAcademicRecordSection = ({
             <RecordBlock aria-labelledby={`${id}-ged`}>
               <RecordBlockTitle id={`${id}-ged`}>검정고시 점수</RecordBlockTitle>
               <CountGrid>
-                {CORRECTION_GED_SUBJECTS.map(({ key, label }) => {
+                {CORRECTION_GED_SUBJECTS.map(({ key, label, isOptional }) => {
                   const score = record.gedScores[key];
 
                   return (
                     <CountInput
                       key={key}
                       id={`${id}-ged-${key}`}
-                      label={label}
+                      label={isOptional ? `${label}(선택)` : label}
                       suffix="점"
                       value={score}
-                      isInvalid={showAllErrors && (score === "" || Number(score) > 100)}
+                      isInvalid={showAllErrors && ((!isOptional && score === "") || Number(score) > 100)}
                       onChange={nextScore => updateRecord({ gedScores: { ...record.gedScores, [key]: nextScore } })}
                     />
                   );

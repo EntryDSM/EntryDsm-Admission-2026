@@ -1,5 +1,5 @@
 import { createRequiredFieldsValidator, getObjectFieldValue, isEmptyValue, validateRouteData } from "@entry/utils";
-import type { ApplicationState } from "./ApplicationDataContext";
+import { GRADUATION_TYPES, type ApplicationState } from "./ApplicationDataContext";
 
 const validateApplicationClassificationPage = (data: unknown) => {
   const missingFields: string[] = [];
@@ -39,6 +39,12 @@ const validateMiddleSchoolInfoPage = (data: unknown) => {
 
   return missingFields;
 };
+
+/** 졸업자는 중학교 원서작성자(교사 성명)·중학교 전화번호를 입력받지 않는다. */
+export const isGraduatedApplicant = (state: ApplicationState) =>
+  state.applicationClassification.graduationType === GRADUATION_TYPES[2];
+
+const GRADUATED_SKIPPED_FIELDS = ["schoolPhone", "teacherName"];
 
 // 백엔드(application) 가 지원자·보호자 연락처에 요구하는 형식. 유선·지역번호는 받지 않는다.
 const MOBILE_PHONE_PATTERN = /^010-\d{4}-\d{4}$/;
@@ -94,6 +100,8 @@ const validateGuardianInfoPage = (data: unknown) => {
 };
 
 const scoreFields = ["kor", "soc", "his", "math", "sci", "tech", "eng"];
+// 검정고시는 역사가 없고 기술·가정은 선택 과목이다.
+const gedScoreFields = ["kor", "soc", "math", "sci", "eng"];
 const activityFields = ["earlyLeave", "tardiness", "classExit", "absence", "volunteer", "dsmAlgorithm", "certificate"];
 
 const pageValidations: Record<string, (data: unknown) => string[]> = {
@@ -112,7 +120,7 @@ const pageValidations: Record<string, (data: unknown) => string[]> = {
   "/second-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/third-prospective-graduate": createRequiredFieldsValidator(scoreFields),
   "/activity-prospective-graduate": createRequiredFieldsValidator(activityFields),
-  "/ged/score": createRequiredFieldsValidator(scoreFields),
+  "/ged/score": createRequiredFieldsValidator(gedScoreFields),
   "/ged/attendance-volunteer": createRequiredFieldsValidator(["dsmAlgorithm", "certificate"]),
 };
 
@@ -198,7 +206,11 @@ const invalidFieldMessages: Record<string, string> = {
 export const canProceedToNext = (state: ApplicationState, currentRoute: string) => {
   const { isValid, missingFields } = validatePageData(state, currentRoute);
   const isGeneralAdmission = state.applicationClassification.typeSelection === "일반";
-  const requiredFields = isGeneralAdmission ? missingFields.filter(field => field !== "certificate") : missingFields;
+  const isGraduated = isGraduatedApplicant(state);
+  const requiredFields = missingFields.filter(
+    field =>
+      !(isGeneralAdmission && field === "certificate") && !(isGraduated && GRADUATED_SKIPPED_FIELDS.includes(field))
+  );
   if (!isValid && requiredFields.length > 0) {
     const invalidField = requiredFields.find(field => field in invalidFieldMessages);
     if (invalidField) {

@@ -87,7 +87,6 @@ const pageValidations = {
     "korean",
     "social",
     "science",
-    "technology",
     "math",
     "english",
   ]),

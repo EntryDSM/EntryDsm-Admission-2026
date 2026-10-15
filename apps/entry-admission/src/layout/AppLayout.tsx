@@ -4,6 +4,7 @@ import {
   canProceedToNext,
   GRADUATION_TYPES,
   type GraduationType,
+  isGraduatedApplicant,
   useApplicationData,
   usePageData,
 } from "@entry/ui";
@@ -156,6 +157,12 @@ const SCORE_INPUT_ROUTES = [
 /** 성적 마지막 단계. 저장하면서 총점을 계산(resultGrades)하므로, 앞의 성적 단계를 다시 저장하면 이 단계도 다시 저장해야 한다. */
 const SCORE_RESULT_ROUTES = ["/activity-graduate", "/activity-prospective-graduate", "/ged/attendance-volunteer"];
 
+/** 졸업자는 교사 성명·중학교 전화번호를 입력받지 않지만, 서버가 두 칸을 비울 수 없게 해 "-" 를 보낸다. */
+const getMiddleSchoolSaveInput = (state: ApplicationState) =>
+  isGraduatedApplicant(state)
+    ? { ...state.middleSchoolInfo, schoolPhone: "-", teacherName: "-" }
+    : state.middleSchoolInfo;
+
 /**
  * 단계 저장이 서버로 보내는 입력값. 저장 기록(utils/savedPages)의 지문을 만들 때 쓰므로 saveCurrentPage 가 읽는 값과 같아야 한다.
  * 미리보기·제출 확인처럼 저장하는 값이 없는 단계는 null 이다.
@@ -171,7 +178,7 @@ const getPageSaveInput = (state: ApplicationState, route: string): unknown => {
     case "/guardian-info":
       return state.guardianInfo;
     case "/middle-school-info":
-      return state.middleSchoolInfo;
+      return getMiddleSchoolSaveInput(state);
     case "/personal-statements":
       return state.personalStatements;
     case "/statement-of-purpose":
@@ -469,7 +476,7 @@ export const AppLayout = () => {
           break;
         }
         case "/middle-school-info": {
-          const { schoolName, schoolCode, studentId, schoolPhone, teacherName } = state.middleSchoolInfo;
+          const { schoolName, schoolCode, studentId, schoolPhone, teacherName } = getMiddleSchoolSaveInput(state);
           await updateMiddleSchoolInformation({
             schoolName: getRequiredValue(schoolName, "중학교 이름"),
             schoolCode: getRequiredValue(schoolCode, "중학교 코드"),
@@ -511,10 +518,9 @@ export const AppLayout = () => {
             kor: getRequiredNumber(state.gedScore.kor, "국어 성적"),
             soc: getRequiredNumber(state.gedScore.soc, "사회 성적"),
             eng: getRequiredNumber(state.gedScore.eng, "영어 성적"),
-            his: getRequiredNumber(state.gedScore.his, "역사 성적"),
             math: getRequiredNumber(state.gedScore.math, "수학 성적"),
             sci: getRequiredNumber(state.gedScore.sci, "과학 성적"),
-            tech: getRequiredNumber(state.gedScore.tech, "기술·가정 성적"),
+            tech: state.gedScore.tech === null ? null : getRequiredNumber(state.gedScore.tech, "기술·가정 성적"),
           });
           break;
         case "/activity-graduate":

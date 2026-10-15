@@ -101,10 +101,9 @@ export interface ApplicantScore {
 export interface ApplicantGedScores {
   korean: number;
   society: number;
-  history: number;
   math: number;
   science: number;
-  technology: number;
+  technology: number | null;
   english: number;
 }
 
@@ -153,6 +152,15 @@ export interface FinalScreeningResult {
   applicantId: number;
   status: ApplicantStatus;
   processedAt: string;
+}
+
+/* ───────── 지원자 상태 변경 (PATCH /applicants/{applicantId}/status) ───────── */
+
+/** `force` 는 정상 흐름을 벗어나는 변경이고, 이때 `reason`(500자 이하)이 필요하다. */
+export interface UpdateApplicantStatusPayload {
+  status: ApplicantStatus;
+  force?: boolean;
+  reason?: string;
 }
 
 /* ───────── 원서 정정 (GET·PATCH /applicants/{applicantId}/application) ───────── */
@@ -215,7 +223,15 @@ export interface SubjectGradesCorrection {
   english: SubjectGrade;
 }
 
-export type GedScoresCorrection = Record<keyof SubjectGradesCorrection, number>;
+/** 검정고시에는 역사가 없다. 기술·가정은 선택 과목으로, 미응시면 null(0점과 다르다)이다. */
+export type GedScoresCorrection = {
+  korean: number;
+  society: number;
+  math: number;
+  science: number;
+  technology: number | null;
+  english: number;
+};
 
 /**
  * 성적은 일부만 보낼 수 없고 전체를 교체한다.

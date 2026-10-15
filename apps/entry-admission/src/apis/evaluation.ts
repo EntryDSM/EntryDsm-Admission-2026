@@ -143,10 +143,9 @@ const gedScoresRequest = (formValues: GedScoreFormValues): SubmitGedScoresReques
   koreanScore: requireScore(formValues.kor),
   societyScore: requireScore(formValues.soc),
   englishScore: requireScore(formValues.eng),
-  historyScore: requireScore(formValues.his),
   mathScore: requireScore(formValues.math),
   scienceScore: requireScore(formValues.sci),
-  technologyScore: requireScore(formValues.tech),
+  technologyScore: formValues.tech === null ? null : requireScore(formValues.tech),
 });
 
 export const submitGedScores = async (formValues: GedScoreFormValues) =>

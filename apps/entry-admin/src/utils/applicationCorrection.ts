@@ -4,6 +4,7 @@ import type {
   ApplicationCorrectionField,
   ApplicationFormChanges,
   CorrectionGraduationType,
+  GedScoresCorrection,
   Gender,
   GraduationStatus,
   Region,
@@ -42,13 +43,18 @@ export const CORRECTION_SUBJECTS: ReadonlyArray<{ key: CorrectionSubject; label:
   { key: "english", label: "영어" },
 ];
 
+export type CorrectionGedSubject = keyof GedScoresCorrection;
+
 /** 지원자 원서 작성 화면(검정고시 성적)과 같은 순서 */
-export const CORRECTION_GED_SUBJECTS: ReadonlyArray<{ key: CorrectionSubject; label: string }> = [
+export const CORRECTION_GED_SUBJECTS: ReadonlyArray<{
+  key: CorrectionGedSubject;
+  label: string;
+  isOptional?: boolean;
+}> = [
   { key: "korean", label: "국어" },
   { key: "society", label: "사회" },
-  { key: "history", label: "역사" },
   { key: "science", label: "과학" },
-  { key: "technology", label: "기술·가정" },
+  { key: "technology", label: "기술·가정", isOptional: true },
   { key: "math", label: "수학" },
   { key: "english", label: "영어" },
 ];
@@ -98,7 +104,7 @@ export interface AcademicRecordFormValues {
   dsmAlgorithmAwarded: boolean | null;
   programmingCertified: boolean | null;
   subjectGrades: Record<CorrectionSemester, Record<CorrectionSubject, SubjectGrade | "">>;
-  gedScores: Record<CorrectionSubject, string>;
+  gedScores: Record<CorrectionGedSubject, string>;
 }
 
 /** 빈 문자열은 "바꾸지 않음" 이다. 상세 조회에 있는 항목만 현재 값으로 채운다. */
@@ -151,7 +157,10 @@ const createEmptyAcademicRecord = (): AcademicRecordFormValues => ({
   subjectGrades: Object.fromEntries(
     CORRECTION_SEMESTERS.map(({ key }) => [key, createSubjectValues<SubjectGrade | "">("")])
   ) as AcademicRecordFormValues["subjectGrades"],
-  gedScores: createSubjectValues(""),
+  gedScores: Object.fromEntries(CORRECTION_GED_SUBJECTS.map(({ key }) => [key, ""])) as Record<
+    CorrectionGedSubject,
+    string
+  >,
 });
 
 export const toCorrectionFormValues = (detail: ApplicantDetailView): CorrectionFormValues => ({
@@ -387,8 +396,11 @@ const toAcademicRecordCorrection = (
         ),
     gedScores: isGed
       ? (Object.fromEntries(
-          CORRECTION_SUBJECTS.map(({ key }) => [key, Number(record.gedScores[key])])
-        ) as AcademicRecordCorrection["gedScores"])
+          CORRECTION_GED_SUBJECTS.map(({ key }) => [
+            key,
+            record.gedScores[key] === "" ? null : Number(record.gedScores[key]),
+          ])
+        ) as GedScoresCorrection)
       : null,
   };
 };
@@ -584,8 +596,12 @@ export const buildCorrectionDraft = (
     }
 
     if (graduationType === "GED") {
-      if (!CORRECTION_SUBJECTS.every(({ key }) => isGedScore(record.gedScores[key]))) {
-        errors.gedScores = "검정고시 일곱 과목 점수를 0~100 사이로 모두 입력해 주세요.";
+      if (
+        !CORRECTION_GED_SUBJECTS.every(
+          ({ key, isOptional }) => (isOptional && record.gedScores[key] === "") || isGedScore(record.gedScores[key])
+        )
+      ) {
+        errors.gedScores = "검정고시 점수를 0~100 사이로 입력해 주세요. 기술·가정만 비워 둘 수 있습니다.";
       }
     } else if (
       !getCorrectionSemesters(graduationType).every(({ key }) =>
