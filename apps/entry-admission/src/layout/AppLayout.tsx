@@ -511,10 +511,9 @@ export const AppLayout = () => {
             kor: getRequiredNumber(state.gedScore.kor, "국어 성적"),
             soc: getRequiredNumber(state.gedScore.soc, "사회 성적"),
             eng: getRequiredNumber(state.gedScore.eng, "영어 성적"),
-            his: getRequiredNumber(state.gedScore.his, "역사 성적"),
             math: getRequiredNumber(state.gedScore.math, "수학 성적"),
             sci: getRequiredNumber(state.gedScore.sci, "과학 성적"),
-            tech: getRequiredNumber(state.gedScore.tech, "기술·가정 성적"),
+            tech: state.gedScore.tech === null ? null : getRequiredNumber(state.gedScore.tech, "기술·가정 성적"),
           });
           break;
         case "/activity-graduate":

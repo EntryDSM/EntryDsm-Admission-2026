@@ -25,8 +25,8 @@ interface IQEScoreType {
   korean: string;
   social: string;
   science: string;
+  /** 선택 과목. 비어 있으면 평균에서 뺀다. */
   technology: string;
-  history: string;
   math: string;
   english: string;
 }
@@ -146,7 +146,6 @@ export const initialState: CalculationState = {
     social: "",
     science: "",
     technology: "",
-    history: "",
     math: "",
     english: "",
   },
