@@ -155,6 +155,15 @@ export interface FinalScreeningResult {
   processedAt: string;
 }
 
+/* ───────── 지원자 상태 변경 (PATCH /applicants/{applicantId}/status) ───────── */
+
+/** `force` 는 정상 흐름을 벗어나는 변경이고, 이때 `reason`(500자 이하)이 필요하다. */
+export interface UpdateApplicantStatusPayload {
+  status: ApplicantStatus;
+  force?: boolean;
+  reason?: string;
+}
+
 /* ───────── 원서 정정 (GET·PATCH /applicants/{applicantId}/application) ───────── */
 
 /** 정정 요청 `changes` 의 항목 이름 */
