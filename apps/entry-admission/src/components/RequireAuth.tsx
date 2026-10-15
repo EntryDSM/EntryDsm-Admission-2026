@@ -46,7 +46,7 @@ export const RequireAuth = () => {
   }
 
   if (isCheckingAccount) {
-    return <GuardScreen>로그인 확인 중...</GuardScreen>;
+    return <GuardScreen>Loading...</GuardScreen>;
   }
 
   if (accountError) {
@@ -61,7 +61,7 @@ export const RequireAuth = () => {
   }
 
   <GuardScreen>
-    로그인이 안되어있습니다.
+    로그인 정보가 없습니다. 로그인 후 다시 시도해주세요.
     <GuardLink href={USER_APP_URL}>유저 페이지로 이동</GuardLink>
   </GuardScreen>;
 
