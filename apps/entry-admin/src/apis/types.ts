@@ -97,16 +97,6 @@ export interface ApplicantScore {
   totalScore: number;
 }
 
-/** 검정고시 과목별 점수(0~100). 원서 입력 API 와 달리 필드명에 `Score` 가 붙지 않는다. */
-export interface ApplicantGedScores {
-  korean: number;
-  society: number;
-  math: number;
-  science: number;
-  technology: number | null;
-  english: number;
-}
-
 export interface AdminApplicantDetail {
   applicantId: number;
   name: string | null;
@@ -123,8 +113,11 @@ export interface AdminApplicantDetail {
   status: ApplicantStatus;
   /** 총점이 아직 없으면 null */
   score: ApplicantScore | null;
-  /** 검정고시 지원자만 있다(응답에 없을 수 있다). */
-  gedScores?: ApplicantGedScores | null;
+  /**
+   * 총점에 반영된 학기만 오는 학기별 환산 점수(반올림 전). 검정고시는 비어 있다.
+   * 검정고시 과목별 점수는 이 응답에 없어 원서 값 조회(`GET /applicants/{id}/application`)로 받는다.
+   */
+  semesterScores?: Partial<Record<SchoolSemester, number>>;
   submittedAt: string | null;
   arrivedAt: string | null;
   updatedAt: string | null;
