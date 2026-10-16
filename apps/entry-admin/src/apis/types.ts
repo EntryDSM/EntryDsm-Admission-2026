@@ -139,21 +139,12 @@ export interface ScreeningResult {
   processedAt: string;
 }
 
-/* ───── 2차(최종) 합격자 개별 등록 (POST /screenings/final/results/{applicantId}) ───── */
+/* ── 2차(최종) 합격자 개별 등록·불합격 처리 (POST·DELETE /screenings/final/results/{applicantId}) ── */
 
 export interface FinalScreeningResult {
   applicantId: number;
   status: ApplicantStatus;
   processedAt: string;
-}
-
-/* ───────── 지원자 상태 변경 (PATCH /applicants/{applicantId}/status) ───────── */
-
-/** `force` 는 정상 흐름을 벗어나는 변경이고, 이때 `reason`(500자 이하)이 필요하다. */
-export interface UpdateApplicantStatusPayload {
-  status: ApplicantStatus;
-  force?: boolean;
-  reason?: string;
 }
 
 /* ───────── 원서 정정 (GET·PATCH /applicants/{applicantId}/application) ───────── */
