@@ -2,10 +2,10 @@ import type {
   AdminApplicantDetail,
   AdminApplicantSummary,
   AdmissionType,
-  ApplicantGedScores,
   ApplicantStatus,
   GraduationStatus,
   Region,
+  SchoolSemester,
 } from "../apis/types";
 import { formatDotDate, formatReceiptNumber } from "./format";
 
@@ -46,11 +46,30 @@ export interface ApplicantDetailView {
   attendanceScore?: number;
   volunteerScore?: number;
   additionalScore?: number;
-  gedScores?: ApplicantGedScores;
+  /** 반영된 학기만 학년·학기 순으로 둔다. 검정고시는 비어 있다. */
+  semesterScores: Array<{ semester: SchoolSemester; label: string; score: number }>;
   photoFileId?: string;
   introduction?: string;
   studyPlan?: string;
 }
+
+const SEMESTERS: ReadonlyArray<{ semester: SchoolSemester; label: string }> = [
+  { semester: "FIRST_GRADE_FIRST_SEMESTER", label: "1학년 1학기" },
+  { semester: "FIRST_GRADE_SECOND_SEMESTER", label: "1학년 2학기" },
+  { semester: "SECOND_GRADE_FIRST_SEMESTER", label: "2학년 1학기" },
+  { semester: "SECOND_GRADE_SECOND_SEMESTER", label: "2학년 2학기" },
+  { semester: "THIRD_GRADE_FIRST_SEMESTER", label: "3학년 1학기" },
+  { semester: "THIRD_GRADE_SECOND_SEMESTER", label: "3학년 2학기" },
+];
+
+/** 다른 점수 항목처럼 소수 셋째 자리까지 보인다. */
+const roundScore = (score: number) => Math.round(score * 1000) / 1000;
+
+const toSemesterScores = (scores: AdminApplicantDetail["semesterScores"] = {}) =>
+  SEMESTERS.flatMap(({ semester, label }) => {
+    const score = scores[semester];
+    return score === undefined ? [] : [{ semester, label, score: roundScore(score) }];
+  });
 
 /** 지역이 비어 있으면 대전/전국을 알 수 없어 undefined 다(화면은 `-`). */
 const toIsDaejeon = (region: Region | null) => (region ? region === "DAEJEON" : undefined);
@@ -88,7 +107,7 @@ export const toApplicantDetailView = (dto: AdminApplicantDetail): ApplicantDetai
   attendanceScore: dto.score?.attendanceScore,
   volunteerScore: dto.score?.volunteerScore,
   additionalScore: dto.score?.additionalScore,
-  gedScores: dto.gedScores ?? undefined,
+  semesterScores: toSemesterScores(dto.semesterScores),
   photoFileId: dto.photoFileId ?? undefined,
   introduction: dto.introduction ?? undefined,
   studyPlan: dto.studyPlan ?? undefined,

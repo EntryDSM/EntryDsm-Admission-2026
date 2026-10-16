@@ -1,15 +1,20 @@
-import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, type KeyboardEvent, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
+export interface ApplicantActionMenuItem {
+  label: string;
+  onSelect: () => void;
+  /** danger 항목은 구분선 아래에 빨간 글씨로 둔다. */
+  tone?: "default" | "danger";
+  /** 보이되 누르기만 막는다. */
+  isDisabled?: boolean;
+}
+
 interface IApplicantActionMenuType {
-  /** 접수 기간이라 접수 취소를 할 수 있는지. 아니면 취소 항목을 막는다. */
-  isCancelAvailable: boolean;
-  /** 1차 합격 발표 전이라 1차 합격자로 등록할 수 있는지. 아니면 등록 항목을 숨긴다. */
-  isFirstPassSelectable: boolean;
-  onCorrect: () => void;
-  onSelectFirstPass: () => void;
-  onCancel: () => void;
+  /** 버튼 문구. 메뉴 이름에도 쓴다. */
+  label: string;
+  items: ApplicantActionMenuItem[];
 }
 
 /** 메뉴가 화면 아래로 넘치면 위로 펼친다. 화면 끝과 띄울 간격 */
@@ -18,16 +23,10 @@ const VIEWPORT_MARGIN = 8;
 const getMenuItems = (menu: HTMLElement) => Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
 
 /**
- * 지원자 목록 마지막 열의 "원서 정정" 버튼과 메뉴(원서 정정·1차 합격자 등록·원서 접수 취소).
+ * 지원자 목록 마지막 열의 메뉴 버튼(심사 대기자의 원서 정정 메뉴, 1차 합격자의 "2차 결과" 메뉴).
  * 행을 누르면 상세 모달이 열리므로 이 안의 클릭은 행으로 올려 보내지 않는다.
  */
-export const ApplicantActionMenu = ({
-  isCancelAvailable,
-  isFirstPassSelectable,
-  onCorrect,
-  onSelectFirstPass,
-  onCancel,
-}: IApplicantActionMenuType) => {
+export const ApplicantActionMenu = ({ label, items }: IApplicantActionMenuType) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -115,24 +114,13 @@ export const ApplicantActionMenu = ({
     }
   };
 
-  const handleCorrectClick = () => {
-    closeMenu(false);
-    onCorrect();
-  };
-
-  const handleSelectFirstPassClick = () => {
-    closeMenu(false);
-    onSelectFirstPass();
-  };
-
-  // 접수 기간이 아니면 항목은 보이되 누르기만 막는다.
-  const handleCancelClick = () => {
-    if (!isCancelAvailable) {
+  const handleItemClick = (item: ApplicantActionMenuItem) => {
+    if (item.isDisabled) {
       return;
     }
 
     closeMenu(false);
-    onCancel();
+    item.onSelect();
   };
 
   return (
@@ -146,32 +134,35 @@ export const ApplicantActionMenu = ({
         onClick={() => setIsOpen(prev => !prev)}
         onKeyDown={handleTriggerKeyDown}
       >
-        원서 정정
+        {label}
         <Chevron $isOpen={isOpen} width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </Chevron>
       </Trigger>
 
       {isOpen && (
-        <Menu ref={menuRef} id={menuId} role="menu" aria-label="원서 정정 메뉴" onKeyDown={handleMenuKeyDown}>
-          <MenuItem type="button" role="menuitem" onClick={handleCorrectClick}>
-            <MenuItemTitle $tone="default">원서 정정</MenuItemTitle>
-          </MenuItem>
-          {isFirstPassSelectable && (
-            <MenuItem type="button" role="menuitem" onClick={handleSelectFirstPassClick}>
-              <MenuItemTitle $tone="default">1차 합격자 등록</MenuItemTitle>
-            </MenuItem>
-          )}
-          <MenuDivider role="separator" />
-          <MenuItem
-            type="button"
-            role="menuitem"
-            $isDanger={true}
-            aria-disabled={!isCancelAvailable}
-            onClick={handleCancelClick}
-          >
-            <MenuItemTitle $tone={isCancelAvailable ? "danger" : "disabled"}>원서 접수 취소</MenuItemTitle>
-          </MenuItem>
+        <Menu ref={menuRef} id={menuId} role="menu" aria-label={`${label} 메뉴`} onKeyDown={handleMenuKeyDown}>
+          {items.map((item, index) => {
+            const isDanger = item.tone === "danger";
+            const hasDividerBefore = isDanger && index > 0 && items[index - 1]?.tone !== "danger";
+
+            return (
+              <Fragment key={item.label}>
+                {hasDividerBefore && <MenuDivider role="separator" />}
+                <MenuItem
+                  type="button"
+                  role="menuitem"
+                  $isDanger={isDanger}
+                  aria-disabled={item.isDisabled}
+                  onClick={() => handleItemClick(item)}
+                >
+                  <MenuItemTitle $tone={item.isDisabled ? "disabled" : isDanger ? "danger" : "default"}>
+                    {item.label}
+                  </MenuItemTitle>
+                </MenuItem>
+              </Fragment>
+            );
+          })}
         </Menu>
       )}
     </Container>

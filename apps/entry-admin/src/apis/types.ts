@@ -97,16 +97,6 @@ export interface ApplicantScore {
   totalScore: number;
 }
 
-/** 검정고시 과목별 점수(0~100). 원서 입력 API 와 달리 필드명에 `Score` 가 붙지 않는다. */
-export interface ApplicantGedScores {
-  korean: number;
-  society: number;
-  math: number;
-  science: number;
-  technology: number | null;
-  english: number;
-}
-
 export interface AdminApplicantDetail {
   applicantId: number;
   name: string | null;
@@ -123,8 +113,11 @@ export interface AdminApplicantDetail {
   status: ApplicantStatus;
   /** 총점이 아직 없으면 null */
   score: ApplicantScore | null;
-  /** 검정고시 지원자만 있다(응답에 없을 수 있다). */
-  gedScores?: ApplicantGedScores | null;
+  /**
+   * 총점에 반영된 학기만 오는 학기별 환산 점수(반올림 전). 검정고시는 비어 있다.
+   * 검정고시 과목별 점수는 이 응답에 없어 원서 값 조회(`GET /applicants/{id}/application`)로 받는다.
+   */
+  semesterScores?: Partial<Record<SchoolSemester, number>>;
   submittedAt: string | null;
   arrivedAt: string | null;
   updatedAt: string | null;
@@ -146,7 +139,7 @@ export interface ScreeningResult {
   processedAt: string;
 }
 
-/* ───── 2차(최종) 합격자 개별 등록 (POST /screenings/final/results/{applicantId}) ───── */
+/* ── 2차(최종) 합격자 개별 등록·불합격 처리 (POST·DELETE /screenings/final/results/{applicantId}) ── */
 
 export interface FinalScreeningResult {
   applicantId: number;
@@ -154,46 +147,59 @@ export interface FinalScreeningResult {
   processedAt: string;
 }
 
-/* ───────── 지원자 상태 변경 (PATCH /applicants/{applicantId}/status) ───────── */
-
-/** `force` 는 정상 흐름을 벗어나는 변경이고, 이때 `reason`(500자 이하)이 필요하다. */
-export interface UpdateApplicantStatusPayload {
-  status: ApplicantStatus;
-  force?: boolean;
-  reason?: string;
-}
-
 /* ───────── 원서 정정 (GET·PATCH /applicants/{applicantId}/application) ───────── */
 
-/** 정정 요청 `changes` 의 항목 이름 */
-export type ApplicationCorrectionField =
-  | "admissionType"
-  | "region"
-  | "graduationType"
-  | "graduationDate"
-  | "photoFileId"
-  | "name"
-  | "phoneNumber"
-  | "gender"
-  | "birthdate"
-  | "specialAdmissionType"
-  | "guardianName"
-  | "guardianPhoneNumber"
-  | "guardianGender"
-  | "guardianRelation"
-  | "zipCode"
-  | "addressBase"
-  | "addressDetail"
-  | "introduction"
-  | "studyPlan"
-  | "school"
-  | "academicRecord";
-
-/** 정정할 수 없으면 `fields` 가 비고 `reason` 에 이유가 온다. */
+/** 정정할 수 있으면 `reason` 이 null 이다. 정정할 수 없어도 `fields` 에 현재 값이 온다. */
 export interface EditableApplicationFields {
-  editable: boolean;
-  fields: ApplicationCorrectionField[];
+  fields: ApplicationFormValues;
   reason: string | null;
+}
+
+/** 원서의 현재 값. 항목 이름은 정정 요청 `changes` 와 같고, 아직 입력하지 않은 항목은 null 이다. */
+export interface ApplicationFormValues {
+  admissionType: AdmissionType | null;
+  region: Region | null;
+  graduationType: CorrectionGraduationType | null;
+  /** `YYYY-MM` */
+  graduationDate: string | null;
+  photoFileId: string | null;
+  name: string | null;
+  phoneNumber: string | null;
+  gender: Gender | null;
+  /** `YYYY-MM-DD` */
+  birthdate: string | null;
+  specialAdmissionType: SpecialAdmissionType | null;
+  guardianName: string | null;
+  guardianPhoneNumber: string | null;
+  guardianGender: Gender | null;
+  guardianRelation: string | null;
+  zipCode: string | null;
+  addressBase: string | null;
+  addressDetail: string | null;
+  introduction: string | null;
+  studyPlan: string | null;
+  school: MiddleSchoolValues | null;
+  academicRecord: AcademicRecordValues | null;
+}
+
+export interface MiddleSchoolValues {
+  schoolCode: string;
+  schoolName: string;
+  studentNumber: string;
+  schoolPhone: string;
+  teacherName: string;
+}
+
+export interface AcademicRecordValues {
+  absentCount: number | null;
+  lateCount: number | null;
+  earlyLeaveCount: number | null;
+  classAbsenceCount: number | null;
+  volunteerTime: number | null;
+  dsmAlgorithmAwarded: boolean | null;
+  programmingCertified: boolean | null;
+  subjectGrades: Partial<Record<SchoolSemester, SubjectGradesCorrection>>;
+  gedScores: Record<keyof GedScoresCorrection, number | null> | null;
 }
 
 /** 조회 응답의 {@link GraduationStatus} 와 달리 졸업 예정은 `PROSPECTIVE` 로 보내야 한다. */

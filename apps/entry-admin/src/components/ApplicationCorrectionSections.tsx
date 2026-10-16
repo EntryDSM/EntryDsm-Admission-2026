@@ -35,12 +35,8 @@ import {
   TextArea,
   TextAreaField,
   TextAreaFooter,
-  TextButton,
   TextInput,
 } from "./applicationCorrectionStyles";
-
-/** 현재 값을 모르는 항목의 "바꾸지 않음" 선택지 */
-const KEEP_OPTION = { value: "", label: "그대로" } as const;
 
 const ADMISSION_TYPE_OPTIONS: ReadonlyArray<IChoiceOption<AdmissionType>> = [
   { value: "GENERAL", label: "일반" },
@@ -53,21 +49,18 @@ const REGION_OPTIONS: ReadonlyArray<IChoiceOption<Region>> = [
   { value: "NATIONWIDE", label: "전국" },
 ];
 
-const SPECIAL_ADMISSION_OPTIONS: ReadonlyArray<IChoiceOption<SpecialAdmissionType | "">> = [
-  KEEP_OPTION,
+const SPECIAL_ADMISSION_OPTIONS: ReadonlyArray<IChoiceOption<SpecialAdmissionType>> = [
   { value: "NONE", label: "해당 없음" },
   { value: "NATIONAL_MERIT", label: "국가유공자" },
   { value: "SPECIAL_ADMISSION", label: "특례입학 대상자" },
 ];
 
-const GENDER_OPTIONS: ReadonlyArray<IChoiceOption<Gender | "">> = [
-  KEEP_OPTION,
+const GENDER_OPTIONS: ReadonlyArray<IChoiceOption<Gender>> = [
   { value: "MALE", label: "남성" },
   { value: "FEMALE", label: "여성" },
 ];
 
-const RELATION_OPTIONS: ReadonlyArray<IChoiceOption<GuardianRelationChoice | "">> = [
-  KEEP_OPTION,
+const RELATION_OPTIONS: ReadonlyArray<IChoiceOption<GuardianRelationChoice>> = [
   { value: "부", label: "부" },
   { value: "모", label: "모" },
   { value: "기타", label: "기타" },
@@ -80,10 +73,6 @@ export const CorrectionNotice = () => (
     <NoticeTitle>정정하기 전에 확인해 주세요</NoticeTitle>
     <NoticeList>
       <li>바꿀 항목만 고치면 됩니다. 손대지 않은 항목은 그대로 유지됩니다.</li>
-      <li>
-        성별·특기 사항·졸업 연월·보호자·주소·성적은 현재 값을 불러올 수 없어 바꿀 때만 입력합니다. 원서 PDF로 확인해
-        주세요.
-      </li>
       <li>전형·졸업 구분·성적을 바꾸면 총점을 다시 계산합니다. 발급된 수험번호는 바뀌지 않습니다.</li>
       <li>연락처·증명사진·중학교 정보는 이 화면에서 정정할 수 없습니다.</li>
     </NoticeList>
@@ -97,7 +86,6 @@ export const CorrectionTypeSection = ({
   initial,
   errors,
   changedKeys,
-  editableKeys,
   onChange,
   onReset,
 }: ICorrectionSectionProps) => {
@@ -113,27 +101,25 @@ export const CorrectionTypeSection = ({
     { value: "GED", label: "검정고시" },
   ];
 
+  // 졸업 구분을 바꾸면 졸업 연월을 새로 고르게 하고, 원래 구분으로 돌아오면 원래 연월로 되돌린다.
   const handleGraduationTypeChange = (nextGraduationType: CorrectionGraduationType | "") => {
     if (!nextGraduationType) {
       return;
     }
 
-    // 새 졸업 구분에 맞지 않는 졸업 연월은 비운다.
-    const keepsYear =
-      nextGraduationType !== "GED" &&
-      getGraduationYearOptions(nextGraduationType).includes(Number(values.graduationYear));
+    const isInitialType = nextGraduationType === initial.graduationType;
 
     onChange({
       graduationType: nextGraduationType,
-      graduationYear: keepsYear ? values.graduationYear : "",
-      graduationMonth: nextGraduationType === "GED" ? "" : values.graduationMonth,
+      graduationYear: isInitialType ? initial.graduationYear : "",
+      graduationMonth: isInitialType ? initial.graduationMonth : "",
     });
   };
 
   const graduationTypeHelper = isGedApplicant
     ? "검정고시 지원자는 중학교 정보가 없어 이 화면에서 졸업(예정)으로 바꿀 수 없습니다."
     : isGraduationTypeChanged
-      ? "졸업 구분을 바꾸면 졸업 연월과 성적을 다시 입력해야 합니다."
+      ? "졸업 구분을 바꾸면 졸업 연월을 다시 고르고 성적도 확인해야 합니다."
       : undefined;
 
   return (
@@ -142,65 +128,58 @@ export const CorrectionTypeSection = ({
       isChanged={hasCorrectionSectionChanges(changedKeys, "type")}
       onReset={() => onReset("type")}
     >
-      {editableKeys.has("admissionType") && (
-        <Field
-          label="전형"
-          labelId={`${id}-admission`}
-          isChanged={changedKeys.has("admissionType")}
-          helper={changedKeys.has("admissionType") ? "전형을 바꾸면 총점을 다시 계산합니다." : undefined}
-        >
-          <ChoiceChips
-            name={`${id}-admission-choice`}
-            labelledBy={`${id}-admission`}
-            options={ADMISSION_TYPE_OPTIONS}
-            value={values.admissionType}
-            currentValue={initial.admissionType}
-            onChange={admissionType => onChange({ admissionType })}
-          />
-        </Field>
-      )}
+      <Field
+        label="전형"
+        labelId={`${id}-admission`}
+        isChanged={changedKeys.has("admissionType")}
+        helper={changedKeys.has("admissionType") ? "전형을 바꾸면 총점을 다시 계산합니다." : undefined}
+      >
+        <ChoiceChips
+          name={`${id}-admission-choice`}
+          labelledBy={`${id}-admission`}
+          options={ADMISSION_TYPE_OPTIONS}
+          value={values.admissionType}
+          currentValue={initial.admissionType}
+          onChange={admissionType => onChange({ admissionType })}
+        />
+      </Field>
 
-      {editableKeys.has("region") && (
-        <Field label="지역" labelId={`${id}-region`} isChanged={changedKeys.has("region")}>
-          <ChoiceChips
-            name={`${id}-region-choice`}
-            labelledBy={`${id}-region`}
-            options={REGION_OPTIONS}
-            value={values.region}
-            currentValue={initial.region}
-            onChange={region => onChange({ region })}
-          />
-        </Field>
-      )}
+      <Field label="지역" labelId={`${id}-region`} isChanged={changedKeys.has("region")}>
+        <ChoiceChips
+          name={`${id}-region-choice`}
+          labelledBy={`${id}-region`}
+          options={REGION_OPTIONS}
+          value={values.region}
+          currentValue={initial.region}
+          onChange={region => onChange({ region })}
+        />
+      </Field>
 
-      {editableKeys.has("graduationType") && (
-        <Field
-          label="졸업 구분"
-          labelId={`${id}-graduation`}
-          isChanged={isGraduationTypeChanged}
-          error={errors.graduationType}
-          helper={graduationTypeHelper}
-        >
-          <ChoiceChips
-            name={`${id}-graduation-choice`}
-            labelledBy={`${id}-graduation`}
-            options={graduationTypeOptions}
-            value={values.graduationType}
-            currentValue={initial.graduationType}
-            isInvalid={!!errors.graduationType}
-            onChange={handleGraduationTypeChange}
-          />
-        </Field>
-      )}
+      <Field
+        label="졸업 구분"
+        labelId={`${id}-graduation`}
+        isChanged={isGraduationTypeChanged}
+        error={errors.graduationType}
+        helper={graduationTypeHelper}
+      >
+        <ChoiceChips
+          name={`${id}-graduation-choice`}
+          labelledBy={`${id}-graduation`}
+          options={graduationTypeOptions}
+          value={values.graduationType}
+          currentValue={initial.graduationType}
+          isInvalid={!!errors.graduationType}
+          onChange={handleGraduationTypeChange}
+        />
+      </Field>
 
-      {editableKeys.has("graduationDate") && graduationType !== "GED" && (
+      {graduationType !== "GED" && (
         <Field
           label={graduationType === "PROSPECTIVE" ? "졸업 예정 연월" : "졸업 연월"}
           labelId={`${id}-graduation-date`}
           isChanged={changedKeys.has("graduationDate")}
           isRequired={isGraduationTypeChanged}
           error={errors.graduationDate}
-          helper="현재 값을 불러올 수 없어 바꿀 때만 고릅니다."
         >
           <InlineGroup role="group" aria-labelledby={`${id}-graduation-date`}>
             <Select
@@ -235,24 +214,23 @@ export const CorrectionTypeSection = ({
         </Field>
       )}
 
-      {editableKeys.has("specialAdmissionType") && (
-        <Field
-          label="특기 사항"
-          labelId={`${id}-special`}
-          isChanged={changedKeys.has("specialAdmissionType")}
-          error={errors.specialAdmissionType}
-          helper="국가유공자·특례입학 대상자는 일반 전형으로만 지원할 수 있습니다."
-        >
-          <ChoiceChips
-            name={`${id}-special-choice`}
-            labelledBy={`${id}-special`}
-            options={SPECIAL_ADMISSION_OPTIONS}
-            value={values.specialAdmissionType}
-            isInvalid={!!errors.specialAdmissionType}
-            onChange={specialAdmissionType => onChange({ specialAdmissionType })}
-          />
-        </Field>
-      )}
+      <Field
+        label="특기 사항"
+        labelId={`${id}-special`}
+        isChanged={changedKeys.has("specialAdmissionType")}
+        error={errors.specialAdmissionType}
+        helper="국가유공자·특례입학 대상자는 일반 전형으로만 지원할 수 있습니다."
+      >
+        <ChoiceChips
+          name={`${id}-special-choice`}
+          labelledBy={`${id}-special`}
+          options={SPECIAL_ADMISSION_OPTIONS}
+          value={values.specialAdmissionType}
+          currentValue={initial.specialAdmissionType}
+          isInvalid={!!errors.specialAdmissionType}
+          onChange={specialAdmissionType => onChange({ specialAdmissionType })}
+        />
+      </Field>
     </SectionCard>
   );
 };
@@ -261,9 +239,9 @@ export const CorrectionTypeSection = ({
 
 export const CorrectionPersonalSection = ({
   values,
+  initial,
   errors,
   changedKeys,
-  editableKeys,
   onChange,
   onTouch,
   onReset,
@@ -276,50 +254,45 @@ export const CorrectionPersonalSection = ({
       isChanged={hasCorrectionSectionChanges(changedKeys, "personal")}
       onReset={() => onReset("personal")}
     >
-      {editableKeys.has("name") && (
-        <Field label="이름" htmlFor={`${id}-name`} isChanged={changedKeys.has("name")} error={errors.name}>
-          <TextInput
-            id={`${id}-name`}
-            value={values.name}
-            maxLength={CORRECTION_LIMITS.name}
-            aria-invalid={!!errors.name}
-            $width="240px"
-            onChange={event => onChange({ name: event.target.value })}
-            onBlur={() => onTouch("name")}
-          />
-        </Field>
-      )}
+      <Field label="이름" htmlFor={`${id}-name`} isChanged={changedKeys.has("name")} error={errors.name}>
+        <TextInput
+          id={`${id}-name`}
+          value={values.name}
+          maxLength={CORRECTION_LIMITS.name}
+          aria-invalid={!!errors.name}
+          $width="240px"
+          onChange={event => onChange({ name: event.target.value })}
+          onBlur={() => onTouch("name")}
+        />
+      </Field>
 
-      {editableKeys.has("birthdate") && (
-        <Field
-          label="생년월일"
-          htmlFor={`${id}-birthdate`}
-          isChanged={changedKeys.has("birthdate")}
-          error={errors.birthdate}
-        >
-          <TextInput
-            id={`${id}-birthdate`}
-            type="date"
-            value={values.birthdate}
-            aria-invalid={!!errors.birthdate}
-            $width="240px"
-            onChange={event => onChange({ birthdate: event.target.value })}
-            onBlur={() => onTouch("birthdate")}
-          />
-        </Field>
-      )}
+      <Field
+        label="생년월일"
+        htmlFor={`${id}-birthdate`}
+        isChanged={changedKeys.has("birthdate")}
+        error={errors.birthdate}
+      >
+        <TextInput
+          id={`${id}-birthdate`}
+          type="date"
+          value={values.birthdate}
+          aria-invalid={!!errors.birthdate}
+          $width="240px"
+          onChange={event => onChange({ birthdate: event.target.value })}
+          onBlur={() => onTouch("birthdate")}
+        />
+      </Field>
 
-      {editableKeys.has("gender") && (
-        <Field label="성별" labelId={`${id}-gender`} isChanged={changedKeys.has("gender")}>
-          <ChoiceChips
-            name={`${id}-gender-choice`}
-            labelledBy={`${id}-gender`}
-            options={GENDER_OPTIONS}
-            value={values.gender}
-            onChange={gender => onChange({ gender })}
-          />
-        </Field>
-      )}
+      <Field label="성별" labelId={`${id}-gender`} isChanged={changedKeys.has("gender")}>
+        <ChoiceChips
+          name={`${id}-gender-choice`}
+          labelledBy={`${id}-gender`}
+          options={GENDER_OPTIONS}
+          value={values.gender}
+          currentValue={initial.gender}
+          onChange={gender => onChange({ gender })}
+        />
+      </Field>
     </SectionCard>
   );
 };
@@ -328,9 +301,9 @@ export const CorrectionPersonalSection = ({
 
 export const CorrectionGuardianSection = ({
   values,
+  initial,
   errors,
   changedKeys,
-  editableKeys,
   onChange,
   onTouch,
   onReset,
@@ -338,147 +311,127 @@ export const CorrectionGuardianSection = ({
   const id = useId();
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
-  // 도로명 주소가 없을 때만 지번 주소를 쓴다.
+  // 도로명 주소가 없을 때만 지번 주소를 쓴다. 옛 상세 주소가 새 주소에 남지 않게 비운다.
   const handleAddressComplete = (address: Address) => {
-    onChange({ zipCode: address.zonecode, addressBase: address.roadAddress || address.address });
+    onChange({ zipCode: address.zonecode, addressBase: address.roadAddress || address.address, addressDetail: "" });
     setIsSearchingAddress(false);
   };
-
-  const isAddressSelected = values.zipCode !== "" && values.addressBase !== "";
 
   return (
     <SectionCard
       title="보호자 · 주소"
-      description="현재 값을 불러올 수 없어 바꿀 항목만 입력합니다. 비워 둔 항목은 그대로 유지됩니다."
       isChanged={hasCorrectionSectionChanges(changedKeys, "guardian")}
       onReset={() => {
         setIsSearchingAddress(false);
         onReset("guardian");
       }}
     >
-      {editableKeys.has("guardianName") && (
-        <Field
-          label="보호자 성명"
-          htmlFor={`${id}-guardian-name`}
-          isChanged={changedKeys.has("guardianName")}
-          error={errors.guardianName}
-        >
+      <Field
+        label="보호자 성명"
+        htmlFor={`${id}-guardian-name`}
+        isChanged={changedKeys.has("guardianName")}
+        error={errors.guardianName}
+      >
+        <TextInput
+          id={`${id}-guardian-name`}
+          value={values.guardianName}
+          maxLength={CORRECTION_LIMITS.guardianName}
+          aria-invalid={!!errors.guardianName}
+          $width="240px"
+          onChange={event => onChange({ guardianName: event.target.value })}
+          onBlur={() => onTouch("guardianName")}
+        />
+      </Field>
+
+      <Field
+        label="보호자 연락처"
+        htmlFor={`${id}-guardian-phone`}
+        isChanged={changedKeys.has("guardianPhoneNumber")}
+        error={errors.guardianPhoneNumber}
+      >
+        <TextInput
+          id={`${id}-guardian-phone`}
+          type="tel"
+          inputMode="numeric"
+          value={values.guardianPhoneNumber}
+          placeholder="010-0000-0000"
+          aria-invalid={!!errors.guardianPhoneNumber}
+          $width="240px"
+          onChange={event => onChange({ guardianPhoneNumber: formatPhoneNumberInput(event.target.value) })}
+          onBlur={() => onTouch("guardianPhoneNumber")}
+        />
+      </Field>
+
+      <Field label="보호자 성별" labelId={`${id}-guardian-gender`} isChanged={changedKeys.has("guardianGender")}>
+        <ChoiceChips
+          name={`${id}-guardian-gender-choice`}
+          labelledBy={`${id}-guardian-gender`}
+          options={GENDER_OPTIONS}
+          value={values.guardianGender}
+          currentValue={initial.guardianGender}
+          onChange={guardianGender => onChange({ guardianGender })}
+        />
+      </Field>
+
+      <Field
+        label="지원자와의 관계"
+        labelId={`${id}-relation`}
+        isChanged={changedKeys.has("guardianRelation")}
+        error={errors.guardianRelation}
+      >
+        <ChoiceChips
+          name={`${id}-relation-choice`}
+          labelledBy={`${id}-relation`}
+          options={RELATION_OPTIONS}
+          value={values.guardianRelation}
+          currentValue={initial.guardianRelation}
+          onChange={guardianRelation => onChange({ guardianRelation })}
+        />
+        {values.guardianRelation === "기타" && (
           <TextInput
-            id={`${id}-guardian-name`}
-            value={values.guardianName}
-            placeholder="바꿀 때만 입력"
-            maxLength={CORRECTION_LIMITS.guardianName}
-            aria-invalid={!!errors.guardianName}
+            aria-label="지원자와의 관계 직접 입력"
+            value={values.guardianRelationOther}
+            placeholder="관계를 입력하세요 (예: 조부)"
+            maxLength={CORRECTION_LIMITS.guardianRelation}
+            aria-invalid={!!errors.guardianRelation}
             $width="240px"
-            onChange={event => onChange({ guardianName: event.target.value })}
-            onBlur={() => onTouch("guardianName")}
+            onChange={event => onChange({ guardianRelationOther: event.target.value })}
+            onBlur={() => onTouch("guardianRelation")}
           />
-        </Field>
-      )}
+        )}
+      </Field>
 
-      {editableKeys.has("guardianPhoneNumber") && (
-        <Field
-          label="보호자 연락처"
-          htmlFor={`${id}-guardian-phone`}
-          isChanged={changedKeys.has("guardianPhoneNumber")}
-          error={errors.guardianPhoneNumber}
-        >
-          <TextInput
-            id={`${id}-guardian-phone`}
-            type="tel"
-            inputMode="numeric"
-            value={values.guardianPhoneNumber}
-            placeholder="010-0000-0000"
-            aria-invalid={!!errors.guardianPhoneNumber}
-            $width="240px"
-            onChange={event => onChange({ guardianPhoneNumber: formatPhoneNumberInput(event.target.value) })}
-            onBlur={() => onTouch("guardianPhoneNumber")}
-          />
-        </Field>
-      )}
+      <Field label="주소" labelId={`${id}-address`} isChanged={changedKeys.has("address")}>
+        <InlineGroup role="group" aria-labelledby={`${id}-address`}>
+          <TextInput aria-label="우편번호" value={values.zipCode} placeholder="우편번호" readOnly $width="112px" />
+          <TextInput aria-label="기본 주소" value={values.addressBase} placeholder="주소 검색으로 입력" readOnly />
+          <SecondaryButton type="button" onClick={() => setIsSearchingAddress(prev => !prev)}>
+            {isSearchingAddress ? "검색 닫기" : "주소 검색"}
+          </SecondaryButton>
+        </InlineGroup>
+        {isSearchingAddress && (
+          <PostcodeFrame>
+            <DaumPostcodeEmbed onComplete={handleAddressComplete} autoClose={false} style={{ height: "440px" }} />
+          </PostcodeFrame>
+        )}
+      </Field>
 
-      {editableKeys.has("guardianGender") && (
-        <Field label="보호자 성별" labelId={`${id}-guardian-gender`} isChanged={changedKeys.has("guardianGender")}>
-          <ChoiceChips
-            name={`${id}-guardian-gender-choice`}
-            labelledBy={`${id}-guardian-gender`}
-            options={GENDER_OPTIONS}
-            value={values.guardianGender}
-            onChange={guardianGender => onChange({ guardianGender })}
-          />
-        </Field>
-      )}
-
-      {editableKeys.has("guardianRelation") && (
-        <Field
-          label="지원자와의 관계"
-          labelId={`${id}-relation`}
-          isChanged={changedKeys.has("guardianRelation")}
-          error={errors.guardianRelation}
-        >
-          <ChoiceChips
-            name={`${id}-relation-choice`}
-            labelledBy={`${id}-relation`}
-            options={RELATION_OPTIONS}
-            value={values.guardianRelation}
-            onChange={guardianRelation => onChange({ guardianRelation })}
-          />
-          {values.guardianRelation === "기타" && (
-            <TextInput
-              aria-label="지원자와의 관계 직접 입력"
-              value={values.guardianRelationOther}
-              placeholder="관계를 입력하세요 (예: 조부)"
-              maxLength={CORRECTION_LIMITS.guardianRelation}
-              aria-invalid={!!errors.guardianRelation}
-              $width="240px"
-              onChange={event => onChange({ guardianRelationOther: event.target.value })}
-              onBlur={() => onTouch("guardianRelation")}
-            />
-          )}
-        </Field>
-      )}
-
-      {editableKeys.has("address") && (
-        <Field label="주소" labelId={`${id}-address`} isChanged={changedKeys.has("address")}>
-          <InlineGroup role="group" aria-labelledby={`${id}-address`}>
-            <TextInput aria-label="우편번호" value={values.zipCode} placeholder="우편번호" readOnly $width="112px" />
-            <TextInput aria-label="기본 주소" value={values.addressBase} placeholder="주소 검색으로 입력" readOnly />
-            <SecondaryButton type="button" onClick={() => setIsSearchingAddress(prev => !prev)}>
-              {isSearchingAddress ? "검색 닫기" : "주소 검색"}
-            </SecondaryButton>
-          </InlineGroup>
-          {isAddressSelected && !isSearchingAddress && (
-            <TextButton type="button" onClick={() => onChange({ zipCode: "", addressBase: "" })}>
-              검색한 주소 지우기
-            </TextButton>
-          )}
-          {isSearchingAddress && (
-            <PostcodeFrame>
-              <DaumPostcodeEmbed onComplete={handleAddressComplete} autoClose={false} style={{ height: "440px" }} />
-            </PostcodeFrame>
-          )}
-        </Field>
-      )}
-
-      {editableKeys.has("addressDetail") && (
-        <Field
-          label="상세 주소"
-          htmlFor={`${id}-address-detail`}
-          isChanged={changedKeys.has("addressDetail")}
-          isRequired={isAddressSelected}
-          error={errors.addressDetail}
-        >
-          <TextInput
-            id={`${id}-address-detail`}
-            value={values.addressDetail}
-            placeholder="바꿀 때만 입력"
-            maxLength={CORRECTION_LIMITS.addressDetail}
-            aria-invalid={!!errors.addressDetail}
-            onChange={event => onChange({ addressDetail: event.target.value })}
-            onBlur={() => onTouch("addressDetail")}
-          />
-        </Field>
-      )}
+      <Field
+        label="상세 주소"
+        htmlFor={`${id}-address-detail`}
+        isChanged={changedKeys.has("addressDetail")}
+        isRequired={changedKeys.has("address")}
+        error={errors.addressDetail}
+      >
+        <TextInput
+          id={`${id}-address-detail`}
+          value={values.addressDetail}
+          maxLength={CORRECTION_LIMITS.addressDetail}
+          aria-invalid={!!errors.addressDetail}
+          onChange={event => onChange({ addressDetail: event.target.value })}
+          onBlur={() => onTouch("addressDetail")}
+        />
+      </Field>
     </SectionCard>
   );
 };

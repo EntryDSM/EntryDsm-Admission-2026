@@ -29,22 +29,33 @@ export const getApplicationPeriodStatus = (
   return startAt <= now && now <= endAt ? "open" : "closed";
 };
 
-export const FIRST_ANNOUNCEMENT_SCHEDULE_TITLE = "1차 합격 발표";
+/** 서버 시각이 발표 시작 전(before)인지 뒤(after)인지. 발표 일정이 없으면 unscheduled 다. */
+export type AnnouncementStatus = "before" | "after" | "unscheduled";
 
-/**
- * 1차 합격자 개별 등록·취소는 발표 시작 전(before)에만, 2차 합격자 등록은 발표 뒤(after)에만 된다.
- * 발표 일정이 없으면 서버가 둘 다 거절한다.
- */
-export type FirstAnnouncementStatus = "before" | "after" | "unscheduled";
-
-export const getFirstAnnouncementStatus = (
+const getAnnouncementStatus = (
   schedules: AdminSchedule[],
-  serverTime: ScheduleDateTime
-): FirstAnnouncementStatus => {
-  const announcement = schedules.find(schedule => schedule.title === FIRST_ANNOUNCEMENT_SCHEDULE_TITLE);
+  serverTime: ScheduleDateTime,
+  title: string
+): AnnouncementStatus => {
+  const announcement = schedules.find(schedule => schedule.title === title);
   if (!announcement) {
     return "unscheduled";
   }
 
   return toDate(serverTime).getTime() < toDate(announcement.startAt).getTime() ? "before" : "after";
 };
+
+export const FIRST_ANNOUNCEMENT_SCHEDULE_TITLE = "1차 합격 발표";
+
+/**
+ * 1차 합격자 개별 등록·취소는 발표 시작 전(before)에만, 2차 합격자 등록·불합격 처리는 발표 뒤(after)에만 된다.
+ * 발표 일정이 없으면 서버가 둘 다 거절한다.
+ */
+export const getFirstAnnouncementStatus = (schedules: AdminSchedule[], serverTime: ScheduleDateTime) =>
+  getAnnouncementStatus(schedules, serverTime, FIRST_ANNOUNCEMENT_SCHEDULE_TITLE);
+
+export const FINAL_ANNOUNCEMENT_SCHEDULE_TITLE = "최종 합격 발표";
+
+/** 2차 불합격 처리·2차 합격 취소는 발표 시작 전(before)에만 된다. 발표 일정이 없으면 서버가 거절한다. */
+export const getFinalAnnouncementStatus = (schedules: AdminSchedule[], serverTime: ScheduleDateTime) =>
+  getAnnouncementStatus(schedules, serverTime, FINAL_ANNOUNCEMENT_SCHEDULE_TITLE);

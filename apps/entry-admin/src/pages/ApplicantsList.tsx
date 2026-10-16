@@ -8,12 +8,12 @@ import {
   useApplicants,
   useApplicationPeriod,
   useCancelApplication,
-  useCancelFinalResult,
   useDownloadAdmissionFile,
   useDownloadAdmissionTickets,
   useDownloadChecklist,
   useDownloadEssays,
   useDownloadFirstPassList,
+  useFailFinalResult,
   useFirstScreening,
   useIssueExamineeNumbers,
   useRegisterFinalResult,
@@ -135,20 +135,17 @@ export const ApplicantsList = () => {
   const { updateArrival, isUpdatingArrival } = useUpdateApplicantArrival();
   const { runFirstScreening, isRunningFirstScreening } = useFirstScreening();
   const { registerFinalResult, isRegisteringFinalResult } = useRegisterFinalResult();
-  const { cancelFinalResult, isCancelingFinalResult } = useCancelFinalResult();
+  const { failFinalResult, isFailingFinalResult } = useFailFinalResult();
   const { updateFirstPass, isUpdatingFirstPass } = useUpdateFirstPass();
 
-  // 심사 대기 지원자는 "원서 정정" 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소, 발표 뒤에는 2차 합격자 등록·취소 버튼이다.
-  // 접수 취소는 원서 접수 기간에만 고를 수 있다.
-  const { periodStatus, firstAnnouncementStatus } = useApplicationPeriod();
+  // 심사 대기 지원자는 "원서 정정" 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소, 발표 뒤 1차 합격자는 "2차 결과" 메뉴다.
+  // 접수 취소는 원서 접수 기간에만, 2차 불합격 처리·2차 합격 취소는 최종 합격 발표 전에만 고를 수 있다.
+  const { periodStatus, firstAnnouncementStatus, finalAnnouncementStatus } = useApplicationPeriod();
   const isCancelAvailable = periodStatus === "open";
   const isBeforeFirstAnnouncement = firstAnnouncementStatus === "before";
-  const tableHeaders = [
-    ...APPLICANT_TABLE_FIXED_HEADERS,
-    getApplicantActionHeader(
-      applicants.map(applicant => getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement))
-    ),
-  ];
+  const getActionMode = (applicant: ApplicantListItem) =>
+    getApplicantActionMode(applicant.status, firstAnnouncementStatus, finalAnnouncementStatus);
+  const tableHeaders = [...APPLICANT_TABLE_FIXED_HEADERS, getApplicantActionHeader(applicants.map(getActionMode))];
 
   const [correctionTarget, setCorrectionTarget] = useState<ApplicantListItem | null>(null);
   const handleCorrectionClose = useCallback(() => setCorrectionTarget(null), []);
@@ -248,25 +245,30 @@ export const ApplicantsList = () => {
       return;
     }
 
-    if (confirm(`${applicant.applicantName} 지원자를 최종 합격자로 등록하시겠습니까?`)) {
-      registerFinalResult({
-        applicantId: applicant.applicantId,
-        applicantName: applicant.applicantName,
-        status: applicant.status,
-      });
+    const name = applicant.applicantName || "해당";
+
+    if (confirm(`${name} 지원자를 최종 합격자로 등록하시겠습니까?`)) {
+      registerFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
     }
   };
 
-  const handleFinalPassCancelClick = (applicant: ApplicantListItem) => {
-    if (isCancelingFinalResult) {
+  const handleFinalFailClick = (applicant: ApplicantListItem) => {
+    if (isFailingFinalResult) {
       return;
     }
 
     const name = applicant.applicantName || "해당";
-    const message = `${name} 지원자의 2차 합격을 취소하시겠습니까?\n취소한 지원자는 최종 불합격이 되며, 다시 2차 합격자로 등록할 수 있습니다.`;
+    const message =
+      applicant.status === "FINAL_PASS"
+        ? `${name} 지원자의 2차 합격을 취소하시겠습니까?\n취소한 지원자는 최종 불합격이 되며, 다시 2차 합격자로 등록할 수 있습니다.`
+        : `${name} 지원자를 2차 불합격으로 처리하시겠습니까?\n처리한 지원자는 최종 불합격이 되며, 다시 2차 합격자로 등록할 수 있습니다.`;
 
     if (confirm(message)) {
-      cancelFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
+      failFinalResult({
+        applicantId: applicant.applicantId,
+        applicantName: applicant.applicantName,
+        status: applicant.status,
+      });
     }
   };
 
@@ -500,14 +502,14 @@ export const ApplicantsList = () => {
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
                 status={applicant.status}
-                actionMode={getApplicantActionMode(applicant.status, isBeforeFirstAnnouncement)}
+                actionMode={getActionMode(applicant)}
                 isCancelAvailable={isCancelAvailable}
                 isFirstPassSelectable={isBeforeFirstAnnouncement}
                 onClick={() => handleApplicantClick(applicant)}
                 onRegisterClick={() => handleRegisterClick(applicant)}
                 onCorrectClick={() => handleCorrectClick(applicant)}
                 onFirstPassClick={isFirstPass => handleFirstPassClick(applicant, isFirstPass)}
-                onFinalPassCancelClick={() => handleFinalPassCancelClick(applicant)}
+                onFinalFailClick={() => handleFinalFailClick(applicant)}
                 onCancelClick={() => handleCancelClick(applicant)}
                 onArrivalClick={() => handleArrivalClick(applicant)}
               />

@@ -13,18 +13,15 @@ import {
 } from "../hooks";
 import {
   buildCorrectionDraft,
-  type CorrectionChangeKey,
   type CorrectionErrorKey,
   type CorrectionFormValues,
   type CorrectionSection,
   formatReceiptNumber,
   getApplicationTypeLabel,
   getCorrectionChangeLabel,
-  getEditableCorrectionKeys,
   getEducationalStatusLabel,
   getRegionLabel,
   getVisibleCorrectionErrors,
-  isCorrectionSectionEditable,
   resetCorrectionSection,
   toCorrectionFormValues,
 } from "../utils";
@@ -46,11 +43,11 @@ interface IApplicationCorrectionModalType {
 }
 
 interface ICorrectionFormState {
-  /** 정정 전 값. 처음 받은 최신 상세로 한 번 정해, 재조회가 입력을 덮지 않게 한다. */
+  /** 정정 전 값. 처음 받은 원서로 한 번 정해, 재조회가 입력을 덮지 않게 한다. */
   initial: CorrectionFormValues;
   values: CorrectionFormValues;
-  /** 입력칸을 보일 항목. 처음 받은 정정 가능 항목으로 한 번 정한다. */
-  editableKeys: ReadonlySet<CorrectionChangeKey>;
+  /** 입력칸을 그릴지. 처음 받은 정정 가능 여부로 한 번 정한다. */
+  isEditable: boolean;
 }
 
 const focusFirstInvalidField = (container: HTMLElement | null) => {
@@ -67,8 +64,7 @@ const focusFirstInvalidField = (container: HTMLElement | null) => {
 };
 
 /**
- * 원서 정정 패널. 정정 가능 여부와 고칠 수 있는 항목은 서버 판정을 따른다.
- * 상세 조회에 있는 항목은 바뀐 것만, 없는 항목은 입력한 것만 보낸다.
+ * 원서 정정 패널. 원서의 현재 값으로 입력칸을 채우고 바뀐 항목만 보낸다. 정정 가능 여부는 서버 판정을 따른다.
  * 작성 중에 닫으려 하면 확인을 받고, 저장 요청 중에는 닫히지 않는다.
  */
 export const ApplicationCorrectionModal = ({
@@ -76,13 +72,8 @@ export const ApplicationCorrectionModal = ({
   applicantName,
   onClose,
 }: IApplicationCorrectionModalType) => {
-  // 그사이 원서가 바뀌었을 수 있어 열 때마다 최신 원서를 받는다.
-  const {
-    detail,
-    isFetching: isFetchingDetail,
-    isError: isDetailError,
-    refetch: refetchDetail,
-  } = useApplicantDetail(applicantId, true, { alwaysRefetchOnMount: true });
+  // 머리말(이름·전형·접수번호)에만 쓴다. 입력칸은 정정 가능 여부 조회에 함께 오는 현재 값으로 채운다.
+  const { detail, refetch: refetchDetail } = useApplicantDetail(applicantId, true, { alwaysRefetchOnMount: true });
   const {
     editableFields,
     isFetching: isFetchingEditableFields,
@@ -99,24 +90,19 @@ export const ApplicationCorrectionModal = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
-  const isError = isDetailError || isEditableFieldsError;
-
-  // 최신 원서와 정정 가능 여부를 모두 받으면 한 번만 입력칸을 채운다.
-  if (form === null && detail && editableFields && !isFetchingDetail && !isFetchingEditableFields && !isError) {
-    const initial = toCorrectionFormValues(detail);
-    setForm({ initial, values: initial, editableKeys: getEditableCorrectionKeys(editableFields.fields) });
+  // 최신 원서를 받으면 한 번만 입력칸을 채운다.
+  if (form === null && editableFields && !isFetchingEditableFields && !isEditableFieldsError) {
+    const initial = toCorrectionFormValues(editableFields.fields);
+    setForm({ initial, values: initial, isEditable: editableFields.reason === null });
   }
 
-  const draft = useMemo(
-    () => (form ? buildCorrectionDraft(form.values, form.initial, form.editableKeys) : null),
-    [form]
-  );
+  const draft = useMemo(() => (form ? buildCorrectionDraft(form.values, form.initial) : null), [form]);
   const changedKeys = useMemo(() => new Set(draft?.changedKeys), [draft]);
   const visibleErrors = draft ? getVisibleCorrectionErrors(draft, touched, showAllErrors) : {};
   const changedCount = draft?.changedKeys.length ?? 0;
   const isDirty = changedCount > 0 || (form?.values.reason.trim() ?? "") !== "";
   // 저장이 409 로 거절되면 정정 가능 여부를 다시 받아 막힌 이유를 보여 준다.
-  const isCorrectable = editableFields?.editable === true;
+  const isCorrectable = editableFields?.reason === null;
   const displayName = detail?.name || applicantName || "지원자";
 
   const requestClose = useCallback(() => {
@@ -189,15 +175,11 @@ export const ApplicationCorrectionModal = ({
     refetchEditableFields();
   };
 
-  const isSectionEditable = (section: CorrectionSection) =>
-    !!form && isCorrectionSectionEditable(form.editableKeys, section);
-
   const sectionProps = form && {
     values: form.values,
     initial: form.initial,
     errors: visibleErrors,
     changedKeys,
-    editableKeys: form.editableKeys,
     showAllErrors,
     onChange: handleChange,
     onTouch: handleTouch,
@@ -247,7 +229,7 @@ export const ApplicationCorrectionModal = ({
 
         <PanelBody>
           {!form || !sectionProps || !draft ? (
-            isError ? (
+            isEditableFieldsError ? (
               <StateMessage role="alert">
                 원서를 불러오지 못했습니다.
                 <RetryButton type="button" onClick={handleRetry}>
@@ -265,21 +247,15 @@ export const ApplicationCorrectionModal = ({
                 </BlockedAlert>
               )}
               {/* 처음부터 정정할 수 없는 원서는 입력칸을 그리지 않는다. */}
-              {form.editableKeys.size > 0 && (
+              {form.isEditable && (
                 <>
                   <CorrectionNotice />
-                  {isSectionEditable("type") && <CorrectionTypeSection {...sectionProps} />}
-                  {isSectionEditable("personal") && <CorrectionPersonalSection {...sectionProps} />}
-                  {isSectionEditable("guardian") && <CorrectionGuardianSection {...sectionProps} />}
-                  {isSectionEditable("introduction") && (
-                    <CorrectionEssaySection {...sectionProps} field="introduction" title="자기소개서" />
-                  )}
-                  {isSectionEditable("studyPlan") && (
-                    <CorrectionEssaySection {...sectionProps} field="studyPlan" title="학업계획서" />
-                  )}
-                  {isSectionEditable("academicRecord") && (
-                    <CorrectionAcademicRecordSection {...sectionProps} isRequired={draft.requiresAcademicRecord} />
-                  )}
+                  <CorrectionTypeSection {...sectionProps} />
+                  <CorrectionPersonalSection {...sectionProps} />
+                  <CorrectionGuardianSection {...sectionProps} />
+                  <CorrectionEssaySection {...sectionProps} field="introduction" title="자기소개서" />
+                  <CorrectionEssaySection {...sectionProps} field="studyPlan" title="학업계획서" />
+                  <CorrectionAcademicRecordSection {...sectionProps} isRequired={draft.requiresAcademicRecord} />
                   <CorrectionReasonSection {...sectionProps} />
                 </>
               )}

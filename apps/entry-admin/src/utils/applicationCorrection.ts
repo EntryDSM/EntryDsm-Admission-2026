@@ -1,19 +1,18 @@
 import type {
   AcademicRecordCorrection,
+  AcademicRecordValues,
   AdmissionType,
-  ApplicationCorrectionField,
   ApplicationFormChanges,
+  ApplicationFormValues,
   CorrectionGraduationType,
   GedScoresCorrection,
   Gender,
-  GraduationStatus,
   Region,
   SchoolSemester,
   SpecialAdmissionType,
   SubjectGrade,
   SubjectGradesCorrection,
 } from "../apis/types";
-import type { ApplicantDetailView } from "./applicantMapper";
 
 /**
  * 원서 정정 화면의 상태·검증·요청 본문.
@@ -107,12 +106,12 @@ export interface AcademicRecordFormValues {
   gedScores: Record<CorrectionGedSubject, string>;
 }
 
-/** 빈 문자열은 "바꾸지 않음" 이다. 상세 조회에 있는 항목만 현재 값으로 채운다. */
+/** 원서의 현재 값으로 채우고, 처음 값과 달라진 항목만 보낸다. 빈 문자열은 값이 없는 것이다. */
 export interface CorrectionFormValues {
   admissionType: AdmissionType | "";
   region: Region | "";
   graduationType: CorrectionGraduationType | "";
-  /** 연도와 월을 모두 고르면 `YYYY-MM` 으로 보낸다. */
+  /** 연도와 월을 모두 고르면 `YYYY-MM` 으로 보낸다. 월은 앞에 0 을 붙이지 않는다. */
   graduationYear: string;
   graduationMonth: string;
   specialAdmissionType: SpecialAdmissionType | "";
@@ -131,62 +130,65 @@ export interface CorrectionFormValues {
   addressDetail: string;
   introduction: string;
   studyPlan: string;
-  /** 졸업 구분을 바꾸면 끌 수 없다. */
-  isAcademicRecordEnabled: boolean;
   academicRecord: AcademicRecordFormValues;
   reason: string;
 }
 
-const GRADUATION_TYPE_BY_STATUS: Record<GraduationStatus, CorrectionGraduationType> = {
-  EXPECTED: "PROSPECTIVE",
-  GRADUATED: "GRADUATED",
-  GED: "GED",
-};
-
 const createSubjectValues = <T>(value: T) =>
   Object.fromEntries(CORRECTION_SUBJECTS.map(({ key }) => [key, value])) as Record<CorrectionSubject, T>;
 
-const createEmptyAcademicRecord = (): AcademicRecordFormValues => ({
-  absentCount: "",
-  lateCount: "",
-  earlyLeaveCount: "",
-  classAbsenceCount: "",
-  volunteerTime: "",
-  dsmAlgorithmAwarded: null,
-  programmingCertified: null,
+const toInputValue = (value: number | null | undefined) => (value == null ? "" : String(value));
+
+const toAcademicRecordFormValues = (record: AcademicRecordValues | null): AcademicRecordFormValues => ({
+  absentCount: toInputValue(record?.absentCount),
+  lateCount: toInputValue(record?.lateCount),
+  earlyLeaveCount: toInputValue(record?.earlyLeaveCount),
+  classAbsenceCount: toInputValue(record?.classAbsenceCount),
+  volunteerTime: toInputValue(record?.volunteerTime),
+  dsmAlgorithmAwarded: record?.dsmAlgorithmAwarded ?? null,
+  programmingCertified: record?.programmingCertified ?? null,
   subjectGrades: Object.fromEntries(
-    CORRECTION_SEMESTERS.map(({ key }) => [key, createSubjectValues<SubjectGrade | "">("")])
+    CORRECTION_SEMESTERS.map(({ key }) => [
+      key,
+      { ...createSubjectValues<SubjectGrade | "">(""), ...record?.subjectGrades[key] },
+    ])
   ) as AcademicRecordFormValues["subjectGrades"],
-  gedScores: Object.fromEntries(CORRECTION_GED_SUBJECTS.map(({ key }) => [key, ""])) as Record<
-    CorrectionGedSubject,
-    string
-  >,
+  gedScores: Object.fromEntries(
+    CORRECTION_GED_SUBJECTS.map(({ key }) => [key, toInputValue(record?.gedScores?.[key])])
+  ) as Record<CorrectionGedSubject, string>,
 });
 
-export const toCorrectionFormValues = (detail: ApplicantDetailView): CorrectionFormValues => ({
-  admissionType: detail.applicationType ?? "",
-  region: detail.region ?? "",
-  graduationType: detail.educationalStatus ? GRADUATION_TYPE_BY_STATUS[detail.educationalStatus] : "",
-  graduationYear: "",
-  graduationMonth: "",
-  specialAdmissionType: "",
-  name: detail.name ?? "",
-  birthdate: detail.birthDate ?? "",
-  gender: "",
-  guardianName: "",
-  guardianPhoneNumber: "",
-  guardianGender: "",
-  guardianRelation: "",
-  guardianRelationOther: "",
-  zipCode: "",
-  addressBase: "",
-  addressDetail: "",
-  introduction: detail.introduction ?? "",
-  studyPlan: detail.studyPlan ?? "",
-  isAcademicRecordEnabled: false,
-  academicRecord: createEmptyAcademicRecord(),
-  reason: "",
-});
+const isPresetGuardianRelation = (relation: string): relation is "부" | "모" => relation === "부" || relation === "모";
+
+export const toCorrectionFormValues = (fields: ApplicationFormValues): CorrectionFormValues => {
+  const [graduationYear = "", graduationMonth = ""] = fields.graduationDate?.split("-") ?? [];
+  const relation = fields.guardianRelation ?? "";
+  const isPresetRelation = isPresetGuardianRelation(relation);
+
+  return {
+    admissionType: fields.admissionType ?? "",
+    region: fields.region ?? "",
+    graduationType: fields.graduationType ?? "",
+    graduationYear,
+    graduationMonth: graduationMonth && String(Number(graduationMonth)),
+    specialAdmissionType: fields.specialAdmissionType ?? "",
+    name: fields.name ?? "",
+    birthdate: fields.birthdate ?? "",
+    gender: fields.gender ?? "",
+    guardianName: fields.guardianName ?? "",
+    guardianPhoneNumber: fields.guardianPhoneNumber ?? "",
+    guardianGender: fields.guardianGender ?? "",
+    guardianRelation: isPresetRelation ? relation : relation && "기타",
+    guardianRelationOther: isPresetRelation ? "" : relation,
+    zipCode: fields.zipCode ?? "",
+    addressBase: fields.addressBase ?? "",
+    addressDetail: fields.addressDetail ?? "",
+    introduction: fields.introduction ?? "",
+    studyPlan: fields.studyPlan ?? "",
+    academicRecord: toAcademicRecordFormValues(fields.academicRecord),
+    reason: "",
+  };
+};
 
 export type CorrectionSection = "type" | "personal" | "guardian" | "introduction" | "studyPlan" | "academicRecord";
 
@@ -231,6 +233,24 @@ const CHANGE_LABELS: Record<CorrectionChangeKey, string> = {
 
 export const getCorrectionChangeLabel = (key: CorrectionChangeKey) => CHANGE_LABELS[key];
 
+const SECTION_INPUTS: Record<CorrectionSection, ReadonlyArray<keyof CorrectionFormValues>> = {
+  type: ["admissionType", "region", "graduationType", "graduationYear", "graduationMonth", "specialAdmissionType"],
+  personal: ["name", "birthdate", "gender"],
+  guardian: [
+    "guardianName",
+    "guardianPhoneNumber",
+    "guardianGender",
+    "guardianRelation",
+    "guardianRelationOther",
+    "zipCode",
+    "addressBase",
+    "addressDetail",
+  ],
+  introduction: ["introduction"],
+  studyPlan: ["studyPlan"],
+  academicRecord: ["academicRecord"],
+};
+
 const SECTION_CHANGES: Record<CorrectionSection, ReadonlyArray<CorrectionChangeKey>> = {
   type: ["admissionType", "region", "graduationType", "graduationDate", "specialAdmissionType"],
   personal: ["name", "birthdate", "gender"],
@@ -245,59 +265,14 @@ export const hasCorrectionSectionChanges = (
   section: CorrectionSection
 ) => SECTION_CHANGES[section].some(key => changedKeys.has(key));
 
-/** 정정 항목의 입력칸(`inputs`)과 서버 항목 이름(`fields`). `fields` 에는 바꿀 때 함께 보내야 하는 항목까지 넣는다. */
-const CHANGE_FIELDS: Record<
-  CorrectionChangeKey,
-  { inputs: ReadonlyArray<keyof CorrectionFormValues>; fields: ReadonlyArray<ApplicationCorrectionField> }
-> = {
-  admissionType: { inputs: ["admissionType"], fields: ["admissionType"] },
-  region: { inputs: ["region"], fields: ["region"] },
-  graduationType: { inputs: ["graduationType"], fields: ["graduationType", "graduationDate", "academicRecord"] },
-  graduationDate: { inputs: ["graduationYear", "graduationMonth"], fields: ["graduationDate"] },
-  specialAdmissionType: { inputs: ["specialAdmissionType"], fields: ["specialAdmissionType"] },
-  name: { inputs: ["name"], fields: ["name"] },
-  birthdate: { inputs: ["birthdate"], fields: ["birthdate"] },
-  gender: { inputs: ["gender"], fields: ["gender"] },
-  guardianName: { inputs: ["guardianName"], fields: ["guardianName"] },
-  guardianPhoneNumber: { inputs: ["guardianPhoneNumber"], fields: ["guardianPhoneNumber"] },
-  guardianGender: { inputs: ["guardianGender"], fields: ["guardianGender"] },
-  guardianRelation: { inputs: ["guardianRelation", "guardianRelationOther"], fields: ["guardianRelation"] },
-  address: { inputs: ["zipCode", "addressBase"], fields: ["zipCode", "addressBase", "addressDetail"] },
-  addressDetail: { inputs: ["addressDetail"], fields: ["addressDetail"] },
-  introduction: { inputs: ["introduction"], fields: ["introduction"] },
-  studyPlan: { inputs: ["studyPlan"], fields: ["studyPlan"] },
-  academicRecord: { inputs: ["isAcademicRecordEnabled", "academicRecord"], fields: ["academicRecord"] },
-};
-
-const CHANGE_KEYS = Object.keys(CHANGE_FIELDS) as CorrectionChangeKey[];
-
-/** 서버가 정정할 수 있다고 알려 준 항목으로 이 화면에서 고칠 수 있는 항목을 정한다. */
-export const getEditableCorrectionKeys = (
-  fields: readonly ApplicationCorrectionField[]
-): ReadonlySet<CorrectionChangeKey> => {
-  const editableFields = new Set(fields);
-  return new Set(CHANGE_KEYS.filter(key => CHANGE_FIELDS[key].fields.every(field => editableFields.has(field))));
-};
-
-export const isCorrectionSectionEditable = (
-  editableKeys: ReadonlySet<CorrectionChangeKey>,
-  section: CorrectionSection
-) => SECTION_CHANGES[section].some(key => editableKeys.has(key));
-
-const restoreInputs = (
-  values: CorrectionFormValues,
-  initial: CorrectionFormValues,
-  keys: ReadonlyArray<CorrectionChangeKey>
-): CorrectionFormValues => ({
-  ...values,
-  ...Object.fromEntries(keys.flatMap(key => CHANGE_FIELDS[key].inputs).map(input => [input, initial[input]])),
-});
-
 export const resetCorrectionSection = (
   values: CorrectionFormValues,
   initial: CorrectionFormValues,
   section: CorrectionSection
-) => restoreInputs(values, initial, SECTION_CHANGES[section]);
+): CorrectionFormValues => ({
+  ...values,
+  ...Object.fromEntries(SECTION_INPUTS[section].map(input => [input, initial[input]])),
+});
 
 export type CorrectionErrorKey =
   | "graduationType"
@@ -372,6 +347,23 @@ export const sanitizeCountInput = (value: string) => value.replace(/\D/g, "").sl
 export const getEffectiveGraduationType = (values: CorrectionFormValues, initial: CorrectionFormValues) =>
   values.graduationType || initial.graduationType;
 
+const getGuardianRelation = (values: CorrectionFormValues) =>
+  values.guardianRelation === "기타" ? values.guardianRelationOther.trim() : values.guardianRelation;
+
+const COUNT_FIELDS = ["absentCount", "lateCount", "earlyLeaveCount", "classAbsenceCount", "volunteerTime"] as const;
+
+/** `07` 과 `7` 은 같은 값이다. */
+const isSameNumberInput = (a: string, b: string) => a === b || (a !== "" && b !== "" && Number(a) === Number(b));
+
+const isSameAcademicRecord = (a: AcademicRecordFormValues, b: AcademicRecordFormValues) =>
+  COUNT_FIELDS.every(key => isSameNumberInput(a[key], b[key])) &&
+  a.dsmAlgorithmAwarded === b.dsmAlgorithmAwarded &&
+  a.programmingCertified === b.programmingCertified &&
+  CORRECTION_SEMESTERS.every(({ key }) =>
+    CORRECTION_SUBJECTS.every(subject => a.subjectGrades[key][subject.key] === b.subjectGrades[key][subject.key])
+  ) &&
+  CORRECTION_GED_SUBJECTS.every(({ key }) => isSameNumberInput(a.gedScores[key], b.gedScores[key]));
+
 const toAcademicRecordCorrection = (
   record: AcademicRecordFormValues,
   graduationType: CorrectionGraduationType | ""
@@ -405,14 +397,8 @@ const toAcademicRecordCorrection = (
   };
 };
 
-/** 입력값으로 요청 본문의 `changes`, 바뀐 항목, 남은 오류를 만든다. 고칠 수 없는 항목은 입력이 있어도 보내지 않는다. */
-export const buildCorrectionDraft = (
-  input: CorrectionFormValues,
-  initial: CorrectionFormValues,
-  editableKeys: ReadonlySet<CorrectionChangeKey>
-): CorrectionDraft => {
-  const uneditableKeys = CHANGE_KEYS.filter(key => !editableKeys.has(key));
-  const values = restoreInputs(input, initial, uneditableKeys);
+/** 입력값으로 요청 본문의 `changes`, 바뀐 항목, 남은 오류를 만든다. 처음 값과 같은 항목은 보내지 않는다. */
+export const buildCorrectionDraft = (values: CorrectionFormValues, initial: CorrectionFormValues): CorrectionDraft => {
   const changes: ApplicationFormChanges = {};
   const changedKeys: CorrectionChangeKey[] = [];
   const errors: CorrectionErrors = {};
@@ -445,10 +431,16 @@ export const buildCorrectionDraft = (
   if (graduationType !== "GED") {
     const { graduationYear, graduationMonth } = values;
 
-    if (graduationYear || graduationMonth) {
+    if (
+      isGraduationTypeChanged ||
+      graduationYear !== initial.graduationYear ||
+      graduationMonth !== initial.graduationMonth
+    ) {
       changedKeys.push("graduationDate");
 
-      if (!graduationYear || !graduationMonth) {
+      if (!graduationYear && !graduationMonth && isGraduationTypeChanged) {
+        errors.graduationDate = "졸업 구분을 바꾸면 졸업 연월도 골라야 합니다.";
+      } else if (!graduationYear || !graduationMonth) {
         errors.graduationDate = "졸업 연도와 월을 모두 골라 주세요.";
       } else {
         changes.graduationDate = `${graduationYear}-${graduationMonth.padStart(2, "0")}`;
@@ -457,19 +449,23 @@ export const buildCorrectionDraft = (
           errors.graduationDate = "졸업 예정 연도는 2026년 또는 2027년이어야 합니다.";
         }
       }
-    } else if (isGraduationTypeChanged) {
-      errors.graduationDate = "졸업 구분을 바꾸면 졸업 연월도 골라야 합니다.";
     }
   }
 
-  if (values.specialAdmissionType) {
+  if (values.specialAdmissionType && values.specialAdmissionType !== initial.specialAdmissionType) {
     changes.specialAdmissionType = values.specialAdmissionType;
     changedKeys.push("specialAdmissionType");
+  }
 
-    const admissionType = values.admissionType || initial.admissionType;
-    if (values.specialAdmissionType !== "NONE" && admissionType !== "GENERAL") {
-      errors.specialAdmissionType = "국가유공자·특례입학 대상자는 일반 전형으로만 지원할 수 있습니다.";
-    }
+  const specialAdmissionType = values.specialAdmissionType || initial.specialAdmissionType;
+  const admissionType = values.admissionType || initial.admissionType;
+  if (
+    (changes.specialAdmissionType || changes.admissionType) &&
+    specialAdmissionType &&
+    specialAdmissionType !== "NONE" &&
+    admissionType !== "GENERAL"
+  ) {
+    errors.specialAdmissionType = "국가유공자·특례입학 대상자는 일반 전형으로만 지원할 수 있습니다.";
   }
 
   /* ── 인적사항 ── */
@@ -494,23 +490,25 @@ export const buildCorrectionDraft = (
     }
   }
 
-  if (values.gender) {
+  if (values.gender && values.gender !== initial.gender) {
     changes.gender = values.gender;
     changedKeys.push("gender");
   }
 
-  /* ── 보호자·주소: 현재 값을 모르므로 입력한 항목만 보낸다 ── */
+  /* ── 보호자·주소 ── */
   const guardianName = values.guardianName.trim();
-  if (guardianName) {
+  if (guardianName !== initial.guardianName.trim()) {
     changes.guardianName = guardianName;
     changedKeys.push("guardianName");
 
-    if (guardianName.length > CORRECTION_LIMITS.guardianName) {
+    if (!guardianName) {
+      errors.guardianName = "보호자 성명을 입력해 주세요.";
+    } else if (guardianName.length > CORRECTION_LIMITS.guardianName) {
       errors.guardianName = `보호자 성명은 ${CORRECTION_LIMITS.guardianName}자까지 입력할 수 있습니다.`;
     }
   }
 
-  if (values.guardianPhoneNumber) {
+  if (values.guardianPhoneNumber !== initial.guardianPhoneNumber) {
     changes.guardianPhoneNumber = values.guardianPhoneNumber;
     changedKeys.push("guardianPhoneNumber");
 
@@ -519,40 +517,43 @@ export const buildCorrectionDraft = (
     }
   }
 
-  if (values.guardianGender) {
+  if (values.guardianGender && values.guardianGender !== initial.guardianGender) {
     changes.guardianGender = values.guardianGender;
     changedKeys.push("guardianGender");
   }
 
-  if (values.guardianRelation) {
-    const relation = values.guardianRelation === "기타" ? values.guardianRelationOther.trim() : values.guardianRelation;
-    changes.guardianRelation = relation;
+  const guardianRelation = getGuardianRelation(values);
+  if (guardianRelation !== getGuardianRelation(initial)) {
+    changes.guardianRelation = guardianRelation;
     changedKeys.push("guardianRelation");
 
-    if (!relation) {
+    if (!guardianRelation) {
       errors.guardianRelation = "지원자와의 관계를 입력해 주세요.";
-    } else if (relation.length > CORRECTION_LIMITS.guardianRelation) {
+    } else if (guardianRelation.length > CORRECTION_LIMITS.guardianRelation) {
       errors.guardianRelation = `지원자와의 관계는 ${CORRECTION_LIMITS.guardianRelation}자까지 입력할 수 있습니다.`;
     }
   }
 
-  if (values.zipCode && values.addressBase) {
+  if (values.zipCode !== initial.zipCode || values.addressBase !== initial.addressBase) {
     changes.zipCode = values.zipCode;
     changes.addressBase = values.addressBase;
     changedKeys.push("address");
   }
 
   const addressDetail = values.addressDetail.trim();
-  if (addressDetail) {
+  const isAddressDetailChanged = addressDetail !== initial.addressDetail.trim();
+  if (isAddressDetailChanged) {
     changes.addressDetail = addressDetail;
     changedKeys.push("addressDetail");
+  }
 
-    if (addressDetail.length > CORRECTION_LIMITS.addressDetail) {
+  // 주소를 다시 검색하면 상세 주소를 비워, 옛 상세 주소가 새 주소에 붙어 남지 않게 한다.
+  if (isAddressDetailChanged || changes.addressBase) {
+    if (!addressDetail) {
+      errors.addressDetail = "상세 주소를 입력해 주세요.";
+    } else if (addressDetail.length > CORRECTION_LIMITS.addressDetail) {
       errors.addressDetail = `상세 주소는 ${CORRECTION_LIMITS.addressDetail}자까지 입력할 수 있습니다.`;
     }
-  } else if (changes.addressBase) {
-    // 기본 주소만 바꾸면 옛 상세 주소가 새 주소에 붙어 남는다.
-    errors.addressDetail = "주소를 바꾸면 상세 주소도 입력해 주세요.";
   }
 
   /* ── 자기소개서·학업계획서: 줄바꿈을 살리려고 다듬지 않고 보낸다 ── */
@@ -576,9 +577,9 @@ export const buildCorrectionDraft = (
     }
   });
 
-  /* ── 성적: 일부만 보낼 수 없어 전체를 다시 입력받는다 ── */
+  /* ── 성적: 일부만 보낼 수 없어 한 칸만 바뀌어도 전체를 보낸다 ── */
   const requiresAcademicRecord = isGraduationTypeChanged;
-  if (values.isAcademicRecordEnabled || requiresAcademicRecord) {
+  if (requiresAcademicRecord || !isSameAcademicRecord(values.academicRecord, initial.academicRecord)) {
     const record = values.academicRecord;
     changes.academicRecord = toAcademicRecordCorrection(record, graduationType);
     changedKeys.push("academicRecord");

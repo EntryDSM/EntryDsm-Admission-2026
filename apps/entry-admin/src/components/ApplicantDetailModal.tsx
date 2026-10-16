@@ -3,8 +3,14 @@ import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 import { Btn } from "@entry/ui";
 
-import { useApplicantDetail, useApplicantDocumentDownloads, useApplicantPhoto } from "../hooks";
+import {
+  useApplicantDetail,
+  useApplicantDocumentDownloads,
+  useApplicantPhoto,
+  useApplicationEditableFields,
+} from "../hooks";
 import { cancel } from "../assets";
+import { CORRECTION_GED_SUBJECTS } from "../utils";
 import {
   getApplicantStatusLabel,
   getApplicationTypeLabel,
@@ -46,6 +52,10 @@ const formatScore = (score?: number) => score ?? "-";
 export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplicantDetailModalType) => {
   const { detail, isLoading } = useApplicantDetail(applicantId, isOpen);
   const { photoUrl, isPhotoFetching } = useApplicantPhoto(detail?.photoFileId, isOpen);
+  const isGed = detail?.educationalStatus === "GED";
+  // 검정고시 과목별 점수는 상세 응답에 없어 원서 값에서 읽는다.
+  const { editableFields, isError: isGedScoresError } = useApplicationEditableFields(applicantId, isOpen && isGed);
+  const gedScores = editableFields?.fields.academicRecord?.gedScores;
   const {
     downloadApplicationForm,
     isDownloadingApplicationForm,
@@ -305,6 +315,40 @@ export const ApplicantDetailModal = ({ applicantId, isOpen, onClose }: IApplican
             <ScoreRow>총점: {formatScore(detail?.totalScore)}</ScoreRow>
           </SectionContent>
         </ModalSection>
+
+        {isGed && (
+          <ModalSection>
+            <SectionTitle>검정고시 과목별 점수</SectionTitle>
+            <SectionContent>
+              {gedScores
+                ? CORRECTION_GED_SUBJECTS.map(({ key, label, isOptional }) => (
+                    <ScoreRow key={key}>
+                      {label}: {gedScores[key] ?? (isOptional ? "미응시" : "-")}
+                    </ScoreRow>
+                  ))
+                : editableFields
+                  ? "입력된 검정고시 점수가 없습니다."
+                  : isGedScoresError
+                    ? "검정고시 점수를 불러오지 못했습니다."
+                    : "검정고시 점수를 불러오는 중..."}
+            </SectionContent>
+          </ModalSection>
+        )}
+
+        {detail?.educationalStatus && !isGed && (
+          <ModalSection>
+            <SectionTitle>학기별 점수</SectionTitle>
+            <SectionContent>
+              {detail.semesterScores.length > 0
+                ? detail.semesterScores.map(({ semester, label, score }) => (
+                    <ScoreRow key={semester}>
+                      {label}: {score}
+                    </ScoreRow>
+                  ))
+                : "반영된 학기 점수가 없습니다."}
+            </SectionContent>
+          </ModalSection>
+        )}
       </ModalContent>
     </ModalOverlay>
   );
