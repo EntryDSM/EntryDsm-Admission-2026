@@ -32,7 +32,7 @@ export const getApplicationPeriodStatus = (
 export const FIRST_ANNOUNCEMENT_SCHEDULE_TITLE = "1차 합격 발표";
 
 /**
- * 1차 합격자 개별 등록·취소는 발표 시작 전(before)에만, 2차 합격자 등록은 발표 뒤(after)에만 된다.
+ * 1차 합격자 개별 등록·취소는 발표 시작 전(before)에만, 2차 합격자 등록·불합격 처리는 발표 뒤(after)에만 된다.
  * 발표 일정이 없으면 서버가 둘 다 거절한다.
  */
 export type FirstAnnouncementStatus = "before" | "after" | "unscheduled";
