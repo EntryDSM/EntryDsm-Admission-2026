@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { colors } from "@entry/design";
 
-import { ApplicantActionMenu } from "./ApplicantActionMenu";
+import { ApplicantActionMenu, type ApplicantActionMenuItem } from "./ApplicantActionMenu";
 import {
   type ApplicantActionMode,
   getApplicantActionLabel,
@@ -25,12 +25,13 @@ type IApplicationComponentType = {
   /** 1차 합격 발표 전이라 원서 정정 메뉴에서 1차 합격자로 등록할 수 있는지 */
   isFirstPassSelectable?: boolean;
   onClick: () => void;
+  /** 2차 합격자 등록 */
   onRegisterClick?: () => void;
   onCorrectClick?: () => void;
   /** 1차 합격자 등록(true)·1차 합격 취소(false) */
   onFirstPassClick?: (isFirstPass: boolean) => void;
-  /** 2차 합격 취소 */
-  onFinalPassCancelClick?: () => void;
+  /** 1차 합격자의 2차 불합격 처리, 최종 합격자의 2차 합격 취소 */
+  onFinalFailClick?: () => void;
   /** 원서 접수 취소 */
   onCancelClick?: () => void;
   onArrivalClick?: () => void;
@@ -52,19 +53,31 @@ export const Applicant = ({
   onRegisterClick,
   onCorrectClick,
   onFirstPassClick,
-  onFinalPassCancelClick,
+  onFinalFailClick,
   onCancelClick,
   onArrivalClick,
 }: IApplicationComponentType) => {
   const regionLabel = isDaejeon === undefined ? "-" : isDaejeon ? "대전" : "전국";
   const statusLabel = getApplicantStatusLabel(status);
 
+  const correctMenuItems: ApplicantActionMenuItem[] = [
+    { label: "원서 정정", onSelect: () => onCorrectClick?.() },
+    ...(isFirstPassSelectable ? [{ label: "1차 합격자 등록", onSelect: () => onFirstPassClick?.(true) }] : []),
+    // 접수 기간이 아니면 항목은 보이되 누르기만 막는다.
+    { label: "원서 접수 취소", onSelect: () => onCancelClick?.(), tone: "danger", isDisabled: !isCancelAvailable },
+  ];
+
+  const finalResultMenuItems: ApplicantActionMenuItem[] = [
+    { label: "2차 합격자 등록", onSelect: () => onRegisterClick?.() },
+    { label: "2차 불합격 처리", onSelect: () => onFinalFailClick?.() },
+  ];
+
   const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (actionMode === "register") {
       onRegisterClick?.();
     } else if (actionMode === "finalPassCancel") {
-      onFinalPassCancelClick?.();
+      onFinalFailClick?.();
     } else {
       onFirstPassClick?.(actionMode === "firstPassSelect");
     }
@@ -88,13 +101,12 @@ export const Applicant = ({
       </CheckboxCell>
       <Cell role="cell">{statusLabel}</Cell>
       <ActionCell role="cell">
-        {actionMode === "correct" ? (
+        {actionMode === "none" ? (
+          "-"
+        ) : actionMode === "correct" || actionMode === "finalResult" ? (
           <ApplicantActionMenu
-            isCancelAvailable={isCancelAvailable}
-            isFirstPassSelectable={isFirstPassSelectable}
-            onCorrect={() => onCorrectClick?.()}
-            onSelectFirstPass={() => onFirstPassClick?.(true)}
-            onCancel={() => onCancelClick?.()}
+            label={getApplicantActionLabel(actionMode)}
+            items={actionMode === "correct" ? correctMenuItems : finalResultMenuItems}
           />
         ) : (
           <ActionButton
