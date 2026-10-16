@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
-import { adminQueryKeys, HttpError, updateApplicantStatus } from "../apis";
+import { adminQueryKeys, failFinalScreeningResult, HttpError } from "../apis";
 
 export interface FailFinalResultTarget {
   applicantId: number;
@@ -12,30 +12,21 @@ export interface FailFinalResultTarget {
 
 const isFinalPassCancel = (status: string) => status === "FINAL_PASS";
 
-// 1차 합격 → 최종 불합격은 정상 흐름이지만, 최종 합격을 되돌리는 것은 강제 변경이다.
-const failFinalResult = ({ applicantId, status }: FailFinalResultTarget) =>
-  updateApplicantStatus(
-    applicantId,
-    isFinalPassCancel(status)
-      ? { status: "FINAL_FAIL", force: true, reason: "2차 합격자 등록 취소" }
-      : { status: "FINAL_FAIL" }
-  );
-
 // 서버는 거절 이유를 나눠 주지 않아(409) 확인할 것을 함께 알린다.
 const CONFLICT_MESSAGES = {
-  cancel: "2차 합격을 취소할 수 없습니다. 1차 합격 발표가 끝났는지 확인해 주세요.",
-  fail: "2차 불합격으로 처리할 수 없습니다. 1차 합격자인지, 1차 합격 발표가 끝났는지 확인해 주세요.",
+  cancel: "2차 합격을 취소할 수 없습니다. 1차 합격 발표가 끝났는지, 최종 합격 발표 전인지 확인해 주세요.",
+  fail: "2차 불합격으로 처리할 수 없습니다. 1차 합격자인지, 1차 합격 발표가 끝났는지, 최종 합격 발표 전인지 확인해 주세요.",
 } as const;
 
 /**
  * 2차 합격 취소와 2차 불합격 처리. 1차 합격 발표 뒤에는 1차 합격으로 되돌릴 수 없어 둘 다 최종 불합격으로 바꾼다.
- * 최종 불합격이 된 지원자는 다시 2차 합격자로 등록할 수 있다.
+ * 최종 합격 발표가 시작되면 할 수 없고, 최종 불합격이 된 지원자는 다시 2차 합격자로 등록할 수 있다.
  */
 export const useFailFinalResult = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: failFinalResult,
+    mutationFn: ({ applicantId }: FailFinalResultTarget) => failFinalScreeningResult(applicantId),
     onSuccess: (_data, { applicantId, applicantName, status }) => {
       const name = applicantName || `지원자 ${applicantId}`;
       toast.success(

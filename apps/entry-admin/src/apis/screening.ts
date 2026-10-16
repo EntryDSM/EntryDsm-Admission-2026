@@ -15,6 +15,10 @@ export const selectFirstPassApplicant = (applicantId: number) =>
 export const cancelFirstPassApplicant = (applicantId: number) =>
   http.delete<void>(`${SCREENINGS_ENDPOINT}/first/applicants/${applicantId}`);
 
-/** 2차(최종) 합격자 개별 등록 */
+/** 1차 합격 발표 뒤에 1차 합격자나 최종 불합격자를 최종 합격자로 등록한다. */
 export const registerFinalScreeningResult = (applicantId: number) =>
   http.post<FinalScreeningResult>(`${SCREENINGS_ENDPOINT}/final/results/${applicantId}`);
+
+/** 1차 합격 발표 뒤, 최종 합격 발표 전에 1차 합격자나 최종 합격자를 최종 불합격으로 바꾼다. */
+export const failFinalScreeningResult = (applicantId: number) =>
+  http.delete<FinalScreeningResult>(`${SCREENINGS_ENDPOINT}/final/results/${applicantId}`);

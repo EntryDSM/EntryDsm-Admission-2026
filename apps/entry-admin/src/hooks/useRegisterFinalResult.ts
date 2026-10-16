@@ -1,27 +1,22 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
-import { adminQueryKeys, HttpError, registerFinalScreeningResult, updateApplicantStatus } from "../apis";
+import { adminQueryKeys, HttpError, registerFinalScreeningResult } from "../apis";
 
 export interface RegisterFinalResultTarget {
   applicantId: number;
   applicantName?: string;
-  /** 지금 전형 상태. 최종 불합격자는 다른 경로로 다시 등록한다. */
-  status?: string;
 }
 
-const registerFinalResult = ({ applicantId, status }: RegisterFinalResultTarget): Promise<unknown> =>
-  // 최종 불합격은 정상 흐름으로 되돌릴 수 없어 강제 변경으로 다시 등록한다.
-  status === "FINAL_FAIL"
-    ? updateApplicantStatus(applicantId, { status: "FINAL_PASS", force: true, reason: "2차 합격자 재등록" })
-    : registerFinalScreeningResult(applicantId);
-
-/** 2차 합격자 개별 등록. 등록하지 않은 1차 합격자는 2차 불합격으로 처리하기 전까지 1차 합격으로 남는다. */
+/**
+ * 2차 합격자 개별 등록. 1차 합격자와 최종 불합격자를 등록할 수 있다.
+ * 등록하지 않은 1차 합격자는 2차 불합격으로 처리하기 전까지 1차 합격으로 남는다.
+ */
 export const useRegisterFinalResult = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: registerFinalResult,
+    mutationFn: ({ applicantId }: RegisterFinalResultTarget) => registerFinalScreeningResult(applicantId),
     onSuccess: (_data, { applicantId, applicantName }) => {
       const name = applicantName || `지원자 ${applicantId}`;
       toast.success(`${name} 님을 최종 합격자로 등록했습니다.`);

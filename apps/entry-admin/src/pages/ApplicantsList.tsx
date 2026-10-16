@@ -139,16 +139,13 @@ export const ApplicantsList = () => {
   const { updateFirstPass, isUpdatingFirstPass } = useUpdateFirstPass();
 
   // 심사 대기 지원자는 "원서 정정" 메뉴, 1차 합격 발표 전에는 1차 합격자 등록·취소, 발표 뒤 1차 합격자는 "2차 결과" 메뉴다.
-  // 접수 취소는 원서 접수 기간에만 고를 수 있다.
-  const { periodStatus, firstAnnouncementStatus } = useApplicationPeriod();
+  // 접수 취소는 원서 접수 기간에만, 2차 불합격 처리·2차 합격 취소는 최종 합격 발표 전에만 고를 수 있다.
+  const { periodStatus, firstAnnouncementStatus, finalAnnouncementStatus } = useApplicationPeriod();
   const isCancelAvailable = periodStatus === "open";
   const isBeforeFirstAnnouncement = firstAnnouncementStatus === "before";
-  const tableHeaders = [
-    ...APPLICANT_TABLE_FIXED_HEADERS,
-    getApplicantActionHeader(
-      applicants.map(applicant => getApplicantActionMode(applicant.status, firstAnnouncementStatus))
-    ),
-  ];
+  const getActionMode = (applicant: ApplicantListItem) =>
+    getApplicantActionMode(applicant.status, firstAnnouncementStatus, finalAnnouncementStatus);
+  const tableHeaders = [...APPLICANT_TABLE_FIXED_HEADERS, getApplicantActionHeader(applicants.map(getActionMode))];
 
   const [correctionTarget, setCorrectionTarget] = useState<ApplicantListItem | null>(null);
   const handleCorrectionClose = useCallback(() => setCorrectionTarget(null), []);
@@ -251,11 +248,7 @@ export const ApplicantsList = () => {
     const name = applicant.applicantName || "해당";
 
     if (confirm(`${name} 지원자를 최종 합격자로 등록하시겠습니까?`)) {
-      registerFinalResult({
-        applicantId: applicant.applicantId,
-        applicantName: applicant.applicantName,
-        status: applicant.status,
-      });
+      registerFinalResult({ applicantId: applicant.applicantId, applicantName: applicant.applicantName });
     }
   };
 
@@ -509,7 +502,7 @@ export const ApplicantsList = () => {
                 isDaejeon={applicant.isDaejeon}
                 isArrived={applicant.isArrived}
                 status={applicant.status}
-                actionMode={getApplicantActionMode(applicant.status, firstAnnouncementStatus)}
+                actionMode={getActionMode(applicant)}
                 isCancelAvailable={isCancelAvailable}
                 isFirstPassSelectable={isBeforeFirstAnnouncement}
                 onClick={() => handleApplicantClick(applicant)}

@@ -1,4 +1,4 @@
-import type { FirstAnnouncementStatus } from "./applicationPeriod";
+import type { AnnouncementStatus } from "./applicationPeriod";
 
 /** 서버 enum → 한국어 라벨. 예전 mock 값(COMMON 등)도 표시할 수 있게 함께 둔다. */
 
@@ -96,17 +96,21 @@ export const getApplicantActionLabel = (mode: Exclude<ApplicantActionMode, "none
  * 1차 합격을 취소한 지원자는 1차 불합격이 되고, 발표 전까지 다시 등록할 수 있다. 발표 뒤 1차 불합격자는 2차 대상이 아니다.
  * 2차 합격을 취소했거나 2차 불합격으로 처리한 지원자는 최종 불합격이 되고, 다시 2차 합격자로 등록할 수 있다.
  * 발표 전후를 아직 모르거나 발표 일정이 없으면 1차 결과가 있는 지원자의 버튼을 숨긴다.
+ * 2차 합격 취소·불합격 처리는 최종 합격 발표 전에만 되어, 그 밖에는 최종 합격자 버튼을 숨기고 1차 합격자는 등록만 남긴다.
  */
 export const getApplicantActionMode = (
   status: string,
-  firstAnnouncementStatus: FirstAnnouncementStatus | undefined
+  firstAnnouncementStatus: AnnouncementStatus | undefined,
+  finalAnnouncementStatus: AnnouncementStatus | undefined
 ): ApplicantActionMode => {
   if (status === "PENDING") {
     return "correct";
   }
 
+  const isBeforeFinalAnnouncement = finalAnnouncementStatus === "before";
+
   if (status === "FINAL_PASS") {
-    return "finalPassCancel";
+    return isBeforeFinalAnnouncement ? "finalPassCancel" : "none";
   }
 
   if (status === "FINAL_FAIL") {
@@ -124,7 +128,7 @@ export const getApplicantActionMode = (
   }
 
   if (firstAnnouncementStatus === "after" && status === "FIRST_PASS") {
-    return "finalResult";
+    return isBeforeFinalAnnouncement ? "finalResult" : "register";
   }
 
   return "none";

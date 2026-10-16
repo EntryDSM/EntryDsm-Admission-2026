@@ -3,10 +3,10 @@ import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 import { adminQueryKeys, getSchedules, getServerTime } from "../apis";
-import { getApplicationPeriodStatus, getFirstAnnouncementStatus } from "../utils";
+import { getApplicationPeriodStatus, getFinalAnnouncementStatus, getFirstAnnouncementStatus } from "../utils";
 
 /**
- * 일정과 서버 시각으로 원서 접수 기간과 1차 합격 발표 전후를 판정한다.
+ * 일정과 서버 시각으로 원서 접수 기간과 1차·최종 합격 발표 전후를 판정한다.
  * 접수 취소 직전 재확인도 새 서버 시각을 쓰도록 staleTime 0 이다.
  */
 const applicationPeriodQueryOptions = queryOptions({
@@ -16,18 +16,23 @@ const applicationPeriodQueryOptions = queryOptions({
     return {
       periodStatus: getApplicationPeriodStatus(schedules, serverTime),
       firstAnnouncementStatus: getFirstAnnouncementStatus(schedules, serverTime),
+      finalAnnouncementStatus: getFinalAnnouncementStatus(schedules, serverTime),
     };
   },
   staleTime: 0,
 });
 
-/** 접수 취소는 접수 기간(open)에만, 1차 합격자 등록·취소는 1차 합격 발표 전(before)에만 고를 수 있다. */
+/**
+ * 접수 취소는 접수 기간(open)에만, 1차 합격자 등록·취소는 1차 합격 발표 전(before)에만,
+ * 2차 불합격 처리·2차 합격 취소는 최종 합격 발표 전(before)에만 고를 수 있다.
+ */
 export const useApplicationPeriod = () => {
   const query = useQuery(applicationPeriodQueryOptions);
 
   return {
     periodStatus: query.data?.periodStatus,
     firstAnnouncementStatus: query.data?.firstAnnouncementStatus,
+    finalAnnouncementStatus: query.data?.finalAnnouncementStatus,
   };
 };
 
