@@ -31,8 +31,6 @@ export interface ICorrectionSectionProps {
   /** 지금 보여 줄 오류만 */
   errors: CorrectionErrors;
   changedKeys: ReadonlySet<CorrectionChangeKey>;
-  /** 서버가 정정할 수 있다고 한 항목만 입력칸을 보인다. */
-  editableKeys: ReadonlySet<CorrectionChangeKey>;
   /** 저장을 눌러 빈 필수 칸까지 표시할지 */
   showAllErrors: boolean;
   onChange: (patch: Partial<CorrectionFormValues>) => void;
@@ -129,7 +127,7 @@ export const ChoiceChips = <T extends string>({
       const isSelected = option.value === value;
 
       return (
-        <Chip key={option.value || "keep"} $isSelected={isSelected} $isDisabled={!!option.isDisabled}>
+        <Chip key={option.value} $isSelected={isSelected} $isDisabled={!!option.isDisabled}>
           <ChipInput
             type="radio"
             name={name}

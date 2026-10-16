@@ -165,35 +165,57 @@ export interface UpdateApplicantStatusPayload {
 
 /* ───────── 원서 정정 (GET·PATCH /applicants/{applicantId}/application) ───────── */
 
-/** 정정 요청 `changes` 의 항목 이름 */
-export type ApplicationCorrectionField =
-  | "admissionType"
-  | "region"
-  | "graduationType"
-  | "graduationDate"
-  | "photoFileId"
-  | "name"
-  | "phoneNumber"
-  | "gender"
-  | "birthdate"
-  | "specialAdmissionType"
-  | "guardianName"
-  | "guardianPhoneNumber"
-  | "guardianGender"
-  | "guardianRelation"
-  | "zipCode"
-  | "addressBase"
-  | "addressDetail"
-  | "introduction"
-  | "studyPlan"
-  | "school"
-  | "academicRecord";
-
-/** 정정할 수 없으면 `fields` 가 비고 `reason` 에 이유가 온다. */
+/** 정정할 수 있으면 `reason` 이 null 이다. 정정할 수 없어도 `fields` 에 현재 값이 온다. */
 export interface EditableApplicationFields {
-  editable: boolean;
-  fields: ApplicationCorrectionField[];
+  fields: ApplicationFormValues;
   reason: string | null;
+}
+
+/** 원서의 현재 값. 항목 이름은 정정 요청 `changes` 와 같고, 아직 입력하지 않은 항목은 null 이다. */
+export interface ApplicationFormValues {
+  admissionType: AdmissionType | null;
+  region: Region | null;
+  graduationType: CorrectionGraduationType | null;
+  /** `YYYY-MM` */
+  graduationDate: string | null;
+  photoFileId: string | null;
+  name: string | null;
+  phoneNumber: string | null;
+  gender: Gender | null;
+  /** `YYYY-MM-DD` */
+  birthdate: string | null;
+  specialAdmissionType: SpecialAdmissionType | null;
+  guardianName: string | null;
+  guardianPhoneNumber: string | null;
+  guardianGender: Gender | null;
+  guardianRelation: string | null;
+  zipCode: string | null;
+  addressBase: string | null;
+  addressDetail: string | null;
+  introduction: string | null;
+  studyPlan: string | null;
+  school: MiddleSchoolValues | null;
+  academicRecord: AcademicRecordValues | null;
+}
+
+export interface MiddleSchoolValues {
+  schoolCode: string;
+  schoolName: string;
+  studentNumber: string;
+  schoolPhone: string;
+  teacherName: string;
+}
+
+export interface AcademicRecordValues {
+  absentCount: number | null;
+  lateCount: number | null;
+  earlyLeaveCount: number | null;
+  classAbsenceCount: number | null;
+  volunteerTime: number | null;
+  dsmAlgorithmAwarded: boolean | null;
+  programmingCertified: boolean | null;
+  subjectGrades: Partial<Record<SchoolSemester, SubjectGradesCorrection>>;
+  gedScores: Record<keyof GedScoresCorrection, number | null> | null;
 }
 
 /** 조회 응답의 {@link GraduationStatus} 와 달리 졸업 예정은 `PROSPECTIVE` 로 보내야 한다. */
