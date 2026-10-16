@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import { colors, Flex, Text } from "@entry/design";
 
 const MAX_LENGTH = 1600;
+/** 입력칸을 이만큼(px, 16px 글자 세 줄 남짓)까지 넘치는 건 알리지 않습니다. */
+const OVERFLOW_TOLERANCE = 72;
 
 type ITextAreaType = {
   placeholder?: string;
@@ -17,14 +19,14 @@ export const TextAreaContent = ({ onChange, placeholder, value }: ITextAreaType)
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const isOverflowingRef = useRef<boolean | null>(null);
 
-  // 원서 PDF 는 입력칸 높이만큼만 담기므로, 줄바꿈 등으로 입력칸에 스크롤이 생기면 넘친 내용이 잘립니다.
-  // 스크롤이 새로 생기는 순간에만 토스트로 알립니다(처음 불러온 내용으로는 알리지 않음).
+  // 원서 PDF 는 입력칸 높이 정도만 담기므로, 줄바꿈이 많아 입력칸을 넘치면 원서에서 잘릴 수 있습니다.
+  // 세 줄 남짓 넘친 정도는 넘어가고, 그보다 더 넘치는 순간에만 토스트로 알립니다(처음 불러온 내용으로는 알리지 않음).
   useEffect(() => {
     const el = textAreaRef.current;
     if (!el) return;
-    const isOverflowing = el.scrollHeight > el.clientHeight;
+    const isOverflowing = el.scrollHeight - el.clientHeight > OVERFLOW_TOLERANCE;
     if (isOverflowing && isOverflowingRef.current === false) {
-      toast.warn("입력칸을 넘어가는 내용은 원서에서 잘립니다. 줄바꿈을 줄여 스크롤이 생기지 않게 작성해 주세요.", {
+      toast.warn("줄바꿈이 많아 원서에서 내용이 잘릴 수 있습니다. 제출 전 원서 미리보기에서 검토한 뒤 제출해 주세요.", {
         toastId: "textarea-overflow",
       });
     }
