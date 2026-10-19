@@ -21,7 +21,7 @@ import {
   type ScreeningRound,
 } from "../utils/applicationResult";
 import { openDownloadWindow } from "../utils/download";
-import { formatScheduleDate, formatScheduleDateWithTime, formatScheduleTime, hasScheduleTime } from "../utils/schedule";
+import { formatScheduleDate } from "../utils/schedule";
 
 const SCHOOL_NAME = "대덕소프트웨어마이스터고등학교";
 const SCHOOL_ADDRESS = `대전광역시 유성구 가정북로 76, ${SCHOOL_NAME}`;
@@ -177,8 +177,6 @@ interface ResultAnnouncementProps {
 const ResultAnnouncement = ({ result, round, isPassed, schedules, onGoHome }: ResultAnnouncementProps) => {
   const findSchedule = (title: string) => schedules?.find(schedule => schedule.title === title);
   const interview = findSchedule(RESULT_GUIDE_SCHEDULE_TITLE.interview);
-  const registration = findSchedule(RESULT_GUIDE_SCHEDULE_TITLE.registration);
-  const orientation = findSchedule(RESULT_GUIDE_SCHEDULE_TITLE.orientation);
   const isFinalPassed = isPassed && round === "FINAL";
 
   const roundText = round === "FIRST" ? "1차 전형에서" : "2차 전형에서 최종";
@@ -263,10 +261,7 @@ const ResultAnnouncement = ({ result, round, isPassed, schedules, onGoHome }: Re
             <GuideTitle>2차 전형 안내</GuideTitle>
             <GuideList>
               <li>일자: {interview ? formatScheduleDate(interview.startAt) : UNDECIDED_SCHEDULE}</li>
-              <li>
-                시간:{" "}
-                {interview && hasScheduleTime(interview.startAt) ? formatScheduleTime(interview.startAt) : "별도 안내"}
-              </li>
+              <li>시간: 학교 홈페이지를 통해 별도 공지</li>
               <li>장소: {SCHOOL_ADDRESS}</li>
             </GuideList>
             <GuideNote>
@@ -282,13 +277,11 @@ const ResultAnnouncement = ({ result, round, isPassed, schedules, onGoHome }: Re
             <GuideSection>
               <GuideTitle>합격자 등록 안내</GuideTitle>
               <GuideList>
-                <li>
-                  기간:{" "}
-                  {registration
-                    ? `${formatScheduleDate(registration.startAt)} ~ ${formatScheduleDateWithTime(registration.endAt)}`
-                    : UNDECIDED_SCHEDULE}
-                </li>
-                <li>장소: {SCHOOL_ADDRESS}</li>
+                <li>기간: 2026. 11. 06.(금) ~ 11. 13.(금) 17:00</li>
+                <li>방법: 본교 등록 접수처 또는 등기우편</li>
+                <li>방문 접수 시간: 10:00 ~ 17:00</li>
+                <li>제출 서류: 합격자 등록 서류 (하단 다운로드 버튼 클릭)</li>
+                <li>주소: {SCHOOL_ADDRESS}</li>
               </GuideList>
               <GuideNote>
                 지원자는 반드시 아래 서류를 기간내에 방문 또는 우편으로 제출하여야 합격자 등록이 완료됩니다.
@@ -297,8 +290,9 @@ const ResultAnnouncement = ({ result, round, isPassed, schedules, onGoHome }: Re
             <GuideSection>
               <GuideTitle>합격자 오리엔테이션 안내</GuideTitle>
               <GuideList>
-                <li>일시: {orientation ? formatScheduleDateWithTime(orientation.startAt) : UNDECIDED_SCHEDULE}</li>
-                <li>장소: {SCHOOL_ADDRESS}</li>
+                <li>일시: 2026. 11. 21.(토) 13:00 ~ 15:30</li>
+                <li>장소: {SCHOOL_NAME} 내 새롬홀 (창의관 1층)</li>
+                <li>대상: 2027학년도 신입생 최종 합격자</li>
               </GuideList>
               <GuideNote>자세한 내용은 합격자 등록 서류에 첨부된 문서를 참고하여 주세요.</GuideNote>
             </GuideSection>
