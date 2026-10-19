@@ -145,7 +145,7 @@ export const SchoolSearchModal = ({
             ) : (
               <Flex width="100%" height="100%" justifyContent="center" alignItems="center" gap={10}>
                 <Search />
-                <Text color={colors.gray[300]}>검색 결과가 없거나 API가 비활성화되어 있습니다</Text>
+                <Text color={colors.gray[300]}>검색 결과가 없습니다, 다른 검색어를 입력해주세요.</Text>
               </Flex>
             )}
           </ContentContainer>
