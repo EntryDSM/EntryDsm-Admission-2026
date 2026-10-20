@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { useCallback, useEffect, useRef, useState } from "react";
 import noticeImages from "virtual:notice-images";
 
-import { colors } from "@entry/design";
+import { colors, media } from "@entry/design";
 
 // public/NoticeImg 의 이미지를 파일명 순으로 한 장씩 띄우는 공지 팝업. 닫으면 다음 장이 뜨고, 폴더가 비어 있으면 뜨지 않는다.
 // 목록은 빌드할 때 vite.config.ts 의 noticeImages 플러그인이 만든다.
@@ -109,19 +109,28 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   visibility: ${({ isVisible }) => (isVisible ? "visible" : "hidden")};
 `;
 
-// 이미지 원래 크기에 맞춰지되 화면(여백 16px 제외)을 넘지 않는다.
+// 데스크톱에서는 팝업이 화면의 65% 를 넘지 않게 이미지를 비율대로 줄여 한눈에 보이게 한다.
+// 태블릿 이하에서는 65% 로 줄이면 글자를 읽기 어려워, 이미지 원래 크기에 맞추되 화면(여백 16px 제외)을 넘지 않는다.
+const DESKTOP_MAX_RATIO = 65;
+const CLOSE_BUTTON_HEIGHT = 52;
+
 const Dialog = styled.div`
   display: flex;
   flex-direction: column;
-  max-width: 100%;
-  max-height: 100%;
+  max-width: min(100%, ${DESKTOP_MAX_RATIO}vw);
+  max-height: min(100%, ${DESKTOP_MAX_RATIO}vh);
   border-radius: 16px;
   overflow: hidden;
   background-color: ${colors.extra.realWhite};
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  ${media.tablet} {
+    max-width: 100%;
+    max-height: 100%;
+  }
 `;
 
-// 공지 이미지는 글자가 많아 화면 높이에 맞춰 줄이면 읽기 어려우므로, 넘치는 만큼은 줄이지 않고 이 영역 안에서 스크롤한다.
+// 태블릿 이하에서 세로로 넘치는 만큼은 줄이지 않고 이 영역 안에서 스크롤한다.
 // 닫기 버튼은 스크롤과 상관없이 늘 팝업 아래에 보인다.
 const ImageArea = styled.div`
   min-height: 0;
@@ -130,16 +139,21 @@ const ImageArea = styled.div`
   overscroll-behavior: contain;
 `;
 
-// 폭이 화면보다 넓을 때만 비율을 유지한 채 줄인다.
+// 폭·높이가 팝업 한도를 넘을 때만 비율을 유지한 채 줄인다. 태블릿 이하에서는 폭만 줄인다.
 const NoticeImage = styled.img`
   display: block;
   max-width: 100%;
+  max-height: calc(${DESKTOP_MAX_RATIO}vh - ${CLOSE_BUTTON_HEIGHT}px);
+
+  ${media.tablet} {
+    max-height: none;
+  }
 `;
 
 const CloseButton = styled.button`
   flex-shrink: 0;
   width: 100%;
-  height: 52px;
+  height: ${CLOSE_BUTTON_HEIGHT}px;
   border-top: 1px solid ${colors.gray[200]};
   background-color: ${colors.extra.realWhite};
   color: ${colors.gray[500]};
