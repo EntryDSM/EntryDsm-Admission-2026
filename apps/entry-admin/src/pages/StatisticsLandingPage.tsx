@@ -11,7 +11,7 @@ import {
 } from "./StatisticsLandingPageSections";
 import { useScheduleDeadline, useStatisticsSummary } from "./StatisticsLandingPageHooks";
 
-const TOTAL_CAPACITY = 128;
+const TOTAL_CAPACITY = 64;
 
 export const StatisticsLandingPage = () => {
   const {

@@ -119,7 +119,17 @@ export const StatCardsGrid = ({
 
       <StatCard>
         <StatContent>
-          <StatTitle>경쟁률</StatTitle>
+          <StatTitle>1차 전형 경쟁률</StatTitle>
+          {isCompetitionLoading ? (
+            <SkeletonValue />
+          ) : (
+            <StatValue>
+              {totalCapacity > 0 ? (competitionSummary.totalApplicants / (totalCapacity * 2)).toFixed(1) : "0.0"} : 1
+            </StatValue>
+          )}
+        </StatContent>
+        <StatContent>
+          <StatTitle>최종 경쟁률</StatTitle>
           {isCompetitionLoading ? (
             <SkeletonValue />
           ) : (
